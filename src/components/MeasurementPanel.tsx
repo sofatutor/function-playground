@@ -52,7 +52,7 @@ const MeasurementPanel: React.FC<MeasurementPanelProps> = ({ selectedShape, meas
                 {key}
               </span>
               <span className="measurement-value font-medium">
-                {value}{key === 'area' ? ' units²' : key === 'perimeter' || key.includes('side') || key === 'width' || key === 'height' || key === 'radius' || key === 'diameter' ? ' units' : ''}
+                {value}{key === 'area' ? ' cm²' : key === 'perimeter' || key.includes('side') || key === 'width' || key === 'height' || key === 'radius' || key === 'diameter' ? ' cm' : ''}
               </span>
             </div>
           ))}
