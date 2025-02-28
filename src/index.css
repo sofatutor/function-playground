@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -35,19 +36,12 @@
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -79,6 +73,7 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
+    
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -97,5 +92,80 @@
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
+}
+
+@layer components {
+  .btn-tool {
+    @apply flex h-10 w-10 items-center justify-center rounded-md border border-border bg-background text-foreground transition-all hover:bg-secondary hover:text-secondary-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  }
+  
+  .btn-tool.active {
+    @apply bg-geometry-primary text-white hover:bg-geometry-primary/90;
+  }
+  
+  .tool-label {
+    @apply absolute left-1/2 -translate-x-1/2 -bottom-8 whitespace-nowrap rounded bg-black px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100;
+  }
+
+  .shape-controls {
+    @apply absolute flex space-x-1 bg-white/90 backdrop-blur-sm rounded-md p-1 shadow-md border border-gray-200 transition-opacity opacity-0 group-hover:opacity-100;
+  }
+  
+  .canvas-container {
+    @apply relative w-full h-full bg-white rounded-lg shadow-md overflow-hidden border border-gray-200;
+  }
+  
+  .control-panel {
+    @apply bg-white rounded-lg shadow-md p-4 border border-gray-200;
+  }
+  
+  .measurement-value {
+    @apply font-mono text-sm;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Canvas cursor styles */
+.cursor-move {
+  cursor: move;
+}
+
+.cursor-resize-nw {
+  cursor: nwse-resize;
+}
+
+.cursor-resize-ne {
+  cursor: nesw-resize;
+}
+
+.cursor-resize-sw {
+  cursor: nesw-resize;
+}
+
+.cursor-resize-se {
+  cursor: nwse-resize;
+}
+
+.cursor-rotate {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 4v6h-6'></path><path d='M20.49 15a9 9 0 1 1-2.12-9.36L23 10'></path></svg>") 12 12, auto;
 }
