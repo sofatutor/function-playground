@@ -17,6 +17,10 @@ const calculateTriangleArea = (points: [Point, Point, Point]): number => {
   return 0.5 * Math.abs((a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y)));
 };
 
+// Pixel to CM conversion (standard 96 DPI: 1cm = 37.8px)
+const PIXELS_PER_CM = 37.8;
+const pixelsToCm = (pixels: number): number => pixels / PIXELS_PER_CM;
+
 // Default shape properties
 const DEFAULT_FILL = 'rgba(190, 227, 219, 0.5)';
 const DEFAULT_STROKE = '#555B6E';
@@ -193,42 +197,54 @@ export function useShapeOperations() {
     switch (shape.type) {
       case 'circle': {
         const circle = shape as Circle;
-        const area = Math.PI * Math.pow(circle.radius, 2);
-        const perimeter = 2 * Math.PI * circle.radius;
+        const radiusCm = pixelsToCm(circle.radius);
+        const areaCm = Math.PI * Math.pow(radiusCm, 2);
+        const perimeterCm = 2 * Math.PI * radiusCm;
         return {
-          radius: circle.radius.toFixed(2),
-          diameter: (circle.radius * 2).toFixed(2),
-          area: area.toFixed(2),
-          perimeter: perimeter.toFixed(2)
+          radius: radiusCm.toFixed(2),
+          diameter: (radiusCm * 2).toFixed(2),
+          area: areaCm.toFixed(2),
+          perimeter: perimeterCm.toFixed(2)
         };
       }
       case 'rectangle': {
         const rect = shape as Rectangle;
-        const area = rect.width * rect.height;
-        const perimeter = 2 * (rect.width + rect.height);
+        const widthCm = pixelsToCm(rect.width);
+        const heightCm = pixelsToCm(rect.height);
+        const areaCm = widthCm * heightCm;
+        const perimeterCm = 2 * (widthCm + heightCm);
         return {
-          width: rect.width.toFixed(2),
-          height: rect.height.toFixed(2),
-          area: area.toFixed(2),
-          perimeter: perimeter.toFixed(2)
+          width: widthCm.toFixed(2),
+          height: heightCm.toFixed(2),
+          area: areaCm.toFixed(2),
+          perimeter: perimeterCm.toFixed(2)
         };
       }
       case 'triangle': {
         const tri = shape as Triangle;
-        const area = calculateTriangleArea(tri.points);
         
-        // Calculate side lengths
-        const side1 = distanceBetweenPoints(tri.points[0], tri.points[1]);
-        const side2 = distanceBetweenPoints(tri.points[1], tri.points[2]);
-        const side3 = distanceBetweenPoints(tri.points[2], tri.points[0]);
-        const perimeter = side1 + side2 + side3;
+        // Calculate side lengths in pixels first
+        const side1Px = distanceBetweenPoints(tri.points[0], tri.points[1]);
+        const side2Px = distanceBetweenPoints(tri.points[1], tri.points[2]);
+        const side3Px = distanceBetweenPoints(tri.points[2], tri.points[0]);
+        
+        // Convert to centimeters
+        const side1Cm = pixelsToCm(side1Px);
+        const side2Cm = pixelsToCm(side2Px);
+        const side3Cm = pixelsToCm(side3Px);
+        
+        // Calculate area in pixels and convert to cm²
+        const areaPx = calculateTriangleArea(tri.points);
+        const areaCm = pixelsToCm(areaPx) * pixelsToCm(1); // Convert px² to cm²
+        
+        const perimeterCm = side1Cm + side2Cm + side3Cm;
         
         return {
-          side1: side1.toFixed(2),
-          side2: side2.toFixed(2),
-          side3: side3.toFixed(2),
-          area: area.toFixed(2),
-          perimeter: perimeter.toFixed(2)
+          side1: side1Cm.toFixed(2),
+          side2: side2Cm.toFixed(2),
+          side3: side3Cm.toFixed(2),
+          area: areaCm.toFixed(2),
+          perimeter: perimeterCm.toFixed(2)
         };
       }
       default:
