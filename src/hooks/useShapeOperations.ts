@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from 'react';
 import { 
-  AnyShape, Circle, Rectangle, Triangle, Point, ShapeType, OperationMode 
+  AnyShape, Circle, Rectangle, Triangle, Point, ShapeType, OperationMode, MeasurementUnit
 } from '@/types/shapes';
 import { toast } from 'sonner';
 
@@ -19,7 +19,15 @@ const calculateTriangleArea = (points: [Point, Point, Point]): number => {
 
 // Pixel to CM conversion (standard 96 DPI: 1cm = 37.8px)
 const PIXELS_PER_CM = 37.8;
+// 1 inch = 96px on standard DPI screens
+const PIXELS_PER_INCH = 96;
+
 const pixelsToCm = (pixels: number): number => pixels / PIXELS_PER_CM;
+const pixelsToInches = (pixels: number): number => pixels / PIXELS_PER_INCH;
+
+// Conversion between units
+const cmToInches = (cm: number): number => cm / 2.54;
+const inchesToCm = (inches: number): number => inches * 2.54;
 
 // Default shape properties
 const DEFAULT_FILL = 'rgba(190, 227, 219, 0.5)';
@@ -31,6 +39,7 @@ export function useShapeOperations() {
   const [selectedShapeId, setSelectedShapeId] = useState<string | null>(null);
   const [activeMode, setActiveMode] = useState<OperationMode>('select');
   const [activeShapeType, setActiveShapeType] = useState<ShapeType>('rectangle');
+  const [measurementUnit, setMeasurementUnit] = useState<MeasurementUnit>('cm');
   const [dragStart, setDragStart] = useState<Point | null>(null);
   
   const createShape = useCallback((startPoint: Point, endPoint: Point) => {
@@ -198,27 +207,54 @@ export function useShapeOperations() {
       case 'circle': {
         const circle = shape as Circle;
         const radiusCm = pixelsToCm(circle.radius);
-        const areaCm = Math.PI * Math.pow(radiusCm, 2);
-        const perimeterCm = 2 * Math.PI * radiusCm;
-        return {
-          radius: radiusCm.toFixed(2),
-          diameter: (radiusCm * 2).toFixed(2),
-          area: areaCm.toFixed(2),
-          perimeter: perimeterCm.toFixed(2)
-        };
+        const radiusInches = pixelsToInches(circle.radius);
+        
+        if (measurementUnit === 'cm') {
+          const areaCm = Math.PI * Math.pow(radiusCm, 2);
+          const perimeterCm = 2 * Math.PI * radiusCm;
+          return {
+            radius: radiusCm.toFixed(2),
+            diameter: (radiusCm * 2).toFixed(2),
+            area: areaCm.toFixed(2),
+            perimeter: perimeterCm.toFixed(2)
+          };
+        } else {
+          const areaInches = Math.PI * Math.pow(radiusInches, 2);
+          const perimeterInches = 2 * Math.PI * radiusInches;
+          return {
+            radius: radiusInches.toFixed(2),
+            diameter: (radiusInches * 2).toFixed(2),
+            area: areaInches.toFixed(2),
+            perimeter: perimeterInches.toFixed(2)
+          };
+        }
       }
       case 'rectangle': {
         const rect = shape as Rectangle;
         const widthCm = pixelsToCm(rect.width);
         const heightCm = pixelsToCm(rect.height);
-        const areaCm = widthCm * heightCm;
-        const perimeterCm = 2 * (widthCm + heightCm);
-        return {
-          width: widthCm.toFixed(2),
-          height: heightCm.toFixed(2),
-          area: areaCm.toFixed(2),
-          perimeter: perimeterCm.toFixed(2)
-        };
+        const widthInches = pixelsToInches(rect.width);
+        const heightInches = pixelsToInches(rect.height);
+        
+        if (measurementUnit === 'cm') {
+          const areaCm = widthCm * heightCm;
+          const perimeterCm = 2 * (widthCm + heightCm);
+          return {
+            width: widthCm.toFixed(2),
+            height: heightCm.toFixed(2),
+            area: areaCm.toFixed(2),
+            perimeter: perimeterCm.toFixed(2)
+          };
+        } else {
+          const areaInches = widthInches * heightInches;
+          const perimeterInches = 2 * (widthInches + heightInches);
+          return {
+            width: widthInches.toFixed(2),
+            height: heightInches.toFixed(2),
+            area: areaInches.toFixed(2),
+            perimeter: perimeterInches.toFixed(2)
+          };
+        }
       }
       case 'triangle': {
         const tri = shape as Triangle;
@@ -228,29 +264,49 @@ export function useShapeOperations() {
         const side2Px = distanceBetweenPoints(tri.points[1], tri.points[2]);
         const side3Px = distanceBetweenPoints(tri.points[2], tri.points[0]);
         
-        // Convert to centimeters
-        const side1Cm = pixelsToCm(side1Px);
-        const side2Cm = pixelsToCm(side2Px);
-        const side3Cm = pixelsToCm(side3Px);
-        
-        // Calculate area in pixels and convert to cm²
+        // Calculate area in pixels
         const areaPx = calculateTriangleArea(tri.points);
-        const areaCm = pixelsToCm(areaPx) * pixelsToCm(1); // Convert px² to cm²
         
-        const perimeterCm = side1Cm + side2Cm + side3Cm;
-        
-        return {
-          side1: side1Cm.toFixed(2),
-          side2: side2Cm.toFixed(2),
-          side3: side3Cm.toFixed(2),
-          area: areaCm.toFixed(2),
-          perimeter: perimeterCm.toFixed(2)
-        };
+        if (measurementUnit === 'cm') {
+          // Convert to centimeters
+          const side1Cm = pixelsToCm(side1Px);
+          const side2Cm = pixelsToCm(side2Px);
+          const side3Cm = pixelsToCm(side3Px);
+          
+          // Convert area px² to cm²
+          const areaCm = pixelsToCm(areaPx) * pixelsToCm(1);
+          const perimeterCm = side1Cm + side2Cm + side3Cm;
+          
+          return {
+            side1: side1Cm.toFixed(2),
+            side2: side2Cm.toFixed(2),
+            side3: side3Cm.toFixed(2),
+            area: areaCm.toFixed(2),
+            perimeter: perimeterCm.toFixed(2)
+          };
+        } else {
+          // Convert to inches
+          const side1Inches = pixelsToInches(side1Px);
+          const side2Inches = pixelsToInches(side2Px);
+          const side3Inches = pixelsToInches(side3Px);
+          
+          // Convert area px² to in²
+          const areaInches = pixelsToInches(areaPx) * pixelsToInches(1);
+          const perimeterInches = side1Inches + side2Inches + side3Inches;
+          
+          return {
+            side1: side1Inches.toFixed(2),
+            side2: side2Inches.toFixed(2),
+            side3: side3Inches.toFixed(2),
+            area: areaInches.toFixed(2),
+            perimeter: perimeterInches.toFixed(2)
+          };
+        }
       }
       default:
         return {};
     }
-  }, []);
+  }, [measurementUnit]);
   
   const getSelectedShape = useCallback(() => {
     if (!selectedShapeId) return null;
@@ -262,6 +318,8 @@ export function useShapeOperations() {
     selectedShapeId,
     activeMode,
     activeShapeType,
+    measurementUnit,
+    setMeasurementUnit,
     dragStart,
     setDragStart,
     createShape,
