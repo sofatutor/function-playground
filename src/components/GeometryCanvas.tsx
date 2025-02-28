@@ -35,6 +35,12 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
   const [rotateStart, setRotateStart] = useState<Point | null>(null);
   const [originalRotation, setOriginalRotation] = useState<number>(0);
   const [currentShapeType, setCurrentShapeType] = useState<ShapeType>('rectangle');
+  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+  
+  // Physical measurements constants (in pixels)
+  // Standard 96 DPI: 1cm = 37.8px, 1mm = 3.78px
+  const PIXELS_PER_CM = 37.8;
+  const PIXELS_PER_MM = 3.78;
 
   // Clean up any ongoing operations when the active mode changes
   useEffect(() => {
@@ -58,6 +64,21 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
       }
     }
   }, [shapes, selectedShapeId]);
+
+  // Measure canvas on mount and resize
+  useEffect(() => {
+    const updateCanvasSize = () => {
+      if (canvasRef.current) {
+        const { width, height } = canvasRef.current.getBoundingClientRect();
+        setCanvasSize({ width, height });
+      }
+    };
+    
+    updateCanvasSize();
+    
+    window.addEventListener('resize', updateCanvasSize);
+    return () => window.removeEventListener('resize', updateCanvasSize);
+  }, []);
 
   const getCanvasPoint = (e: React.MouseEvent): Point => {
     const canvas = canvasRef.current;
@@ -527,6 +548,128 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     return null;
   };
 
+  // Render the centimeter and millimeter grid lines
+  const renderGrid = () => {
+    // Calculate the number of lines needed for the entire canvas
+    const numHorizontalCmLines = Math.ceil(canvasSize.height / PIXELS_PER_CM) + 1;
+    const numVerticalCmLines = Math.ceil(canvasSize.width / PIXELS_PER_CM) + 1;
+    
+    // Arrays to store the grid lines
+    const cmGridLines = [];
+    const mmGridLines = [];
+    
+    // Create horizontal centimeter lines
+    for (let i = 0; i < numHorizontalCmLines; i++) {
+      const yPosition = i * PIXELS_PER_CM;
+      cmGridLines.push(
+        <line 
+          key={`h-cm-${i}`} 
+          x1="0" 
+          y1={yPosition} 
+          x2={canvasSize.width} 
+          y2={yPosition} 
+          stroke="#555B6E" 
+          strokeWidth="0.5" 
+        />
+      );
+      
+      // Only add millimeter lines if they fit in the canvas
+      if (i < numHorizontalCmLines - 1) {
+        for (let j = 1; j < 10; j++) {  // 9 millimeter lines between each centimeter line
+          const mmY = yPosition + j * PIXELS_PER_MM;
+          mmGridLines.push(
+            <line 
+              key={`h-mm-${i}-${j}`} 
+              x1="0" 
+              y1={mmY} 
+              x2={canvasSize.width} 
+              y2={mmY} 
+              stroke="#555B6E" 
+              strokeWidth="0.2" 
+              strokeOpacity="0.5"
+            />
+          );
+        }
+      }
+    }
+    
+    // Create vertical centimeter lines
+    for (let i = 0; i < numVerticalCmLines; i++) {
+      const xPosition = i * PIXELS_PER_CM;
+      cmGridLines.push(
+        <line 
+          key={`v-cm-${i}`} 
+          x1={xPosition} 
+          y1="0" 
+          x2={xPosition} 
+          y2={canvasSize.height} 
+          stroke="#555B6E" 
+          strokeWidth="0.5" 
+        />
+      );
+      
+      // Only add millimeter lines if they fit in the canvas
+      if (i < numVerticalCmLines - 1) {
+        for (let j = 1; j < 10; j++) {  // 9 millimeter lines between each centimeter line
+          const mmX = xPosition + j * PIXELS_PER_MM;
+          mmGridLines.push(
+            <line 
+              key={`v-mm-${i}-${j}`} 
+              x1={mmX} 
+              y1="0" 
+              x2={mmX} 
+              y2={canvasSize.height} 
+              stroke="#555B6E" 
+              strokeWidth="0.2" 
+              strokeOpacity="0.5"
+            />
+          );
+        }
+      }
+    }
+    
+    // Create labels for centimeter markings
+    const cmLabels = [];
+    for (let i = 0; i < numHorizontalCmLines; i++) {
+      cmLabels.push(
+        <text 
+          key={`h-label-${i}`} 
+          x="2" 
+          y={i * PIXELS_PER_CM - 2} 
+          fontSize="8" 
+          fill="#555B6E"
+        >
+          {i} cm
+        </text>
+      );
+    }
+    
+    for (let i = 0; i < numVerticalCmLines; i++) {
+      cmLabels.push(
+        <text 
+          key={`v-label-${i}`} 
+          x={i * PIXELS_PER_CM + 2} 
+          y="10" 
+          fontSize="8" 
+          fill="#555B6E"
+        >
+          {i} cm
+        </text>
+      );
+    }
+    
+    return (
+      <svg className="absolute inset-0 pointer-events-none" width={canvasSize.width} height={canvasSize.height}>
+        {/* Render millimeter lines first (behind centimeter lines) */}
+        {mmGridLines}
+        {/* Render centimeter lines */}
+        {cmGridLines}
+        {/* Render labels */}
+        {cmLabels}
+      </svg>
+    );
+  };
+
   return (
     <div 
       ref={canvasRef}
@@ -536,9 +679,14 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
+      {/* Grid background */}
+      {renderGrid()}
+      
+      {/* Shapes */}
       {shapes.map(shape => renderShape(shape))}
       {renderPreviewShape()}
       
+      {/* Controls */}
       {selectedShapeId && (
         <ShapeControls
           shape={shapes.find(s => s.id === selectedShapeId)!}
