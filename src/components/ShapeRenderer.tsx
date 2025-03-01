@@ -61,16 +61,22 @@ const renderTriangle = (tri: Triangle, activeMode: OperationMode) => {
   const minY = Math.min(tri.points[0].y, tri.points[1].y, tri.points[2].y);
   const width = Math.max(tri.points[0].x, tri.points[1].x, tri.points[2].x) - minX;
   const height = Math.max(tri.points[0].y, tri.points[1].y, tri.points[2].y) - minY;
+  
+  // Create SVG path data for the triangle
   const pathData = `
-      M ${tri.points[0].x - minX} ${tri.points[0].y - minY}
-      L ${tri.points[1].x - minX} ${tri.points[1].y - minY}
-      L ${tri.points[2].x - minX} ${tri.points[2].y - minY}
-      Z
-    `;
+    M ${tri.points[0].x - minX} ${tri.points[0].y - minY}
+    L ${tri.points[1].x - minX} ${tri.points[1].y - minY}
+    L ${tri.points[2].x - minX} ${tri.points[2].y - minY}
+    Z
+  `;
+  
+  // Generate unique IDs for the filter and shadow
+  const filterId = `shadow-blur-${tri.id}`;
+  
   return (
     <div
       key={tri.id}
-      className={`absolute ${tri.selected ? 'shadow-md' : ''}`}
+      className="absolute"
       style={{
         left: minX,
         top: minY,
@@ -79,13 +85,38 @@ const renderTriangle = (tri: Triangle, activeMode: OperationMode) => {
         cursor: activeMode === 'select' ? 'pointer' : 'default'
       }}
     >
-      <svg width={width} height={height}>
+      <svg 
+        width={width + 10} 
+        height={height + 10} 
+        style={{ 
+          position: 'absolute', 
+          top: -5, 
+          left: -5,
+          overflow: 'visible'
+        }}
+      >
+        {tri.selected && (
+          <>
+            <defs>
+              <filter id={filterId} x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="2" />
+              </filter>
+            </defs>
+            <path
+              d={pathData}
+              fill="rgba(0,0,0,0.3)"
+              transform={`translate(3, 3) rotate(${tri.rotation}, ${width/2}, ${height/2})`}
+              filter={`url(#${filterId})`}
+              style={{ pointerEvents: 'none' }}
+            />
+          </>
+        )}
         <path
           d={pathData}
           fill={tri.fill}
           stroke={tri.stroke}
           strokeWidth={tri.strokeWidth}
-          transform={`rotate(${tri.rotation}, ${width / 2}, ${height / 2})`}
+          transform={`rotate(${tri.rotation}, ${width/2}, ${height/2})`}
         />
       </svg>
     </div>
