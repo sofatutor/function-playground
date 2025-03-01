@@ -72,12 +72,14 @@ const MeasurementPanel: React.FC<MeasurementPanelProps> = ({
                   <TooltipTrigger asChild>
                     <span className="text-xs text-muted-foreground cursor-help flex items-center">
                       {t(`measurementLabels.${key}`)}
-                      {(key === 'area' || key === 'perimeter') && (
+                      {(key === 'area' || key === 'perimeter' || 
+                        (selectedShape.type === 'triangle' && (key === 'height' || key === 'angles'))) && (
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1 h-3 w-3 text-muted-foreground"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg>
                       )}
                     </span>
                   </TooltipTrigger>
-                  {(key === 'area' || key === 'perimeter') && (
+                  {(key === 'area' || key === 'perimeter' || 
+                    (selectedShape.type === 'triangle' && (key === 'height' || key === 'angles'))) && (
                     <TooltipContent side="top" className="max-w-xs p-4">
                       <div className="space-y-2">
                         <div className="font-medium">{t('formula')}:</div>

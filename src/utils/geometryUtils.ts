@@ -30,6 +30,14 @@ export const formulas = {
     perimeter: {
       en: '\\text{perimeter} = a + b + c',
       de: '\\text{Umfang} = a + b + c'
+    },
+    height: {
+      en: '\\text{height} = \\frac{2 \\times \\text{area}}{\\text{base}}',
+      de: '\\text{Höhe} = \\frac{2 \\times \\text{Fläche}}{\\text{Basis}}'
+    },
+    angles: {
+      en: '\\text{angles: } \\alpha + \\beta + \\gamma = 180°',
+      de: '\\text{Winkel: } \\alpha + \\beta + \\gamma = 180°'
     }
   }
 };
@@ -71,6 +79,10 @@ export const getFormulaExplanation = (shapeType: ShapeType, measurementKey: stri
           return 'The space inside the triangle. For a general triangle: $A = \\frac{1}{2} \\times \\text{base} \\times \\text{height}$.';
         case 'perimeter':
           return 'The distance around the triangle: $P = a + b + c$ (sum of all sides).';
+        case 'height':
+          return 'The perpendicular distance from a vertex to the opposite side (base): $h = \\frac{2A}{b}$.';
+        case 'angles':
+          return 'The sum of the interior angles of a triangle is always 180 degrees: $\\alpha + \\beta + \\gamma = 180°$.';
       }
       break;
   }

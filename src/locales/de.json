@@ -29,7 +29,8 @@
     "side2": "Seite 2",
     "side3": "Seite 3",
     "area": "Fläche",
-    "perimeter": "Umfang"
+    "perimeter": "Umfang",
+    "angles": "Innenwinkel"
   },
   "unitSuffixes": {
     "area": "{unit}²",
@@ -40,7 +41,8 @@
     "width": "{unit}",
     "height": "{unit}",
     "radius": "{unit}",
-    "diameter": "{unit}"
+    "diameter": "{unit}",
+    "angles": "°"
   },
   "formulaExplanations": {
     "circle": {
@@ -60,7 +62,9 @@
       "side2": "Die Länge einer Seite des Dreiecks.",
       "side3": "Die Länge einer Seite des Dreiecks.",
       "area": "Die Fläche innerhalb des Dreiecks.",
-      "perimeter": "Der Umfang des Dreiecks (Summe aller Seiten)."
+      "perimeter": "Der Umfang des Dreiecks (Summe aller Seiten).",
+      "height": "Der senkrechte Abstand von einer Ecke zur gegenüberliegenden Seite (Basis): $h = \\frac{2A}{b}$.",
+      "angles": "Die Summe der Innenwinkel eines Dreiecks beträgt immer 180 Grad: $\\alpha + \\beta + \\gamma = 180°$."
     }
   },
   "tooltips": {

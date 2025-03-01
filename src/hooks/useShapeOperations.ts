@@ -16,6 +16,23 @@ const calculateTriangleArea = (points: [Point, Point, Point]): number => {
   return 0.5 * Math.abs((a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y)));
 };
 
+// Helper function to calculate triangle height
+const calculateTriangleHeight = (points: [Point, Point, Point], base: number): number => {
+  // Area = 0.5 * base * height, so height = 2 * area / base
+  const area = calculateTriangleArea(points);
+  return (2 * area) / base;
+};
+
+// Helper function to calculate triangle angles in degrees
+const calculateTriangleAngles = (a: number, b: number, c: number): [number, number, number] => {
+  // Law of cosines: cos(A) = (b² + c² - a²) / (2bc)
+  const angleA = Math.acos((b * b + c * c - a * a) / (2 * b * c)) * (180 / Math.PI);
+  const angleB = Math.acos((a * a + c * c - b * b) / (2 * a * c)) * (180 / Math.PI);
+  const angleC = 180 - angleA - angleB; // Sum of angles in a triangle is 180°
+  
+  return [angleA, angleB, angleC];
+};
+
 // Default pixel to physical unit conversion (standard 96 DPI: 1cm = 37.8px)
 const DEFAULT_PIXELS_PER_CM = 60;
 // 1 inch = 96px on standard DPI screens
@@ -316,6 +333,14 @@ export function useShapeOperations() {
         // Calculate area in pixels
         const areaPx = calculateTriangleArea(tri.points);
         
+        // Calculate height using the longest side as base
+        const basePx = Math.max(side1Px, side2Px, side3Px);
+        const heightPx = calculateTriangleHeight(tri.points, basePx);
+        
+        // Calculate angles
+        const angles = calculateTriangleAngles(side1Px, side2Px, side3Px);
+        const anglesStr = angles.map(angle => angle.toFixed(1)).join('° + ') + '°';
+        
         if (measurementUnit === 'cm') {
           // Convert to centimeters
           const side1Cm = pixelsToCm(side1Px);
@@ -325,13 +350,16 @@ export function useShapeOperations() {
           // Convert area px² to cm²
           const areaCm = pixelsToCm(areaPx) * pixelsToCm(1);
           const perimeterCm = side1Cm + side2Cm + side3Cm;
+          const heightCm = pixelsToCm(heightPx);
           
           return {
             side1: side1Cm.toFixed(2),
             side2: side2Cm.toFixed(2),
             side3: side3Cm.toFixed(2),
             area: areaCm.toFixed(2),
-            perimeter: perimeterCm.toFixed(2)
+            perimeter: perimeterCm.toFixed(2),
+            height: heightCm.toFixed(2),
+            angles: anglesStr
           };
         } else {
           // Convert to inches
@@ -342,13 +370,16 @@ export function useShapeOperations() {
           // Convert area px² to in²
           const areaInches = pixelsToInches(areaPx) * pixelsToInches(1);
           const perimeterInches = side1Inches + side2Inches + side3Inches;
+          const heightInches = pixelsToInches(heightPx);
           
           return {
             side1: side1Inches.toFixed(2),
             side2: side2Inches.toFixed(2),
             side3: side3Inches.toFixed(2),
             area: areaInches.toFixed(2),
-            perimeter: perimeterInches.toFixed(2)
+            perimeter: perimeterInches.toFixed(2),
+            height: heightInches.toFixed(2),
+            angles: anglesStr
           };
         }
       }

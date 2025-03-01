@@ -29,7 +29,8 @@
     "side2": "Side 2",
     "side3": "Side 3",
     "area": "Area",
-    "perimeter": "Perimeter"
+    "perimeter": "Perimeter",
+    "angles": "Interior Angles"
   },
   "unitSuffixes": {
     "area": "{unit}²",
@@ -40,7 +41,8 @@
     "width": "{unit}",
     "height": "{unit}",
     "radius": "{unit}",
-    "diameter": "{unit}"
+    "diameter": "{unit}",
+    "angles": "°"
   },
   "formulaExplanations": {
     "circle": {
@@ -60,7 +62,9 @@
       "side2": "The length of one of the sides of the triangle.",
       "side3": "The length of one of the sides of the triangle.",
       "area": "The space inside the triangle.",
-      "perimeter": "The distance around the triangle (sum of all sides)."
+      "perimeter": "The distance around the triangle (sum of all sides).",
+      "height": "The perpendicular distance from a vertex to the opposite side (base).",
+      "angles": "The sum of the interior angles of a triangle is always 180 degrees."
     }
   },
   "tooltips": {
