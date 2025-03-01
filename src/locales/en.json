@@ -1,0 +1,44 @@
+{
+  "appTitle": "Geometry Visualizer",
+  "appDescription": "Create, manipulate, and understand geometric shapes interactively",
+  "clearCanvas": "Clear Canvas",
+  "gettingStarted": "Getting Started",
+  "selectShapeTool": "Select a shape tool",
+  "clickAndDrag": "Click and drag to create",
+  "useControls": "Use controls",
+  "measurements": "Measurements",
+  "selectShapeToViewMeasurements": "Select a shape to view measurements",
+  "units": {
+    "label": "Measurement Units",
+    "placeholder": "Select a unit",
+    "centimeters": "Centimeters",
+    "inches": "Inches"
+  },
+  "shapeNames": {
+    "circle": "Circle",
+    "rectangle": "Rectangle",
+    "triangle": "Triangle"
+  },
+  "measurementLabels": {
+    "radius": "Radius",
+    "diameter": "Diameter",
+    "width": "Width",
+    "height": "Height",
+    "side1": "Side 1",
+    "side2": "Side 2",
+    "side3": "Side 3",
+    "area": "Area",
+    "perimeter": "Perimeter"
+  },
+  "unitSuffixes": {
+    "area": "{unit}²",
+    "perimeter": "{unit}",
+    "side1": "{unit}",
+    "side2": "{unit}",
+    "side3": "{unit}",
+    "width": "{unit}",
+    "height": "{unit}",
+    "radius": "{unit}",
+    "diameter": "{unit}"
+  }
+}

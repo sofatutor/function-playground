@@ -1,0 +1,44 @@
+{
+  "appTitle": "Geometrie-Visualisierer",
+  "appDescription": "Erstellen, manipulieren und verstehen Sie geometrische Formen interaktiv",
+  "clearCanvas": "Leinwand leeren",
+  "gettingStarted": "Erste Schritte",
+  "selectShapeTool": "Wählen Sie ein Formwerkzeug",
+  "clickAndDrag": "Klicken und ziehen Sie",
+  "useControls": "Nutzen Sie die Steuerung",
+  "measurements": "Messungen",
+  "selectShapeToViewMeasurements": "Wählen Sie eine Form aus, um Messungen anzuzeigen",
+  "units": {
+    "label": "Maßeinheit",
+    "placeholder": "Einheit auswählen",
+    "centimeters": "Zentimeter",
+    "inches": "Zoll"
+  },
+  "shapeNames": {
+    "circle": "Kreis",
+    "rectangle": "Rechteck",
+    "triangle": "Dreieck"
+  },
+  "measurementLabels": {
+    "radius": "Radius",
+    "diameter": "Durchmesser",
+    "width": "Breite",
+    "height": "Höhe",
+    "side1": "Seite 1",
+    "side2": "Seite 2",
+    "side3": "Seite 3",
+    "area": "Fläche",
+    "perimeter": "Umfang"
+  },
+  "unitSuffixes": {
+    "area": "{unit}²",
+    "perimeter": "{unit}",
+    "side1": "{unit}",
+    "side2": "{unit}",
+    "side3": "{unit}",
+    "width": "{unit}",
+    "height": "{unit}",
+    "radius": "{unit}",
+    "diameter": "{unit}"
+  }
+}
