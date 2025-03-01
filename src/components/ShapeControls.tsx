@@ -1,3 +1,4 @@
+
 import React from 'react';
 import type { AnyShape } from '@/types/shapes';
 
@@ -76,17 +77,29 @@ const ShapeControls: React.FC<ShapeControlsProps> = ({
     }
     case 'triangle': {
       const tri = shape as Extract<AnyShape, { type: 'triangle' }>;
-      // Resize point at first vertex
+      
+      // Calculate the center of the triangle
+      const centerX = (tri.points[0].x + tri.points[1].x + tri.points[2].x) / 3;
+      const centerY = (tri.points[0].y + tri.points[1].y + tri.points[2].y) / 3;
+      
+      // Calculate the top-most point of the triangle
+      const minY = Math.min(tri.points[0].y, tri.points[1].y, tri.points[2].y);
+      const topPointIndex = tri.points.findIndex(p => p.y === minY);
+      
+      // Resize point at the bottommost vertex
+      const maxY = Math.max(tri.points[0].y, tri.points[1].y, tri.points[2].y);
+      const bottomPointIndex = tri.points.findIndex(p => p.y === maxY);
+      
       controlPoints = [
         { 
-          x: tri.points[1].x, 
-          y: tri.points[1].y, 
+          x: tri.points[bottomPointIndex].x, 
+          y: tri.points[bottomPointIndex].y, 
           type: 'resize' 
         },
-        // Rotation control above the shape
+        // Position the rotation control above the top of the triangle
         { 
-          x: (tri.points[0].x + tri.points[1].x + tri.points[2].x) / 3, 
-          y: (tri.points[0].y + tri.points[1].y + tri.points[2].y) / 3 - 30, 
+          x: centerX, 
+          y: minY - 20, 
           type: 'rotate' 
         }
       ];
