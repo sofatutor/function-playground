@@ -29,7 +29,7 @@ const Index = () => {
     setActiveShapeType,
     getShapeMeasurements,
     getSelectedShape,
-    updateShapeFromMeasurement
+    updateMeasurement
   } = useShapeOperations();
 
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -47,7 +47,16 @@ const Index = () => {
   }, []);
 
   const selectedShape = getSelectedShape();
-  const measurements = selectedShape ? getShapeMeasurements(selectedShape) : {};
+  
+  // Convert measurements from numbers to strings
+  const rawMeasurements = selectedShape ? getShapeMeasurements(selectedShape) : {};
+  const measurements: Record<string, string> = {};
+  
+  // Convert each measurement to a string
+  Object.entries(rawMeasurements).forEach(([key, value]) => {
+    measurements[key] = value.toString();
+  });
+
   const t = useTranslate();
 
   return (
@@ -110,7 +119,7 @@ const Index = () => {
                 selectedShape={selectedShape}
                 measurements={measurements}
                 measurementUnit={measurementUnit}
-                onMeasurementUpdate={updateShapeFromMeasurement}
+                onMeasurementUpdate={updateMeasurement}
               />
               
               {!isFullscreen && (
