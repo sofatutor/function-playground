@@ -162,6 +162,13 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
       }
     };
     
+    // Debounced resize handler for better performance
+    let resizeTimer: NodeJS.Timeout;
+    const debouncedResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(updateCanvasSize, 100);
+    };
+    
     // Initial update
     updateCanvasSize();
     
@@ -171,13 +178,14 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     // Set up a periodic check for size changes
     const intervalCheck = setInterval(updateCanvasSize, 500);
     
-    // Update on window resize
-    window.addEventListener('resize', updateCanvasSize);
+    // Update on window resize with debouncing
+    window.addEventListener('resize', debouncedResize);
     
     // Cleanup
     return () => {
-      window.removeEventListener('resize', updateCanvasSize);
+      window.removeEventListener('resize', debouncedResize);
       clearTimeout(initialTimeout);
+      clearTimeout(resizeTimer);
       clearInterval(intervalCheck);
     };
   }, [measurementUnit, pixelsPerUnit, pixelsPerSmallUnit]);
@@ -777,8 +785,10 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
       
       <div
         ref={canvasRef}
-        className={`canvas-container ${activeMode === 'move' ? 'cursor-move' : ''}`}
-        style={{ height: isFullscreen ? 'calc(100vh - 120px)' : '500px' }}
+        className={`canvas-container ${activeMode === 'move' ? 'cursor-move' : ''} flex-grow`}
+        style={{ 
+          minHeight: isFullscreen ? 'calc(100vh - 120px)' : '400px'
+        }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}

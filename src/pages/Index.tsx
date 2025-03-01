@@ -52,13 +52,13 @@ const Index = () => {
 
   return (
     <div className={`min-h-screen bg-gray-50 ${isFullscreen ? 'p-2' : ''}`}>
-      <div className={`${isFullscreen ? 'max-w-full p-2' : 'container py-8'} transition-all duration-200`}>
+      <div className={`${isFullscreen ? 'max-w-full p-2' : 'container py-8'} transition-all duration-200 h-[calc(100vh-2rem)]`}>
         <GeometryHeader isFullscreen={isFullscreen} />
         
-        <div className={`grid ${isFullscreen ? 'grid-cols-12 gap-2' : 'grid-cols-1 lg:grid-cols-4 gap-6'}`}>
-          <div className={`${isFullscreen ? 'col-span-10' : 'lg:col-span-3'}`}>
-            <div className="flex flex-col space-y-2">
-              <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between ${isFullscreen ? 'space-y-1 sm:space-y-0 sm:space-x-1' : 'space-y-2 sm:space-y-0 sm:space-x-2'}`}>
+        <div className={`grid ${isFullscreen ? 'grid-cols-12 gap-2' : 'grid-cols-1 lg:grid-cols-4 gap-6'} h-[calc(100%-4rem)]`}>
+          <div className={`${isFullscreen ? 'col-span-10' : 'lg:col-span-3'} h-full`}>
+            <div className="flex flex-col h-full">
+              <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between ${isFullscreen ? 'space-y-1 sm:space-y-0 sm:space-x-1' : 'space-y-2 sm:space-y-0 sm:space-x-2'} mb-2`}>
                 <Toolbar
                   activeMode={activeMode}
                   activeShapeType={activeShapeType}

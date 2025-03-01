@@ -1,4 +1,3 @@
-
 import React from 'react';
 import type { AnyShape } from '@/types/shapes';
 
@@ -65,18 +64,12 @@ const ShapeControls: React.FC<ShapeControlsProps> = ({
     }
     case 'circle': {
       const circle = shape as Extract<AnyShape, { type: 'circle' }>;
-      // Resize point at right edge
+      // Only add resize point for circles, no rotation
       controlPoints = [
         { 
           x: circle.position.x + circle.radius, 
           y: circle.position.y, 
           type: 'resize' 
-        },
-        // Rotation control at top
-        { 
-          x: circle.position.x, 
-          y: circle.position.y - circle.radius - 20, 
-          type: 'rotate' 
         }
       ];
       break;
@@ -101,6 +94,7 @@ const ShapeControls: React.FC<ShapeControlsProps> = ({
     }
   }
 
+  // Only render rotation control points if the active mode is 'rotate'
   return (
     <>
       {controlPoints.map((point, index) => (
