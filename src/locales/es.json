@@ -30,11 +30,16 @@
     "side3": "Lado 3",
     "area": "Área",
     "perimeter": "Perímetro",
-    "angles": "Ángulos Interiores"
+    "circumference": "Circunferencia",
+    "angles": "Ángulos interiores",
+    "angle1": "Ángulo 1",
+    "angle2": "Ángulo 2",
+    "angle3": "Ángulo 3"
   },
   "unitSuffixes": {
     "area": "{unit}²",
     "perimeter": "{unit}",
+    "circumference": "{unit}",
     "side1": "{unit}",
     "side2": "{unit}",
     "side3": "{unit}",
@@ -42,7 +47,10 @@
     "height": "{unit}",
     "radius": "{unit}",
     "diameter": "{unit}",
-    "angles": "°"
+    "angles": "°",
+    "angle1": "°",
+    "angle2": "°",
+    "angle3": "°"
   },
   "formulaExplanations": {
     "circle": {
@@ -64,7 +72,10 @@
       "area": "El espacio dentro del triángulo.",
       "perimeter": "La distancia alrededor del triángulo (suma de todos los lados).",
       "height": "La distancia perpendicular desde un vértice hasta el lado opuesto (base).",
-      "angles": "La suma de los ángulos interiores de un triángulo siempre es 180 grados."
+      "angles": "La suma de los ángulos interiores de un triángulo siempre es 180 grados.",
+      "angle1": "El ángulo entre el lado 3 y el lado 2. Cuando un ángulo cambia, los otros se ajustan para mantener una suma de 180°.",
+      "angle2": "El ángulo entre el lado 1 y el lado 3. Cuando un ángulo cambia, los otros se ajustan para mantener una suma de 180°.",
+      "angle3": "El ángulo entre el lado 1 y el lado 2. Cuando un ángulo cambia, los otros se ajustan para mantener una suma de 180°."
     }
   },
   "tooltips": {

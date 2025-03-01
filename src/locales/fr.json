@@ -28,13 +28,18 @@
     "side1": "Côté 1",
     "side2": "Côté 2",
     "side3": "Côté 3",
-    "area": "Aire",
+    "area": "Surface",
     "perimeter": "Périmètre",
-    "angles": "Angles Intérieurs"
+    "circumference": "Circonférence",
+    "angles": "Angles intérieurs",
+    "angle1": "Angle 1",
+    "angle2": "Angle 2",
+    "angle3": "Angle 3"
   },
   "unitSuffixes": {
     "area": "{unit}²",
     "perimeter": "{unit}",
+    "circumference": "{unit}",
     "side1": "{unit}",
     "side2": "{unit}",
     "side3": "{unit}",
@@ -42,14 +47,18 @@
     "height": "{unit}",
     "radius": "{unit}",
     "diameter": "{unit}",
-    "angles": "°"
+    "angles": "°",
+    "angle1": "°",
+    "angle2": "°",
+    "angle3": "°"
   },
   "formulaExplanations": {
     "circle": {
       "radius": "La distance du centre au bord du cercle.",
       "diameter": "La distance à travers le cercle en passant par le centre.",
       "area": "L'espace à l'intérieur du cercle.",
-      "perimeter": "La distance autour du cercle, aussi appelée circonférence."
+      "perimeter": "La distance autour du cercle, aussi appelée circonférence.",
+      "circumference": "La distance autour du cercle, égale à 2πr ou πd."
     },
     "rectangle": {
       "width": "La dimension horizontale du rectangle.",
@@ -64,7 +73,10 @@
       "area": "L'espace à l'intérieur du triangle.",
       "perimeter": "La distance autour du triangle (somme de tous les côtés).",
       "height": "La distance perpendiculaire d'un sommet au côté opposé (base).",
-      "angles": "La somme des angles intérieurs d'un triangle est toujours de 180 degrés."
+      "angles": "La somme des angles intérieurs d'un triangle est toujours de 180 degrés.",
+      "angle1": "L'angle entre le côté 3 et le côté 2. Lorsqu'un angle change, les autres s'ajustent pour maintenir une somme de 180°.",
+      "angle2": "L'angle entre le côté 1 et le côté 3. Lorsqu'un angle change, les autres s'ajustent pour maintenir une somme de 180°.",
+      "angle3": "L'angle entre le côté 1 et le côté 2. Lorsqu'un angle change, les autres s'ajustent pour maintenir une somme de 180°."
     }
   },
   "tooltips": {

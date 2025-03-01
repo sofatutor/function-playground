@@ -30,11 +30,16 @@
     "side3": "Seite 3",
     "area": "Fläche",
     "perimeter": "Umfang",
-    "angles": "Innenwinkel"
+    "circumference": "Kreisumfang",
+    "angles": "Innenwinkel",
+    "angle1": "Winkel 1",
+    "angle2": "Winkel 2",
+    "angle3": "Winkel 3"
   },
   "unitSuffixes": {
     "area": "{unit}²",
     "perimeter": "{unit}",
+    "circumference": "{unit}",
     "side1": "{unit}",
     "side2": "{unit}",
     "side3": "{unit}",
@@ -42,14 +47,18 @@
     "height": "{unit}",
     "radius": "{unit}",
     "diameter": "{unit}",
-    "angles": "°"
+    "angles": "°",
+    "angle1": "°",
+    "angle2": "°",
+    "angle3": "°"
   },
   "formulaExplanations": {
     "circle": {
       "radius": "Der Abstand vom Mittelpunkt zum Rand des Kreises.",
-      "diameter": "Der Durchmesser des Kreises, gemessen durch den Mittelpunkt.",
+      "diameter": "Der Abstand durch den Mittelpunkt des Kreises.",
       "area": "Die Fläche innerhalb des Kreises.",
-      "perimeter": "Der Umfang des Kreises, auch als Kreislinie bekannt."
+      "perimeter": "Der Umfang des Kreises, auch Kreisumfang genannt.",
+      "circumference": "Der Umfang des Kreises, gleich 2πr oder πd."
     },
     "rectangle": {
       "width": "Die horizontale Ausdehnung des Rechtecks.",
@@ -64,7 +73,10 @@
       "area": "Die Fläche innerhalb des Dreiecks.",
       "perimeter": "Der Umfang des Dreiecks (Summe aller Seiten).",
       "height": "Der senkrechte Abstand von einer Ecke zur gegenüberliegenden Seite (Basis).",
-      "angles": "Die Summe der Innenwinkel eines Dreiecks beträgt immer 180 Grad."
+      "angles": "Die Summe der Innenwinkel eines Dreiecks beträgt immer 180 Grad.",
+      "angle1": "Der Winkel zwischen Seite 3 und Seite 2. Wenn sich ein Winkel ändert, passen sich die anderen an, um eine Summe von 180° zu erhalten.",
+      "angle2": "Der Winkel zwischen Seite 1 und Seite 3. Wenn sich ein Winkel ändert, passen sich die anderen an, um eine Summe von 180° zu erhalten.",
+      "angle3": "Der Winkel zwischen Seite 1 und Seite 2. Wenn sich ein Winkel ändert, passen sich die anderen an, um eine Summe von 180° zu erhalten."
     }
   },
   "tooltips": {
