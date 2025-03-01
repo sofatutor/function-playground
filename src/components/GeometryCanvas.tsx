@@ -16,6 +16,7 @@ interface GeometryCanvasProps {
   onShapeMove: (id: string, newPosition: Point) => void;
   onShapeResize: (id: string, factor: number) => void;
   onShapeRotate: (id: string, angle: number) => void;
+  onModeChange?: (mode: OperationMode) => void;
 }
 
 const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
@@ -29,7 +30,8 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
   onShapeCreate,
   onShapeMove,
   onShapeResize,
-  onShapeRotate
+  onShapeRotate,
+  onModeChange
 }) => {
   console.log('GeometryCanvas received props:', { 
     shapes, 
@@ -383,7 +385,14 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
       );
       
       if (distance > 5) {
-        onShapeCreate(drawStart, drawCurrent);
+        const newShapeId = onShapeCreate(drawStart, drawCurrent);
+        
+        // Switch to select mode after creating a shape
+        // We need to use the parent component's setActiveMode function
+        // This will be passed through props
+        if (onModeChange) {
+          onModeChange('select');
+        }
       }
     }
     
@@ -638,28 +647,37 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
             />
           );
         case 'triangle': {
-          // Create a right-angled triangle to match the one created in useShapeOperations
-          const distance = Math.sqrt(
-            Math.pow(drawCurrent.x - drawStart.x, 2) + 
-            Math.pow(drawCurrent.y - drawStart.y, 2)
-          );
+          // Create a true right-angled triangle with a 90-degree angle at the top
           
-          const angle = Math.atan2(
-            drawCurrent.y - drawStart.y,
-            drawCurrent.x - drawStart.x
-          );
+          // Calculate the width based on the horizontal distance
+          const width = Math.abs(drawCurrent.x - drawStart.x) * 1.2;
           
-          // First point (start point)
-          const p1 = drawStart;
-          // Second point (end point)
+          // Determine the direction of the drag (left-to-right or right-to-left)
+          const isRightward = drawCurrent.x >= drawStart.x;
+          
+          // Calculate the midpoint between start and end points (horizontal only)
+          const midX = (drawStart.x + drawCurrent.x) / 2;
+          const topY = Math.min(drawStart.y, drawCurrent.y) - width/4;
+          
+          // Create the right angle at the top point (p1)
+          const p1 = { 
+            x: midX,
+            y: topY
+          }; // Top point with right angle
+          
+          // Create the other two points to form a right-angled triangle
+          // For a right angle at p1, we need the vectors p1->p2 and p1->p3 to be perpendicular
+          
+          // Point directly below p1
           const p2 = {
-            x: drawStart.x + distance * Math.cos(angle),
-            y: drawStart.y + distance * Math.sin(angle)
+            x: midX,
+            y: topY + width
           };
-          // Third point (perpendicular to create right angle at p1)
+          
+          // Point to the right or left of p1 depending on drag direction
           const p3 = {
-            x: drawStart.x + distance * Math.sin(angle), // Use sin for x to create perpendicular direction
-            y: drawStart.y - distance * Math.cos(angle)  // Use negative cos for y to create perpendicular direction
+            x: isRightward ? midX + width : midX - width,
+            y: topY
           };
           
           // Calculate bounding box

@@ -91,6 +91,7 @@ const Index = () => {
                 onShapeMove={moveShape}
                 onShapeResize={resizeShape}
                 onShapeRotate={rotateShape}
+                onModeChange={setActiveMode}
               />
             </div>
           </div>
