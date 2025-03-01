@@ -83,6 +83,7 @@ const MeasurementItem: React.FC<MeasurementItemProps> = ({
   const hasFormula = 
     measureKey === 'area' || 
     measureKey === 'perimeter' || 
+    measureKey === 'circumference' || 
     (shape.type === 'triangle' && (
       measureKey === 'height' || 
       measureKey === 'angles' || 
