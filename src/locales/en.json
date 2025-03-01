@@ -8,6 +8,7 @@
   "useControls": "Use controls",
   "measurements": "Measurements",
   "selectShapeToViewMeasurements": "Select a shape to view measurements",
+  "formula": "Formula",
   "units": {
     "label": "Measurement Units",
     "placeholder": "Select a unit",
@@ -40,5 +41,34 @@
     "height": "{unit}",
     "radius": "{unit}",
     "diameter": "{unit}"
+  },
+  "formulaExplanations": {
+    "circle": {
+      "radius": "The distance from the center to the edge of the circle.",
+      "diameter": "The distance across the circle through the center.",
+      "area": "The space inside the circle.",
+      "perimeter": "The distance around the circle, also called circumference."
+    },
+    "rectangle": {
+      "width": "The horizontal dimension of the rectangle.",
+      "height": "The vertical dimension of the rectangle.",
+      "area": "The space inside the rectangle.",
+      "perimeter": "The distance around the rectangle."
+    },
+    "triangle": {
+      "side1": "The length of one of the sides of the triangle.",
+      "side2": "The length of one of the sides of the triangle.",
+      "side3": "The length of one of the sides of the triangle.",
+      "area": "The space inside the triangle.",
+      "perimeter": "The distance around the triangle (sum of all sides)."
+    }
+  },
+  "tooltips": {
+    "rectangle": "Rectangle",
+    "circle": "Circle",
+    "triangle": "Triangle",
+    "select": "Select & Move Shapes",
+    "rotate": "Rotate Shape",
+    "delete": "Delete Selected"
   }
 }

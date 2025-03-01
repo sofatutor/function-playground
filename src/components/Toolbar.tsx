@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -7,6 +6,9 @@ import { Square, Circle, Triangle, MousePointer, Move, RotateCw, Trash } from 'l
 import 'katex/dist/katex.min.css';
 import { InlineMath } from 'react-katex';
 import type { ShapeType, OperationMode } from '@/types/shapes';
+import { useTranslate } from '@/utils/translate';
+import { useConfig } from '@/context/ConfigContext';
+import { getFormula } from '@/utils/geometryUtils';
 
 interface ToolbarProps {
   activeMode: OperationMode;
@@ -29,12 +31,15 @@ const Toolbar: React.FC<ToolbarProps> = ({
   hasSelectedShape,
   canDelete
 }) => {
+  const t = useTranslate();
+  const { language } = useConfig();
+  
   return (
     <div className="flex items-center space-x-1 p-1 bg-white rounded-lg shadow-sm border border-gray-200 animate-fade-in">
       <ToolButton 
         active={activeMode === 'select'}
         onClick={() => onModeChange('select')}
-        tooltip="Select & Move Shapes"
+        tooltip={t('tooltips.select')}
       >
         <MousePointer size={18} />
       </ToolButton>
@@ -47,9 +52,9 @@ const Toolbar: React.FC<ToolbarProps> = ({
           onModeChange('create');
           onShapeTypeChange('rectangle');
         }}
-        tooltip="Rectangle"
-        formula="A = w \\times h"
-        formulaExplanation="Area of a rectangle: width × height"
+        tooltip={t('tooltips.rectangle')}
+        formula={getFormula('rectangle', 'area', language)}
+        formulaExplanation={t('formulaExplanations.rectangle.area')}
       >
         <Square size={18} />
       </ToolButton>
@@ -60,9 +65,9 @@ const Toolbar: React.FC<ToolbarProps> = ({
           onModeChange('create');
           onShapeTypeChange('circle');
         }}
-        tooltip="Circle"
-        formula="A = \\pi r^2"
-        formulaExplanation="Area of a circle: π × radius²"
+        tooltip={t('tooltips.circle')}
+        formula={getFormula('circle', 'area', language)}
+        formulaExplanation={t('formulaExplanations.circle.area')}
       >
         <Circle size={18} />
       </ToolButton>
@@ -73,9 +78,9 @@ const Toolbar: React.FC<ToolbarProps> = ({
           onModeChange('create');
           onShapeTypeChange('triangle');
         }}
-        tooltip="Triangle"
-        formula="A = \\frac{1}{2} \\times b \\times h"
-        formulaExplanation="Area of a triangle: 1/2 × base × height"
+        tooltip={t('tooltips.triangle')}
+        formula={getFormula('triangle', 'area', language)}
+        formulaExplanation={t('formulaExplanations.triangle.area')}
       >
         <Triangle size={18} />
       </ToolButton>
@@ -86,7 +91,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
         active={activeMode === 'rotate'}
         onClick={() => onModeChange('rotate')}
         disabled={!hasSelectedShape}
-        tooltip="Rotate Shape"
+        tooltip={t('tooltips.rotate')}
       >
         <RotateCw size={18} />
       </ToolButton>
@@ -96,7 +101,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
       <ToolButton 
         onClick={onDelete}
         disabled={!canDelete}
-        tooltip="Delete Selected"
+        tooltip={t('tooltips.delete')}
         variant="destructive"
       >
         <Trash size={18} />
@@ -126,6 +131,8 @@ const ToolButton: React.FC<ToolButtonProps> = ({
   formulaExplanation,
   variant = 'default'
 }) => {
+  const t = useTranslate();
+  
   return (
     <TooltipProvider>
       <Tooltip>

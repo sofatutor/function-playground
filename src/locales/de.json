@@ -4,12 +4,13 @@
   "clearCanvas": "Leinwand leeren",
   "gettingStarted": "Erste Schritte",
   "selectShapeTool": "Wählen Sie ein Formwerkzeug",
-  "clickAndDrag": "Klicken und ziehen Sie",
-  "useControls": "Nutzen Sie die Steuerung",
+  "clickAndDrag": "Klicken und ziehen Sie, um zu erstellen",
+  "useControls": "Verwenden Sie die Steuerung",
   "measurements": "Messungen",
   "selectShapeToViewMeasurements": "Wählen Sie eine Form aus, um Messungen anzuzeigen",
+  "formula": "Formel",
   "units": {
-    "label": "Maßeinheit",
+    "label": "Maßeinheiten",
     "placeholder": "Einheit auswählen",
     "centimeters": "Zentimeter",
     "inches": "Zoll"
@@ -40,5 +41,34 @@
     "height": "{unit}",
     "radius": "{unit}",
     "diameter": "{unit}"
+  },
+  "formulaExplanations": {
+    "circle": {
+      "radius": "Der Abstand vom Mittelpunkt zum Rand des Kreises.",
+      "diameter": "Der Durchmesser des Kreises, gemessen durch den Mittelpunkt.",
+      "area": "Die Fläche innerhalb des Kreises.",
+      "perimeter": "Der Umfang des Kreises, auch als Kreislinie bekannt."
+    },
+    "rectangle": {
+      "width": "Die horizontale Ausdehnung des Rechtecks.",
+      "height": "Die vertikale Ausdehnung des Rechtecks.",
+      "area": "Die Fläche innerhalb des Rechtecks.",
+      "perimeter": "Der Umfang des Rechtecks."
+    },
+    "triangle": {
+      "side1": "Die Länge einer Seite des Dreiecks.",
+      "side2": "Die Länge einer Seite des Dreiecks.",
+      "side3": "Die Länge einer Seite des Dreiecks.",
+      "area": "Die Fläche innerhalb des Dreiecks.",
+      "perimeter": "Der Umfang des Dreiecks (Summe aller Seiten)."
+    }
+  },
+  "tooltips": {
+    "rectangle": "Rechteck",
+    "circle": "Kreis",
+    "triangle": "Dreieck",
+    "select": "Formen auswählen & bewegen",
+    "rotate": "Form drehen",
+    "delete": "Ausgewählte löschen"
   }
 }
