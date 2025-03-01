@@ -8,6 +8,7 @@ interface GeometryCanvasProps {
   shapes: AnyShape[];
   selectedShapeId: string | null;
   activeMode: OperationMode;
+  activeShapeType: ShapeType;
   measurementUnit: MeasurementUnit;
   isFullscreen?: boolean;
   onShapeSelect: (id: string | null) => void;
@@ -21,6 +22,7 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
   shapes,
   selectedShapeId,
   activeMode,
+  activeShapeType,
   measurementUnit,
   isFullscreen = false,
   onShapeSelect,
@@ -32,7 +34,8 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
   console.log('GeometryCanvas received props:', { 
     shapes, 
     selectedShapeId, 
-    activeMode, 
+    activeMode,
+    activeShapeType,
     measurementUnit: measurementUnit, 
     measurementUnitType: typeof measurementUnit 
   });
@@ -47,7 +50,6 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
   const [originalSize, setOriginalSize] = useState<number | null>(null);
   const [rotateStart, setRotateStart] = useState<Point | null>(null);
   const [originalRotation, setOriginalRotation] = useState<number>(0);
-  const [currentShapeType, setCurrentShapeType] = useState<ShapeType>('rectangle');
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   
   // Add state for calibration
@@ -147,16 +149,6 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     setRotateStart(null);
     setOriginalRotation(0);
   }, [activeMode]);
-
-  // Try to infer the current shape type from the shapes array
-  useEffect(() => {
-    if (shapes.length > 0 && selectedShapeId) {
-      const selectedShape = shapes.find(s => s.id === selectedShapeId);
-      if (selectedShape) {
-        setCurrentShapeType(selectedShape.type);
-      }
-    }
-  }, [shapes, selectedShapeId]);
 
   // Measure canvas on mount and resize
   useEffect(() => {
@@ -516,10 +508,13 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
       Z
     `;
     
+    // Generate unique IDs for the filter and shadow
+    const filterId = `shadow-blur-${tri.id}`;
+    
     return (
       <div
         key={tri.id}
-        className={`absolute ${tri.selected ? 'shadow-md' : ''}`}
+        className="absolute"
         style={{
           left: minX,
           top: minY,
@@ -528,7 +523,32 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
           cursor: activeMode === 'select' ? 'pointer' : 'default'
         }}
       >
-        <svg width={width} height={height}>
+        <svg 
+          width={width + 10} 
+          height={height + 10} 
+          style={{ 
+            position: 'absolute', 
+            top: -5, 
+            left: -5,
+            overflow: 'visible'
+          }}
+        >
+          {tri.selected && (
+            <>
+              <defs>
+                <filter id={filterId} x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur in="SourceGraphic" stdDeviation="2" />
+                </filter>
+              </defs>
+              <path
+                d={pathData}
+                fill="rgba(0,0,0,0.3)"
+                transform={`translate(3, 3) rotate(${tri.rotation}, ${width/2}, ${height/2})`}
+                filter={`url(#${filterId})`}
+                style={{ pointerEvents: 'none' }}
+              />
+            </>
+          )}
           <path
             d={pathData}
             fill={tri.fill}
@@ -550,7 +570,7 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     const height = Math.abs(drawCurrent.y - drawStart.y);
     
     if (activeMode === 'create') {
-      switch (currentShapeType) {
+      switch (activeShapeType) {
         case 'circle': {
           const radius = Math.sqrt(
             Math.pow(drawCurrent.x - drawStart.x, 2) + 
