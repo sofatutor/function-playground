@@ -537,12 +537,14 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
             <>
               <defs>
                 <filter id={filterId} x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur in="SourceGraphic" stdDeviation="2" />
+                  <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
                 </filter>
               </defs>
               <path
                 d={pathData}
-                fill="rgba(0,0,0,0.3)"
+                fill="transparent"
+                stroke="rgba(0,0,0,0.3)"
+                strokeWidth="4"
                 transform={`translate(3, 3) rotate(${tri.rotation}, ${width/2}, ${height/2})`}
                 filter={`url(#${filterId})`}
                 style={{ pointerEvents: 'none' }}
