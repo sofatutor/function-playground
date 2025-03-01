@@ -253,7 +253,21 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     switch (activeMode) {
       case 'select': {
         const shape = getShapeAtPosition(point);
-        onShapeSelect(shape ? shape.id : null);
+        
+        if (shape) {
+          // If a shape is clicked, select it and prepare for potential movement
+          onShapeSelect(shape.id);
+          setDragStart(point);
+          
+          // Store the original position for calculating movement delta
+          const selectedShape = shapes.find(s => s.id === shape.id);
+          if (selectedShape) {
+            setOriginalPosition(selectedShape.position);
+          }
+        } else {
+          // If clicking on empty space, deselect
+          onShapeSelect(null);
+        }
         break;
       }
       case 'create': {
@@ -262,14 +276,25 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
         setDrawCurrent(point);
         break;
       }
-      case 'move': {
+      case 'resize': {
+        // Keep existing resize functionality
         if (!selectedShapeId) break;
         
         const shape = shapes.find(s => s.id === selectedShapeId);
         if (!shape) break;
         
-        setDragStart(point);
-        setOriginalPosition(shape.position);
+        setResizeStart(point);
+        break;
+      }
+      case 'rotate': {
+        // Keep existing rotate functionality
+        if (!selectedShapeId) break;
+        
+        const shape = shapes.find(s => s.id === selectedShapeId);
+        if (!shape) break;
+        
+        setRotateStart(point);
+        setOriginalRotation(shape.rotation);
         break;
       }
       default:
@@ -281,21 +306,26 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     const point = getCanvasPoint(e);
     
     switch (activeMode) {
+      case 'select': {
+        // If we have a drag start and original position, we're moving a selected shape
+        if (dragStart && originalPosition && selectedShapeId) {
+          const deltaX = point.x - dragStart.x;
+          const deltaY = point.y - dragStart.y;
+          
+          // Only start moving if the mouse has moved a minimum distance
+          const dragDistance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+          if (dragDistance > 3) {
+            onShapeMove(selectedShapeId, {
+              x: originalPosition.x + deltaX,
+              y: originalPosition.y + deltaY
+            });
+          }
+        }
+        break;
+      }
       case 'create': {
         if (!isDrawing || !drawStart) break;
         setDrawCurrent(point);
-        break;
-      }
-      case 'move': {
-        if (!dragStart || !originalPosition || !selectedShapeId) break;
-        
-        const deltaX = point.x - dragStart.x;
-        const deltaY = point.y - dragStart.y;
-        
-        onShapeMove(selectedShapeId, {
-          x: originalPosition.x + deltaX,
-          y: originalPosition.y + deltaY
-        });
         break;
       }
       case 'resize': {
@@ -366,6 +396,7 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     setResizeStart(null);
     setOriginalSize(null);
     setRotateStart(null);
+    setOriginalRotation(0);
   };
 
   const handleResizeStart = (e: React.MouseEvent) => {

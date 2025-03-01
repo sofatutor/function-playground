@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -32,7 +31,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
       <ToolButton 
         active={activeMode === 'select'}
         onClick={() => onModeChange('select')}
-        tooltip="Select Shape"
+        tooltip="Select & Move Shapes"
       >
         <MousePointer size={18} />
       </ToolButton>
@@ -73,15 +72,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
       </ToolButton>
       
       <Separator orientation="vertical" className="h-8 mx-1" />
-      
-      <ToolButton 
-        active={activeMode === 'move'}
-        onClick={() => onModeChange('move')}
-        disabled={!hasSelectedShape}
-        tooltip="Move Shape"
-      >
-        <Move size={18} />
-      </ToolButton>
       
       <ToolButton 
         active={activeMode === 'rotate'}
