@@ -40,7 +40,13 @@ const MeasurementPanel: React.FC<MeasurementPanelProps> = ({
   // Function to handle saving the edited value
   const handleSaveEdit = () => {
     if (editingKey) {
-      onMeasurementUpdate(editingKey, editValue);
+      // For angles, ensure we're using integer values
+      if (editingKey.startsWith('angle')) {
+        const intValue = Math.round(parseFloat(editValue)).toString();
+        onMeasurementUpdate(editingKey, intValue);
+      } else {
+        onMeasurementUpdate(editingKey, editValue);
+      }
       setEditingKey(null);
     }
   };
@@ -62,6 +68,15 @@ const MeasurementPanel: React.FC<MeasurementPanelProps> = ({
     } else if (e.key === 'Escape') {
       handleCancelEdit();
     }
+  };
+
+  // Function to format measurement values
+  const formatValue = (key: string, value: string): string => {
+    // For angles, display as integers
+    if (key.startsWith('angle')) {
+      return Math.round(parseFloat(value)).toString();
+    }
+    return value;
   };
 
   if (!selectedShape) {
@@ -107,7 +122,25 @@ const MeasurementPanel: React.FC<MeasurementPanelProps> = ({
     // Height in triangles is calculated, not directly editable
     if (selectedShape.type === 'triangle' && key === 'height') return false;
     
+    // Make individual angles editable for triangles
+    if (selectedShape.type === 'triangle' && (key === 'angle1' || key === 'angle2' || key === 'angle3')) return true;
+    
     return true;
+  };
+
+  // Determine input step and min values based on measurement type
+  const getInputProps = (key: string) => {
+    if (key.startsWith('angle')) {
+      return {
+        step: "1",
+        min: "1",
+        max: "179"
+      };
+    }
+    return {
+      step: "0.01",
+      min: "0.01"
+    };
   };
 
   return (
@@ -128,13 +161,15 @@ const MeasurementPanel: React.FC<MeasurementPanelProps> = ({
                     <span className="text-xs text-muted-foreground cursor-help flex items-center">
                       {t(`measurementLabels.${key}`)}
                       {(key === 'area' || key === 'perimeter' || 
-                        (selectedShape.type === 'triangle' && (key === 'height' || key === 'angles'))) && (
+                        (selectedShape.type === 'triangle' && (key === 'height' || key === 'angles' || 
+                        key === 'angle1' || key === 'angle2' || key === 'angle3'))) && (
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1 h-3 w-3 text-muted-foreground"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg>
                       )}
                     </span>
                   </TooltipTrigger>
                   {(key === 'area' || key === 'perimeter' || 
-                    (selectedShape.type === 'triangle' && (key === 'height' || key === 'angles'))) && (
+                    (selectedShape.type === 'triangle' && (key === 'height' || key === 'angles' || 
+                    key === 'angle1' || key === 'angle2' || key === 'angle3'))) && (
                     <TooltipContent side="top" className="max-w-xs p-4">
                       <div className="space-y-2">
                         <div className="font-medium">{t('formula')}:</div>
@@ -159,8 +194,7 @@ const MeasurementPanel: React.FC<MeasurementPanelProps> = ({
                     onKeyDown={handleKeyPress}
                     autoFocus
                     type="number"
-                    step="0.01"
-                    min="0.01"
+                    {...getInputProps(key)}
                   />
                   <div className="flex space-x-1">
                     <Button 
@@ -184,9 +218,9 @@ const MeasurementPanel: React.FC<MeasurementPanelProps> = ({
               ) : (
                 <div 
                   className={`measurement-value font-medium ${isEditable(key) ? 'cursor-pointer hover:text-geometry-primary' : ''}`}
-                  onClick={() => isEditable(key) && handleStartEdit(key, value)}
+                  onClick={() => isEditable(key) && handleStartEdit(key, formatValue(key, value))}
                 >
-                  {value} {t(`unitSuffixes.${key}`, { unit: measurementUnit })}
+                  {formatValue(key, value)} {t(`unitSuffixes.${key}`, { unit: measurementUnit })}
                   {isEditable(key) && (
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block ml-1 h-3 w-3 text-muted-foreground"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
                   )}
