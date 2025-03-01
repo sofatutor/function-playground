@@ -83,6 +83,7 @@ const Index = () => {
                 shapes={shapes}
                 selectedShapeId={selectedShapeId}
                 activeMode={activeMode}
+                activeShapeType={activeShapeType}
                 measurementUnit={measurementUnit}
                 isFullscreen={isFullscreen}
                 onShapeSelect={selectShape}
