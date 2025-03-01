@@ -1,0 +1,78 @@
+{
+  "appTitle": "Visualizador de Geometría",
+  "appDescription": "Crea, manipula y comprende formas geométricas de manera interactiva",
+  "clearCanvas": "Limpiar Lienzo",
+  "gettingStarted": "Cómo Empezar",
+  "selectShapeTool": "Selecciona una herramienta de forma",
+  "clickAndDrag": "Haz clic y arrastra para crear",
+  "useControls": "Usa los controles",
+  "measurements": "Medidas",
+  "selectShapeToViewMeasurements": "Selecciona una forma para ver las medidas",
+  "formula": "Fórmula",
+  "units": {
+    "label": "Unidades de Medida",
+    "placeholder": "Selecciona una unidad",
+    "centimeters": "Centímetros",
+    "inches": "Pulgadas"
+  },
+  "shapeNames": {
+    "circle": "Círculo",
+    "rectangle": "Rectángulo",
+    "triangle": "Triángulo"
+  },
+  "measurementLabels": {
+    "radius": "Radio",
+    "diameter": "Diámetro",
+    "width": "Ancho",
+    "height": "Alto",
+    "side1": "Lado 1",
+    "side2": "Lado 2",
+    "side3": "Lado 3",
+    "area": "Área",
+    "perimeter": "Perímetro",
+    "angles": "Ángulos Interiores"
+  },
+  "unitSuffixes": {
+    "area": "{unit}²",
+    "perimeter": "{unit}",
+    "side1": "{unit}",
+    "side2": "{unit}",
+    "side3": "{unit}",
+    "width": "{unit}",
+    "height": "{unit}",
+    "radius": "{unit}",
+    "diameter": "{unit}",
+    "angles": "°"
+  },
+  "formulaExplanations": {
+    "circle": {
+      "radius": "La distancia desde el centro hasta el borde del círculo.",
+      "diameter": "La distancia a través del círculo pasando por el centro.",
+      "area": "El espacio dentro del círculo.",
+      "perimeter": "La distancia alrededor del círculo, también llamada circunferencia."
+    },
+    "rectangle": {
+      "width": "La dimensión horizontal del rectángulo.",
+      "height": "La dimensión vertical del rectángulo.",
+      "area": "El espacio dentro del rectángulo.",
+      "perimeter": "La distancia alrededor del rectángulo."
+    },
+    "triangle": {
+      "side1": "La longitud de uno de los lados del triángulo.",
+      "side2": "La longitud de uno de los lados del triángulo.",
+      "side3": "La longitud de uno de los lados del triángulo.",
+      "area": "El espacio dentro del triángulo.",
+      "perimeter": "La distancia alrededor del triángulo (suma de todos los lados).",
+      "height": "La distancia perpendicular desde un vértice hasta el lado opuesto (base).",
+      "angles": "La suma de los ángulos interiores de un triángulo siempre es 180 grados."
+    }
+  },
+  "tooltips": {
+    "rectangle": "Rectángulo",
+    "circle": "Círculo",
+    "triangle": "Triángulo",
+    "select": "Seleccionar y Mover Formas",
+    "rotate": "Rotar Forma",
+    "delete": "Eliminar Seleccionado"
+  }
+} 

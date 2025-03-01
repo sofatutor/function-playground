@@ -1,17 +1,37 @@
 import en from '@/locales/en.json';
 import de from '@/locales/de.json';
+import es from '@/locales/es.json';
+import fr from '@/locales/fr.json';
 import { useConfig } from '@/context/ConfigContext';
+
+// Define language names for the UI
+export const languageNames = {
+  en: 'English',
+  de: 'Deutsch',
+  es: 'Español',
+  fr: 'Français'
+};
+
+// Export available languages for use in other components
+export const availableLanguages = Object.keys(languageNames);
 
 const translations = {
   en,
-  de
+  de,
+  es,
+  fr
+};
+
+// Define a type for nested translation objects
+type NestedTranslation = {
+  [key: string]: string | number | boolean | NestedTranslation;
 };
 
 // Helper function to get nested properties using dot notation
-const getNestedValue = (obj: any, path: string) => {
+const getNestedValue = (obj: NestedTranslation, path: string): any => {
   return path.split('.').reduce((prev, curr) => {
-    return prev && prev[curr] !== undefined ? prev[curr] : undefined;
-  }, obj);
+    return prev && typeof prev === 'object' ? prev[curr] : undefined;
+  }, obj as any);
 };
 
 export const useTranslate = () => {
