@@ -161,11 +161,32 @@ export function useShapeOperations() {
   
   const moveShape = useCallback((id: string, newPosition: Point) => {
     setShapes(prevShapes => 
-      prevShapes.map(shape => 
-        shape.id === id 
-          ? { ...shape, position: newPosition } 
-          : shape
-      )
+      prevShapes.map(shape => {
+        if (shape.id !== id) return shape;
+        
+        if (shape.type === 'triangle') {
+          // For triangles, we need to update each point
+          const tri = shape as Triangle;
+          const deltaX = newPosition.x - tri.position.x;
+          const deltaY = newPosition.y - tri.position.y;
+          
+          // Move each point by the same delta
+          const newPoints: [Point, Point, Point] = [
+            { x: tri.points[0].x + deltaX, y: tri.points[0].y + deltaY },
+            { x: tri.points[1].x + deltaX, y: tri.points[1].y + deltaY },
+            { x: tri.points[2].x + deltaX, y: tri.points[2].y + deltaY }
+          ];
+          
+          return {
+            ...shape,
+            position: newPosition,
+            points: newPoints
+          };
+        }
+        
+        // For other shapes, just update the position
+        return { ...shape, position: newPosition };
+      })
     );
   }, []);
   
