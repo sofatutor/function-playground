@@ -1,6 +1,6 @@
 
 import React from 'react';
-import type { AnyShape } from '@/types/shapes';
+import type { AnyShape, Line } from '@/types/shapes';
 
 interface ControlPointProps {
   x: number;
@@ -100,6 +100,25 @@ const ShapeControls: React.FC<ShapeControlsProps> = ({
         { 
           x: centerX, 
           y: minY - 20, 
+          type: 'rotate' 
+        }
+      ];
+      break;
+    }
+    case 'line': {
+      const line = shape as Line;
+      
+      // Add resize control at the end point
+      controlPoints = [
+        { 
+          x: line.endPoint.x, 
+          y: line.endPoint.y, 
+          type: 'resize' 
+        },
+        // Add rotation control perpendicular to the line
+        { 
+          x: line.position.x, 
+          y: line.position.y - 20, 
           type: 'rotate' 
         }
       ];

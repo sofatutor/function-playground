@@ -1,4 +1,6 @@
-import { AnyShape, Point, Triangle } from '@/types/shapes';
+
+import { AnyShape, Point, Triangle, Line } from '@/types/shapes';
+import { distanceBetweenPoints } from './common';
 
 // Function to select a shape
 export const selectShape = (shapes: AnyShape[], id: string | null): AnyShape[] => {
@@ -30,6 +32,30 @@ export const moveShape = (shapes: AnyShape[], id: string, newPosition: Point): A
         ...shape,
         position: newPosition,
         points: newPoints
+      };
+    }
+    
+    if (shape.type === 'line') {
+      // For lines, we need to update both start and end points
+      const line = shape as Line;
+      const deltaX = newPosition.x - line.position.x;
+      const deltaY = newPosition.y - line.position.y;
+      
+      const newStartPoint = {
+        x: line.startPoint.x + deltaX,
+        y: line.startPoint.y + deltaY
+      };
+      
+      const newEndPoint = {
+        x: line.endPoint.x + deltaX,
+        y: line.endPoint.y + deltaY
+      };
+      
+      return {
+        ...shape,
+        position: newPosition,
+        startPoint: newStartPoint,
+        endPoint: newEndPoint
       };
     }
     
@@ -68,6 +94,31 @@ export const resizeShape = (shapes: AnyShape[], id: string, factor: number): Any
           points: newPoints
         };
       }
+      case 'line': {
+        const line = shape as Line;
+        const center = line.position;
+        
+        // Scale the start and end points from the center
+        const newStartPoint = {
+          x: center.x + (line.startPoint.x - center.x) * factor,
+          y: center.y + (line.startPoint.y - center.y) * factor
+        };
+        
+        const newEndPoint = {
+          x: center.x + (line.endPoint.x - center.x) * factor,
+          y: center.y + (line.endPoint.y - center.y) * factor
+        };
+        
+        // Calculate the new length
+        const newLength = distanceBetweenPoints(newStartPoint, newEndPoint);
+        
+        return {
+          ...line,
+          startPoint: newStartPoint,
+          endPoint: newEndPoint,
+          length: newLength
+        };
+      }
       default:
         return shape;
     }
@@ -76,9 +127,52 @@ export const resizeShape = (shapes: AnyShape[], id: string, factor: number): Any
 
 // Function to rotate a shape
 export const rotateShape = (shapes: AnyShape[], id: string, angle: number): AnyShape[] => {
-  return shapes.map(shape => 
-    shape.id === id 
-      ? { ...shape, rotation: angle } 
-      : shape
-  );
+  return shapes.map(shape => {
+    if (shape.id !== id) return shape;
+    
+    if (shape.type === 'line') {
+      const line = shape as Line;
+      const center = line.position;
+      
+      // Convert angle from degrees to radians
+      const angleRad = (angle * Math.PI) / 180;
+      const cos = Math.cos(angleRad);
+      const sin = Math.sin(angleRad);
+      
+      // Rotate start point around center
+      const startX = line.startPoint.x - center.x;
+      const startY = line.startPoint.y - center.y;
+      const rotatedStartX = startX * cos - startY * sin;
+      const rotatedStartY = startX * sin + startY * cos;
+      
+      // Rotate end point around center
+      const endX = line.endPoint.x - center.x;
+      const endY = line.endPoint.y - center.y;
+      const rotatedEndX = endX * cos - endY * sin;
+      const rotatedEndY = endX * sin + endY * cos;
+      
+      // Create new points
+      const newStartPoint = {
+        x: rotatedStartX + center.x,
+        y: rotatedStartY + center.y
+      };
+      
+      const newEndPoint = {
+        x: rotatedEndX + center.x,
+        y: rotatedEndY + center.y
+      };
+      
+      return {
+        ...line,
+        startPoint: newStartPoint,
+        endPoint: newEndPoint,
+        rotation: angle
+      };
+    }
+    
+    return { 
+      ...shape, 
+      rotation: angle 
+    };
+  });
 }; 

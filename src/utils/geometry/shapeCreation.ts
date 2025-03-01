@@ -1,4 +1,5 @@
-import { ShapeType, Point, AnyShape, Circle, Rectangle, Triangle } from '@/types/shapes';
+
+import { ShapeType, Point, AnyShape, Circle, Rectangle, Triangle, Line } from '@/types/shapes';
 import { generateId, distanceBetweenPoints, DEFAULT_FILL, DEFAULT_STROKE, DEFAULT_STROKE_WIDTH } from './common';
 
 export const createShape = (
@@ -93,6 +94,30 @@ export const createShape = (
         fill: DEFAULT_FILL,
         stroke: DEFAULT_STROKE,
         strokeWidth: DEFAULT_STROKE_WIDTH
+      };
+    }
+    case 'line': {
+      // Calculate the middle point as the position
+      const position = {
+        x: (startPoint.x + endPoint.x) / 2,
+        y: (startPoint.y + endPoint.y) / 2
+      };
+      
+      // Calculate length using distance formula
+      const length = distanceBetweenPoints(startPoint, endPoint);
+      
+      return {
+        id,
+        type: 'line',
+        position,
+        startPoint: { ...startPoint },
+        endPoint: { ...endPoint },
+        length,
+        rotation: 0,
+        selected: true,
+        fill: 'transparent', // Lines don't have fill
+        stroke: '#9b87f5', // Use a distinct color for lines
+        strokeWidth: 2
       };
     }
     default:

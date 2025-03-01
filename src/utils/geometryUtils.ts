@@ -1,3 +1,4 @@
+
 import { ShapeType } from '@/types/shapes';
 import en from '@/locales/en.json';
 import de from '@/locales/de.json';
@@ -90,6 +91,20 @@ export const formulas = {
       de: '\\text{Winkelsumme: } C = 180° - A - B',
       es: '\\text{Suma de ángulos: } C = 180° - A - B',
       fr: '\\text{Somme des angles: } C = 180° - A - B'
+    }
+  },
+  line: {
+    length: {
+      en: '\\text{length} = \\sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}',
+      de: '\\text{Länge} = \\sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}',
+      es: '\\text{longitud} = \\sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}',
+      fr: '\\text{longueur} = \\sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}'
+    },
+    angle: {
+      en: '\\text{angle} = \\tan^{-1}\\left(\\frac{y_2 - y_1}{x_2 - x_1}\\right)',
+      de: '\\text{Winkel} = \\tan^{-1}\\left(\\frac{y_2 - y_1}{x_2 - x_1}\\right)',
+      es: '\\text{ángulo} = \\tan^{-1}\\left(\\frac{y_2 - y_1}{x_2 - x_1}\\right)',
+      fr: '\\text{angle} = \\tan^{-1}\\left(\\frac{y_2 - y_1}{x_2 - x_1}\\right)'
     }
   }
 };

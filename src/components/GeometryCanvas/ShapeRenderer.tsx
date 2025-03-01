@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { AnyShape, Circle, Rectangle, Triangle } from '@/types/shapes';
+import { AnyShape, Circle, Rectangle, Triangle, Line } from '@/types/shapes';
 
 interface ShapeRendererProps {
   shape: AnyShape;
@@ -15,6 +16,8 @@ const ShapeRenderer: React.FC<ShapeRendererProps> = ({ shape, isSelected, active
       return renderRectangle(shape as Rectangle, isSelected, activeMode);
     case 'triangle':
       return renderTriangle(shape as Triangle, isSelected, activeMode);
+    case 'line':
+      return renderLine(shape as Line, isSelected, activeMode);
     default:
       return null;
   }
@@ -136,6 +139,89 @@ const renderTriangle = (tri: Triangle, isSelected: boolean, activeMode: string) 
           strokeWidth={tri.strokeWidth}
           transform={`rotate(${tri.rotation}, ${width/2}, ${height/2})`}
         />
+      </svg>
+    </div>
+  );
+};
+
+const renderLine = (line: Line, isSelected: boolean, activeMode: string) => {
+  // For lines, we'll use SVG to render them
+  
+  // Calculate the bounding box (add some padding for hit detection)
+  const padding = 10;
+  const minX = Math.min(line.startPoint.x, line.endPoint.x) - padding;
+  const minY = Math.min(line.startPoint.y, line.endPoint.y) - padding;
+  const maxX = Math.max(line.startPoint.x, line.endPoint.x) + padding;
+  const maxY = Math.max(line.startPoint.y, line.endPoint.y) + padding;
+  
+  const width = maxX - minX;
+  const height = maxY - minY;
+  
+  // Define start and end points relative to the container
+  const startX = line.startPoint.x - minX;
+  const startY = line.startPoint.y - minY;
+  const endX = line.endPoint.x - minX;
+  const endY = line.endPoint.y - minY;
+  
+  // Generate unique ID for shadow filter
+  const filterId = `line-shadow-${line.id}`;
+  
+  return (
+    <div
+      key={line.id}
+      className="absolute"
+      style={{
+        left: minX,
+        top: minY,
+        width,
+        height,
+        cursor: activeMode === 'select' ? 'pointer' : 'default',
+        zIndex: 1
+      }}
+    >
+      <svg 
+        width={width} 
+        height={height} 
+        style={{ 
+          position: 'absolute',
+          overflow: 'visible'
+        }}
+      >
+        {isSelected && (
+          <>
+            <defs>
+              <filter id={filterId} x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
+              </filter>
+            </defs>
+            <line
+              x1={startX}
+              y1={startY}
+              x2={endX}
+              y2={endY}
+              stroke="rgba(0,0,0,0.3)"
+              strokeWidth="6"
+              transform="translate(2, 2)"
+              filter={`url(#${filterId})`}
+              style={{ pointerEvents: 'none' }}
+            />
+          </>
+        )}
+        
+        {/* Main line */}
+        <line
+          x1={startX}
+          y1={startY}
+          x2={endX}
+          y2={endY}
+          stroke={line.stroke}
+          strokeWidth={line.strokeWidth}
+          strokeLinecap="round"
+        />
+        
+        {/* Add small circles at endpoints to make them more visible */}
+        <circle cx={startX} cy={startY} r="3" fill={line.stroke} />
+        <circle cx={endX} cy={endY} r="3" fill={line.stroke} />
       </svg>
     </div>
   );

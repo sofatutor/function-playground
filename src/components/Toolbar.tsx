@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
-import { Square, Circle, Triangle, MousePointer, Move, RotateCw, Trash } from 'lucide-react';
+import { Square, Circle, Triangle, MousePointer, Move, RotateCw, Trash, Ruler } from 'lucide-react';
 import 'katex/dist/katex.min.css';
 import { InlineMath } from 'react-katex';
 import type { ShapeType, OperationMode } from '@/types/shapes';
@@ -83,6 +84,19 @@ const Toolbar: React.FC<ToolbarProps> = ({
         formulaExplanation={t('formulaExplanations.triangle.area')}
       >
         <Triangle size={18} />
+      </ToolButton>
+      
+      <ToolButton 
+        active={activeMode === 'create' && activeShapeType === 'line'}
+        onClick={() => {
+          onModeChange('create');
+          onShapeTypeChange('line');
+        }}
+        tooltip={t('tooltips.line')}
+        formula="d = \\sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}"
+        formulaExplanation={t('tooltips.lineExplanation') || "Calculates the straight-line distance between two points"}
+      >
+        <Ruler size={18} />
       </ToolButton>
       
       <Separator orientation="vertical" className="h-8 mx-1" />

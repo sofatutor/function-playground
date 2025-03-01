@@ -1,4 +1,5 @@
-import { AnyShape, Circle, Rectangle, Triangle, MeasurementUnit } from '@/types/shapes';
+
+import { AnyShape, Circle, Rectangle, Triangle, Line, MeasurementUnit } from '@/types/shapes';
 import { distanceBetweenPoints } from './common';
 import { calculateTriangleArea, calculateTriangleAngles } from './triangle';
 
@@ -102,6 +103,26 @@ export const getShapeMeasurements = (
       measurements.angle1 = Math.round(angles[0]);
       measurements.angle2 = Math.round(angles[1]);
       measurements.angle3 = Math.round(angles[2]);
+      break;
+    }
+    case 'line': {
+      const line = shape as Line;
+      
+      // Calculate the length in physical units
+      const length = convertFromPixelsFn(line.length);
+      
+      // For a line, we only need to display its length
+      measurements.length = parseFloat(length.toFixed(2));
+      
+      // Calculate the angle with respect to the horizontal
+      const dx = line.endPoint.x - line.startPoint.x;
+      const dy = line.endPoint.y - line.startPoint.y;
+      let angle = Math.atan2(dy, dx) * (180 / Math.PI);
+      
+      // Normalize angle to 0-360 degrees
+      if (angle < 0) angle += 360;
+      
+      measurements.angle = Math.round(angle);
       break;
     }
   }
