@@ -63,8 +63,8 @@
       "side3": "Die Länge einer Seite des Dreiecks.",
       "area": "Die Fläche innerhalb des Dreiecks.",
       "perimeter": "Der Umfang des Dreiecks (Summe aller Seiten).",
-      "height": "Der senkrechte Abstand von einer Ecke zur gegenüberliegenden Seite (Basis): $h = \\frac{2A}{b}$.",
-      "angles": "Die Summe der Innenwinkel eines Dreiecks beträgt immer 180 Grad: $\\alpha + \\beta + \\gamma = 180°$."
+      "height": "Der senkrechte Abstand von einer Ecke zur gegenüberliegenden Seite (Basis).",
+      "angles": "Die Summe der Innenwinkel eines Dreiecks beträgt immer 180 Grad."
     }
   },
   "tooltips": {
