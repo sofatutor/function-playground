@@ -19,18 +19,8 @@ const App: React.FC = () => {
   const [selectedShapeId, setSelectedShapeId] = useState<string | null>(null);
   const [activeMode, setActiveMode] = useState<OperationMode>('select');
 
-  // Log when measurement unit changes
-  useEffect(() => {
-    console.log('App: Measurement unit changed to:', measurementUnit);
-  }, [measurementUnit]);
-
   const handleUnitChange = (unit: MeasurementUnit) => {
-    console.log('Unit changed to:', unit, typeof unit); // Log the type as well
     setMeasurementUnit(unit);
-    // Log the state after update (this will be one render behind due to React's state updates)
-    setTimeout(() => {
-      console.log('After state update, measurementUnit is:', measurementUnit);
-    }, 0);
   };
 
   const handleShapeSelect = (id: string | null) => {

@@ -19,8 +19,6 @@ interface UnitSelectorProps {
 const UnitSelector: React.FC<UnitSelectorProps> = ({ value, onChange, onUnitChange }) => {
   const t = useTranslate();
   
-  console.log('UnitSelector received value:', value, 'Type:', typeof value);
-  
   // Map of unit codes to translation keys
   const unitLabels: Record<MeasurementUnit, string> = {
     'cm': 'units.centimeters',
@@ -35,10 +33,9 @@ const UnitSelector: React.FC<UnitSelectorProps> = ({ value, onChange, onUnitChan
       <Select
         value={value}
         onValueChange={(v) => {
-          console.log('Select onValueChange called with:', v, 'Type:', typeof v);
           onChange(v as MeasurementUnit);
           if (onUnitChange) {
-            onUnitChange(v as MeasurementUnit); // Check if onUnitChange is defined
+            onUnitChange(v as MeasurementUnit);
           }
         }}
       >

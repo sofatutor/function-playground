@@ -9,8 +9,6 @@ interface CanvasGridProps {
 }
 
 const CanvasGrid: React.FC<CanvasGridProps> = ({ canvasSize, pixelsPerCm, pixelsPerMm, measurementUnit }) => {
-  console.log('CanvasGrid received props:', { canvasSize, pixelsPerCm, pixelsPerMm, measurementUnit });
-  
   // Default to 'cm' if measurementUnit is undefined
   const unit = measurementUnit || 'cm';
   
