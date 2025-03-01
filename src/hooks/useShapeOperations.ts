@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { 
   AnyShape, Circle, Rectangle, Triangle, Point, ShapeType, OperationMode, MeasurementUnit
 } from '@/types/shapes';
@@ -16,13 +16,19 @@ const calculateTriangleArea = (points: [Point, Point, Point]): number => {
   return 0.5 * Math.abs((a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y)));
 };
 
-// Pixel to CM conversion (standard 96 DPI: 1cm = 37.8px)
-const PIXELS_PER_CM = 37.8;
+// Default pixel to physical unit conversion (standard 96 DPI: 1cm = 37.8px)
+const DEFAULT_PIXELS_PER_CM = 60;
 // 1 inch = 96px on standard DPI screens
-const PIXELS_PER_INCH = 96;
+const DEFAULT_PIXELS_PER_INCH = 152.4;
 
-const pixelsToCm = (pixels: number): number => pixels / PIXELS_PER_CM;
-const pixelsToInches = (pixels: number): number => pixels / PIXELS_PER_INCH;
+// Helper to get calibrated values from localStorage
+const getStoredPixelsPerUnit = (unit: MeasurementUnit): number => {
+  const storedValue = localStorage.getItem(`pixelsPerUnit_${unit}`);
+  if (storedValue) {
+    return parseFloat(storedValue);
+  }
+  return unit === 'cm' ? DEFAULT_PIXELS_PER_CM : DEFAULT_PIXELS_PER_INCH;
+};
 
 // Conversion between units
 const cmToInches = (cm: number): number => cm / 2.54;
@@ -40,6 +46,27 @@ export function useShapeOperations() {
   const [activeShapeType, setActiveShapeType] = useState<ShapeType>('rectangle');
   const [measurementUnit, setMeasurementUnit] = useState<MeasurementUnit>('cm');
   const [dragStart, setDragStart] = useState<Point | null>(null);
+  
+  // Get the calibrated pixels per unit values - add a dependency to force refresh
+  const [refreshCalibration, setRefreshCalibration] = useState(0);
+  
+  // Force refresh of calibration values when component mounts
+  useEffect(() => {
+    setRefreshCalibration(prev => prev + 1);
+  }, []);
+  
+  // Get the calibrated pixels per unit values with refresh dependency
+  const pixelsPerCm = useMemo(() => getStoredPixelsPerUnit('cm'), [refreshCalibration]);
+  const pixelsPerInch = useMemo(() => getStoredPixelsPerUnit('in'), [refreshCalibration]);
+  
+  // Dynamic conversion functions that use the calibrated values
+  const pixelsToCm = useCallback((pixels: number): number => {
+    return pixels / pixelsPerCm;
+  }, [pixelsPerCm]);
+  
+  const pixelsToInches = useCallback((pixels: number): number => {
+    return pixels / pixelsPerInch;
+  }, [pixelsPerInch]);
   
   const createShape = useCallback((startPoint: Point, endPoint: Point) => {
     const id = generateId();
@@ -307,7 +334,7 @@ export function useShapeOperations() {
       default:
         return {};
     }
-  }, [measurementUnit]);
+  }, [measurementUnit, pixelsToCm, pixelsToInches]);
   
   const getSelectedShape = useCallback(() => {
     if (!selectedShapeId) return null;
