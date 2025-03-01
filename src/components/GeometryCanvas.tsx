@@ -33,15 +33,6 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
   onShapeRotate,
   onModeChange
 }) => {
-  console.log('GeometryCanvas received props:', { 
-    shapes, 
-    selectedShapeId, 
-    activeMode,
-    activeShapeType,
-    measurementUnit: measurementUnit, 
-    measurementUnitType: typeof measurementUnit 
-  });
-  
   const canvasRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawStart, setDrawStart] = useState<Point | null>(null);
@@ -80,8 +71,6 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
   
   // Handle calibration completion
   const handleCalibrationComplete = (newPixelsPerUnit: number) => {
-    console.log('Calibration complete, new value:', newPixelsPerUnit);
-    
     // Store the calibrated value in localStorage
     localStorage.setItem(`pixelsPerUnit_${measurementUnit}`, newPixelsPerUnit.toString());
     
@@ -103,7 +92,6 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
   
   // Update pixel values when measurement unit changes
   useEffect(() => {
-    console.log('Measurement unit changed to:', measurementUnit, 'Type:', typeof measurementUnit);
     // Default to 'cm' if measurementUnit is undefined
     const unit = measurementUnit || 'cm';
     
@@ -111,32 +99,23 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     const storedValue = getStoredPixelsPerUnit(unit);
     
     if (unit === 'in') {
-      console.log('Setting pixels for inches');
       setPixelsPerUnit(storedValue);
       setPixelsPerSmallUnit(storedValue / 10); // 1/10th of an inch
     } else {
-      console.log('Setting pixels for centimeters');
       setPixelsPerUnit(storedValue);
       setPixelsPerSmallUnit(storedValue / 10); // 1mm = 1/10th of a cm
     }
-  }, [measurementUnit]);
+  }, [measurementUnit, getStoredPixelsPerUnit]);
 
   // Clear existing calibration values and use the new defaults
+  // This effect should only run once on mount
   useEffect(() => {
-    // Clear existing calibration values
-    localStorage.removeItem('pixelsPerUnit_cm');
-    localStorage.removeItem('pixelsPerUnit_in');
-    localStorage.removeItem('pixelsPerUnit_mm');
-    
-    // Set the new default values
-    setPixelsPerUnit(measurementUnit === 'in' ? DEFAULT_PIXELS_PER_INCH : DEFAULT_PIXELS_PER_CM);
-    setPixelsPerSmallUnit(measurementUnit === 'in' ? DEFAULT_PIXELS_PER_INCH / 10 : DEFAULT_PIXELS_PER_MM);
-    
-    console.log('Using new default calibration values:', {
-      cm: DEFAULT_PIXELS_PER_CM,
-      in: DEFAULT_PIXELS_PER_INCH,
-      mm: DEFAULT_PIXELS_PER_MM
-    });
+    // Only clear if no values exist yet
+    if (!localStorage.getItem('pixelsPerUnit_cm') && !localStorage.getItem('pixelsPerUnit_in')) {
+      // Set the new default values
+      setPixelsPerUnit(measurementUnit === 'in' ? DEFAULT_PIXELS_PER_INCH : DEFAULT_PIXELS_PER_CM);
+      setPixelsPerSmallUnit(measurementUnit === 'in' ? DEFAULT_PIXELS_PER_INCH / 10 : DEFAULT_PIXELS_PER_MM);
+    }
   }, []); // Run only once on component mount
 
   // Clean up any ongoing operations when the active mode changes
@@ -157,7 +136,6 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     const updateCanvasSize = () => {
       if (canvasRef.current) {
         const { width, height } = canvasRef.current.getBoundingClientRect();
-        console.log('Canvas size updated:', { width, height });
         setCanvasSize({ width, height });
       }
     };
@@ -175,8 +153,7 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     // Update after a short delay to ensure the DOM has fully rendered
     const initialTimeout = setTimeout(updateCanvasSize, 100);
     
-    // Set up a periodic check for size changes
-    const intervalCheck = setInterval(updateCanvasSize, 500);
+    // Remove the interval check that was causing constant updates
     
     // Update on window resize with debouncing
     window.addEventListener('resize', debouncedResize);
@@ -186,9 +163,8 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
       window.removeEventListener('resize', debouncedResize);
       clearTimeout(initialTimeout);
       clearTimeout(resizeTimer);
-      clearInterval(intervalCheck);
     };
-  }, [measurementUnit, pixelsPerUnit, pixelsPerSmallUnit]);
+  }, []); // Only run on mount, not on every prop change
 
   const getCanvasPoint = (e: React.MouseEvent): Point => {
     const canvas = canvasRef.current;
@@ -736,17 +712,13 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
 
   // Render the grid using the CanvasGrid component
   const renderGrid = () => {
-    console.log('Rendering grid with:', { pixelsPerUnit, pixelsPerSmallUnit, measurementUnit });
-    // Default to 'cm' if measurementUnit is undefined
-    const unit = measurementUnit || 'cm';
-    
     return (
       <CanvasGrid 
-        key={`grid-${unit}-${pixelsPerUnit}`}
+        key={`grid-${measurementUnit || 'cm'}-${pixelsPerUnit}`}
         canvasSize={canvasSize} 
         pixelsPerCm={pixelsPerUnit} 
         pixelsPerMm={pixelsPerSmallUnit}
-        measurementUnit={unit}
+        measurementUnit={measurementUnit || 'cm'}
       />
     );
   };
