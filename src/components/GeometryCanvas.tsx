@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import ShapeControls from './ShapeControls';
 import CanvasGrid from './CanvasGrid';
+import CalibrationTool from './CalibrationTool';
 import { AnyShape, Circle, Rectangle, Triangle, Point, OperationMode, ShapeType, MeasurementUnit } from '@/types/shapes';
 
 interface GeometryCanvasProps {
@@ -8,6 +9,7 @@ interface GeometryCanvasProps {
   selectedShapeId: string | null;
   activeMode: OperationMode;
   measurementUnit: MeasurementUnit;
+  isFullscreen?: boolean;
   onShapeSelect: (id: string | null) => void;
   onShapeCreate: (start: Point, end: Point) => string;
   onShapeMove: (id: string, newPosition: Point) => void;
@@ -20,6 +22,7 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
   selectedShapeId,
   activeMode,
   measurementUnit,
+  isFullscreen = false,
   onShapeSelect,
   onShapeCreate,
   onShapeMove,
@@ -46,14 +49,53 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
   const [originalRotation, setOriginalRotation] = useState<number>(0);
   const [currentShapeType, setCurrentShapeType] = useState<ShapeType>('rectangle');
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
-  const [pixelsPerUnit, setPixelsPerUnit] = useState(37.8); // Default to CM
-  const [pixelsPerSmallUnit, setPixelsPerSmallUnit] = useState(3.78); // Default to MM
   
-  // Physical measurements constants (in pixels)
+  // Add state for calibration
+  const [showCalibration, setShowCalibration] = useState(false);
+  
+  // Default physical measurements constants (in pixels)
   // Standard 96 DPI: 1cm = 37.8px, 1mm = 3.78px, 1in = 96px
-  const PIXELS_PER_CM = 37.8;
-  const PIXELS_PER_MM = 3.78;
-  const PIXELS_PER_INCH = 96;
+  const DEFAULT_PIXELS_PER_CM = 60;
+  const DEFAULT_PIXELS_PER_MM = 6;
+  const DEFAULT_PIXELS_PER_INCH = 152.4;
+  
+  // Use localStorage to persist calibration values
+  const getStoredPixelsPerUnit = (unit: MeasurementUnit): number => {
+    const storedValue = localStorage.getItem(`pixelsPerUnit_${unit}`);
+    if (storedValue) {
+      return parseFloat(storedValue);
+    }
+    return unit === 'cm' ? DEFAULT_PIXELS_PER_CM : DEFAULT_PIXELS_PER_INCH;
+  };
+  
+  // State for pixel conversion values with persisted defaults
+  const [pixelsPerUnit, setPixelsPerUnit] = useState(() => getStoredPixelsPerUnit(measurementUnit || 'cm'));
+  const [pixelsPerSmallUnit, setPixelsPerSmallUnit] = useState(() => 
+    measurementUnit === 'in' ? getStoredPixelsPerUnit('in') / 10 : DEFAULT_PIXELS_PER_MM
+  );
+  
+  // Handle calibration completion
+  const handleCalibrationComplete = (newPixelsPerUnit: number) => {
+    console.log('Calibration complete, new value:', newPixelsPerUnit);
+    
+    // Store the calibrated value in localStorage
+    localStorage.setItem(`pixelsPerUnit_${measurementUnit}`, newPixelsPerUnit.toString());
+    
+    // Update the state
+    setPixelsPerUnit(newPixelsPerUnit);
+    
+    // Update small unit value
+    if (measurementUnit === 'in') {
+      setPixelsPerSmallUnit(newPixelsPerUnit / 10); // 1/10th of an inch
+    } else {
+      // For cm, we need to update mm (1/10th of a cm)
+      setPixelsPerSmallUnit(newPixelsPerUnit / 10);
+      localStorage.setItem('pixelsPerUnit_mm', (newPixelsPerUnit / 10).toString());
+    }
+    
+    // Hide the calibration tool
+    setShowCalibration(false);
+  };
   
   // Update pixel values when measurement unit changes
   useEffect(() => {
@@ -61,16 +103,37 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     // Default to 'cm' if measurementUnit is undefined
     const unit = measurementUnit || 'cm';
     
+    // Get the stored calibration value for this unit
+    const storedValue = getStoredPixelsPerUnit(unit);
+    
     if (unit === 'in') {
       console.log('Setting pixels for inches');
-      setPixelsPerUnit(PIXELS_PER_INCH);
-      setPixelsPerSmallUnit(PIXELS_PER_INCH / 10); // 1/10th of an inch
+      setPixelsPerUnit(storedValue);
+      setPixelsPerSmallUnit(storedValue / 10); // 1/10th of an inch
     } else {
       console.log('Setting pixels for centimeters');
-      setPixelsPerUnit(PIXELS_PER_CM);
-      setPixelsPerSmallUnit(PIXELS_PER_MM);
+      setPixelsPerUnit(storedValue);
+      setPixelsPerSmallUnit(storedValue / 10); // 1mm = 1/10th of a cm
     }
   }, [measurementUnit]);
+
+  // Clear existing calibration values and use the new defaults
+  useEffect(() => {
+    // Clear existing calibration values
+    localStorage.removeItem('pixelsPerUnit_cm');
+    localStorage.removeItem('pixelsPerUnit_in');
+    localStorage.removeItem('pixelsPerUnit_mm');
+    
+    // Set the new default values
+    setPixelsPerUnit(measurementUnit === 'in' ? DEFAULT_PIXELS_PER_INCH : DEFAULT_PIXELS_PER_CM);
+    setPixelsPerSmallUnit(measurementUnit === 'in' ? DEFAULT_PIXELS_PER_INCH / 10 : DEFAULT_PIXELS_PER_MM);
+    
+    console.log('Using new default calibration values:', {
+      cm: DEFAULT_PIXELS_PER_CM,
+      in: DEFAULT_PIXELS_PER_INCH,
+      mm: DEFAULT_PIXELS_PER_MM
+    });
+  }, []); // Run only once on component mount
 
   // Clean up any ongoing operations when the active mode changes
   useEffect(() => {
@@ -100,14 +163,29 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     const updateCanvasSize = () => {
       if (canvasRef.current) {
         const { width, height } = canvasRef.current.getBoundingClientRect();
+        console.log('Canvas size updated:', { width, height });
         setCanvasSize({ width, height });
       }
     };
     
+    // Initial update
     updateCanvasSize();
     
+    // Update after a short delay to ensure the DOM has fully rendered
+    const initialTimeout = setTimeout(updateCanvasSize, 100);
+    
+    // Set up a periodic check for size changes
+    const intervalCheck = setInterval(updateCanvasSize, 500);
+    
+    // Update on window resize
     window.addEventListener('resize', updateCanvasSize);
-    return () => window.removeEventListener('resize', updateCanvasSize);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', updateCanvasSize);
+      clearTimeout(initialTimeout);
+      clearInterval(intervalCheck);
+    };
   }, [measurementUnit, pixelsPerUnit, pixelsPerSmallUnit]);
 
   const getCanvasPoint = (e: React.MouseEvent): Point => {
@@ -594,31 +672,61 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     );
   };
 
+  // Add a toggle for the calibration tool
+  const toggleCalibration = () => {
+    setShowCalibration(!showCalibration);
+  };
+
   return (
-    <div 
-      ref={canvasRef}
-      className="canvas-container relative w-full h-[500px]"
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
-    >
-      {/* Grid background */}
-      {renderGrid()}
+    <div className="relative w-full h-full">
+      {/* Calibration button */}
+      <div className="absolute top-2 right-2 z-10">
+        <button
+          className="btn-tool"
+          onClick={toggleCalibration}
+          title="Calibrate Screen"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+      </div>
       
-      {/* Shapes */}
-      {shapes.map(shape => renderShape(shape))}
-      {renderPreviewShape()}
-      
-      {/* Controls */}
-      {selectedShapeId && (
-        <ShapeControls
-          shape={shapes.find(s => s.id === selectedShapeId)!}
-          canvasRef={canvasRef}
-          onResizeStart={handleResizeStart}
-          onRotateStart={handleRotateStart}
-        />
+      {/* Calibration tool */}
+      {showCalibration && (
+        <div className="absolute top-14 right-2 z-10 w-80">
+          <CalibrationTool
+            measurementUnit={measurementUnit || 'cm'}
+            onCalibrationComplete={handleCalibrationComplete}
+            defaultPixelsPerUnit={pixelsPerUnit}
+          />
+        </div>
       )}
+      
+      <div
+        ref={canvasRef}
+        className={`canvas-container ${activeMode === 'move' ? 'cursor-move' : ''}`}
+        style={{ height: isFullscreen ? 'calc(100vh - 120px)' : '500px' }}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+      >
+        {renderGrid()}
+        {shapes.map(renderShape)}
+        {renderPreviewShape()}
+        
+        {/* Controls */}
+        {selectedShapeId && (
+          <ShapeControls
+            shape={shapes.find(s => s.id === selectedShapeId)!}
+            canvasRef={canvasRef}
+            onResizeStart={handleResizeStart}
+            onRotateStart={handleRotateStart}
+          />
+        )}
+      </div>
     </div>
   );
 };
