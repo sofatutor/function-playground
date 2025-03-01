@@ -26,11 +26,205 @@ const calculateTriangleHeight = (points: [Point, Point, Point], base: number): n
 // Helper function to calculate triangle angles in degrees
 const calculateTriangleAngles = (a: number, b: number, c: number): [number, number, number] => {
   // Law of cosines: cos(A) = (b² + c² - a²) / (2bc)
-  const angleA = Math.acos((b * b + c * c - a * a) / (2 * b * c)) * (180 / Math.PI);
-  const angleB = Math.acos((a * a + c * c - b * b) / (2 * a * c)) * (180 / Math.PI);
-  const angleC = 180 - angleA - angleB; // Sum of angles in a triangle is 180°
+  // Angle A is opposite to side a, angle B is opposite to side b, angle C is opposite to side c
   
-  return [angleA, angleB, angleC];
+  // Ensure we don't get NaN due to floating point errors
+  const clamp = (val: number): number => Math.max(-1, Math.min(1, val));
+  
+  // Calculate angles using the law of cosines
+  // Angle at vertex 0 (between sides c and b)
+  const angleA = Math.acos(clamp((b * b + c * c - a * a) / (2 * b * c))) * (180 / Math.PI);
+  
+  // Angle at vertex 1 (between sides a and c)
+  const angleB = Math.acos(clamp((a * a + c * c - b * b) / (2 * a * c))) * (180 / Math.PI);
+  
+  // Angle at vertex 2 (between sides a and b)
+  const angleC = Math.acos(clamp((a * a + b * b - c * c) / (2 * a * b))) * (180 / Math.PI);
+  
+  // Ensure the sum is exactly 180°
+  const sum = angleA + angleB + angleC;
+  const scaleFactor = 180 / sum;
+  
+  return [
+    angleA * scaleFactor,
+    angleB * scaleFactor,
+    angleC * scaleFactor
+  ];
+};
+
+// Helper function to update triangle points based on a changed angle
+const updateTriangleFromAngle = (
+  points: [Point, Point, Point],
+  angleIndex: number,
+  newAngleDegrees: number,
+  currentAngles: [number, number, number]
+): [Point, Point, Point] => {
+  console.log(`Updating angle ${angleIndex} to ${newAngleDegrees}°`);
+  console.log(`Current angles: ${currentAngles.map(a => Math.round(a)).join(', ')}`);
+  
+  // Make a copy of the original points
+  const originalPoints = [...points] as [Point, Point, Point];
+  
+  // Calculate side lengths
+  const sides = [
+    distanceBetweenPoints(points[1], points[2]), // side a (opposite to vertex 0)
+    distanceBetweenPoints(points[0], points[2]), // side b (opposite to vertex 1)
+    distanceBetweenPoints(points[0], points[1]), // side c (opposite to vertex 2)
+  ];
+  
+  // Calculate the new angles
+  const newAngles: [number, number, number] = [...currentAngles];
+  
+  // Important: We need to update the correct angle index
+  // angleIndex is the index of the angle we want to change (0, 1, or 2)
+  newAngles[angleIndex] = newAngleDegrees;
+  
+  // Adjust the other two angles to maintain 180° sum
+  const otherIndices = [0, 1, 2].filter(i => i !== angleIndex);
+  const remainingAngle = 180 - newAngleDegrees;
+  
+  // Distribute the remaining angle proportionally to the other two angles
+  const ratio = currentAngles[otherIndices[0]] / (currentAngles[otherIndices[0]] + currentAngles[otherIndices[1]]);
+  newAngles[otherIndices[0]] = Math.round(remainingAngle * ratio);
+  newAngles[otherIndices[1]] = 180 - newAngleDegrees - newAngles[otherIndices[0]];
+  
+  console.log(`New angles: ${newAngles.map(a => Math.round(a)).join(', ')}`);
+  
+  // We'll keep the vertex at the angleIndex fixed and recalculate the positions of the other two
+  const newPoints: [Point, Point, Point] = [...points] as [Point, Point, Point];
+  
+  // Convert angles to radians for calculations
+  const angleRads = newAngles.map(a => a * (Math.PI / 180));
+  
+  // Keep the vertex at angleIndex fixed
+  if (angleIndex === 0) {
+    // If we're changing angle at vertex 0, keep that vertex fixed
+    // and recalculate positions of vertices 1 and 2
+    
+    // Calculate new position for vertex 1
+    // We'll keep the distance between vertex 0 and 1 the same
+    const distC = sides[2]; // side c between vertices 0 and 1
+    
+    // The angle at vertex 0 is the angle we're changing
+    const angle0Rad = newAngleDegrees * (Math.PI / 180);
+    
+    // Calculate the new position for vertex 1
+    newPoints[1] = {
+      x: points[0].x + distC * Math.cos(angle0Rad),
+      y: points[0].y + distC * Math.sin(angle0Rad)
+    };
+    
+    // Calculate the new position for vertex 2
+    // We need to ensure the angle at vertex 0 is exactly newAngleDegrees
+    // and the angle at vertex 1 is newAngles[1]
+    
+    // Calculate the angle for the third vertex
+    const angle1Rad = newAngles[1] * (Math.PI / 180);
+    const totalAngle = Math.PI - angle0Rad - angle1Rad;
+    
+    // Calculate the new position for vertex 2
+    // We'll use the law of sines to determine the distance
+    const distB = sides[1]; // side b between vertices 0 and 2
+    
+    newPoints[2] = {
+      x: points[0].x + distB * Math.cos(totalAngle),
+      y: points[0].y + distB * Math.sin(totalAngle)
+    };
+  } else if (angleIndex === 1) {
+    // If we're changing angle at vertex 1, keep that vertex fixed
+    // and recalculate positions of vertices 0 and 2
+    
+    // Calculate new position for vertex 0
+    // We'll keep the distance between vertex 1 and 0 the same
+    const distC = sides[2]; // side c between vertices 0 and 1
+    
+    // The angle at vertex 1 is the angle we're changing
+    const angle1Rad = newAngleDegrees * (Math.PI / 180);
+    
+    // Calculate the new position for vertex 0
+    newPoints[0] = {
+      x: points[1].x + distC * Math.cos(angle1Rad),
+      y: points[1].y + distC * Math.sin(angle1Rad)
+    };
+    
+    // Calculate the new position for vertex 2
+    // We need to ensure the angle at vertex 1 is exactly newAngleDegrees
+    // and the angle at vertex 0 is newAngles[0]
+    
+    // Calculate the angle for the third vertex
+    const angle0Rad = newAngles[0] * (Math.PI / 180);
+    const totalAngle = Math.PI - angle1Rad - angle0Rad;
+    
+    // Calculate the new position for vertex 2
+    // We'll use the law of sines to determine the distance
+    const distA = sides[0]; // side a between vertices 1 and 2
+    
+    newPoints[2] = {
+      x: points[1].x + distA * Math.cos(totalAngle),
+      y: points[1].y + distA * Math.sin(totalAngle)
+    };
+  } else if (angleIndex === 2) {
+    // If we're changing angle at vertex 2, keep that vertex fixed
+    // and recalculate positions of vertices 0 and 1
+    
+    // Calculate new position for vertex 0
+    // We'll keep the distance between vertex 2 and 0 the same
+    const distB = sides[1]; // side b between vertices 0 and 2
+    
+    // The angle at vertex 2 is the angle we're changing
+    const angle2Rad = newAngleDegrees * (Math.PI / 180);
+    
+    // Calculate the new position for vertex 0
+    newPoints[0] = {
+      x: points[2].x + distB * Math.cos(angle2Rad),
+      y: points[2].y + distB * Math.sin(angle2Rad)
+    };
+    
+    // Calculate the new position for vertex 1
+    // We need to ensure the angle at vertex 2 is exactly newAngleDegrees
+    // and the angle at vertex 0 is newAngles[0]
+    
+    // Calculate the angle for the third vertex
+    const angle0Rad = newAngles[0] * (Math.PI / 180);
+    const totalAngle = Math.PI - angle2Rad - angle0Rad;
+    
+    // Calculate the new position for vertex 1
+    // We'll use the law of sines to determine the distance
+    const distA = sides[0]; // side a between vertices 1 and 2
+    
+    newPoints[1] = {
+      x: points[2].x + distA * Math.cos(totalAngle),
+      y: points[2].y + distA * Math.sin(totalAngle)
+    };
+  }
+  
+  // Calculate the center of the original triangle
+  const originalCenter = {
+    x: (originalPoints[0].x + originalPoints[1].x + originalPoints[2].x) / 3,
+    y: (originalPoints[0].y + originalPoints[1].y + originalPoints[2].y) / 3
+  };
+  
+  // Calculate the center of the new triangle
+  const newCenter = {
+    x: (newPoints[0].x + newPoints[1].x + newPoints[2].x) / 3,
+    y: (newPoints[0].y + newPoints[1].y + newPoints[2].y) / 3
+  };
+  
+  // Translate the new triangle to match the center of the original triangle
+  const translation = {
+    x: originalCenter.x - newCenter.x,
+    y: originalCenter.y - newCenter.y
+  };
+  
+  const finalPoints: [Point, Point, Point] = newPoints.map(p => ({
+    x: p.x + translation.x,
+    y: p.y + translation.y
+  })) as [Point, Point, Point];
+  
+  console.log('Original points:', originalPoints);
+  console.log('Final points:', finalPoints);
+  
+  return finalPoints;
 };
 
 // Default pixel to physical unit conversion (standard 96 DPI: 1cm = 37.8px)
@@ -56,6 +250,42 @@ const DEFAULT_FILL = 'rgba(190, 227, 219, 0.5)';
 const DEFAULT_STROKE = '#555B6E';
 const DEFAULT_STROKE_WIDTH = 2;
 
+// Helper function to calculate triangle perimeter
+const calculateTrianglePerimeter = (points: [Point, Point, Point]): number => {
+  return (
+    distanceBetweenPoints(points[0], points[1]) +
+    distanceBetweenPoints(points[1], points[2]) +
+    distanceBetweenPoints(points[2], points[0])
+  );
+};
+
+// Helper function to update triangle from side length
+const updateTriangleFromSideLength = (
+  shape: Triangle,
+  sideIndex: number,
+  newLength: number
+): Triangle => {
+  // Get the current side length
+  const p1 = shape.points[sideIndex];
+  const p2 = shape.points[(sideIndex + 1) % 3];
+  const currentLength = distanceBetweenPoints(p1, p2);
+  
+  // Calculate the scale factor
+  const scaleFactor = newLength / currentLength;
+  
+  // Scale the triangle from its center
+  const center = shape.position;
+  const newPoints = shape.points.map(point => ({
+    x: center.x + (point.x - center.x) * scaleFactor,
+    y: center.y + (point.y - center.y) * scaleFactor
+  })) as [Point, Point, Point];
+  
+  return {
+    ...shape,
+    points: newPoints
+  };
+};
+
 export function useShapeOperations() {
   const [shapes, setShapes] = useState<AnyShape[]>([]);
   const [selectedShapeId, setSelectedShapeId] = useState<string | null>(null);
@@ -71,6 +301,11 @@ export function useShapeOperations() {
   useEffect(() => {
     setRefreshCalibration(prev => prev + 1);
   }, []);
+  
+  // Force refresh of calibration values when measurement unit changes
+  useEffect(() => {
+    setRefreshCalibration(prev => prev + 1);
+  }, [measurementUnit]);
   
   // Get the calibrated pixels per unit values with refresh dependency
   const pixelsPerCm = useMemo(() => getStoredPixelsPerUnit('cm'), [refreshCalibration]);
@@ -291,133 +526,441 @@ export function useShapeOperations() {
     toast.info("All shapes cleared");
   }, []);
   
+  // Convert physical measurements to pixels based on the current unit
+  const convertToPixels = useCallback((value: number): number => {
+    if (measurementUnit === 'in') {
+      return value * pixelsPerInch;
+    }
+    return value * pixelsPerCm;
+  }, [measurementUnit, pixelsPerCm, pixelsPerInch]);
+  
+  // Convert pixels to physical measurements based on the current unit
+  const convertFromPixels = useCallback((pixels: number): number => {
+    if (measurementUnit === 'in') {
+      return pixelsToInches(pixels);
+    }
+    return pixelsToCm(pixels);
+  }, [measurementUnit, pixelsToCm, pixelsToInches]);
+  
+  // Get measurements for a shape in the current unit
   const getShapeMeasurements = useCallback((shape: AnyShape) => {
+    const measurements: Record<string, number> = {};
+    
     switch (shape.type) {
       case 'circle': {
         const circle = shape as Circle;
-        const radiusCm = pixelsToCm(circle.radius);
-        const radiusInches = pixelsToInches(circle.radius);
+        const diameter = convertFromPixels(circle.radius * 2);
+        const radius = diameter / 2;
+        const circumference = Math.PI * diameter;
+        const area = Math.PI * radius * radius;
         
-        if (measurementUnit === 'cm') {
-          const areaCm = Math.PI * Math.pow(radiusCm, 2);
-          const perimeterCm = 2 * Math.PI * radiusCm;
-          return {
-            radius: radiusCm.toFixed(2),
-            diameter: (radiusCm * 2).toFixed(2),
-            area: areaCm.toFixed(2),
-            perimeter: perimeterCm.toFixed(2)
-          };
-        } else {
-          const areaInches = Math.PI * Math.pow(radiusInches, 2);
-          const perimeterInches = 2 * Math.PI * radiusInches;
-          return {
-            radius: radiusInches.toFixed(2),
-            diameter: (radiusInches * 2).toFixed(2),
-            area: areaInches.toFixed(2),
-            perimeter: perimeterInches.toFixed(2)
-          };
-        }
+        measurements.diameter = parseFloat(diameter.toFixed(2));
+        measurements.radius = parseFloat(radius.toFixed(2));
+        measurements.circumference = parseFloat(circumference.toFixed(2));
+        measurements.area = parseFloat(area.toFixed(2));
+        break;
       }
       case 'rectangle': {
         const rect = shape as Rectangle;
-        const widthCm = pixelsToCm(rect.width);
-        const heightCm = pixelsToCm(rect.height);
-        const widthInches = pixelsToInches(rect.width);
-        const heightInches = pixelsToInches(rect.height);
+        const width = convertFromPixels(rect.width);
+        const height = convertFromPixels(rect.height);
+        const perimeter = 2 * (width + height);
+        const area = width * height;
         
-        if (measurementUnit === 'cm') {
-          const areaCm = widthCm * heightCm;
-          const perimeterCm = 2 * (widthCm + heightCm);
-          return {
-            width: widthCm.toFixed(2),
-            height: heightCm.toFixed(2),
-            area: areaCm.toFixed(2),
-            perimeter: perimeterCm.toFixed(2)
-          };
-        } else {
-          const areaInches = widthInches * heightInches;
-          const perimeterInches = 2 * (widthInches + heightInches);
-          return {
-            width: widthInches.toFixed(2),
-            height: heightInches.toFixed(2),
-            area: areaInches.toFixed(2),
-            perimeter: perimeterInches.toFixed(2)
-          };
-        }
+        measurements.width = parseFloat(width.toFixed(2));
+        measurements.height = parseFloat(height.toFixed(2));
+        measurements.perimeter = parseFloat(perimeter.toFixed(2));
+        measurements.area = parseFloat(area.toFixed(2));
+        break;
       }
       case 'triangle': {
         const tri = shape as Triangle;
         
-        // Calculate side lengths in pixels first
-        const side1Px = distanceBetweenPoints(tri.points[0], tri.points[1]);
-        const side2Px = distanceBetweenPoints(tri.points[1], tri.points[2]);
-        const side3Px = distanceBetweenPoints(tri.points[2], tri.points[0]);
+        // Calculate side lengths in pixels
+        const side1 = distanceBetweenPoints(tri.points[0], tri.points[1]);
+        const side2 = distanceBetweenPoints(tri.points[1], tri.points[2]);
+        const side3 = distanceBetweenPoints(tri.points[2], tri.points[0]);
         
-        // Calculate area in pixels
-        const areaPx = calculateTriangleArea(tri.points);
+        // Convert to physical units
+        const side1Length = convertFromPixels(side1);
+        const side2Length = convertFromPixels(side2);
+        const side3Length = convertFromPixels(side3);
         
-        // Calculate height using the longest side as base
-        const basePx = Math.max(side1Px, side2Px, side3Px);
-        const heightPx = calculateTriangleHeight(tri.points, basePx);
+        // Calculate perimeter
+        const perimeter = side1Length + side2Length + side3Length;
+        
+        // Calculate area using Heron's formula
+        const s = perimeter / 2; // Semi-perimeter
+        const area = Math.sqrt(s * (s - side1Length) * (s - side2Length) * (s - side3Length));
+        
+        // Calculate heights for each side as base
+        const height1 = (2 * area) / side1Length; // Height from side1 as base
+        const height2 = (2 * area) / side2Length; // Height from side2 as base
+        const height3 = (2 * area) / side3Length; // Height from side3 as base
+        
+        // Use the average height as the representative height
+        const height = (height1 + height2 + height3) / 3;
         
         // Calculate angles
-        const angles = calculateTriangleAngles(side1Px, side2Px, side3Px);
-        const anglesStr = angles.map(angle => angle.toFixed(1)).join('° + ') + '°';
+        const angles = calculateTriangleAngles(side1Length, side2Length, side3Length);
         
-        if (measurementUnit === 'cm') {
-          // Convert to centimeters
-          const side1Cm = pixelsToCm(side1Px);
-          const side2Cm = pixelsToCm(side2Px);
-          const side3Cm = pixelsToCm(side3Px);
-          
-          // Convert area px² to cm²
-          const areaCm = pixelsToCm(areaPx) * pixelsToCm(1);
-          const perimeterCm = side1Cm + side2Cm + side3Cm;
-          const heightCm = pixelsToCm(heightPx);
-          
-          return {
-            side1: side1Cm.toFixed(2),
-            side2: side2Cm.toFixed(2),
-            side3: side3Cm.toFixed(2),
-            area: areaCm.toFixed(2),
-            perimeter: perimeterCm.toFixed(2),
-            height: heightCm.toFixed(2),
-            angles: anglesStr
-          };
-        } else {
-          // Convert to inches
-          const side1Inches = pixelsToInches(side1Px);
-          const side2Inches = pixelsToInches(side2Px);
-          const side3Inches = pixelsToInches(side3Px);
-          
-          // Convert area px² to in²
-          const areaInches = pixelsToInches(areaPx) * pixelsToInches(1);
-          const perimeterInches = side1Inches + side2Inches + side3Inches;
-          const heightInches = pixelsToInches(heightPx);
-          
-          return {
-            side1: side1Inches.toFixed(2),
-            side2: side2Inches.toFixed(2),
-            side3: side3Inches.toFixed(2),
-            area: areaInches.toFixed(2),
-            perimeter: perimeterInches.toFixed(2),
-            height: heightInches.toFixed(2),
-            angles: anglesStr
-          };
-        }
+        measurements.side1 = parseFloat(side1Length.toFixed(2));
+        measurements.side2 = parseFloat(side2Length.toFixed(2));
+        measurements.side3 = parseFloat(side3Length.toFixed(2));
+        measurements.perimeter = parseFloat(perimeter.toFixed(2));
+        measurements.area = parseFloat(area.toFixed(2));
+        measurements.height = parseFloat(height.toFixed(2));
+        measurements.angle1 = Math.round(angles[0]);
+        measurements.angle2 = Math.round(angles[1]);
+        measurements.angle3 = Math.round(angles[2]);
+        break;
       }
-      default:
-        return {};
     }
-  }, [measurementUnit, pixelsToCm, pixelsToInches]);
+    
+    return measurements;
+  }, [convertFromPixels]);
   
   const getSelectedShape = useCallback(() => {
     if (!selectedShapeId) return null;
     return shapes.find(shape => shape.id === selectedShapeId) || null;
   }, [shapes, selectedShapeId]);
   
+  // Update shape based on measurement changes
+  const updateShapeFromMeasurement = useCallback((
+    shape: AnyShape,
+    measurementKey: string,
+    newValue: number,
+    unit: string
+  ): AnyShape => {
+    // Convert to pixels if needed
+    const valueInPixels = unit === 'px' ? newValue : convertToPixels(newValue);
+
+    // Handle different shape types
+    switch (shape.type) {
+      case 'circle': {
+        if (measurementKey === 'radius') {
+          return {
+            ...shape,
+            radius: valueInPixels
+          };
+        } else if (measurementKey === 'diameter') {
+          return {
+            ...shape,
+            radius: valueInPixels / 2
+          };
+        } else if (measurementKey === 'circumference') {
+          // C = 2πr, so r = C/(2π)
+          return {
+            ...shape,
+            radius: valueInPixels / (2 * Math.PI)
+          };
+        } else if (measurementKey === 'area') {
+          // A = πr², so r = √(A/π)
+          return {
+            ...shape,
+            radius: Math.sqrt(valueInPixels / Math.PI)
+          };
+        }
+        break;
+      }
+      case 'rectangle': {
+        if (measurementKey === 'width') {
+          return {
+            ...shape,
+            width: valueInPixels
+          };
+        } else if (measurementKey === 'height') {
+          return {
+            ...shape,
+            height: valueInPixels
+          };
+        } else if (measurementKey === 'area') {
+          // For area, we'll maintain the aspect ratio
+          const aspectRatio = shape.width / shape.height;
+          const newHeight = Math.sqrt(valueInPixels / aspectRatio);
+          const newWidth = newHeight * aspectRatio;
+          return {
+            ...shape,
+            width: newWidth,
+            height: newHeight
+          };
+        } else if (measurementKey === 'perimeter') {
+          // For perimeter, we'll maintain the aspect ratio
+          const aspectRatio = shape.width / shape.height;
+          // P = 2w + 2h, with w = aspectRatio * h
+          // P = 2(aspectRatio * h) + 2h = 2h(aspectRatio + 1)
+          // h = P / (2(aspectRatio + 1))
+          const newHeight = valueInPixels / (2 * (aspectRatio + 1));
+          const newWidth = aspectRatio * newHeight;
+          return {
+            ...shape,
+            width: newWidth,
+            height: newHeight
+          };
+        } else if (measurementKey === 'diagonal') {
+          // For diagonal, we'll maintain the aspect ratio
+          // d² = w² + h², with w = aspectRatio * h
+          // d² = (aspectRatio * h)² + h² = h²(aspectRatio² + 1)
+          // h = d / √(aspectRatio² + 1)
+          const aspectRatio = shape.width / shape.height;
+          const newHeight = valueInPixels / Math.sqrt(aspectRatio * aspectRatio + 1);
+          const newWidth = aspectRatio * newHeight;
+          return {
+            ...shape,
+            width: newWidth,
+            height: newHeight
+          };
+        }
+        break;
+      }
+      case 'triangle': {
+        // Handle side length updates
+        if (measurementKey === 'side1' || measurementKey === 'side2' || measurementKey === 'side3') {
+          const sideIndex = parseInt(measurementKey.slice(-1)) - 1;
+          return updateTriangleFromSideLength(shape as Triangle, sideIndex, valueInPixels);
+        }
+        // Handle angle updates
+        else if (measurementKey === 'angle1' || measurementKey === 'angle2' || measurementKey === 'angle3') {
+          console.log(`Updating ${measurementKey} to ${newValue} degrees`);
+          
+          // Ensure the angle value is an integer
+          const intAngleValue = Math.round(newValue);
+          
+          // Validate the angle is within range
+          if (intAngleValue <= 0 || intAngleValue >= 180) {
+            console.log(`Invalid angle value: ${intAngleValue}. Must be between 0 and 180.`);
+            return shape;
+          }
+          
+          // Get the angle index (0, 1, or 2)
+          const angleIndex = parseInt(measurementKey.slice(-1)) - 1;
+          
+          // Store the original triangle properties
+          const originalPoints = [...shape.points] as [Point, Point, Point];
+          const originalCenter = {
+            x: (originalPoints[0].x + originalPoints[1].x + originalPoints[2].x) / 3,
+            y: (originalPoints[0].y + originalPoints[1].y + originalPoints[2].y) / 3
+          };
+          
+          // Calculate the current side lengths
+          const sides = [
+            distanceBetweenPoints(shape.points[1], shape.points[2]),
+            distanceBetweenPoints(shape.points[0], shape.points[2]),
+            distanceBetweenPoints(shape.points[0], shape.points[1])
+          ];
+          
+          // Calculate the average side length to maintain approximate size
+          const avgSideLength = (sides[0] + sides[1] + sides[2]) / 3;
+          const originalPerimeter = sides[0] + sides[1] + sides[2];
+          
+          // Calculate the current angles
+          const currentAngles = calculateTriangleAngles(
+            sides[0],
+            sides[1],
+            sides[2]
+          ).map(a => Math.round(a)) as [number, number, number];
+          
+          console.log(`Current angles: ${currentAngles.join(', ')}`);
+          
+          // Create a new array of angles
+          const newAngles: [number, number, number] = [...currentAngles];
+          
+          // Set the new value for the angle we're changing
+          newAngles[angleIndex] = intAngleValue;
+          
+          // When changing angle 1, adjust angle 2 (and angle 3 gets the remainder)
+          // When changing angle 2, adjust angle 3 (and angle 1 gets the remainder)
+          // When changing angle 3, adjust angle 1 (and angle 2 gets the remainder)
+          const adjustIndex = (angleIndex + 1) % 3;
+          const thirdIndex = (angleIndex + 2) % 3;
+          
+          // Calculate the difference
+          const angleDiff = intAngleValue - currentAngles[angleIndex];
+          
+          // Adjust the second angle by the opposite of the difference
+          newAngles[adjustIndex] = Math.max(1, Math.min(178, currentAngles[adjustIndex] - angleDiff));
+          
+          // The third angle is whatever is needed to make the sum 180
+          newAngles[thirdIndex] = 180 - newAngles[angleIndex] - newAngles[adjustIndex];
+          
+          // Ensure the third angle is valid
+          if (newAngles[thirdIndex] <= 0 || newAngles[thirdIndex] >= 180) {
+            console.log(`Invalid angle configuration: ${newAngles.join(', ')}`);
+            return shape;
+          }
+          
+          console.log(`New angles to apply: ${newAngles.join(', ')}`);
+          
+          // SIMPLER APPROACH: Create a triangle with fixed side length and exact angles
+          
+          // Convert angles to radians
+          const angleRads = newAngles.map(a => a * (Math.PI / 180));
+          
+          // We'll create a triangle with a fixed side length (avgSideLength)
+          // and position it so that the vertex with the changed angle is at the origin
+          
+          // Initialize points
+          let p0: Point = { x: 0, y: 0 };
+          let p1: Point = { x: 0, y: 0 };
+          let p2: Point = { x: 0, y: 0 };
+          
+          if (angleIndex === 0) {
+            // If we're changing angle 0, put it at the origin
+            // Place p1 at a fixed distance along the x-axis
+            p0 = { x: 0, y: 0 };
+            p1 = { x: avgSideLength, y: 0 };
+            
+            // Place p2 to create the desired angle at p0
+            const angle0 = angleRads[0];
+            p2 = { 
+              x: avgSideLength * Math.cos(angle0), 
+              y: avgSideLength * Math.sin(angle0) 
+            };
+          } 
+          else if (angleIndex === 1) {
+            // If we're changing angle 1, put it at the origin
+            // Place p0 at a fixed distance along the x-axis
+            p1 = { x: 0, y: 0 };
+            p0 = { x: avgSideLength, y: 0 };
+            
+            // Place p2 to create the desired angle at p1
+            const angle1 = angleRads[1];
+            p2 = { 
+              x: avgSideLength * Math.cos(angle1), 
+              y: avgSideLength * Math.sin(angle1) 
+            };
+          }
+          else { // angleIndex === 2
+            // If we're changing angle 2, put it at the origin
+            // Place p0 at a fixed distance along the x-axis
+            p2 = { x: 0, y: 0 };
+            p0 = { x: avgSideLength, y: 0 };
+            
+            // Place p1 to create the desired angle at p2
+            const angle2 = angleRads[2];
+            p1 = { 
+              x: avgSideLength * Math.cos(angle2), 
+              y: avgSideLength * Math.sin(angle2) 
+            };
+          }
+          
+          // Now we have a triangle with the exact angle we want at the specified vertex
+          // We need to scale it to match the original size and translate it to the original center
+          
+          // Calculate the center of our new triangle
+          const newCenter = {
+            x: (p0.x + p1.x + p2.x) / 3,
+            y: (p0.y + p1.y + p2.y) / 3
+          };
+          
+          // Calculate the new perimeter
+          const newSides = [
+            distanceBetweenPoints(p1, p2),
+            distanceBetweenPoints(p0, p2),
+            distanceBetweenPoints(p0, p1)
+          ];
+          const newPerimeter = newSides[0] + newSides[1] + newSides[2];
+          
+          // Calculate the scale factor to maintain the original perimeter
+          const scaleFactor = originalPerimeter / newPerimeter;
+          
+          // Scale and translate the points to match the original center and size
+          const finalPoints: [Point, Point, Point] = [
+            { 
+              x: originalCenter.x + (p0.x - newCenter.x) * scaleFactor, 
+              y: originalCenter.y + (p0.y - newCenter.y) * scaleFactor 
+            },
+            { 
+              x: originalCenter.x + (p1.x - newCenter.x) * scaleFactor, 
+              y: originalCenter.y + (p1.y - newCenter.y) * scaleFactor 
+            },
+            { 
+              x: originalCenter.x + (p2.x - newCenter.x) * scaleFactor, 
+              y: originalCenter.y + (p2.y - newCenter.y) * scaleFactor 
+            }
+          ];
+          
+          // Verify the new angles
+          const finalSides = [
+            distanceBetweenPoints(finalPoints[1], finalPoints[2]),
+            distanceBetweenPoints(finalPoints[0], finalPoints[2]),
+            distanceBetweenPoints(finalPoints[0], finalPoints[1])
+          ];
+          
+          const resultAngles = calculateTriangleAngles(
+            finalSides[0],
+            finalSides[1],
+            finalSides[2]
+          );
+          
+          console.log(`Resulting angles after update: ${resultAngles.map(a => Math.round(a)).join(', ')}`);
+          
+          // Double-check that the angle we wanted to change is correct
+          if (Math.abs(Math.round(resultAngles[angleIndex]) - intAngleValue) > 1) {
+            console.log(`Warning: Resulting angle ${Math.round(resultAngles[angleIndex])} differs from requested angle ${intAngleValue}`);
+          }
+          
+          return {
+            ...shape,
+            points: finalPoints,
+            position: originalCenter
+          };
+        }
+        // Handle area updates
+        else if (measurementKey === 'area') {
+          // For area, we'll scale the triangle uniformly
+          const currentArea = calculateTriangleArea(shape.points);
+          const scaleFactor = Math.sqrt(valueInPixels / currentArea);
+          
+          // Scale the points from the center
+          const center = {
+            x: (shape.points[0].x + shape.points[1].x + shape.points[2].x) / 3,
+            y: (shape.points[0].y + shape.points[1].y + shape.points[2].y) / 3
+          };
+          
+          const newPoints: [Point, Point, Point] = shape.points.map(point => ({
+            x: center.x + (point.x - center.x) * scaleFactor,
+            y: center.y + (point.y - center.y) * scaleFactor
+          })) as [Point, Point, Point];
+          
+          return {
+            ...shape,
+            points: newPoints
+          };
+        }
+        // Handle perimeter updates
+        else if (measurementKey === 'perimeter') {
+          // For perimeter, we'll scale the triangle uniformly
+          const currentPerimeter = calculateTrianglePerimeter(shape.points);
+          const scaleFactor = valueInPixels / currentPerimeter;
+          
+          // Scale the points from the center
+          const center = {
+            x: (shape.points[0].x + shape.points[1].x + shape.points[2].x) / 3,
+            y: (shape.points[0].y + shape.points[1].y + shape.points[2].y) / 3
+          };
+          
+          const newPoints: [Point, Point, Point] = shape.points.map(point => ({
+            x: center.x + (point.x - center.x) * scaleFactor,
+            y: center.y + (point.y - center.y) * scaleFactor
+          })) as [Point, Point, Point];
+          
+          return {
+            ...shape,
+            points: newPoints
+          };
+        }
+        break;
+      }
+    }
+    
+    // If we get here, we didn't handle the measurement update
+    console.warn(`Unhandled measurement update: ${measurementKey} for shape type ${shape.type}`);
+    return shape;
+  }, [convertToPixels, convertFromPixels]);
+  
   // Function to update shape based on measurement values
-  const updateShapeFromMeasurement = useCallback((key: string, value: string) => {
+  const updateMeasurement = useCallback((key: string, value: string) => {
     if (!selectedShapeId) return;
     
     // Parse the input value to a number
@@ -427,88 +970,20 @@ export function useShapeOperations() {
       return;
     }
     
+    const selectedShape = getSelectedShape();
+    if (!selectedShape) return;
+    
     setShapes(prevShapes => 
       prevShapes.map(shape => {
         if (shape.id !== selectedShapeId) return shape;
         
-        // Convert from display units (cm/in) to pixels
-        const toPixels = measurementUnit === 'cm' 
-          ? (val: number) => val * pixelsPerCm 
-          : (val: number) => val * pixelsPerInch;
-        
-        switch (shape.type) {
-          case 'circle': {
-            const circle = shape as Circle;
-            
-            if (key === 'radius') {
-              return {
-                ...circle,
-                radius: toPixels(numValue)
-              };
-            } else if (key === 'diameter') {
-              return {
-                ...circle,
-                radius: toPixels(numValue / 2)
-              };
-            }
-            return circle;
-          }
-          case 'rectangle': {
-            const rect = shape as Rectangle;
-            
-            if (key === 'width') {
-              return {
-                ...rect,
-                width: toPixels(numValue)
-              };
-            } else if (key === 'height') {
-              return {
-                ...rect,
-                height: toPixels(numValue)
-              };
-            }
-            return rect;
-          }
-          case 'triangle': {
-            const tri = shape as Triangle;
-            
-            // For triangles, we only allow editing side lengths
-            // This is more complex as we need to maintain the triangle's shape
-            if (key === 'side1' || key === 'side2' || key === 'side3') {
-              const index = parseInt(key.slice(-1)) - 1;
-              if (index >= 0 && index < 3) {
-                // Get the current side length
-                const p1 = tri.points[index];
-                const p2 = tri.points[(index + 1) % 3];
-                const currentLength = distanceBetweenPoints(p1, p2);
-                
-                // Calculate the scale factor
-                const pixelValue = toPixels(numValue);
-                const scaleFactor = pixelValue / currentLength;
-                
-                // Scale the triangle from its center
-                const center = tri.position;
-                const newPoints = tri.points.map(point => ({
-                  x: center.x + (point.x - center.x) * scaleFactor,
-                  y: center.y + (point.y - center.y) * scaleFactor
-                })) as [Point, Point, Point];
-                
-                return {
-                  ...tri,
-                  points: newPoints
-                };
-              }
-            }
-            return tri;
-          }
-          default:
-            return shape;
-        }
+        // Use our helper function to update the shape
+        return updateShapeFromMeasurement(shape, key, numValue, measurementUnit);
       })
     );
     
     toast.success("Shape updated");
-  }, [selectedShapeId, measurementUnit, pixelsPerCm, pixelsPerInch, distanceBetweenPoints]);
+  }, [selectedShapeId, getSelectedShape, updateShapeFromMeasurement, measurementUnit]);
   
   return {
     shapes,
@@ -530,6 +1005,7 @@ export function useShapeOperations() {
     setActiveShapeType,
     getShapeMeasurements,
     getSelectedShape,
-    updateShapeFromMeasurement
+    updateShapeFromMeasurement,
+    updateMeasurement
   };
 }
