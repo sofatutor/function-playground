@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useShapeOperations } from '@/hooks/useShapeOperations';
 import GeometryHeader from '@/components/GeometryHeader';
@@ -85,6 +84,7 @@ const Index = () => {
                 selectedShapeId={selectedShapeId}
                 activeMode={activeMode}
                 measurementUnit={measurementUnit}
+                isFullscreen={isFullscreen}
                 onShapeSelect={selectShape}
                 onShapeCreate={createShape}
                 onShapeMove={moveShape}
