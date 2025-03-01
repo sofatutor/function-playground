@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useShapeOperations } from '@/hooks/useShapeOperations';
 import GeometryHeader from '@/components/GeometryHeader';
 import GeometryCanvas from '@/components/GeometryCanvas';
@@ -31,19 +32,33 @@ const Index = () => {
     getSelectedShape
   } = useShapeOperations();
 
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Check fullscreen status
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
   const selectedShape = getSelectedShape();
   const measurements = selectedShape ? getShapeMeasurements(selectedShape) : {};
   const t = useTranslate();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container py-8">
-        <GeometryHeader />
+    <div className={`min-h-screen bg-gray-50 ${isFullscreen ? 'p-2' : ''}`}>
+      <div className={`${isFullscreen ? 'max-w-full p-2' : 'container py-8'} transition-all duration-200`}>
+        <GeometryHeader isFullscreen={isFullscreen} />
         
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-3">
-            <div className="flex flex-col space-y-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 sm:space-x-2">
+        <div className={`grid ${isFullscreen ? 'grid-cols-12 gap-2' : 'grid-cols-1 lg:grid-cols-4 gap-6'}`}>
+          <div className={`${isFullscreen ? 'col-span-10' : 'lg:col-span-3'}`}>
+            <div className="flex flex-col space-y-2">
+              <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between ${isFullscreen ? 'space-y-1 sm:space-y-0 sm:space-x-1' : 'space-y-2 sm:space-y-0 sm:space-x-2'}`}>
                 <Toolbar
                   activeMode={activeMode}
                   activeShapeType={activeShapeType}
@@ -79,9 +94,9 @@ const Index = () => {
             </div>
           </div>
           
-          <div className="lg:col-span-1">
-            <div className="flex flex-col space-y-4">
-              <Card className="p-4">
+          <div className={`${isFullscreen ? 'col-span-2' : 'lg:col-span-1'}`}>
+            <div className={`flex flex-col ${isFullscreen ? 'space-y-2' : 'space-y-4'}`}>
+              <Card className={`${isFullscreen ? 'p-2' : 'p-4'}`}>
                 <UnitSelector
                   value={measurementUnit}
                   onChange={setMeasurementUnit}
@@ -94,23 +109,25 @@ const Index = () => {
                 measurementUnit={measurementUnit}
               />
               
-              <Card className="p-4">
-                <h3 className="text-sm font-medium mb-2">{t('gettingStarted')}</h3>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li className="flex items-center space-x-2">
-                    <Square size={16} className="text-geometry-primary" />
-                    <span>{t('selectShapeTool')}</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <Circle size={16} className="text-geometry-primary" />
-                    <span>{t('clickAndDrag')}</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <Triangle size={16} className="text-geometry-primary" />
-                    <span>{t('useControls')}</span>
-                  </li>
-                </ul>
-              </Card>
+              {!isFullscreen && (
+                <Card className="p-4">
+                  <h3 className="text-sm font-medium mb-2">{t('gettingStarted')}</h3>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex items-center space-x-2">
+                      <Square size={16} className="text-geometry-primary" />
+                      <span>{t('selectShapeTool')}</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <Circle size={16} className="text-geometry-primary" />
+                      <span>{t('clickAndDrag')}</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <Triangle size={16} className="text-geometry-primary" />
+                      <span>{t('useControls')}</span>
+                    </li>
+                  </ul>
+                </Card>
+              )}
             </div>
           </div>
         </div>

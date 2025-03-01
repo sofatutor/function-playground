@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { MeasurementUnit } from '@/types/shapes';
 
@@ -20,12 +21,10 @@ const CanvasGrid: React.FC<CanvasGridProps> = ({ canvasSize, pixelsPerCm, pixels
   const mmGridLines = [];
   const cmLabels = [];
 
-  // Define the text style to prevent selection
-  const textStyle = {
-    userSelect: 'none',
-    WebkitUserSelect: 'none',
-    MozUserSelect: 'none',
-    msUserSelect: 'none'
+  // Define the text style to prevent selection - using correct TypeScript types
+  const textStyle: React.CSSProperties = {
+    userSelect: 'none' as const,
+    pointerEvents: 'none'
   };
 
   // Horizontal centimeter and millimeter lines
@@ -67,7 +66,6 @@ const CanvasGrid: React.FC<CanvasGridProps> = ({ canvasSize, pixelsPerCm, pixels
         fontSize="8" 
         fill="#555B6E"
         style={textStyle}
-        pointerEvents="none"
       >
         {i} {unit}
       </text>
@@ -113,7 +111,6 @@ const CanvasGrid: React.FC<CanvasGridProps> = ({ canvasSize, pixelsPerCm, pixels
         fontSize="8" 
         fill="#555B6E"
         style={textStyle}
-        pointerEvents="none"
       >
         {i} {unit}
       </text>
