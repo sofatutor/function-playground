@@ -1,6 +1,5 @@
-
 export type ShapeType = 'circle' | 'rectangle' | 'triangle';
-export type MeasurementUnit = 'cm' | 'inch';
+export type MeasurementUnit = 'cm' | 'in';
 
 export interface Point {
   x: number;

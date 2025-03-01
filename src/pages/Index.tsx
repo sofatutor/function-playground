@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useShapeOperations } from '@/hooks/useShapeOperations';
 import GeometryHeader from '@/components/GeometryHeader';
@@ -9,6 +8,7 @@ import UnitSelector from '@/components/UnitSelector';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Triangle, Circle, Square } from 'lucide-react';
+import { useTranslate } from '@/utils/translate';
 
 const Index = () => {
   const {
@@ -33,6 +33,7 @@ const Index = () => {
 
   const selectedShape = getSelectedShape();
   const measurements = selectedShape ? getShapeMeasurements(selectedShape) : {};
+  const t = useTranslate();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -60,7 +61,7 @@ const Index = () => {
                   onClick={deleteAllShapes}
                   className="text-sm"
                 >
-                  Clear Canvas
+                  {t('clearCanvas')}
                 </Button>
               </div>
               
@@ -68,6 +69,7 @@ const Index = () => {
                 shapes={shapes}
                 selectedShapeId={selectedShapeId}
                 activeMode={activeMode}
+                measurementUnit={measurementUnit}
                 onShapeSelect={selectShape}
                 onShapeCreate={createShape}
                 onShapeMove={moveShape}
@@ -93,19 +95,19 @@ const Index = () => {
               />
               
               <Card className="p-4">
-                <h3 className="text-sm font-medium mb-2">Erste Schritte (Getting Started)</h3>
+                <h3 className="text-sm font-medium mb-2">{t('gettingStarted')}</h3>
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex items-center space-x-2">
                     <Square size={16} className="text-geometry-primary" />
-                    <span>Wählen Sie ein Formwerkzeug (Select a shape tool)</span>
+                    <span>{t('selectShapeTool')}</span>
                   </li>
                   <li className="flex items-center space-x-2">
                     <Circle size={16} className="text-geometry-primary" />
-                    <span>Klicken und ziehen Sie (Click and drag to create)</span>
+                    <span>{t('clickAndDrag')}</span>
                   </li>
                   <li className="flex items-center space-x-2">
                     <Triangle size={16} className="text-geometry-primary" />
-                    <span>Nutzen Sie die Steuerung (Use controls)</span>
+                    <span>{t('useControls')}</span>
                   </li>
                 </ul>
               </Card>

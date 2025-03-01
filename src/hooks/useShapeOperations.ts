@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { 
   AnyShape, Circle, Rectangle, Triangle, Point, ShapeType, OperationMode, MeasurementUnit
@@ -84,18 +83,20 @@ export function useShapeOperations() {
         break;
       }
       case 'triangle': {
-        // Create an equilateral triangle centered around the start point
+        // Create a rectangular triangle with a right angle
         const distance = distanceBetweenPoints(startPoint, endPoint);
         const angle = Math.atan2(endPoint.y - startPoint.y, endPoint.x - startPoint.x);
         
-        const p1 = { ...startPoint };
+        const p1 = { ...startPoint }; // First point (start point)
         const p2 = {
           x: startPoint.x + distance * Math.cos(angle),
           y: startPoint.y + distance * Math.sin(angle)
-        };
+        }; // Second point (end point)
+        
+        // Create a right angle at p1 by making the third point perpendicular to the line p1-p2
         const p3 = {
-          x: startPoint.x + distance * Math.cos(angle + (2 * Math.PI / 3)),
-          y: startPoint.y + distance * Math.sin(angle + (2 * Math.PI / 3))
+          x: startPoint.x + distance * Math.sin(angle), // Use sin for x to create perpendicular direction
+          y: startPoint.y - distance * Math.cos(angle)  // Use negative cos for y to create perpendicular direction
         };
         
         newShape = {

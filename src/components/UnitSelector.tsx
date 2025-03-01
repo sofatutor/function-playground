@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Select,
@@ -9,36 +8,47 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { MeasurementUnit } from '@/types/shapes';
+import { useTranslate } from '@/utils/translate';
 
 interface UnitSelectorProps {
   value: MeasurementUnit;
   onChange: (value: MeasurementUnit) => void;
+  onUnitChange?: (unit: MeasurementUnit) => void; // Make this prop optional
 }
 
-const UnitSelector: React.FC<UnitSelectorProps> = ({ value, onChange }) => {
-  // Map of unit codes to display names for localization
-  const unitLabels: Record<MeasurementUnit, { de: string, en: string }> = {
-    'cm': { de: 'Zentimeter', en: 'Centimeters' },
-    'inch': { de: 'Zoll', en: 'Inches' },
+const UnitSelector: React.FC<UnitSelectorProps> = ({ value, onChange, onUnitChange }) => {
+  const t = useTranslate();
+  
+  console.log('UnitSelector received value:', value, 'Type:', typeof value);
+  
+  // Map of unit codes to translation keys
+  const unitLabels: Record<MeasurementUnit, string> = {
+    'cm': 'units.centimeters',
+    'in': 'units.inches',
   };
 
   return (
     <div className="flex flex-col space-y-1.5">
       <Label htmlFor="unit-selector" className="text-xs font-medium">
-        {/* German label with English in parentheses */}
-        Maßeinheit (Units)
+        {t('units.label')}
       </Label>
       <Select
         value={value}
-        onValueChange={(v) => onChange(v as MeasurementUnit)}
+        onValueChange={(v) => {
+          console.log('Select onValueChange called with:', v, 'Type:', typeof v);
+          onChange(v as MeasurementUnit);
+          if (onUnitChange) {
+            onUnitChange(v as MeasurementUnit); // Check if onUnitChange is defined
+          }
+        }}
       >
         <SelectTrigger id="unit-selector" className="w-full">
-          <SelectValue placeholder="Maßeinheit wählen" />
+          <SelectValue placeholder={t('units.placeholder')} />
         </SelectTrigger>
         <SelectContent position="popper">
           {(Object.keys(unitLabels) as MeasurementUnit[]).map((unit) => (
             <SelectItem key={unit} value={unit}>
-              {unitLabels[unit].de} ({unitLabels[unit].en})
+              {t(unitLabels[unit])}
             </SelectItem>
           ))}
         </SelectContent>
