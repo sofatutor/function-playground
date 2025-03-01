@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { MeasurementUnit } from '@/types/shapes';
 
 interface CanvasGridProps {
@@ -15,8 +14,9 @@ const CanvasGrid: React.FC<CanvasGridProps> = ({ canvasSize, pixelsPerCm, pixels
   // Default to 'cm' if measurementUnit is undefined
   const unit = measurementUnit || 'cm';
   
-  const numHorizontalCmLines = Math.ceil(canvasSize.height / pixelsPerCm) + 1;
-  const numVerticalCmLines = Math.ceil(canvasSize.width / pixelsPerCm) + 1;
+  // Add a larger buffer to ensure all grid lines are rendered completely
+  const numHorizontalCmLines = Math.ceil(canvasSize.height / pixelsPerCm) + 5;
+  const numVerticalCmLines = Math.ceil(canvasSize.width / pixelsPerCm) + 5;
   const cmGridLines = [];
   const mmGridLines = [];
   const cmLabels = [];
