@@ -28,7 +28,8 @@ const Index = () => {
     setActiveMode,
     setActiveShapeType,
     getShapeMeasurements,
-    getSelectedShape
+    getSelectedShape,
+    updateShapeFromMeasurement
   } = useShapeOperations();
 
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -109,6 +110,7 @@ const Index = () => {
                 selectedShape={selectedShape}
                 measurements={measurements}
                 measurementUnit={measurementUnit}
+                onMeasurementUpdate={updateShapeFromMeasurement}
               />
               
               {!isFullscreen && (

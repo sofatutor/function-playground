@@ -416,6 +416,100 @@ export function useShapeOperations() {
     return shapes.find(shape => shape.id === selectedShapeId) || null;
   }, [shapes, selectedShapeId]);
   
+  // Function to update shape based on measurement values
+  const updateShapeFromMeasurement = useCallback((key: string, value: string) => {
+    if (!selectedShapeId) return;
+    
+    // Parse the input value to a number
+    const numValue = parseFloat(value);
+    if (isNaN(numValue) || numValue <= 0) {
+      toast.error("Please enter a valid positive number");
+      return;
+    }
+    
+    setShapes(prevShapes => 
+      prevShapes.map(shape => {
+        if (shape.id !== selectedShapeId) return shape;
+        
+        // Convert from display units (cm/in) to pixels
+        const toPixels = measurementUnit === 'cm' 
+          ? (val: number) => val * pixelsPerCm 
+          : (val: number) => val * pixelsPerInch;
+        
+        switch (shape.type) {
+          case 'circle': {
+            const circle = shape as Circle;
+            
+            if (key === 'radius') {
+              return {
+                ...circle,
+                radius: toPixels(numValue)
+              };
+            } else if (key === 'diameter') {
+              return {
+                ...circle,
+                radius: toPixels(numValue / 2)
+              };
+            }
+            return circle;
+          }
+          case 'rectangle': {
+            const rect = shape as Rectangle;
+            
+            if (key === 'width') {
+              return {
+                ...rect,
+                width: toPixels(numValue)
+              };
+            } else if (key === 'height') {
+              return {
+                ...rect,
+                height: toPixels(numValue)
+              };
+            }
+            return rect;
+          }
+          case 'triangle': {
+            const tri = shape as Triangle;
+            
+            // For triangles, we only allow editing side lengths
+            // This is more complex as we need to maintain the triangle's shape
+            if (key === 'side1' || key === 'side2' || key === 'side3') {
+              const index = parseInt(key.slice(-1)) - 1;
+              if (index >= 0 && index < 3) {
+                // Get the current side length
+                const p1 = tri.points[index];
+                const p2 = tri.points[(index + 1) % 3];
+                const currentLength = distanceBetweenPoints(p1, p2);
+                
+                // Calculate the scale factor
+                const pixelValue = toPixels(numValue);
+                const scaleFactor = pixelValue / currentLength;
+                
+                // Scale the triangle from its center
+                const center = tri.position;
+                const newPoints = tri.points.map(point => ({
+                  x: center.x + (point.x - center.x) * scaleFactor,
+                  y: center.y + (point.y - center.y) * scaleFactor
+                })) as [Point, Point, Point];
+                
+                return {
+                  ...tri,
+                  points: newPoints
+                };
+              }
+            }
+            return tri;
+          }
+          default:
+            return shape;
+        }
+      })
+    );
+    
+    toast.success("Shape updated");
+  }, [selectedShapeId, measurementUnit, pixelsPerCm, pixelsPerInch, distanceBetweenPoints]);
+  
   return {
     shapes,
     selectedShapeId,
@@ -435,6 +529,7 @@ export function useShapeOperations() {
     setActiveMode,
     setActiveShapeType,
     getShapeMeasurements,
-    getSelectedShape
+    getSelectedShape,
+    updateShapeFromMeasurement
   };
 }
