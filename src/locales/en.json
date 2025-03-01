@@ -30,11 +30,16 @@
     "side3": "Side 3",
     "area": "Area",
     "perimeter": "Perimeter",
-    "angles": "Interior Angles"
+    "circumference": "Circumference",
+    "angles": "Interior Angles",
+    "angle1": "Angle 1",
+    "angle2": "Angle 2",
+    "angle3": "Angle 3"
   },
   "unitSuffixes": {
     "area": "{unit}²",
     "perimeter": "{unit}",
+    "circumference": "{unit}",
     "side1": "{unit}",
     "side2": "{unit}",
     "side3": "{unit}",
@@ -42,14 +47,18 @@
     "height": "{unit}",
     "radius": "{unit}",
     "diameter": "{unit}",
-    "angles": "°"
+    "angles": "°",
+    "angle1": "°",
+    "angle2": "°",
+    "angle3": "°"
   },
   "formulaExplanations": {
     "circle": {
       "radius": "The distance from the center to the edge of the circle.",
       "diameter": "The distance across the circle through the center.",
       "area": "The space inside the circle.",
-      "perimeter": "The distance around the circle, also called circumference."
+      "perimeter": "The distance around the circle, also called circumference.",
+      "circumference": "The distance around the circle, equal to 2πr or πd."
     },
     "rectangle": {
       "width": "The horizontal dimension of the rectangle.",
@@ -64,7 +73,10 @@
       "area": "The space inside the triangle.",
       "perimeter": "The distance around the triangle (sum of all sides).",
       "height": "The perpendicular distance from a vertex to the opposite side (base).",
-      "angles": "The sum of the interior angles of a triangle is always 180 degrees."
+      "angles": "The sum of the interior angles of a triangle is always 180 degrees.",
+      "angle1": "The angle between side3 and side2. When one angle changes, the others adjust to maintain a sum of 180°.",
+      "angle2": "The angle between side1 and side3. When one angle changes, the others adjust to maintain a sum of 180°.",
+      "angle3": "The angle between side1 and side2. When one angle changes, the others adjust to maintain a sum of 180°."
     }
   },
   "tooltips": {

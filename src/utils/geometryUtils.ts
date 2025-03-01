@@ -26,6 +26,12 @@ export const formulas = {
       de: '\\text{Umfang} = 2\\pi r',
       es: '\\text{perímetro} = 2\\pi r',
       fr: '\\text{périmètre} = 2\\pi r'
+    },
+    circumference: {
+      en: '\\text{circumference} = 2\\pi r',
+      de: '\\text{Kreisumfang} = 2\\pi r',
+      es: '\\text{circunferencia} = 2\\pi r',
+      fr: '\\text{circonférence} = 2\\pi r'
     }
   },
   rectangle: {
@@ -66,6 +72,24 @@ export const formulas = {
       de: '\\text{Winkel: } \\alpha + \\beta + \\gamma = 180°',
       es: '\\text{ángulos: } \\alpha + \\beta + \\gamma = 180°',
       fr: '\\text{angles: } \\alpha + \\beta + \\gamma = 180°'
+    },
+    angle1: {
+      en: '\\text{Law of cosines: } \\cos(A) = \\frac{b^2 + c^2 - a^2}{2bc}',
+      de: '\\text{Kosinussatz: } \\cos(A) = \\frac{b^2 + c^2 - a^2}{2bc}',
+      es: '\\text{Ley de cosenos: } \\cos(A) = \\frac{b^2 + c^2 - a^2}{2bc}',
+      fr: '\\text{Loi des cosinus: } \\cos(A) = \\frac{b^2 + c^2 - a^2}{2bc}'
+    },
+    angle2: {
+      en: '\\text{Law of cosines: } \\cos(B) = \\frac{a^2 + c^2 - b^2}{2ac}',
+      de: '\\text{Kosinussatz: } \\cos(B) = \\frac{a^2 + c^2 - b^2}{2ac}',
+      es: '\\text{Ley de cosenos: } \\cos(B) = \\frac{a^2 + c^2 - b^2}{2ac}',
+      fr: '\\text{Loi des cosinus: } \\cos(B) = \\frac{a^2 + c^2 - b^2}{2ac}'
+    },
+    angle3: {
+      en: '\\text{Sum of angles: } C = 180° - A - B',
+      de: '\\text{Winkelsumme: } C = 180° - A - B',
+      es: '\\text{Suma de ángulos: } C = 180° - A - B',
+      fr: '\\text{Somme des angles: } C = 180° - A - B'
     }
   }
 };
