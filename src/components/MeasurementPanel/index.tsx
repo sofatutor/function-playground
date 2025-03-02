@@ -51,7 +51,8 @@ const MeasurementPanel: React.FC<MeasurementPanelProps> = ({
   
   // Function to handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEditValue(e.target.value);
+    const value = e.target.value;
+    setEditValue(value);
   };
   
   // Function to handle key press events

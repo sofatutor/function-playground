@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MeasurementUnit } from '@/types/shapes';
 import GridLines from './GridLines';
 import OriginIndicator from './OriginIndicator';
@@ -9,19 +9,32 @@ interface CanvasGridProps {
   pixelsPerCm: number;
   pixelsPerMm: number;
   measurementUnit?: MeasurementUnit;
+  onMoveAllShapes?: (dx: number, dy: number) => void;
 }
 
 const CanvasGrid: React.FC<CanvasGridProps> = ({
   canvasSize,
   pixelsPerCm,
   pixelsPerMm,
-  measurementUnit = 'cm'
+  measurementUnit = 'cm',
+  onMoveAllShapes
 }) => {
   // State for the grid origin point
   const [origin, setOrigin] = useState({
     x: canvasSize.width / 2,
     y: canvasSize.height / 2
   });
+
+  // Update origin when canvas size changes to keep it centered
+  useEffect(() => {
+    // Only update if the origin is at the default center position
+    if (origin.x === canvasSize.width / 2 - 1 || origin.y === canvasSize.height / 2 - 1) {
+      setOrigin({
+        x: canvasSize.width / 2,
+        y: canvasSize.height / 2
+      });
+    }
+  }, [canvasSize, origin.x, origin.y]);
 
   return (
     <div 
@@ -32,13 +45,14 @@ const CanvasGrid: React.FC<CanvasGridProps> = ({
         left: 0, 
         width: '100%', 
         height: '100%', 
-        pointerEvents: 'none', // Allow events to pass through to shapes underneath
-        zIndex: 0 // Changed from -1 to 0 to ensure grid is visible but still below shapes
+        pointerEvents: 'none', // Allow events to pass through to shapes underneath by default
+        zIndex: 5 // Ensure grid is above shapes when interacting with it
       }}
     >
       <GridDragHandler
         origin={origin}
         onOriginChange={setOrigin}
+        onMoveAllShapes={onMoveAllShapes}
       >
         <GridLines
           canvasSize={canvasSize}

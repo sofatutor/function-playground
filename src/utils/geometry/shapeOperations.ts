@@ -1,4 +1,3 @@
-
 import { AnyShape, Point, Triangle, Line } from '@/types/shapes';
 import { distanceBetweenPoints } from './common';
 
@@ -15,11 +14,13 @@ export const moveShape = (shapes: AnyShape[], id: string, newPosition: Point): A
   return shapes.map(shape => {
     if (shape.id !== id) return shape;
     
+    // Calculate the delta between current and new position
+    const deltaX = newPosition.x - shape.position.x;
+    const deltaY = newPosition.y - shape.position.y;
+    
     if (shape.type === 'triangle') {
       // For triangles, we need to update each point
       const tri = shape as Triangle;
-      const deltaX = newPosition.x - tri.position.x;
-      const deltaY = newPosition.y - tri.position.y;
       
       // Move each point by the same delta
       const newPoints: [Point, Point, Point] = [
@@ -38,8 +39,6 @@ export const moveShape = (shapes: AnyShape[], id: string, newPosition: Point): A
     if (shape.type === 'line') {
       // For lines, we need to update both start and end points
       const line = shape as Line;
-      const deltaX = newPosition.x - line.position.x;
-      const deltaY = newPosition.y - line.position.y;
       
       const newStartPoint = {
         x: line.startPoint.x + deltaX,

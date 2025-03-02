@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import ShapeControls from '../ShapeControls';
 import CanvasGrid from '../CanvasGrid';
 import ShapeRenderer from './ShapeRenderer';
@@ -32,6 +32,7 @@ interface GeometryCanvasProps {
   onShapeResize: (id: string, factor: number) => void;
   onShapeRotate: (id: string, angle: number) => void;
   onModeChange?: (mode: OperationMode) => void;
+  onMoveAllShapes?: (dx: number, dy: number) => void;
 }
 
 const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
@@ -46,7 +47,8 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
   onShapeMove,
   onShapeResize,
   onShapeRotate,
-  onModeChange
+  onModeChange,
+  onMoveAllShapes
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -326,6 +328,14 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     setShowCalibration(!showCalibration);
   };
 
+  // Inside the GeometryCanvas component, add a new function to handle moving all shapes
+  const handleMoveAllShapes = useCallback((dx: number, dy: number) => {
+    if (!onMoveAllShapes) return;
+    
+    // Call the parent component's handler with precise deltas
+    onMoveAllShapes(dx, dy);
+  }, [onMoveAllShapes]);
+
   return (
     <div className="relative w-full h-full">
       {/* Calibration button and tool */}
@@ -356,6 +366,7 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
           pixelsPerCm={pixelsPerUnit} 
           pixelsPerMm={pixelsPerSmallUnit}
           measurementUnit={measurementUnit || 'cm'}
+          onMoveAllShapes={handleMoveAllShapes}
         />
         
         {/* Render all shapes */}

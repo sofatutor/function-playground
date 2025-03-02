@@ -18,7 +18,8 @@
   "shapeNames": {
     "circle": "Kreis",
     "rectangle": "Rechteck",
-    "triangle": "Dreieck"
+    "triangle": "Dreieck",
+    "line": "Linie"
   },
   "measurementLabels": {
     "radius": "Radius",
@@ -34,7 +35,9 @@
     "angles": "Innenwinkel",
     "angle1": "Winkel 1",
     "angle2": "Winkel 2",
-    "angle3": "Winkel 3"
+    "angle3": "Winkel 3",
+    "length": "Länge",
+    "angle": "Winkel"
   },
   "unitSuffixes": {
     "area": "{unit}²",
@@ -50,7 +53,9 @@
     "angles": "°",
     "angle1": "°",
     "angle2": "°",
-    "angle3": "°"
+    "angle3": "°",
+    "length": "{unit}",
+    "angle": "°"
   },
   "formulaExplanations": {
     "circle": {
@@ -72,19 +77,26 @@
       "side3": "Die Länge einer Seite des Dreiecks.",
       "area": "Die Fläche innerhalb des Dreiecks.",
       "perimeter": "Der Umfang des Dreiecks (Summe aller Seiten).",
-      "height": "Der senkrechte Abstand von einer Ecke zur gegenüberliegenden Seite (Basis).",
+      "height": "Der senkrechte Abstand von einer Ecke zur längsten Seite (als Basis verwendet).",
       "angles": "Die Summe der Innenwinkel eines Dreiecks beträgt immer 180 Grad.",
       "angle1": "Der Winkel zwischen Seite 3 und Seite 2. Wenn sich ein Winkel ändert, passen sich die anderen an, um eine Summe von 180° zu erhalten.",
       "angle2": "Der Winkel zwischen Seite 1 und Seite 3. Wenn sich ein Winkel ändert, passen sich die anderen an, um eine Summe von 180° zu erhalten.",
       "angle3": "Der Winkel zwischen Seite 1 und Seite 2. Wenn sich ein Winkel ändert, passen sich die anderen an, um eine Summe von 180° zu erhalten."
+    },
+    "line": {
+      "length": "Der direkte Abstand zwischen den beiden Endpunkten.",
+      "angle": "Der Winkel, den die Linie mit der horizontalen Achse bildet, gemessen in Grad."
     }
   },
   "tooltips": {
     "rectangle": "Rechteck",
     "circle": "Kreis",
     "triangle": "Dreieck",
+    "line": "Linie",
+    "lineExplanation": "Berechnet den direkten Abstand zwischen zwei Punkten",
     "select": "Formen auswählen & bewegen",
     "rotate": "Form drehen",
     "delete": "Ausgewählte löschen"
-  }
+  },
+  "holdShiftToSnap15Degrees": "Shift-Taste halten, um beim Drehen in 15°-Schritten einzurasten"
 }

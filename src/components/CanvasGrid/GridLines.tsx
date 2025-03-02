@@ -70,6 +70,9 @@ const GridLines: React.FC<GridLinesProps> = ({
       }
     }
     if (yPosition >= 0 && yPosition <= canvasSize.height) {
+      // Invert the y-axis label value to follow standard Cartesian coordinates
+      // In Cartesian coordinates, y increases upward, so we negate the value
+      const yLabelValue = -i;
       cmLabels.push(
         <text 
           key={`h-label-${i}`} 
@@ -79,7 +82,7 @@ const GridLines: React.FC<GridLinesProps> = ({
           fill="#555B6E"
           style={textStyle}
         >
-          {i} {unit}
+          {yLabelValue} {unit}
         </text>
       );
     }

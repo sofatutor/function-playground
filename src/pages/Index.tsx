@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useShapeOperations } from '@/hooks/useShapeOperations';
 import GeometryHeader from '@/components/GeometryHeader';
 import GeometryCanvas from '@/components/GeometryCanvas';
@@ -59,6 +59,18 @@ const Index = () => {
 
   const t = useTranslate();
 
+  // Inside the Index component, add a function to handle moving all shapes
+  const handleMoveAllShapes = useCallback((dx: number, dy: number) => {
+    // Move each shape by the specified delta
+    shapes.forEach(shape => {
+      const newPosition = {
+        x: shape.position.x + dx,
+        y: shape.position.y + dy
+      };
+      moveShape(shape.id, newPosition);
+    });
+  }, [shapes, moveShape]);
+
   return (
     <div className={`min-h-screen bg-gray-50 ${isFullscreen ? 'p-2' : ''}`}>
       <div className={`${isFullscreen ? 'max-w-full p-2' : 'container py-8'} transition-all duration-200 h-[calc(100vh-2rem)]`}>
@@ -102,6 +114,7 @@ const Index = () => {
                 onShapeResize={resizeShape}
                 onShapeRotate={rotateShape}
                 onModeChange={setActiveMode}
+                onMoveAllShapes={handleMoveAllShapes}
               />
             </div>
           </div>

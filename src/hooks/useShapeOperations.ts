@@ -118,7 +118,7 @@ export function useShapeOperations() {
     
     // Parse the input value to a number
     const numValue = parseFloat(value);
-    if (isNaN(numValue) || numValue <= 0) {
+    if (isNaN(numValue) || numValue < 0) {
       toast.error("Please enter a valid positive number");
       return;
     }
@@ -129,7 +129,7 @@ export function useShapeOperations() {
     // Convert the value to pixels if needed
     const valueInPixels = handleConvertToPixels(numValue);
     
-    setShapes(prevShapes => 
+    setShapes(prevShapes =>
       prevShapes.map(shape => {
         if (shape.id !== selectedShapeId) return shape;
         

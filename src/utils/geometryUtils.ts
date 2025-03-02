@@ -1,4 +1,3 @@
-
 import { ShapeType } from '@/types/shapes';
 import en from '@/locales/en.json';
 import de from '@/locales/de.json';
@@ -63,10 +62,10 @@ export const formulas = {
       fr: '\\text{périmètre} = a + b + c'
     },
     height: {
-      en: '\\text{height} = \\frac{2 \\times \\text{area}}{\\text{base}}',
-      de: '\\text{Höhe} = \\frac{2 \\times \\text{Fläche}}{\\text{Basis}}',
-      es: '\\text{altura} = \\frac{2 \\times \\text{área}}{\\text{base}}',
-      fr: '\\text{hauteur} = \\frac{2 \\times \\text{aire}}{\\text{base}}'
+      en: '\\text{height} = \\frac{2 \\times \\text{area}}{\\text{longest side}}',
+      de: '\\text{Höhe} = \\frac{2 \\times \\text{Fläche}}{\\text{längste Seite}}',
+      es: '\\text{altura} = \\frac{2 \\times \\text{área}}{\\text{lado más largo}}',
+      fr: '\\text{hauteur} = \\frac{2 \\times \\text{aire}}{\\text{côté le plus long}}'
     },
     angles: {
       en: '\\text{angles: } \\alpha + \\beta + \\gamma = 180°',

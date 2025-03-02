@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { AnyShape, Circle, Rectangle, Triangle, Line } from '@/types/shapes';
 
@@ -147,8 +146,8 @@ const renderTriangle = (tri: Triangle, isSelected: boolean, activeMode: string) 
 const renderLine = (line: Line, isSelected: boolean, activeMode: string) => {
   // For lines, we'll use SVG to render them
   
-  // Calculate the bounding box (add some padding for hit detection)
-  const padding = 10;
+  // Calculate the bounding box (add more padding for better hit detection)
+  const padding = 15;
   const minX = Math.min(line.startPoint.x, line.endPoint.x) - padding;
   const minY = Math.min(line.startPoint.y, line.endPoint.y) - padding;
   const maxX = Math.max(line.startPoint.x, line.endPoint.x) + padding;
@@ -208,6 +207,17 @@ const renderLine = (line: Line, isSelected: boolean, activeMode: string) => {
           </>
         )}
         
+        {/* Invisible wider line for easier selection */}
+        <line
+          x1={startX}
+          y1={startY}
+          x2={endX}
+          y2={endY}
+          stroke="transparent"
+          strokeWidth="20"
+          strokeLinecap="round"
+        />
+        
         {/* Main line */}
         <line
           x1={startX}
@@ -220,8 +230,8 @@ const renderLine = (line: Line, isSelected: boolean, activeMode: string) => {
         />
         
         {/* Add small circles at endpoints to make them more visible */}
-        <circle cx={startX} cy={startY} r="3" fill={line.stroke} />
-        <circle cx={endX} cy={endY} r="3" fill={line.stroke} />
+        <circle cx={startX} cy={startY} r="4" fill={line.stroke} />
+        <circle cx={endX} cy={endY} r="4" fill={line.stroke} />
       </svg>
     </div>
   );

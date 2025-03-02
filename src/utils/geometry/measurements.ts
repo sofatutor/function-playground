@@ -1,4 +1,3 @@
-
 import { AnyShape, Circle, Rectangle, Triangle, Line, MeasurementUnit } from '@/types/shapes';
 import { distanceBetweenPoints } from './common';
 import { calculateTriangleArea, calculateTriangleAngles } from './triangle';
@@ -83,13 +82,11 @@ export const getShapeMeasurements = (
       const s = perimeter / 2; // Semi-perimeter
       const area = Math.sqrt(s * (s - side1Length) * (s - side2Length) * (s - side3Length));
       
-      // Calculate heights for each side as base
-      const height1 = (2 * area) / side1Length; // Height from side1 as base
-      const height2 = (2 * area) / side2Length; // Height from side2 as base
-      const height3 = (2 * area) / side3Length; // Height from side3 as base
+      // Find the longest side
+      const longestSide = Math.max(side1Length, side2Length, side3Length);
       
-      // Use the average height as the representative height
-      const height = (height1 + height2 + height3) / 3;
+      // Calculate height from the longest side as base
+      const height = (2 * area) / longestSide;
       
       // Calculate angles
       const angles = calculateTriangleAngles(side1Length, side2Length, side3Length);

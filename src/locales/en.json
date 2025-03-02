@@ -9,6 +9,7 @@
   "measurements": "Measurements",
   "selectShapeToViewMeasurements": "Select a shape to view measurements",
   "formula": "Formula",
+  "holdShiftToSnap15Degrees": "Hold Shift to snap to 15° increments when rotating",
   "units": {
     "label": "Measurement Units",
     "placeholder": "Select a unit",
@@ -18,7 +19,8 @@
   "shapeNames": {
     "circle": "Circle",
     "rectangle": "Rectangle",
-    "triangle": "Triangle"
+    "triangle": "Triangle",
+    "line": "Line"
   },
   "measurementLabels": {
     "radius": "Radius",
@@ -34,7 +36,9 @@
     "angles": "Interior Angles",
     "angle1": "Angle 1",
     "angle2": "Angle 2",
-    "angle3": "Angle 3"
+    "angle3": "Angle 3",
+    "length": "Length",
+    "angle": "Angle"
   },
   "unitSuffixes": {
     "area": "{unit}²",
@@ -50,7 +54,9 @@
     "angles": "°",
     "angle1": "°",
     "angle2": "°",
-    "angle3": "°"
+    "angle3": "°",
+    "length": "{unit}",
+    "angle": "°"
   },
   "formulaExplanations": {
     "circle": {
@@ -72,17 +78,23 @@
       "side3": "The length of one of the sides of the triangle.",
       "area": "The space inside the triangle.",
       "perimeter": "The distance around the triangle (sum of all sides).",
-      "height": "The perpendicular distance from a vertex to the opposite side (base).",
+      "height": "The perpendicular distance from a vertex to the longest side (used as base).",
       "angles": "The sum of the interior angles of a triangle is always 180 degrees.",
       "angle1": "The angle between side3 and side2. When one angle changes, the others adjust to maintain a sum of 180°.",
       "angle2": "The angle between side1 and side3. When one angle changes, the others adjust to maintain a sum of 180°.",
       "angle3": "The angle between side1 and side2. When one angle changes, the others adjust to maintain a sum of 180°."
+    },
+    "line": {
+      "length": "The straight-line distance between the two endpoints.",
+      "angle": "The angle the line makes with the horizontal axis, measured in degrees."
     }
   },
   "tooltips": {
     "rectangle": "Rectangle",
     "circle": "Circle",
     "triangle": "Triangle",
+    "line": "Line",
+    "lineExplanation": "Calculates the straight-line distance between two points",
     "select": "Select & Move Shapes",
     "rotate": "Rotate Shape",
     "delete": "Delete Selected"

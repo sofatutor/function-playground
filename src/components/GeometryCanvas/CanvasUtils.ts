@@ -1,5 +1,5 @@
 import React from 'react';
-import { AnyShape, Circle, Rectangle, Triangle, Point, MeasurementUnit } from '@/types/shapes';
+import { AnyShape, Circle, Rectangle, Triangle, Line, Point, MeasurementUnit } from '@/types/shapes';
 
 // Default physical measurements constants (in pixels)
 // Standard 96 DPI: 1cm = 37.8px, 1mm = 3.78px, 1in = 96px
@@ -80,6 +80,24 @@ export const getShapeAtPosition = (point: Point, shapes: AnyShape[]): AnyShape |
         }
         break;
       }
+      case 'line': {
+        const line = shape as Line;
+        
+        // Calculate distance from point to line segment
+        const distance = distanceFromPointToLineSegment(
+          point,
+          line.startPoint,
+          line.endPoint
+        );
+        
+        // Use a threshold for hit detection (make it easier to select thin lines)
+        const hitThreshold = Math.max(line.strokeWidth * 2, 10);
+        
+        if (distance <= hitThreshold) {
+          return shape;
+        }
+        break;
+      }
     }
   }
   return null;
@@ -128,4 +146,32 @@ export const isPointInTriangle = (p: Point, a: Point, b: Point, c: Point): boole
   
   // Sum of the three sub-triangles should equal the total triangle area
   return Math.abs(areaABC - (areaPBC + areaPAC + areaPAB)) < 0.01;
+};
+
+// Calculate the shortest distance from a point to a line segment
+export const distanceFromPointToLineSegment = (point: Point, lineStart: Point, lineEnd: Point): number => {
+  // Calculate the squared length of the line segment
+  const lengthSquared = Math.pow(lineEnd.x - lineStart.x, 2) + Math.pow(lineEnd.y - lineStart.y, 2);
+  
+  // If the line segment has zero length, return distance to either endpoint
+  if (lengthSquared === 0) {
+    return Math.sqrt(Math.pow(point.x - lineStart.x, 2) + Math.pow(point.y - lineStart.y, 2));
+  }
+  
+  // Calculate the projection of the point onto the line
+  // t is the normalized position along the line segment (0 to 1)
+  let t = ((point.x - lineStart.x) * (lineEnd.x - lineStart.x) + 
+           (point.y - lineStart.y) * (lineEnd.y - lineStart.y)) / lengthSquared;
+  
+  // Clamp t to the range [0, 1] to ensure we're on the line segment
+  t = Math.max(0, Math.min(1, t));
+  
+  // Calculate the closest point on the line segment
+  const closestPoint = {
+    x: lineStart.x + t * (lineEnd.x - lineStart.x),
+    y: lineStart.y + t * (lineEnd.y - lineStart.y)
+  };
+  
+  // Return the distance to the closest point
+  return Math.sqrt(Math.pow(point.x - closestPoint.x, 2) + Math.pow(point.y - closestPoint.y, 2));
 }; 

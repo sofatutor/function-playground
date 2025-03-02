@@ -69,7 +69,7 @@ const MeasurementItem: React.FC<MeasurementItemProps> = ({
     if (key.startsWith('angle')) {
       return {
         step: "1",
-        min: "1",
+        min: "0",
         max: "179"
       };
     }

@@ -9,6 +9,7 @@
   "measurements": "Mesures",
   "selectShapeToViewMeasurements": "Sélectionnez une forme pour voir les mesures",
   "formula": "Formule",
+  "holdShiftToSnap15Degrees": "Maintenez Shift pour aligner sur des incréments de 15° lors de la rotation",
   "units": {
     "label": "Unités de Mesure",
     "placeholder": "Sélectionnez une unité",
@@ -18,7 +19,8 @@
   "shapeNames": {
     "circle": "Cercle",
     "rectangle": "Rectangle",
-    "triangle": "Triangle"
+    "triangle": "Triangle",
+    "line": "Ligne"
   },
   "measurementLabels": {
     "radius": "Rayon",
@@ -34,7 +36,9 @@
     "angles": "Angles intérieurs",
     "angle1": "Angle 1",
     "angle2": "Angle 2",
-    "angle3": "Angle 3"
+    "angle3": "Angle 3",
+    "length": "Longueur",
+    "angle": "Angle"
   },
   "unitSuffixes": {
     "area": "{unit}²",
@@ -50,7 +54,9 @@
     "angles": "°",
     "angle1": "°",
     "angle2": "°",
-    "angle3": "°"
+    "angle3": "°",
+    "length": "{unit}",
+    "angle": "°"
   },
   "formulaExplanations": {
     "circle": {
@@ -72,17 +78,23 @@
       "side3": "La longueur d'un des côtés du triangle.",
       "area": "L'espace à l'intérieur du triangle.",
       "perimeter": "La distance autour du triangle (somme de tous les côtés).",
-      "height": "La distance perpendiculaire d'un sommet au côté opposé (base).",
+      "height": "La distance perpendiculaire d'un sommet au côté le plus long (utilisé comme base).",
       "angles": "La somme des angles intérieurs d'un triangle est toujours de 180 degrés.",
       "angle1": "L'angle entre le côté 3 et le côté 2. Lorsqu'un angle change, les autres s'ajustent pour maintenir une somme de 180°.",
       "angle2": "L'angle entre le côté 1 et le côté 3. Lorsqu'un angle change, les autres s'ajustent pour maintenir une somme de 180°.",
       "angle3": "L'angle entre le côté 1 et le côté 2. Lorsqu'un angle change, les autres s'ajustent pour maintenir une somme de 180°."
+    },
+    "line": {
+      "length": "La distance en ligne droite entre les deux points d'extrémité.",
+      "angle": "L'angle que fait la ligne avec l'axe horizontal, mesuré en degrés."
     }
   },
   "tooltips": {
     "rectangle": "Rectangle",
     "circle": "Cercle",
     "triangle": "Triangle",
+    "line": "Ligne",
+    "lineExplanation": "Calcule la distance en ligne droite entre deux points",
     "select": "Sélectionner et Déplacer les Formes",
     "rotate": "Faire Pivoter la Forme",
     "delete": "Supprimer la Sélection"

@@ -1,4 +1,4 @@
-import { AnyShape, Circle, Rectangle, Triangle, Point } from '@/types/shapes';
+import { AnyShape, Circle, Rectangle, Triangle, Point, Line } from '@/types/shapes';
 import { updateTriangleFromSideLength, updateTriangleFromAngle, calculateTriangleAngles } from './triangle';
 import { distanceBetweenPoints } from './common';
 
@@ -174,6 +174,68 @@ export const updateShapeFromMeasurement = (
         return {
           ...shape,
           points: newPoints
+        };
+      }
+      break;
+    }
+    case 'line': {
+      if (measurementKey === 'length') {
+        const line = shape as Line;
+        const currentLength = distanceBetweenPoints(line.startPoint, line.endPoint);
+        const scaleFactor = valueInPixels / currentLength;
+        
+        // Scale the line from its center
+        const center = line.position;
+        
+        // Calculate new endpoints by scaling from the center
+        const newStartPoint = {
+          x: center.x + (line.startPoint.x - center.x) * scaleFactor,
+          y: center.y + (line.startPoint.y - center.y) * scaleFactor
+        };
+        
+        const newEndPoint = {
+          x: center.x + (line.endPoint.x - center.x) * scaleFactor,
+          y: center.y + (line.endPoint.y - center.y) * scaleFactor
+        };
+        
+        return {
+          ...line,
+          startPoint: newStartPoint,
+          endPoint: newEndPoint,
+          length: valueInPixels
+        };
+      } else if (measurementKey === 'angle') {
+        const line = shape as Line;
+        const center = line.position;
+        
+        // Use the exact angle value provided by the user
+        const angleValue = newValue;
+        
+        // Convert angle to radians
+        const angleRad = (angleValue * Math.PI) / 180;
+        
+        // Calculate the current length
+        const currentLength = distanceBetweenPoints(line.startPoint, line.endPoint);
+        
+        // Calculate the half-length (distance from center to endpoint)
+        const halfLength = currentLength / 2;
+        
+        // Calculate new endpoints based on the angle
+        const newStartPoint = {
+          x: center.x - Math.cos(angleRad) * halfLength,
+          y: center.y - Math.sin(angleRad) * halfLength
+        };
+        
+        const newEndPoint = {
+          x: center.x + Math.cos(angleRad) * halfLength,
+          y: center.y + Math.sin(angleRad) * halfLength
+        };
+        
+        return {
+          ...line,
+          startPoint: newStartPoint,
+          endPoint: newEndPoint,
+          rotation: angleValue
         };
       }
       break;

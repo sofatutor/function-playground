@@ -120,7 +120,22 @@ export const createHandleMouseMove = (params: EventHandlerParams) => {
     const point = getCanvasPoint(e, canvasRef);
     
     if (activeMode === 'create' && isDrawing && drawStart) {
-      setDrawCurrent(point);
+      // For line tool, add precision mode when Shift key is pressed
+      if (e.shiftKey) {
+        // Calculate a more precise point by reducing the movement from the start point
+        const dx = point.x - drawStart.x;
+        const dy = point.y - drawStart.y;
+        
+        // Slow down the movement by a factor of 0.25 for precision
+        const precisionPoint = {
+          x: drawStart.x + dx * 0.25,
+          y: drawStart.y + dy * 0.25
+        };
+        
+        setDrawCurrent(precisionPoint);
+      } else {
+        setDrawCurrent(point);
+      }
     } else if (activeMode === 'select' && dragStart && originalPosition && selectedShapeId) {
       // Calculate the offset from the drag start
       const dx = point.x - dragStart.x;
@@ -192,7 +207,23 @@ export const createHandleMouseMove = (params: EventHandlerParams) => {
       ) * (180 / Math.PI);
       
       // Calculate the angle difference
-      const angleDiff = currentAngle - startAngle;
+      let angleDiff = currentAngle - startAngle;
+      
+      // Slow down rotation for lines to make it less sensitive to mouse movements
+      if (selectedShape.type === 'line') {
+        // Reduce rotation speed by 75% for lines
+        angleDiff = angleDiff * 0.25;
+      }
+      
+      // If shift key is pressed, snap to absolute multiples of 15 degrees
+      if (e.shiftKey) {
+        // Calculate the new rotation angle
+        const newRotation = originalRotation + angleDiff;
+        // Snap to the nearest absolute multiple of 15 degrees (0, 15, 30, 45, etc.)
+        const snappedRotation = Math.floor(newRotation / 15) * 15;
+        // Adjust the angle difference to achieve the snapped rotation
+        angleDiff = snappedRotation - originalRotation;
+      }
       
       // Apply the rotation
       onShapeRotate(selectedShapeId, originalRotation + angleDiff);

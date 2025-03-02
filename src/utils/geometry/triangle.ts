@@ -7,10 +7,20 @@ export const calculateTriangleArea = (points: [Point, Point, Point]): number => 
 };
 
 // Helper function to calculate triangle height
-export const calculateTriangleHeight = (points: [Point, Point, Point], base: number): number => {
-  // Area = 0.5 * base * height, so height = 2 * area / base
+export const calculateTriangleHeight = (points: [Point, Point, Point]): number => {
+  // Calculate the area
   const area = calculateTriangleArea(points);
-  return (2 * area) / base;
+  
+  // Calculate side lengths
+  const side1 = distanceBetweenPoints(points[0], points[1]);
+  const side2 = distanceBetweenPoints(points[1], points[2]);
+  const side3 = distanceBetweenPoints(points[2], points[0]);
+  
+  // Find the longest side
+  const longestSide = Math.max(side1, side2, side3);
+  
+  // Calculate height from the longest side as base
+  return (2 * area) / longestSide;
 };
 
 // Helper function to calculate triangle perimeter
