@@ -16,7 +16,8 @@ import {
   createHandleMouseMove,
   createHandleMouseUp,
   createHandleResizeStart,
-  createHandleRotateStart
+  createHandleRotateStart,
+  createHandleKeyDown
 } from './CanvasEventHandlers';
 
 interface GeometryCanvasProps {
@@ -61,6 +62,7 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
   const [rotateStart, setRotateStart] = useState<Point | null>(null);
   const [originalRotation, setOriginalRotation] = useState<number>(0);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+  const [isShiftPressed, setIsShiftPressed] = useState(false);
   
   // Add state for calibration
   const [showCalibration, setShowCalibration] = useState(false);
@@ -70,6 +72,29 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
   const [pixelsPerSmallUnit, setPixelsPerSmallUnit] = useState(() => 
     measurementUnit === 'in' ? getStoredPixelsPerUnit('in') / 10 : DEFAULT_PIXELS_PER_MM
   );
+  
+  // Track Shift key state
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') {
+        setIsShiftPressed(true);
+      }
+    };
+    
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') {
+        setIsShiftPressed(false);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
   
   // Handle calibration completion
   const handleCalibrationComplete = (newPixelsPerUnit: number) => {
@@ -182,6 +207,9 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     originalSize,
     rotateStart,
     originalRotation,
+    pixelsPerUnit,
+    pixelsPerSmallUnit,
+    measurementUnit,
     setIsDrawing,
     setDrawStart,
     setDrawCurrent,
@@ -213,6 +241,9 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     originalSize,
     rotateStart,
     originalRotation,
+    pixelsPerUnit,
+    pixelsPerSmallUnit,
+    measurementUnit,
     setIsDrawing,
     setDrawStart,
     setDrawCurrent,
@@ -244,6 +275,9 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     originalSize,
     rotateStart,
     originalRotation,
+    pixelsPerUnit,
+    pixelsPerSmallUnit,
+    measurementUnit,
     setIsDrawing,
     setDrawStart,
     setDrawCurrent,
@@ -276,6 +310,9 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     originalSize,
     rotateStart,
     originalRotation,
+    pixelsPerUnit,
+    pixelsPerSmallUnit,
+    measurementUnit,
     setIsDrawing,
     setDrawStart,
     setDrawCurrent,
@@ -307,6 +344,9 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     originalSize,
     rotateStart,
     originalRotation,
+    pixelsPerUnit,
+    pixelsPerSmallUnit,
+    measurementUnit,
     setIsDrawing,
     setDrawStart,
     setDrawCurrent,
@@ -335,6 +375,52 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     // Call the parent component's handler with precise deltas
     onMoveAllShapes(dx, dy);
   }, [onMoveAllShapes]);
+
+  // Create keyboard event handler
+  const handleKeyDown = createHandleKeyDown({
+    canvasRef,
+    shapes,
+    activeMode,
+    activeShapeType,
+    selectedShapeId,
+    isDrawing,
+    drawStart,
+    drawCurrent,
+    dragStart,
+    originalPosition,
+    resizeStart,
+    originalSize,
+    rotateStart,
+    originalRotation,
+    pixelsPerUnit,
+    pixelsPerSmallUnit,
+    measurementUnit,
+    setIsDrawing,
+    setDrawStart,
+    setDrawCurrent,
+    setDragStart,
+    setOriginalPosition,
+    setResizeStart,
+    setOriginalSize,
+    setRotateStart,
+    setOriginalRotation,
+    onShapeSelect,
+    onShapeCreate,
+    onShapeMove,
+    onShapeResize,
+    onShapeRotate
+  });
+
+  // Set up keyboard event listener
+  useEffect(() => {
+    // Add event listener for keyboard events
+    window.addEventListener('keydown', handleKeyDown);
+    
+    // Clean up event listener on component unmount
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleKeyDown]);
 
   return (
     <div className="relative w-full h-full">
@@ -385,6 +471,8 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
           drawStart={drawStart}
           drawCurrent={drawCurrent}
           activeShapeType={activeShapeType}
+          snapToGrid={isShiftPressed}
+          pixelsPerSmallUnit={pixelsPerSmallUnit}
         />
         
         {/* Controls for selected shape */}

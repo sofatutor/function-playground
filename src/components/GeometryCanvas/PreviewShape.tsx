@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Point, ShapeType } from '@/types/shapes';
 
@@ -7,31 +6,59 @@ interface PreviewShapeProps {
   drawStart: Point | null;
   drawCurrent: Point | null;
   activeShapeType: ShapeType;
+  snapToGrid?: boolean;
+  pixelsPerSmallUnit?: number;
 }
 
 const PreviewShape: React.FC<PreviewShapeProps> = ({
   isDrawing,
   drawStart,
   drawCurrent,
-  activeShapeType
+  activeShapeType,
+  snapToGrid = false,
+  pixelsPerSmallUnit
 }) => {
   if (!isDrawing || !drawStart || !drawCurrent) return null;
   
+  // If snapToGrid is true and we have pixelsPerSmallUnit, snap the current point to the grid
+  let effectiveCurrent = { ...drawCurrent };
+  
+  if (snapToGrid && pixelsPerSmallUnit) {
+    effectiveCurrent = {
+      x: Math.round(drawCurrent.x / pixelsPerSmallUnit) * pixelsPerSmallUnit,
+      y: Math.round(drawCurrent.y / pixelsPerSmallUnit) * pixelsPerSmallUnit
+    };
+  }
+  
+  // Also snap the start point if we're in grid snapping mode
+  let effectiveStart = { ...drawStart };
+  if (snapToGrid && pixelsPerSmallUnit) {
+    effectiveStart = {
+      x: Math.round(drawStart.x / pixelsPerSmallUnit) * pixelsPerSmallUnit,
+      y: Math.round(drawStart.y / pixelsPerSmallUnit) * pixelsPerSmallUnit
+    };
+  }
+  
+  // Determine the border style based on whether we're snapping to grid
+  const borderStyle = snapToGrid ? 'solid' : 'dashed';
+  const borderColor = snapToGrid ? 'rgba(76, 175, 80, 0.7)' : 'rgba(155, 135, 245, 0.7)';
+  const fillColor = snapToGrid ? 'rgba(76, 175, 80, 0.1)' : 'rgba(155, 135, 245, 0.1)';
+  
   switch (activeShapeType) {
     case 'circle':
-      return renderCirclePreview(drawStart, drawCurrent);
+      return renderCirclePreview(effectiveStart, effectiveCurrent, borderStyle, borderColor, fillColor);
     case 'rectangle':
-      return renderRectanglePreview(drawStart, drawCurrent);
+      return renderRectanglePreview(effectiveStart, effectiveCurrent, borderStyle, borderColor, fillColor);
     case 'triangle':
-      return renderTrianglePreview(drawStart, drawCurrent);
+      return renderTrianglePreview(effectiveStart, effectiveCurrent, borderStyle, borderColor, fillColor);
     case 'line':
-      return renderLinePreview(drawStart, drawCurrent);
+      return renderLinePreview(effectiveStart, effectiveCurrent, borderStyle, borderColor, fillColor);
     default:
       return null;
   }
 };
 
-const renderCirclePreview = (start: Point, current: Point) => {
+const renderCirclePreview = (start: Point, current: Point, borderStyle: string, borderColor: string, fillColor: string) => {
   const radius = Math.sqrt(
     Math.pow(current.x - start.x, 2) + 
     Math.pow(current.y - start.y, 2)
@@ -39,20 +66,21 @@ const renderCirclePreview = (start: Point, current: Point) => {
   
   return (
     <div
-      className="absolute border-2 rounded-full border-dashed pointer-events-none"
+      className={`absolute border-2 rounded-full pointer-events-none`}
       style={{
         left: start.x - radius,
         top: start.y - radius,
         width: radius * 2,
         height: radius * 2,
-        borderColor: 'rgba(155, 135, 245, 0.7)',
-        backgroundColor: 'rgba(155, 135, 245, 0.1)'
+        borderColor,
+        backgroundColor: fillColor,
+        borderStyle
       }}
     />
   );
 };
 
-const renderRectanglePreview = (start: Point, current: Point) => {
+const renderRectanglePreview = (start: Point, current: Point, borderStyle: string, borderColor: string, fillColor: string) => {
   const left = Math.min(start.x, current.x);
   const top = Math.min(start.y, current.y);
   const width = Math.abs(current.x - start.x);
@@ -60,20 +88,21 @@ const renderRectanglePreview = (start: Point, current: Point) => {
   
   return (
     <div
-      className="absolute border-2 border-dashed pointer-events-none"
+      className={`absolute border-2 pointer-events-none`}
       style={{
         left,
         top,
         width,
         height,
-        borderColor: 'rgba(155, 135, 245, 0.7)',
-        backgroundColor: 'rgba(155, 135, 245, 0.1)'
+        borderColor,
+        backgroundColor: fillColor,
+        borderStyle
       }}
     />
   );
 };
 
-const renderTrianglePreview = (start: Point, current: Point) => {
+const renderTrianglePreview = (start: Point, current: Point, borderStyle: string, borderColor: string, fillColor: string) => {
   // Calculate the width based on the horizontal distance
   const width = Math.abs(current.x - start.x) * 1.2;
   
@@ -119,6 +148,9 @@ const renderTrianglePreview = (start: Point, current: Point) => {
     Z
   `;
   
+  // Determine the dash array based on border style
+  const strokeDasharray = borderStyle === 'dashed' ? '5,5' : 'none';
+  
   return (
     <div
       className="absolute pointer-events-none"
@@ -136,17 +168,17 @@ const renderTrianglePreview = (start: Point, current: Point) => {
       >
         <path
           d={pathData}
-          fill="rgba(155, 135, 245, 0.1)"
-          stroke="rgba(155, 135, 245, 0.7)"
+          fill={fillColor}
+          stroke={borderColor}
           strokeWidth="2"
-          strokeDasharray="5,5"
+          strokeDasharray={strokeDasharray}
         />
       </svg>
     </div>
   );
 };
 
-const renderLinePreview = (start: Point, current: Point) => {
+const renderLinePreview = (start: Point, current: Point, borderStyle: string, borderColor: string, fillColor: string) => {
   // For a line preview, we'll use SVG to draw a dashed line
 
   // Calculate the bounding box (add some padding)
@@ -164,6 +196,9 @@ const renderLinePreview = (start: Point, current: Point) => {
   const startY = start.y - minY;
   const endX = current.x - minX;
   const endY = current.y - minY;
+  
+  // Determine the dash array based on border style
+  const strokeDasharray = borderStyle === 'dashed' ? '5,5' : 'none';
   
   return (
     <div
@@ -185,15 +220,15 @@ const renderLinePreview = (start: Point, current: Point) => {
           y1={startY}
           x2={endX}
           y2={endY}
-          stroke="rgba(155, 135, 245, 0.7)"
+          stroke={borderColor}
           strokeWidth="2"
-          strokeDasharray="5,5"
+          strokeDasharray={strokeDasharray}
           strokeLinecap="round"
         />
         
         {/* Add small circles at endpoints */}
-        <circle cx={startX} cy={startY} r="3" fill="rgba(155, 135, 245, 0.7)" />
-        <circle cx={endX} cy={endY} r="3" fill="rgba(155, 135, 245, 0.7)" />
+        <circle cx={startX} cy={startY} r="3" fill={borderColor} />
+        <circle cx={endX} cy={endY} r="3" fill={borderColor} />
       </svg>
     </div>
   );

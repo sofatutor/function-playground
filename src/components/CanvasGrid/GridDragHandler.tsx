@@ -4,6 +4,7 @@ interface GridDragHandlerProps {
   origin: { x: number, y: number };
   onOriginChange: (newOrigin: { x: number, y: number }) => void;
   onMoveAllShapes?: (dx: number, dy: number) => void;
+  pixelsPerSmallUnit?: number;
   children: React.ReactNode;
 }
 
@@ -11,6 +12,7 @@ const GridDragHandler: React.FC<GridDragHandlerProps> = ({
   origin, 
   onOriginChange,
   onMoveAllShapes,
+  pixelsPerSmallUnit,
   children 
 }) => {
   const [isDragging, setIsDragging] = useState(false);
@@ -18,6 +20,19 @@ const GridDragHandler: React.FC<GridDragHandlerProps> = ({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [originalOrigin, setOriginalOrigin] = useState({ x: 0, y: 0 });
   const [lastDelta, setLastDelta] = useState({ dx: 0, dy: 0 });
+  const [virtualOrigin, setVirtualOrigin] = useState({ x: 0, y: 0 });
+
+  // Helper function to snap a point to the grid
+  const snapToGrid = useCallback((point: { x: number, y: number }): { x: number, y: number } => {
+    if (!pixelsPerSmallUnit || pixelsPerSmallUnit <= 0) {
+      return point;
+    }
+    
+    return {
+      x: Math.round(point.x / pixelsPerSmallUnit) * pixelsPerSmallUnit,
+      y: Math.round(point.y / pixelsPerSmallUnit) * pixelsPerSmallUnit
+    };
+  }, [pixelsPerSmallUnit]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button === 1 || (e.button === 0 && e.altKey)) {
@@ -25,15 +40,17 @@ const GridDragHandler: React.FC<GridDragHandlerProps> = ({
       e.stopPropagation();
       setIsDragging(true);
       
-      setIsMovingAll(e.shiftKey && e.button === 0);
+      // Set isMovingAll if Shift key is pressed
+      setIsMovingAll(e.shiftKey);
       
       setDragStart({ x: e.clientX, y: e.clientY });
       setOriginalOrigin({ ...origin });
+      setVirtualOrigin({ ...origin });
       setLastDelta({ dx: 0, dy: 0 });
       
       document.body.classList.add('grid-dragging');
       
-      if (e.shiftKey && e.button === 0) {
+      if (e.shiftKey) {
         document.body.classList.add('moving-all');
       }
     }
@@ -54,24 +71,49 @@ const GridDragHandler: React.FC<GridDragHandlerProps> = ({
       const deltaDx = currentDx - lastDelta.dx;
       const deltaDy = currentDy - lastDelta.dy;
       
-      // Update the origin with the precise current position
-      const newOrigin = {
+      // Update the virtual origin with the precise current position
+      const newVirtualOrigin = {
         x: originalOrigin.x + currentDx,
         y: originalOrigin.y + currentDy
       };
       
+      setVirtualOrigin(newVirtualOrigin);
+      
+      // Determine if we should snap to grid (Alt key)
+      const shouldSnap = 'altKey' in e ? e.altKey : false;
+      
+      // Apply snapping if Alt key is pressed, otherwise use the virtual origin directly
+      const newOrigin = shouldSnap && pixelsPerSmallUnit 
+        ? snapToGrid(newVirtualOrigin)
+        : newVirtualOrigin;
+      
+      // If we're moving all shapes (Shift key is pressed)
+      if (isMovingAll && onMoveAllShapes && (deltaDx !== 0 || deltaDy !== 0)) {
+        // If Alt key is also pressed, we need to ensure shapes move consistently with the grid
+        if (shouldSnap && pixelsPerSmallUnit) {
+          // Calculate the snapped delta to ensure shapes move by the same amount as the grid
+          const snappedDelta = {
+            dx: newOrigin.x - origin.x,
+            dy: newOrigin.y - origin.y
+          };
+          
+          // Move shapes by the snapped delta
+          if (snappedDelta.dx !== 0 || snappedDelta.dy !== 0) {
+            onMoveAllShapes(snappedDelta.dx, snappedDelta.dy);
+          }
+        } else {
+          // Normal behavior - move shapes by the raw delta
+          onMoveAllShapes(deltaDx, deltaDy);
+        }
+      }
+      
+      // Update the grid origin
       onOriginChange(newOrigin);
       
-      // Only move shapes if there's an actual change in position
-      if (isMovingAll && onMoveAllShapes && (deltaDx !== 0 || deltaDy !== 0)) {
-        // Apply the delta change to shapes
-        onMoveAllShapes(deltaDx, deltaDy);
-        
-        // Update the last delta
-        setLastDelta({ dx: currentDx, dy: currentDy });
-      }
+      // Update the last delta
+      setLastDelta({ dx: currentDx, dy: currentDy });
     }
-  }, [isDragging, isMovingAll, dragStart, originalOrigin, lastDelta, onOriginChange, onMoveAllShapes]);
+  }, [isDragging, isMovingAll, dragStart, originalOrigin, lastDelta, onOriginChange, onMoveAllShapes, pixelsPerSmallUnit, snapToGrid, origin]);
 
   const handleMouseUp = useCallback((e: MouseEvent | React.MouseEvent) => {
     if (isDragging) {

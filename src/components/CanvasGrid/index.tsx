@@ -53,6 +53,7 @@ const CanvasGrid: React.FC<CanvasGridProps> = ({
         origin={origin}
         onOriginChange={setOrigin}
         onMoveAllShapes={onMoveAllShapes}
+        pixelsPerSmallUnit={pixelsPerMm}
       >
         <GridLines
           canvasSize={canvasSize}
