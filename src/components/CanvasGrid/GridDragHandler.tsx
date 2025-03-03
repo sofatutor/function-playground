@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 
 interface GridDragHandlerProps {
   origin: { x: number, y: number };
@@ -21,6 +21,14 @@ const GridDragHandler: React.FC<GridDragHandlerProps> = ({
   const [originalOrigin, setOriginalOrigin] = useState({ x: 0, y: 0 });
   const [lastDelta, setLastDelta] = useState({ dx: 0, dy: 0 });
   const [virtualOrigin, setVirtualOrigin] = useState({ x: 0, y: 0 });
+  
+  // Keep a ref to the current origin to avoid stale closures in event handlers
+  const originRef = useRef(origin);
+  
+  // Update the ref when the origin changes
+  useEffect(() => {
+    originRef.current = origin;
+  }, [origin]);
 
   // Helper function to snap a point to the grid
   const snapToGrid = useCallback((point: { x: number, y: number }): { x: number, y: number } => {
@@ -44,8 +52,9 @@ const GridDragHandler: React.FC<GridDragHandlerProps> = ({
       setIsMovingAll(e.shiftKey);
       
       setDragStart({ x: e.clientX, y: e.clientY });
-      setOriginalOrigin({ ...origin });
-      setVirtualOrigin({ ...origin });
+      // Use the current origin from the ref to avoid stale closures
+      setOriginalOrigin({ ...originRef.current });
+      setVirtualOrigin({ ...originRef.current });
       setLastDelta({ dx: 0, dy: 0 });
       
       document.body.classList.add('grid-dragging');
@@ -54,7 +63,7 @@ const GridDragHandler: React.FC<GridDragHandlerProps> = ({
         document.body.classList.add('moving-all');
       }
     }
-  }, [origin]);
+  }, []);
 
   const handleMouseMove = useCallback((e: MouseEvent | React.MouseEvent) => {
     if (isDragging) {
@@ -93,8 +102,8 @@ const GridDragHandler: React.FC<GridDragHandlerProps> = ({
         if (shouldSnap && pixelsPerSmallUnit) {
           // Calculate the snapped delta to ensure shapes move by the same amount as the grid
           const snappedDelta = {
-            dx: newOrigin.x - origin.x,
-            dy: newOrigin.y - origin.y
+            dx: newOrigin.x - originRef.current.x,
+            dy: newOrigin.y - originRef.current.y
           };
           
           // Move shapes by the snapped delta
@@ -113,7 +122,7 @@ const GridDragHandler: React.FC<GridDragHandlerProps> = ({
       // Update the last delta
       setLastDelta({ dx: currentDx, dy: currentDy });
     }
-  }, [isDragging, isMovingAll, dragStart, originalOrigin, lastDelta, onOriginChange, onMoveAllShapes, pixelsPerSmallUnit, snapToGrid, origin]);
+  }, [isDragging, isMovingAll, dragStart, originalOrigin, lastDelta, onOriginChange, onMoveAllShapes, pixelsPerSmallUnit, snapToGrid]);
 
   const handleMouseUp = useCallback((e: MouseEvent | React.MouseEvent) => {
     if (isDragging) {

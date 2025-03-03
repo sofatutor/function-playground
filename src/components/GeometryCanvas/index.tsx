@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import ShapeControls from '../ShapeControls';
-import CanvasGrid from '../CanvasGrid';
+import CanvasGrid from '../CanvasGrid/index';
 import ShapeRenderer from './ShapeRenderer';
 import PreviewShape from './PreviewShape';
 import CalibrationButton from './CalibrationButton';
@@ -73,6 +73,12 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     measurementUnit === 'in' ? getStoredPixelsPerUnit('in') / 10 : DEFAULT_PIXELS_PER_MM
   );
   
+  // Add a new state for persistent grid position - initialize as null to allow the CanvasGrid to center it
+  const [gridPosition, setGridPosition] = useState<Point | null>(null);
+  
+  // Add a ref to track if this is the first load
+  const isFirstLoad = useRef(true);
+  
   // Track Shift key state
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -125,6 +131,7 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     // Get the stored calibration value for this unit
     const storedValue = getStoredPixelsPerUnit(unit);
     
+    // Update the pixel values without affecting the grid position
     if (unit === 'in') {
       setPixelsPerUnit(storedValue);
       setPixelsPerSmallUnit(storedValue / 10); // 1/10th of an inch
@@ -132,6 +139,9 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
       setPixelsPerUnit(storedValue);
       setPixelsPerSmallUnit(storedValue / 10); // 1mm = 1/10th of a cm
     }
+    
+    // We don't need to adjust any positions here since the CanvasGrid component
+    // will maintain its position when the unit changes
   }, [measurementUnit]);
 
   // Clear existing calibration values and use the new defaults
@@ -368,6 +378,20 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     setShowCalibration(!showCalibration);
   };
 
+  // Add a handler for grid position changes
+  const handleGridPositionChange = useCallback((position: Point) => {
+    // Only update the grid position if it's not the first load or if we're explicitly setting it
+    if (!isFirstLoad.current) {
+      setGridPosition(position);
+    } else {
+      // Mark that we've handled the first load
+      isFirstLoad.current = false;
+      
+      // For the first load, we still want to update the position to match what's displayed
+      setGridPosition(position);
+    }
+  }, []);
+
   // Inside the GeometryCanvas component, add a new function to handle moving all shapes
   const handleMoveAllShapes = useCallback((dx: number, dy: number) => {
     if (!onMoveAllShapes) return;
@@ -375,6 +399,22 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     // Call the parent component's handler with precise deltas
     onMoveAllShapes(dx, dy);
   }, [onMoveAllShapes]);
+
+  // Ensure the grid is centered when the canvas size changes
+  useEffect(() => {
+    if (canvasSize.width > 0 && canvasSize.height > 0) {
+      // Center the grid when the canvas size is first determined
+      const centeredPosition = {
+        x: canvasSize.width / 2,
+        y: canvasSize.height / 2
+      };
+      
+      // Only set the position if we haven't already moved the grid
+      if (isFirstLoad.current) {
+        setGridPosition(centeredPosition);
+      }
+    }
+  }, [canvasSize]);
 
   // Create keyboard event handler
   const handleKeyDown = createHandleKeyDown({
@@ -445,14 +485,16 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
       >
-        {/* Grid */}
+        {/* Grid - Pass the persistent grid position */}
         <CanvasGrid 
-          key={`grid-${measurementUnit || 'cm'}-${pixelsPerUnit}`}
+          key={`grid-${measurementUnit || 'cm'}-${pixelsPerUnit}-${canvasSize.width > 0 && canvasSize.height > 0 ? 'loaded' : 'loading'}`}
           canvasSize={canvasSize} 
           pixelsPerCm={pixelsPerUnit} 
           pixelsPerMm={pixelsPerSmallUnit}
           measurementUnit={measurementUnit || 'cm'}
           onMoveAllShapes={handleMoveAllShapes}
+          initialPosition={gridPosition}
+          onPositionChange={handleGridPositionChange}
         />
         
         {/* Render all shapes */}
