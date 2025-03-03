@@ -83,6 +83,14 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
   // Effect to update internal grid position when external grid position changes
   useEffect(() => {
     console.log('GeometryCanvas: External grid position changed:', externalGridPosition);
+    
+    // If externalGridPosition is null, reset internal grid position to null
+    if (externalGridPosition === null) {
+      console.log('GeometryCanvas: Resetting internal grid position to null');
+      setGridPosition(null);
+      return;
+    }
+    
     if (externalGridPosition) {
       // Only update if there's a significant difference to avoid oscillation
       if (!gridPosition || 

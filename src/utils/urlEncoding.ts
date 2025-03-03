@@ -218,6 +218,10 @@ export function updateUrlWithShapes(shapes: AnyShape[], gridPosition?: Point | n
     const encodedGrid = encodeGridPosition(gridPosition);
     console.log('Updating grid position in URL:', gridPosition, 'encoded as:', encodedGrid);
     url.searchParams.set('grid', encodedGrid);
+  } else {
+    // Remove the grid parameter if gridPosition is null
+    url.searchParams.delete('grid');
+    console.log('Removing grid position from URL');
   }
   
   // Update the URL without reloading the page

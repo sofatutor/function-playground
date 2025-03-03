@@ -196,10 +196,12 @@ export function useShapeOperations() {
   const handleDeleteAllShapes = useCallback(() => {
     setShapes([]);
     setSelectedShapeId(null);
-    // Clear shapes from URL but keep grid position
-    updateUrlWithShapes([], gridPosition);
+    // Reset grid position to null (center of canvas)
+    setGridPosition(null);
+    // Clear shapes and grid position from URL
+    updateUrlWithShapes([], null);
     toast.info("All shapes cleared");
-  }, [gridPosition]);
+  }, []);
   
   // Add a function to update the grid position
   const updateGridPosition = useCallback((newPosition: Point) => {

@@ -68,8 +68,34 @@ const CanvasGrid: React.FC<CanvasGridProps> = ({
     // Skip during initialization phase
     if (!hasInitialized.current) return;
     
-    // Skip if there's no initialPosition
-    if (!initialPosition) return;
+    // If initialPosition is null, reset to center
+    if (!initialPosition) {
+      console.log('CanvasGrid: Resetting grid to center because initialPosition is null');
+      
+      // Only reset if canvas size is valid
+      if (canvasSize.width > 0 && canvasSize.height > 0) {
+        const centerPoint = {
+          x: Math.round(canvasSize.width / 2), 
+          y: Math.round(canvasSize.height / 2) 
+        };
+        
+        // Set the isHandlingExternalUpdate flag to prevent feedback loops
+        isHandlingExternalUpdate.current = true;
+        
+        // Reset the origin to center
+        setOrigin(centerPoint);
+        
+        // Reset the hasOriginMoved flag since we're explicitly resetting
+        hasOriginMoved.current = false;
+        
+        // Reset the flag after a short delay
+        setTimeout(() => {
+          isHandlingExternalUpdate.current = false;
+        }, 50);
+      }
+      
+      return;
+    }
     
     // Skip if the origin has been manually moved by the user
     if (hasOriginMoved.current) {
@@ -89,7 +115,7 @@ const CanvasGrid: React.FC<CanvasGridProps> = ({
     setTimeout(() => {
       isHandlingExternalUpdate.current = false;
     }, 50);
-  }, [initialPosition]);
+  }, [initialPosition, canvasSize]);
   
   // Store the previous measurement unit and pixel ratio to handle unit changes
   const [prevUnit, setPrevUnit] = useState<MeasurementUnit>(measurementUnit);
