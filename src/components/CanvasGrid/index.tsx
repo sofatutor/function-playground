@@ -62,6 +62,35 @@ const CanvasGrid: React.FC<CanvasGridProps> = ({
     hasInitialized.current = true;
   }, [initialPosition, canvasSize]);
   
+  // Add an effect to update the grid position when initialPosition changes
+  // This ensures the grid updates even after initialization
+  useEffect(() => {
+    // Skip during initialization phase
+    if (!hasInitialized.current) return;
+    
+    // Skip if there's no initialPosition
+    if (!initialPosition) return;
+    
+    // Skip if the origin has been manually moved by the user
+    if (hasOriginMoved.current) {
+      console.log('CanvasGrid: Skipping initialPosition update because origin was manually moved');
+      return;
+    }
+    
+    console.log('CanvasGrid: Updating origin from initialPosition:', initialPosition);
+    
+    // Set the isHandlingExternalUpdate flag to prevent feedback loops
+    isHandlingExternalUpdate.current = true;
+    
+    // Update the origin
+    setOrigin(initialPosition);
+    
+    // Reset the flag after a short delay
+    setTimeout(() => {
+      isHandlingExternalUpdate.current = false;
+    }, 50);
+  }, [initialPosition]);
+  
   // Store the previous measurement unit and pixel ratio to handle unit changes
   const [prevUnit, setPrevUnit] = useState<MeasurementUnit>(measurementUnit);
   const [prevPixelsPerCm, setPrevPixelsPerCm] = useState<number>(pixelsPerCm);
