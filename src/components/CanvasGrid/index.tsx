@@ -50,7 +50,7 @@ const CanvasGrid: React.FC<CanvasGridProps> = ({
       console.log('CanvasGrid: Using initialPosition for origin:', initialPosition);
       setOrigin(initialPosition);
     } else if (canvasSize.width > 0 && canvasSize.height > 0) {
-      const centerPoint = { 
+      const centerPoint = {
         x: Math.round(canvasSize.width / 2), 
         y: Math.round(canvasSize.height / 2) 
       };
@@ -60,7 +60,7 @@ const CanvasGrid: React.FC<CanvasGridProps> = ({
     
     // Mark as initialized
     hasInitialized.current = true;
-  }, [initialPosition, canvasSize.width, canvasSize.height]);
+  }, [initialPosition, canvasSize]);
   
   // Store the previous measurement unit and pixel ratio to handle unit changes
   const [prevUnit, setPrevUnit] = useState<MeasurementUnit>(measurementUnit);

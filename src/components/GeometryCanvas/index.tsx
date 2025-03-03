@@ -553,7 +553,7 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
       >
         {/* Grid - Pass the persistent grid position */}
         <CanvasGrid 
-          key={`grid-${canvasSize.width > 0 && canvasSize.height > 0 ? 'loaded' : 'loading'}-${gridPosition ? `${gridPosition.x}-${gridPosition.y}` : 'default'}`}
+          key={`grid-${canvasSize.width > 0 && canvasSize.height > 0 ? 'loaded' : 'loading'}`}
           canvasSize={canvasSize} 
           pixelsPerCm={pixelsPerUnit} 
           pixelsPerMm={pixelsPerSmallUnit}

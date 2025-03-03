@@ -95,7 +95,7 @@ export function useShapeOperations() {
         console.log('useShapeOperations: Updating URL with shapes and grid position');
         updateUrlWithShapes(shapes, gridPosition);
         gridUpdateTimeoutRef.current = null;
-      }, 1000); // 1000ms debounce - longer debounce for URL updates to prevent browser history spam
+      }, 100);
     }
     
     return () => {
@@ -191,7 +191,7 @@ export function useShapeOperations() {
     }
     toast.info("Shape deleted");
   }, [selectedShapeId, gridPosition]);
-  
+
   // Delete all shapes
   const handleDeleteAllShapes = useCallback(() => {
     setShapes([]);

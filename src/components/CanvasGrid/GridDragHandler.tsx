@@ -1,5 +1,4 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { debounce } from 'lodash';
 
 interface GridDragHandlerProps {
   origin: { x: number, y: number };
@@ -124,8 +123,6 @@ const GridDragHandler: React.FC<GridDragHandlerProps> = ({
   }, [isDragging, isMovingAll, dragStart, originalOrigin, lastDelta, onOriginChange, onMoveAllShapes]);
 
   // Debounce the onOriginChange function
-  const debouncedOnOriginChange = useCallback(debounce(onOriginChange, 100), []);
-
   const handleMouseUp = useCallback((e: MouseEvent | React.MouseEvent) => {
     if (isDragging) {
       if ('preventDefault' in e) {
