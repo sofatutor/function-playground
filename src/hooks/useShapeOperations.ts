@@ -165,24 +165,68 @@ export function useShapeOperations() {
     );
   }, [gridPosition, measurementUnit, pixelsPerCm, pixelsPerMm, pixelsPerInch]);
   
-  // Update the move shape function to use our new utility
+  // Update the move shape function to use our new utility and handle shape-specific snapping
   const handleMoveShape = useCallback((id: string, newPosition: Point) => {
     // Get keyboard modifiers from the current event
     const event = window.event as KeyboardEvent | MouseEvent | undefined;
     const { shiftPressed, altPressed } = getGridModifiers(event);
     
-    // Apply snapping if shift is pressed and alt is not pressed
-    const finalPosition = (shiftPressed && !altPressed) 
-      ? handleSnapToGrid(newPosition) 
-      : newPosition;
+    // Only apply snapping if shift is pressed and alt is not pressed
+    if (shiftPressed && !altPressed) {
+      // Find the shape we're moving
+      const shape = shapes.find(s => s.id === id);
+      if (shape) {
+        let finalPosition = { ...newPosition };
+        
+        // Apply different snapping logic based on shape type
+        if (shape.type === 'circle') {
+          // For circles, we want to snap the left and top edges
+          // Calculate the left and top edge positions
+          const leftEdge = { x: newPosition.x - shape.radius, y: newPosition.y };
+          const topEdge = { x: newPosition.x, y: newPosition.y - shape.radius };
+          
+          // Snap the edges to the grid
+          const snappedLeftEdge = handleSnapToGrid(leftEdge);
+          const snappedTopEdge = handleSnapToGrid(topEdge);
+          
+          // Adjust the position to maintain the snapped edges
+          finalPosition = {
+            x: snappedLeftEdge.x + shape.radius,
+            y: snappedTopEdge.y + shape.radius
+          };
+        } else if (shape.type === 'rectangle') {
+          // For rectangles, just snap the center for simplicity
+          finalPosition = handleSnapToGrid(newPosition);
+          
+          console.log('Rectangle snapping (center only):', {
+            original: newPosition,
+            final: finalPosition
+          });
+        } else {
+          // For other shapes, just snap the center
+          finalPosition = handleSnapToGrid(newPosition);
+        }
+        
+        // Update the shapes with the snapped position
+        setShapes(prevShapes => {
+          const updatedShapes = moveShape(prevShapes, id, finalPosition);
+          // Update URL with the new shape positions
+          updateUrlWithShapes(updatedShapes, gridPosition);
+          return updatedShapes;
+        });
+        
+        return;
+      }
+    }
     
+    // If no snapping or shape not found, just move normally
     setShapes(prevShapes => {
-      const updatedShapes = moveShape(prevShapes, id, finalPosition);
+      const updatedShapes = moveShape(prevShapes, id, newPosition);
       // Update URL with the new shape positions
       updateUrlWithShapes(updatedShapes, gridPosition);
       return updatedShapes;
     });
-  }, [gridPosition, handleSnapToGrid]);
+  }, [gridPosition, handleSnapToGrid, shapes]);
   
   // Resize a shape
   const handleResizeShape = useCallback((id: string, factor: number) => {

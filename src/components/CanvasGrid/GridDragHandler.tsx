@@ -38,16 +38,16 @@ const GridDragHandler: React.FC<GridDragHandlerProps> = ({
       return point;
     }
     
-    // Use the utility with minimal parameters since we only need simple snapping here
+    // Use the utility with the correct grid origin
     return snapToGrid(
       point,
-      null, // No grid origin offset needed here
+      origin, // Pass the actual grid origin
       true, // Always use small units
       'cm', // Default unit (doesn't matter since we're using small units)
       0,    // Not needed
       pixelsPerSmallUnit // Pass the small unit size
     );
-  }, [pixelsPerSmallUnit]);
+  }, [pixelsPerSmallUnit, origin]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     // Middle mouse button (button === 1) or left mouse button with Alt key (button === 0 && e.altKey)

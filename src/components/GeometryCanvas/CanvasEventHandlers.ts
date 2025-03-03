@@ -21,6 +21,7 @@ interface EventHandlerParams {
   pixelsPerUnit?: number;
   pixelsPerSmallUnit?: number;
   measurementUnit?: string;
+  gridPosition?: Point | null;
   setIsDrawing: (value: boolean) => void;
   setDrawStart: (point: Point | null) => void;
   setDrawCurrent: (point: Point | null) => void;
@@ -45,6 +46,7 @@ export const createHandleMouseDown = (params: EventHandlerParams) => {
     activeMode,
     selectedShapeId,
     pixelsPerSmallUnit,
+    gridPosition,
     setIsDrawing,
     setDrawStart,
     setDrawCurrent,
@@ -58,11 +60,11 @@ export const createHandleMouseDown = (params: EventHandlerParams) => {
   const handleSnapToGrid = (point: Point): Point => {
     return snapToGrid(
       point,
-      null, // No grid origin offset needed here
-      true, // Always use small units
-      'cm', // Default unit (doesn't matter since we're using small units)
-      0,    // Not needed
-      pixelsPerSmallUnit // Pass the small unit size
+      gridPosition,
+      true,
+      'cm',
+      0,
+      pixelsPerSmallUnit
     );
   };
   
@@ -126,6 +128,7 @@ export const createHandleMouseMove = (params: EventHandlerParams) => {
     rotateStart,
     originalRotation,
     pixelsPerSmallUnit,
+    gridPosition,
     setDrawCurrent,
     onShapeMove,
     onShapeResize,
@@ -136,11 +139,11 @@ export const createHandleMouseMove = (params: EventHandlerParams) => {
   const handleSnapToGrid = (point: Point): Point => {
     return snapToGrid(
       point,
-      null, // No grid origin offset needed here
-      true, // Always use small units
-      'cm', // Default unit (doesn't matter since we're using small units)
-      0,    // Not needed
-      pixelsPerSmallUnit // Pass the small unit size
+      gridPosition,
+      true,
+      'cm',
+      0,
+      pixelsPerSmallUnit
     );
   };
   
@@ -177,10 +180,49 @@ export const createHandleMouseMove = (params: EventHandlerParams) => {
           y: originalPosition.y + dy
         };
         
-        // If Shift key is pressed but not Alt+Shift together, snap the current position directly to the grid
+        // If Shift key is pressed but not Alt+Shift together, snap to the grid
         if (shiftPressed && !altPressed && pixelsPerSmallUnit && pixelsPerSmallUnit > 0) {
-          // Directly snap the current position to the grid
-          newPosition = handleSnapToGrid(newPosition);
+          // Apply different snapping logic based on shape type
+          if (selectedShape.type === 'circle') {
+            // For circles, we want to snap the left and top edges
+            const leftEdge = { x: newPosition.x - selectedShape.radius, y: newPosition.y };
+            const topEdge = { x: newPosition.x, y: newPosition.y - selectedShape.radius };
+            
+            // Snap the edges to the grid
+            const snappedLeftEdge = handleSnapToGrid(leftEdge);
+            const snappedTopEdge = handleSnapToGrid(topEdge);
+            
+            // Adjust the position to maintain the snapped edges
+            newPosition = {
+              x: snappedLeftEdge.x + selectedShape.radius,
+              y: snappedTopEdge.y + selectedShape.radius
+            };
+          } else if (selectedShape.type === 'rectangle') {
+            // For rectangles, we want to snap the top-left corner
+            const topLeft = { 
+              x: newPosition.x - selectedShape.width / 2, 
+              y: newPosition.y - selectedShape.height / 2 
+            };
+            
+            // Snap the top-left corner to the grid
+            const snappedTopLeft = handleSnapToGrid(topLeft);
+            
+            // Adjust the position to maintain the snapped corner
+            newPosition = {
+              x: snappedTopLeft.x + selectedShape.width / 2,
+              y: snappedTopLeft.y + selectedShape.height / 2
+            };
+            
+            // Add debug logging
+            console.log('Rectangle snapping:', {
+              topLeft,
+              snappedTopLeft,
+              final: newPosition
+            });
+          } else {
+            // For other shapes, just snap the center
+            newPosition = handleSnapToGrid(newPosition);
+          }
         }
         
         // Move the shape to the new position
@@ -263,6 +305,7 @@ export const createHandleMouseUp = (params: EventHandlerParams) => {
     drawStart,
     drawCurrent,
     pixelsPerSmallUnit,
+    gridPosition,
     setIsDrawing,
     setDrawStart,
     setDrawCurrent,
@@ -280,11 +323,11 @@ export const createHandleMouseUp = (params: EventHandlerParams) => {
   const handleSnapToGrid = (point: Point): Point => {
     return snapToGrid(
       point,
-      null, // No grid origin offset needed here
-      true, // Always use small units
-      'cm', // Default unit (doesn't matter since we're using small units)
-      0,    // Not needed
-      pixelsPerSmallUnit // Pass the small unit size
+      gridPosition,
+      true,
+      'cm',
+      0,
+      pixelsPerSmallUnit
     );
   };
   
