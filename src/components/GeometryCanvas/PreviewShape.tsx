@@ -25,8 +25,8 @@ const PreviewShape: React.FC<PreviewShapeProps> = ({
   
   if (snapToGrid && pixelsPerSmallUnit) {
     effectiveCurrent = {
-      x: Math.round(drawCurrent.x / pixelsPerSmallUnit) * pixelsPerSmallUnit,
-      y: Math.round(drawCurrent.y / pixelsPerSmallUnit) * pixelsPerSmallUnit
+      x: Math.floor(drawCurrent.x / pixelsPerSmallUnit) * pixelsPerSmallUnit,
+      y: Math.floor(drawCurrent.y / pixelsPerSmallUnit) * pixelsPerSmallUnit
     };
   }
   
@@ -34,8 +34,8 @@ const PreviewShape: React.FC<PreviewShapeProps> = ({
   let effectiveStart = { ...drawStart };
   if (snapToGrid && pixelsPerSmallUnit) {
     effectiveStart = {
-      x: Math.round(drawStart.x / pixelsPerSmallUnit) * pixelsPerSmallUnit,
-      y: Math.round(drawStart.y / pixelsPerSmallUnit) * pixelsPerSmallUnit
+      x: Math.floor(drawStart.x / pixelsPerSmallUnit) * pixelsPerSmallUnit,
+      y: Math.floor(drawStart.y / pixelsPerSmallUnit) * pixelsPerSmallUnit
     };
   }
   
@@ -66,7 +66,7 @@ const renderCirclePreview = (start: Point, current: Point, borderStyle: string, 
   
   return (
     <div
-      className={`absolute border-2 rounded-full pointer-events-none`}
+      className="absolute rounded-full pointer-events-none border-[1px]"
       style={{
         left: start.x - radius,
         top: start.y - radius,
@@ -88,7 +88,7 @@ const renderRectanglePreview = (start: Point, current: Point, borderStyle: strin
   
   return (
     <div
-      className={`absolute border-2 pointer-events-none`}
+      className="absolute pointer-events-none border-[1px]"
       style={{
         left,
         top,
@@ -164,13 +164,13 @@ const renderTrianglePreview = (start: Point, current: Point, borderStyle: string
       <svg 
         width={boundingWidth} 
         height={boundingHeight} 
-        style={{ position: 'absolute' }}
+        className="absolute"
       >
         <path
           d={pathData}
           fill={fillColor}
           stroke={borderColor}
-          strokeWidth="2"
+          strokeWidth="1"
           strokeDasharray={strokeDasharray}
         />
       </svg>
@@ -213,7 +213,7 @@ const renderLinePreview = (start: Point, current: Point, borderStyle: string, bo
       <svg 
         width={width} 
         height={height} 
-        style={{ position: 'absolute' }}
+        className="absolute"
       >
         <line
           x1={startX}
@@ -221,7 +221,7 @@ const renderLinePreview = (start: Point, current: Point, borderStyle: string, bo
           x2={endX}
           y2={endY}
           stroke={borderColor}
-          strokeWidth="2"
+          strokeWidth="1"
           strokeDasharray={strokeDasharray}
           strokeLinecap="round"
         />

@@ -26,8 +26,8 @@ const renderCircle = (circle: Circle, isSelected: boolean, activeMode: string) =
   return (
     <div
       key={circle.id}
-      className={`absolute rounded-full border-2 transition-shadow ${
-        isSelected ? 'shadow-md' : ''
+      className={`absolute rounded-full border-[1px] ${
+        isSelected ? 'shadow-[0_0_1px_rgba(0,0,0,0.1)]' : ''
       }`}
       style={{
         left: circle.position.x - circle.radius,
@@ -36,7 +36,6 @@ const renderCircle = (circle: Circle, isSelected: boolean, activeMode: string) =
         height: circle.radius * 2,
         backgroundColor: circle.fill,
         borderColor: circle.stroke,
-        borderWidth: circle.strokeWidth,
         transform: `rotate(${circle.rotation}rad)`,
         cursor: activeMode === 'select' ? 'pointer' : 'default',
         zIndex: 1
@@ -49,8 +48,8 @@ const renderRectangle = (rect: Rectangle, isSelected: boolean, activeMode: strin
   return (
     <div
       key={rect.id}
-      className={`absolute border-2 transition-shadow ${
-        isSelected ? 'shadow-md' : ''
+      className={`absolute border-[1px] ${
+        isSelected ? 'shadow-[0_0_1px_rgba(0,0,0,0.1)]' : ''
       }`}
       style={{
         left: rect.position.x,
@@ -59,7 +58,6 @@ const renderRectangle = (rect: Rectangle, isSelected: boolean, activeMode: strin
         height: rect.height,
         backgroundColor: rect.fill,
         borderColor: rect.stroke,
-        borderWidth: rect.strokeWidth,
         transform: `rotate(${rect.rotation}rad)`,
         transformOrigin: 'center',
         cursor: activeMode === 'select' ? 'pointer' : 'default',
@@ -87,9 +85,6 @@ const renderTriangle = (tri: Triangle, isSelected: boolean, activeMode: string) 
     Z
   `;
   
-  // Generate unique IDs for the filter and shadow
-  const filterId = `shadow-blur-${tri.id}`;
-  
   return (
     <div
       key={tri.id}
@@ -104,39 +99,19 @@ const renderTriangle = (tri: Triangle, isSelected: boolean, activeMode: string) 
       }}
     >
       <svg 
-        width={width + 10} 
-        height={height + 10} 
-        style={{ 
-          position: 'absolute', 
-          top: -5, 
-          left: -5,
-          overflow: 'visible'
-        }}
+        width={width} 
+        height={height} 
+        className="absolute overflow-visible"
       >
-        {isSelected && (
-          <>
-            <defs>
-              <filter id={filterId} x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
-              </filter>
-            </defs>
-            <path
-              d={pathData}
-              fill="transparent"
-              stroke="rgba(0,0,0,0.3)"
-              strokeWidth="4"
-              transform={`translate(3, 3) rotate(${tri.rotation}, ${width/2}, ${height/2})`}
-              filter={`url(#${filterId})`}
-              style={{ pointerEvents: 'none' }}
-            />
-          </>
-        )}
         <path
           d={pathData}
           fill={tri.fill}
           stroke={tri.stroke}
-          strokeWidth={tri.strokeWidth}
+          strokeWidth="1"
           transform={`rotate(${tri.rotation}, ${width/2}, ${height/2})`}
+          style={{
+            filter: isSelected ? 'drop-shadow(0 0 1px rgba(0,0,0,0.1))' : 'none'
+          }}
         />
       </svg>
     </div>
@@ -162,9 +137,6 @@ const renderLine = (line: Line, isSelected: boolean, activeMode: string) => {
   const endX = line.endPoint.x - minX;
   const endY = line.endPoint.y - minY;
   
-  // Generate unique ID for shadow filter
-  const filterId = `line-shadow-${line.id}`;
-  
   return (
     <div
       key={line.id}
@@ -181,32 +153,8 @@ const renderLine = (line: Line, isSelected: boolean, activeMode: string) => {
       <svg 
         width={width} 
         height={height} 
-        style={{ 
-          position: 'absolute',
-          overflow: 'visible'
-        }}
+        className="absolute overflow-visible"
       >
-        {isSelected && (
-          <>
-            <defs>
-              <filter id={filterId} x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
-              </filter>
-            </defs>
-            <line
-              x1={startX}
-              y1={startY}
-              x2={endX}
-              y2={endY}
-              stroke="rgba(0,0,0,0.3)"
-              strokeWidth="6"
-              transform="translate(2, 2)"
-              filter={`url(#${filterId})`}
-              style={{ pointerEvents: 'none' }}
-            />
-          </>
-        )}
-        
         {/* Invisible wider line for easier selection */}
         <line
           x1={startX}
@@ -225,8 +173,11 @@ const renderLine = (line: Line, isSelected: boolean, activeMode: string) => {
           x2={endX}
           y2={endY}
           stroke={line.stroke}
-          strokeWidth={line.strokeWidth}
+          strokeWidth="1"
           strokeLinecap="round"
+          style={{
+            filter: isSelected ? 'drop-shadow(0 0 1px rgba(0,0,0,0.1))' : 'none'
+          }}
         />
         
         {/* Add small circles at endpoints to make them more visible */}

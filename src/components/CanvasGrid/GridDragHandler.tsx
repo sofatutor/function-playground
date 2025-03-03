@@ -37,8 +37,8 @@ const GridDragHandler: React.FC<GridDragHandlerProps> = ({
     }
     
     return {
-      x: Math.round(point.x / pixelsPerSmallUnit) * pixelsPerSmallUnit,
-      y: Math.round(point.y / pixelsPerSmallUnit) * pixelsPerSmallUnit
+      x: Math.floor(point.x / pixelsPerSmallUnit) * pixelsPerSmallUnit,
+      y: Math.floor(point.y / pixelsPerSmallUnit) * pixelsPerSmallUnit
     };
   }, [pixelsPerSmallUnit]);
 

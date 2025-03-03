@@ -60,10 +60,10 @@ export const createHandleMouseDown = (params: EventHandlerParams) => {
       return point;
     }
     
-    // Snap to grid
+    // Snap to grid - use Math.floor for consistent snapping behavior
     return {
-      x: Math.round(point.x / pixelsPerSmallUnit) * pixelsPerSmallUnit,
-      y: Math.round(point.y / pixelsPerSmallUnit) * pixelsPerSmallUnit
+      x: Math.floor(point.x / pixelsPerSmallUnit) * pixelsPerSmallUnit,
+      y: Math.floor(point.y / pixelsPerSmallUnit) * pixelsPerSmallUnit
     };
   };
   
@@ -137,10 +137,11 @@ export const createHandleMouseMove = (params: EventHandlerParams) => {
       return point;
     }
     
-    // Snap to grid
+    // Snap to grid - use Math.floor to ensure we snap to the exact grid line pixel
+    // rather than rounding to the nearest grid line
     return {
-      x: Math.round(point.x / pixelsPerSmallUnit) * pixelsPerSmallUnit,
-      y: Math.round(point.y / pixelsPerSmallUnit) * pixelsPerSmallUnit
+      x: Math.floor(point.x / pixelsPerSmallUnit) * pixelsPerSmallUnit,
+      y: Math.floor(point.y / pixelsPerSmallUnit) * pixelsPerSmallUnit
     };
   };
   
@@ -280,10 +281,10 @@ export const createHandleMouseUp = (params: EventHandlerParams) => {
       return point;
     }
     
-    // Snap to grid
+    // Snap to grid - use Math.floor for consistent snapping behavior
     return {
-      x: Math.round(point.x / pixelsPerSmallUnit) * pixelsPerSmallUnit,
-      y: Math.round(point.y / pixelsPerSmallUnit) * pixelsPerSmallUnit
+      x: Math.floor(point.x / pixelsPerSmallUnit) * pixelsPerSmallUnit,
+      y: Math.floor(point.y / pixelsPerSmallUnit) * pixelsPerSmallUnit
     };
   };
   

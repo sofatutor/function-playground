@@ -10,7 +10,7 @@ export const distanceBetweenPoints = (p1: Point, p2: Point): number => {
 // Default shape properties
 export const DEFAULT_FILL = 'rgba(190, 227, 219, 0.5)';
 export const DEFAULT_STROKE = '#555B6E';
-export const DEFAULT_STROKE_WIDTH = 2;
+export const DEFAULT_STROKE_WIDTH = 1;
 
 // Default pixel to physical unit conversion (standard 96 DPI: 1cm = 37.8px)
 export const DEFAULT_PIXELS_PER_CM = 60;
