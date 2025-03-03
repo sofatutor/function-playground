@@ -211,7 +211,7 @@
 
 /* Add a hint for users about grid dragging */
 .canvas-grid:hover::after {
-  content: "Alt+Click to move grid origin | Alt+Shift+Click to move grid and shapes | Hold Shift for precision mode when creating or rotating lines";
+  content: "Alt+Click to move grid origin | Alt+Shift+Click to move grid and shapes";
   position: absolute;
   bottom: 10px;
   right: 10px;
