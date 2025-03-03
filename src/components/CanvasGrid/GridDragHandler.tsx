@@ -1,8 +1,10 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { Point } from '@/types/shapes';
+import { snapToGrid, getGridModifiers } from '@/utils/grid/gridUtils';
 
 interface GridDragHandlerProps {
-  origin: { x: number, y: number };
-  onOriginChange: (newOrigin: { x: number, y: number }) => void;
+  origin: Point;
+  onOriginChange: (newOrigin: Point) => void;
   onMoveAllShapes?: (dx: number, dy: number) => void;
   pixelsPerSmallUnit?: number;
   children: React.ReactNode;
@@ -30,16 +32,21 @@ const GridDragHandler: React.FC<GridDragHandlerProps> = ({
     originRef.current = origin;
   }, [origin]);
 
-  // Helper function to snap a point to the grid
-  const snapToGrid = useCallback((point: { x: number, y: number }): { x: number, y: number } => {
+  // Replace the existing snapToGrid function with our new utility
+  const handleSnapToGrid = useCallback((point: Point): Point => {
     if (!pixelsPerSmallUnit || pixelsPerSmallUnit <= 0) {
       return point;
     }
     
-    return {
-      x: Math.floor(point.x / pixelsPerSmallUnit) * pixelsPerSmallUnit,
-      y: Math.floor(point.y / pixelsPerSmallUnit) * pixelsPerSmallUnit
-    };
+    // Use the utility with minimal parameters since we only need simple snapping here
+    return snapToGrid(
+      point,
+      null, // No grid origin offset needed here
+      true, // Always use small units
+      'cm', // Default unit (doesn't matter since we're using small units)
+      0,    // Not needed
+      pixelsPerSmallUnit // Pass the small unit size
+    );
   }, [pixelsPerSmallUnit]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -98,8 +105,8 @@ const GridDragHandler: React.FC<GridDragHandlerProps> = ({
       
       setVirtualOrigin(newVirtualOrigin);
       
-      // Check if Shift key is pressed to determine if we should move all shapes
-      const shiftPressed = 'shiftKey' in e ? e.shiftKey : false;
+      // Check if Shift key is pressed using our utility
+      const { shiftPressed } = getGridModifiers(e);
       
       // If we're moving all shapes (Shift key is pressed)
       if ((isMovingAll || shiftPressed) && onMoveAllShapes && (deltaDx !== 0 || deltaDy !== 0)) {

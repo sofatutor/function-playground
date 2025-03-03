@@ -16,6 +16,7 @@ import {
   getShapesFromUrl, 
   getGridPositionFromUrl 
 } from '@/utils/urlEncoding';
+import { snapToGrid, isSignificantGridChange, getGridModifiers } from '@/utils/grid/gridUtils';
 
 export function useShapeOperations() {
   const [shapes, setShapes] = useState<AnyShape[]>([]);
@@ -151,52 +152,29 @@ export function useShapeOperations() {
     setSelectedShapeId(id);
   }, []);
   
-  // Add snapToGrid function before handleMoveShape
-  const snapToGrid = useCallback((position: Point, useSmallUnit = true): Point => {
-    console.log('snapToGrid called!', { position, useSmallUnit });
-    
-    // Choose between small units (mm) and large units (cm/inch)
-    const gridSize = useSmallUnit ? pixelsPerMm : 
-                    (measurementUnit === 'cm' ? pixelsPerCm : pixelsPerInch);
-    
-    // Calculate the offset from the origin
-    const offsetX = position.x - (gridPosition?.x || 0);
-    const offsetY = position.y - (gridPosition?.y || 0);
-    
-    console.log('Snapping details:', {
+  // Replace the existing snapToGrid function with our new utility
+  const handleSnapToGrid = useCallback((position: Point, useSmallUnit = true): Point => {
+    return snapToGrid(
       position,
       gridPosition,
-      offsetX,
-      offsetY,
-      gridSize
-    });
-    
-    // Round to the nearest grid line
-    const snappedOffsetX = Math.round(offsetX / gridSize) * gridSize;
-    const snappedOffsetY = Math.round(offsetY / gridSize) * gridSize;
-    
-    // Add the origin back to get the final position
-    const result = {
-      x: snappedOffsetX + (gridPosition?.x || 0),
-      y: snappedOffsetY + (gridPosition?.y || 0)
-    };
-    
-    console.log('Snapping result:', {
-      snappedOffsetX,
-      snappedOffsetY,
-      result
-    });
-    
-    return result;
-  }, [measurementUnit, pixelsPerCm, pixelsPerMm, pixelsPerInch, gridPosition]);
+      useSmallUnit,
+      measurementUnit,
+      pixelsPerCm,
+      pixelsPerMm,
+      pixelsPerInch
+    );
+  }, [gridPosition, measurementUnit, pixelsPerCm, pixelsPerMm, pixelsPerInch]);
   
-  // Move a shape
+  // Update the move shape function to use our new utility
   const handleMoveShape = useCallback((id: string, newPosition: Point) => {
-    // Check if shift key is pressed during the move
-    const isShiftPressed = window.event && window.event.shiftKey;
+    // Get keyboard modifiers from the current event
+    const event = window.event as KeyboardEvent | MouseEvent | undefined;
+    const { shiftPressed, altPressed } = getGridModifiers(event);
     
-    // Apply snapping if shift is pressed
-    const finalPosition = isShiftPressed ? snapToGrid(newPosition) : newPosition;
+    // Apply snapping if shift is pressed and alt is not pressed
+    const finalPosition = (shiftPressed && !altPressed) 
+      ? handleSnapToGrid(newPosition) 
+      : newPosition;
     
     setShapes(prevShapes => {
       const updatedShapes = moveShape(prevShapes, id, finalPosition);
@@ -204,7 +182,7 @@ export function useShapeOperations() {
       updateUrlWithShapes(updatedShapes, gridPosition);
       return updatedShapes;
     });
-  }, [gridPosition, snapToGrid]);
+  }, [gridPosition, handleSnapToGrid]);
   
   // Resize a shape
   const handleResizeShape = useCallback((id: string, factor: number) => {
@@ -251,16 +229,12 @@ export function useShapeOperations() {
     toast.info("All shapes cleared");
   }, []);
   
-  // Add a function to update the grid position
+  // Update the grid position update function to use our new utility
   const updateGridPosition = useCallback((newPosition: Point) => {
     console.log('useShapeOperations: Updating grid position:', newPosition);
     
     // Check if the change is significant enough to update
-    const isSignificantChange = !gridPosition || 
-      Math.abs(newPosition.x - gridPosition.x) > 1 || 
-      Math.abs(newPosition.y - gridPosition.y) > 1;
-    
-    if (isSignificantChange) {
+    if (isSignificantGridChange(newPosition, gridPosition)) {
       setGridPosition(newPosition);
     } else {
       console.log('useShapeOperations: Ignoring small grid position change to prevent oscillation');
@@ -361,6 +335,6 @@ export function useShapeOperations() {
     updateShapeFromMeasurement,
     updateMeasurement: handleUpdateMeasurement,
     shareCanvasUrl,
-    snapToGrid
+    snapToGrid: handleSnapToGrid
   };
 } 

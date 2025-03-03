@@ -1,6 +1,7 @@
 import React from 'react';
 import { AnyShape, Point, OperationMode, ShapeType, Circle, Rectangle, Triangle } from '@/types/shapes';
 import { getCanvasPoint, getShapeAtPosition, rotatePoint } from './CanvasUtils';
+import { snapToGrid, getGridModifiers } from '@/utils/grid/gridUtils';
 
 interface EventHandlerParams {
   canvasRef: React.RefObject<HTMLDivElement>;
@@ -53,18 +54,16 @@ export const createHandleMouseDown = (params: EventHandlerParams) => {
     onShapeMove
   } = params;
   
-  // Helper function to snap a point to the millimeter grid
-  const snapToGrid = (point: Point): Point => {
-    // Check if pixelsPerSmallUnit is defined and valid
-    if (!pixelsPerSmallUnit || pixelsPerSmallUnit <= 0) {
-      return point;
-    }
-    
-    // Snap to grid - use Math.floor for consistent snapping behavior
-    return {
-      x: Math.floor(point.x / pixelsPerSmallUnit) * pixelsPerSmallUnit,
-      y: Math.floor(point.y / pixelsPerSmallUnit) * pixelsPerSmallUnit
-    };
+  // Replace the existing snapToGrid function with our new utility
+  const handleSnapToGrid = (point: Point): Point => {
+    return snapToGrid(
+      point,
+      null, // No grid origin offset needed here
+      true, // Always use small units
+      'cm', // Default unit (doesn't matter since we're using small units)
+      0,    // Not needed
+      pixelsPerSmallUnit // Pass the small unit size
+    );
   };
   
   return (e: React.MouseEvent) => {
@@ -76,9 +75,12 @@ export const createHandleMouseDown = (params: EventHandlerParams) => {
     // Always store the raw point for drag operations
     setDragStart(point);
     
-    // If Shift is pressed but not Alt+Shift together, snap the effective point to the grid for drawing operations
-    const effectivePoint = (e.shiftKey && !e.altKey && pixelsPerSmallUnit && pixelsPerSmallUnit > 0) 
-      ? snapToGrid(point) 
+    // Get keyboard modifiers using our utility
+    const { shiftPressed, altPressed } = getGridModifiers(e);
+    
+    // If Shift is pressed but not Alt+Shift together, snap the effective point to the grid
+    const effectivePoint = (shiftPressed && !altPressed && pixelsPerSmallUnit && pixelsPerSmallUnit > 0) 
+      ? handleSnapToGrid(point) 
       : point;
     
     if (activeMode === 'select' || activeMode === 'move') {
@@ -130,28 +132,28 @@ export const createHandleMouseMove = (params: EventHandlerParams) => {
     onShapeRotate
   } = params;
   
-  // Helper function to snap a point to the millimeter grid
-  const snapToGrid = (point: Point): Point => {
-    // Check if pixelsPerSmallUnit is defined and valid
-    if (!pixelsPerSmallUnit || pixelsPerSmallUnit <= 0) {
-      return point;
-    }
-    
-    // Snap to grid - use Math.floor to ensure we snap to the exact grid line pixel
-    // rather than rounding to the nearest grid line
-    return {
-      x: Math.floor(point.x / pixelsPerSmallUnit) * pixelsPerSmallUnit,
-      y: Math.floor(point.y / pixelsPerSmallUnit) * pixelsPerSmallUnit
-    };
+  // Replace the existing snapToGrid function with our new utility
+  const handleSnapToGrid = (point: Point): Point => {
+    return snapToGrid(
+      point,
+      null, // No grid origin offset needed here
+      true, // Always use small units
+      'cm', // Default unit (doesn't matter since we're using small units)
+      0,    // Not needed
+      pixelsPerSmallUnit // Pass the small unit size
+    );
   };
   
   return (e: React.MouseEvent) => {
     const point = getCanvasPoint(e, canvasRef);
     
+    // Get keyboard modifiers using our utility
+    const { shiftPressed, altPressed } = getGridModifiers(e);
+    
     if (activeMode === 'create' && isDrawing && drawStart) {
       // When Shift is pressed, snap to millimeter grid
-      if (e.shiftKey && pixelsPerSmallUnit && pixelsPerSmallUnit > 0) {
-        const snappedPoint = snapToGrid(point);
+      if (shiftPressed && pixelsPerSmallUnit && pixelsPerSmallUnit > 0) {
+        const snappedPoint = handleSnapToGrid(point);
         setDrawCurrent(snappedPoint);
       } else {
         // Normal behavior without snapping
@@ -176,9 +178,9 @@ export const createHandleMouseMove = (params: EventHandlerParams) => {
         };
         
         // If Shift key is pressed but not Alt+Shift together, snap the current position directly to the grid
-        if (e.shiftKey && !e.altKey && pixelsPerSmallUnit && pixelsPerSmallUnit > 0) {
+        if (shiftPressed && !altPressed && pixelsPerSmallUnit && pixelsPerSmallUnit > 0) {
           // Directly snap the current position to the grid
-          newPosition = snapToGrid(newPosition);
+          newPosition = handleSnapToGrid(newPosition);
         }
         
         // Move the shape to the new position
@@ -204,7 +206,7 @@ export const createHandleMouseMove = (params: EventHandlerParams) => {
       let factor = distanceCurrent / distanceStart;
       
       // If Shift key is pressed, snap the size to millimeter increments
-      if (e.shiftKey && pixelsPerSmallUnit && originalSize) {
+      if (shiftPressed && pixelsPerSmallUnit && originalSize) {
         // Calculate the new size
         const newSize = originalSize * factor;
         // Snap to the nearest millimeter
@@ -238,7 +240,7 @@ export const createHandleMouseMove = (params: EventHandlerParams) => {
       let angleDiff = currentAngle - startAngle;
       
       // If shift key is pressed, snap to absolute multiples of 15 degrees
-      if (e.shiftKey) {
+      if (shiftPressed) {
         // Calculate the new rotation angle
         const newRotation = originalRotation + angleDiff;
         // Snap to the nearest absolute multiple of 15 degrees (0, 15, 30, 45, etc.)
@@ -275,17 +277,15 @@ export const createHandleMouseUp = (params: EventHandlerParams) => {
   } = params;
   
   // Helper function to snap a point to the millimeter grid
-  const snapToGrid = (point: Point): Point => {
-    // Check if pixelsPerSmallUnit is defined and valid
-    if (!pixelsPerSmallUnit || pixelsPerSmallUnit <= 0) {
-      return point;
-    }
-    
-    // Snap to grid - use Math.floor for consistent snapping behavior
-    return {
-      x: Math.floor(point.x / pixelsPerSmallUnit) * pixelsPerSmallUnit,
-      y: Math.floor(point.y / pixelsPerSmallUnit) * pixelsPerSmallUnit
-    };
+  const handleSnapToGrid = (point: Point): Point => {
+    return snapToGrid(
+      point,
+      null, // No grid origin offset needed here
+      true, // Always use small units
+      'cm', // Default unit (doesn't matter since we're using small units)
+      0,    // Not needed
+      pixelsPerSmallUnit // Pass the small unit size
+    );
   };
   
   return (e: React.MouseEvent) => {
@@ -293,7 +293,7 @@ export const createHandleMouseUp = (params: EventHandlerParams) => {
     
     // If Shift is pressed, snap the final point to the grid
     const effectivePoint = (e.shiftKey && pixelsPerSmallUnit && pixelsPerSmallUnit > 0) 
-      ? snapToGrid(point) 
+      ? handleSnapToGrid(point) 
       : point;
     
     if (activeMode === 'create' && isDrawing && drawStart && drawCurrent) {
@@ -306,10 +306,10 @@ export const createHandleMouseUp = (params: EventHandlerParams) => {
       if (distance > 5) {
         // If Shift is pressed, use snapped points for both start and end
         const effectiveStart = (e.shiftKey && pixelsPerSmallUnit && pixelsPerSmallUnit > 0) 
-          ? snapToGrid(drawStart) 
+          ? handleSnapToGrid(drawStart) 
           : drawStart;
         const effectiveEnd = (e.shiftKey && pixelsPerSmallUnit && pixelsPerSmallUnit > 0) 
-          ? snapToGrid(drawCurrent) 
+          ? handleSnapToGrid(drawCurrent) 
           : drawCurrent;
         
         // Create a new shape
