@@ -76,8 +76,8 @@ export const createHandleMouseDown = (params: EventHandlerParams) => {
     // Always store the raw point for drag operations
     setDragStart(point);
     
-    // If Shift is pressed, snap the effective point to the grid for drawing operations
-    const effectivePoint = (e.shiftKey && pixelsPerSmallUnit && pixelsPerSmallUnit > 0) 
+    // If Shift is pressed but not Alt+Shift together, snap the effective point to the grid for drawing operations
+    const effectivePoint = (e.shiftKey && !e.altKey && pixelsPerSmallUnit && pixelsPerSmallUnit > 0) 
       ? snapToGrid(point) 
       : point;
     
@@ -175,8 +175,8 @@ export const createHandleMouseMove = (params: EventHandlerParams) => {
           y: originalPosition.y + dy
         };
         
-        // If Shift key is pressed, snap the current position directly to the grid
-        if (e.shiftKey && pixelsPerSmallUnit && pixelsPerSmallUnit > 0) {
+        // If Shift key is pressed but not Alt+Shift together, snap the current position directly to the grid
+        if (e.shiftKey && !e.altKey && pixelsPerSmallUnit && pixelsPerSmallUnit > 0) {
           // Directly snap the current position to the grid
           newPosition = snapToGrid(newPosition);
         }

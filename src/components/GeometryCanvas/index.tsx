@@ -79,17 +79,26 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
   // Add a ref to track if this is the first load
   const isFirstLoad = useRef(true);
   
-  // Track Shift key state
+  // Add state for Alt key
+  const [isAltPressed, setIsAltPressed] = useState(false);
+  
+  // Track Shift and Alt key states
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Shift') {
         setIsShiftPressed(true);
+      }
+      if (e.key === 'Alt') {
+        setIsAltPressed(true);
       }
     };
     
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.key === 'Shift') {
         setIsShiftPressed(false);
+      }
+      if (e.key === 'Alt') {
+        setIsAltPressed(false);
       }
     };
     
@@ -513,7 +522,7 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
           drawStart={drawStart}
           drawCurrent={drawCurrent}
           activeShapeType={activeShapeType}
-          snapToGrid={isShiftPressed}
+          snapToGrid={isShiftPressed && !isAltPressed}
           pixelsPerSmallUnit={pixelsPerSmallUnit}
         />
         

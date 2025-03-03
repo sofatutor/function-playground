@@ -90,16 +90,18 @@ const GridDragHandler: React.FC<GridDragHandlerProps> = ({
       
       // Determine if we should snap to grid (Alt key)
       const shouldSnap = 'altKey' in e ? e.altKey : false;
+      // Check if both Alt and Shift keys are pressed
+      const bothAltShift = shouldSnap && ('shiftKey' in e ? e.shiftKey : false);
       
-      // Apply snapping if Alt key is pressed, otherwise use the virtual origin directly
-      const newOrigin = shouldSnap && pixelsPerSmallUnit 
+      // Apply snapping if Alt key is pressed (but not both Alt and Shift), otherwise use the virtual origin directly
+      const newOrigin = shouldSnap && !bothAltShift && pixelsPerSmallUnit 
         ? snapToGrid(newVirtualOrigin)
         : newVirtualOrigin;
       
       // If we're moving all shapes (Shift key is pressed)
       if (isMovingAll && onMoveAllShapes && (deltaDx !== 0 || deltaDy !== 0)) {
-        // If Alt key is also pressed, we need to ensure shapes move consistently with the grid
-        if (shouldSnap && pixelsPerSmallUnit) {
+        // If Alt key is also pressed but not both Alt and Shift, we need to ensure shapes move consistently with the grid
+        if (shouldSnap && !bothAltShift && pixelsPerSmallUnit) {
           // Calculate the snapped delta to ensure shapes move by the same amount as the grid
           const snappedDelta = {
             dx: newOrigin.x - originRef.current.x,
