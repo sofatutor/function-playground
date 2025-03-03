@@ -115,9 +115,12 @@ export function useShapeOperations() {
     setRefreshCalibration(prev => prev + 1);
   }, [measurementUnit]);
   
-  // Get the calibrated pixels per unit values with refresh dependency
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const pixelsPerCm = useMemo(() => getStoredPixelsPerUnit('cm'), [refreshCalibration]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const pixelsPerInch = useMemo(() => getStoredPixelsPerUnit('in'), [refreshCalibration]);
+  // Calculate pixelsPerMm (1 cm = 10 mm)
+  const pixelsPerMm = useMemo(() => pixelsPerCm / 10, [pixelsPerCm]);
   
   // Dynamic conversion functions that use the calibrated values
   const pixelsToCm = useCallback((pixels: number): number => {
@@ -148,15 +151,60 @@ export function useShapeOperations() {
     setSelectedShapeId(id);
   }, []);
   
+  // Add snapToGrid function before handleMoveShape
+  const snapToGrid = useCallback((position: Point, useSmallUnit = true): Point => {
+    console.log('snapToGrid called!', { position, useSmallUnit });
+    
+    // Choose between small units (mm) and large units (cm/inch)
+    const gridSize = useSmallUnit ? pixelsPerMm : 
+                    (measurementUnit === 'cm' ? pixelsPerCm : pixelsPerInch);
+    
+    // Calculate the offset from the origin
+    const offsetX = position.x - (gridPosition?.x || 0);
+    const offsetY = position.y - (gridPosition?.y || 0);
+    
+    console.log('Snapping details:', {
+      position,
+      gridPosition,
+      offsetX,
+      offsetY,
+      gridSize
+    });
+    
+    // Round to the nearest grid line
+    const snappedOffsetX = Math.round(offsetX / gridSize) * gridSize;
+    const snappedOffsetY = Math.round(offsetY / gridSize) * gridSize;
+    
+    // Add the origin back to get the final position
+    const result = {
+      x: snappedOffsetX + (gridPosition?.x || 0),
+      y: snappedOffsetY + (gridPosition?.y || 0)
+    };
+    
+    console.log('Snapping result:', {
+      snappedOffsetX,
+      snappedOffsetY,
+      result
+    });
+    
+    return result;
+  }, [measurementUnit, pixelsPerCm, pixelsPerMm, pixelsPerInch, gridPosition]);
+  
   // Move a shape
   const handleMoveShape = useCallback((id: string, newPosition: Point) => {
+    // Check if shift key is pressed during the move
+    const isShiftPressed = window.event && window.event.shiftKey;
+    
+    // Apply snapping if shift is pressed
+    const finalPosition = isShiftPressed ? snapToGrid(newPosition) : newPosition;
+    
     setShapes(prevShapes => {
-      const updatedShapes = moveShape(prevShapes, id, newPosition);
+      const updatedShapes = moveShape(prevShapes, id, finalPosition);
       // Update URL with the new shape positions
       updateUrlWithShapes(updatedShapes, gridPosition);
       return updatedShapes;
     });
-  }, [gridPosition]);
+  }, [gridPosition, snapToGrid]);
   
   // Resize a shape
   const handleResizeShape = useCallback((id: string, factor: number) => {
@@ -312,6 +360,7 @@ export function useShapeOperations() {
     getSelectedShape,
     updateShapeFromMeasurement,
     updateMeasurement: handleUpdateMeasurement,
-    shareCanvasUrl
+    shareCanvasUrl,
+    snapToGrid
   };
 } 

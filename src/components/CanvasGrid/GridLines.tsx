@@ -29,11 +29,12 @@ const GridLines: React.FC<GridLinesProps> = ({
   const pixelsPerUnit = pixelsPerCm;
   const pixelsPerSmallUnit = pixelsPerMm;
 
+  // Add more buffer to ensure all grid lines are rendered in fullscreen
   // Calculate the range of grid lines needed based on the origin
-  const minHorizontalLine = Math.floor(-origin.y / pixelsPerUnit) - 2;
-  const maxHorizontalLine = Math.ceil((canvasSize.height - origin.y) / pixelsPerUnit) + 2;
-  const minVerticalLine = Math.floor(-origin.x / pixelsPerUnit) - 2;
-  const maxVerticalLine = Math.ceil((canvasSize.width - origin.x) / pixelsPerUnit) + 2;
+  const minHorizontalLine = Math.floor(-origin.y / pixelsPerUnit) - 5;
+  const maxHorizontalLine = Math.ceil((canvasSize.height - origin.y) / pixelsPerUnit) + 5;
+  const minVerticalLine = Math.floor(-origin.x / pixelsPerUnit) - 5;
+  const maxVerticalLine = Math.ceil((canvasSize.width - origin.x) / pixelsPerUnit) + 5;
 
   const majorGridLines = [];
   const minorGridLines = [];
