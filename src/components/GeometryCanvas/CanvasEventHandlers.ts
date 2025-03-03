@@ -219,15 +219,6 @@ export const createHandleMouseMove = (params: EventHandlerParams) => {
               snappedTopLeft,
               final: newPosition
             });
-          } else if (selectedShape.type === 'triangle') {
-            // For triangles, snap the center point
-            newPosition = handleSnapToGrid(newPosition);
-            
-            // Add debug logging
-            console.log('Triangle snapping:', {
-              original: newPosition,
-              final: newPosition
-            });
           } else {
             // For other shapes, just snap the center
             newPosition = handleSnapToGrid(newPosition);

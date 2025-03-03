@@ -165,7 +165,7 @@ export function useShapeOperations() {
     );
   }, [gridPosition, measurementUnit, pixelsPerCm, pixelsPerMm, pixelsPerInch]);
   
-  // Update the move shape function to handle triangles properly
+  // Update the move shape function to use our new utility and handle shape-specific snapping
   const handleMoveShape = useCallback((id: string, newPosition: Point) => {
     // Get keyboard modifiers from the current event
     const event = window.event as KeyboardEvent | MouseEvent | undefined;
@@ -199,14 +199,6 @@ export function useShapeOperations() {
           finalPosition = handleSnapToGrid(newPosition);
           
           console.log('Rectangle snapping (center only):', {
-            original: newPosition,
-            final: finalPosition
-          });
-        } else if (shape.type === 'triangle') {
-          // For triangles, snap the center point
-          finalPosition = handleSnapToGrid(newPosition);
-          
-          console.log('Triangle snapping:', {
             original: newPosition,
             final: finalPosition
           });
