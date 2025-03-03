@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import LanguageSelector from './LanguageSelector';
 import { useTranslate } from '@/utils/translate';
 import { Button } from './ui/button';
-import { Maximize2, Minimize2 } from 'lucide-react';
+import { Maximize2, Minimize2, Share2 } from 'lucide-react';
+import { useShapeOperations } from '@/hooks/useShapeOperations';
 
 interface GeometryHeaderProps {
   isFullscreen: boolean;
@@ -12,6 +12,7 @@ interface GeometryHeaderProps {
 const GeometryHeader: React.FC<GeometryHeaderProps> = ({ isFullscreen }) => {
   const t = useTranslate();
   const [isFullscreenState, setIsFullscreenState] = useState(isFullscreen);
+  const { shareCanvasUrl, shapes } = useShapeOperations();
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -50,6 +51,15 @@ const GeometryHeader: React.FC<GeometryHeaderProps> = ({ isFullscreen }) => {
           {t('appTitle')}
         </h1>
         <div className="flex items-center space-x-2">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={shareCanvasUrl}
+            title={t('shareCanvas')}
+            disabled={shapes.length === 0}
+          >
+            <Share2 size={18} />
+          </Button>
           <Button 
             variant="outline" 
             size="icon" 

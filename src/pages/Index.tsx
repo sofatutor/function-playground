@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Triangle, Circle, Square } from 'lucide-react';
 import { useTranslate } from '@/utils/translate';
+import { Point } from '@/types/shapes';
 
 const Index = () => {
   const {
@@ -17,6 +18,8 @@ const Index = () => {
     activeMode,
     activeShapeType,
     measurementUnit,
+    gridPosition,
+    updateGridPosition,
     setMeasurementUnit,
     createShape,
     selectShape,
@@ -71,6 +74,12 @@ const Index = () => {
     });
   }, [shapes, moveShape]);
 
+  // Handle grid position changes
+  const handleGridPositionChange = useCallback((newPosition: Point) => {
+    console.log('Index: Grid position changed:', newPosition);
+    updateGridPosition(newPosition);
+  }, [updateGridPosition]);
+
   return (
     <div className={`min-h-screen bg-gray-50 ${isFullscreen ? 'p-2' : ''}`}>
       <div className={`${isFullscreen ? 'max-w-full p-2' : 'container py-8'} transition-all duration-200 h-[calc(100vh-2rem)]`}>
@@ -115,6 +124,8 @@ const Index = () => {
                 onShapeRotate={rotateShape}
                 onModeChange={setActiveMode}
                 onMoveAllShapes={handleMoveAllShapes}
+                gridPosition={gridPosition}
+                onGridPositionChange={handleGridPositionChange}
               />
             </div>
           </div>

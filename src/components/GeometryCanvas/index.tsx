@@ -27,6 +27,7 @@ interface GeometryCanvasProps {
   activeShapeType: ShapeType;
   measurementUnit: MeasurementUnit;
   isFullscreen?: boolean;
+  gridPosition?: Point | null;
   onShapeSelect: (id: string | null) => void;
   onShapeCreate: (start: Point, end: Point) => string;
   onShapeMove: (id: string, newPosition: Point) => void;
@@ -34,6 +35,7 @@ interface GeometryCanvasProps {
   onShapeRotate: (id: string, angle: number) => void;
   onModeChange?: (mode: OperationMode) => void;
   onMoveAllShapes?: (dx: number, dy: number) => void;
+  onGridPositionChange?: (newPosition: Point) => void;
 }
 
 const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
@@ -43,13 +45,15 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
   activeShapeType,
   measurementUnit,
   isFullscreen = false,
+  gridPosition: externalGridPosition,
   onShapeSelect,
   onShapeCreate,
   onShapeMove,
   onShapeResize,
   onShapeRotate,
   onModeChange,
-  onMoveAllShapes
+  onMoveAllShapes,
+  onGridPositionChange
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -74,10 +78,29 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
   );
   
   // Add a new state for persistent grid position - initialize as null to allow the CanvasGrid to center it
-  const [gridPosition, setGridPosition] = useState<Point | null>(null);
+  const [gridPosition, setGridPosition] = useState<Point | null>(externalGridPosition || null);
+  
+  // Effect to update internal grid position when external grid position changes
+  useEffect(() => {
+    console.log('GeometryCanvas: External grid position changed:', externalGridPosition);
+    if (externalGridPosition) {
+      // Only update if there's a significant difference to avoid oscillation
+      if (!gridPosition || 
+          Math.abs(externalGridPosition.x - gridPosition.x) > 1 || 
+          Math.abs(externalGridPosition.y - gridPosition.y) > 1) {
+        console.log('GeometryCanvas: Updating internal grid position from external');
+        setGridPosition(externalGridPosition);
+      } else {
+        console.log('GeometryCanvas: Ignoring small external grid position change to prevent oscillation');
+      }
+    }
+  }, [externalGridPosition, gridPosition]);
   
   // Add a ref to track if this is the first load
   const isFirstLoad = useRef(true);
+  
+  // Add a ref for debouncing grid position updates
+  const gridPositionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Add state for Alt key
   const [isAltPressed, setIsAltPressed] = useState(false);
@@ -387,21 +410,7 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     setShowCalibration(!showCalibration);
   };
 
-  // Add a handler for grid position changes
-  const handleGridPositionChange = useCallback((position: Point) => {
-    // Only update the grid position if it's not the first load or if we're explicitly setting it
-    if (!isFirstLoad.current) {
-      setGridPosition(position);
-    } else {
-      // Mark that we've handled the first load
-      isFirstLoad.current = false;
-      
-      // For the first load, we still want to update the position to match what's displayed
-      setGridPosition(position);
-    }
-  }, []);
-
-  // Inside the GeometryCanvas component, add a new function to handle moving all shapes
+  // Inside the GeometryCanvas component, add a function to handle moving all shapes
   const handleMoveAllShapes = useCallback((dx: number, dy: number) => {
     if (!onMoveAllShapes) return;
     
@@ -409,21 +418,64 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     onMoveAllShapes(dx, dy);
   }, [onMoveAllShapes]);
 
+  // Handle grid position change
+  const handleGridPositionChange = useCallback((newPosition: Point) => {
+    console.log('GeometryCanvas: Grid position changed:', newPosition);
+    
+    // Only update if the position has actually changed
+    if (!gridPosition || newPosition.x !== gridPosition.x || newPosition.y !== gridPosition.y) {
+      // Debounce the grid position updates
+      if (gridPositionTimeoutRef.current) {
+        clearTimeout(gridPositionTimeoutRef.current);
+      }
+      
+      // Update the grid position immediately
+      setGridPosition(newPosition);
+      
+      // Notify parent after a delay to prevent too many updates
+      gridPositionTimeoutRef.current = setTimeout(() => {
+        // If we have a parent handler for grid position changes, call it
+        if (onGridPositionChange) {
+          console.log('GeometryCanvas: Notifying parent of grid position change (debounced)');
+          onGridPositionChange(newPosition);
+        }
+        gridPositionTimeoutRef.current = null;
+      }, 200); // 200ms debounce
+    } else {
+      console.log('GeometryCanvas: Skipping grid position update (no change)');
+    }
+  }, [onGridPositionChange, gridPosition]);
+
+  // Clean up the timeout when the component unmounts
+  useEffect(() => {
+    return () => {
+      if (gridPositionTimeoutRef.current) {
+        clearTimeout(gridPositionTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Ensure the grid is centered when the canvas size changes
   useEffect(() => {
-    if (canvasSize.width > 0 && canvasSize.height > 0) {
-      // Center the grid when the canvas size is first determined
-      const centeredPosition = {
-        x: canvasSize.width / 2,
-        y: canvasSize.height / 2
-      };
+    if (canvasSize.width > 0 && canvasSize.height > 0 && isFirstLoad.current) {
+      console.log('GeometryCanvas: First load with valid canvas size, isFirstLoad:', isFirstLoad.current);
       
-      // Only set the position if we haven't already moved the grid
-      if (isFirstLoad.current) {
+      // Only set the position if we haven't already loaded from URL
+      if (gridPosition === null) {
+        console.log('GeometryCanvas: No grid position from URL, centering grid');
+        const centeredPosition = {
+          x: Math.round(canvasSize.width / 2),
+          y: Math.round(canvasSize.height / 2)
+        };
         setGridPosition(centeredPosition);
+      } else {
+        console.log('GeometryCanvas: Using grid position from URL:', gridPosition);
       }
+      
+      // Mark first load as complete
+      isFirstLoad.current = false;
     }
-  }, [canvasSize]);
+  }, [canvasSize, gridPosition]);
 
   // Create keyboard event handler
   const handleKeyDown = createHandleKeyDown({
@@ -471,6 +523,11 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     };
   }, [handleKeyDown]);
 
+  // Add a useEffect to log when gridPosition changes
+  useEffect(() => {
+    console.log('GeometryCanvas: gridPosition changed:', gridPosition);
+  }, [gridPosition]);
+
   return (
     <div className="relative w-full h-full">
       {/* Calibration button and tool */}
@@ -496,12 +553,12 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
       >
         {/* Grid - Pass the persistent grid position */}
         <CanvasGrid 
-          key={`grid-${canvasSize.width > 0 && canvasSize.height > 0 ? 'loaded' : 'loading'}`}
+          key={`grid-${canvasSize.width > 0 && canvasSize.height > 0 ? 'loaded' : 'loading'}-${gridPosition ? `${gridPosition.x}-${gridPosition.y}` : 'default'}`}
           canvasSize={canvasSize} 
           pixelsPerCm={pixelsPerUnit} 
           pixelsPerMm={pixelsPerSmallUnit}
           measurementUnit={measurementUnit || 'cm'}
-          onMoveAllShapes={handleMoveAllShapes}
+          onMoveAllShapes={onMoveAllShapes}
           initialPosition={gridPosition}
           onPositionChange={handleGridPositionChange}
         />

@@ -10,6 +10,7 @@
   "selectShapeToViewMeasurements": "Select a shape to view measurements",
   "formula": "Formula",
   "holdShiftToSnap15Degrees": "Hold Shift to snap to 15° increments when rotating",
+  "shareCanvas": "Share Canvas URL",
   "units": {
     "label": "Measurement Units",
     "placeholder": "Select a unit",

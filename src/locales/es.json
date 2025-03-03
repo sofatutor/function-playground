@@ -9,7 +9,8 @@
   "measurements": "Medidas",
   "selectShapeToViewMeasurements": "Selecciona una forma para ver las medidas",
   "formula": "Fórmula",
-  "holdShiftToSnap15Degrees": "Mantén Shift para ajustar a incrementos de 15° al rotar",
+  "holdShiftToSnap15Degrees": "Mantén presionada la tecla Shift para ajustar a incrementos de 15° al rotar",
+  "shareCanvas": "Compartir URL del lienzo",
   "units": {
     "label": "Unidades de Medida",
     "placeholder": "Selecciona una unidad",

@@ -4,6 +4,9 @@ import GridLines from './GridLines';
 import OriginIndicator from './OriginIndicator';
 import GridDragHandler from './GridDragHandler';
 
+// Remove global flag as we'll handle initialization differently
+// const HAS_COMPLETED_FIRST_RENDER = { value: false };
+
 interface CanvasGridProps {
   canvasSize: { width: number, height: number };
   pixelsPerCm: number;
@@ -23,79 +26,102 @@ const CanvasGrid: React.FC<CanvasGridProps> = ({
   initialPosition,
   onPositionChange
 }) => {
-  // State for the grid origin point - always center the grid on initial load
-  const [origin, setOrigin] = useState<Point>({
-    x: canvasSize.width / 2,
-    y: canvasSize.height / 2
-  });
+  // Track if initialization has been done
+  const hasInitialized = useRef(false);
+  
+  // Track if origin has been manually moved
+  const hasOriginMoved = useRef(false);
+  
+  // Track if we're currently handling an external position update
+  const isHandlingExternalUpdate = useRef(false);
+  
+  // State for the grid origin point
+  const [origin, setOrigin] = useState<Point>({ x: 0, y: 0 });
+  
+  // Initialize the grid position once
+  useEffect(() => {
+    // Skip if we've already initialized
+    if (hasInitialized.current) return;
+    
+    console.log('CanvasGrid: Initializing grid position');
+    
+    // Set the initial position
+    if (initialPosition) {
+      console.log('CanvasGrid: Using initialPosition for origin:', initialPosition);
+      setOrigin(initialPosition);
+    } else if (canvasSize.width > 0 && canvasSize.height > 0) {
+      const centerPoint = { 
+        x: Math.round(canvasSize.width / 2), 
+        y: Math.round(canvasSize.height / 2) 
+      };
+      console.log('CanvasGrid: Using center for origin:', centerPoint);
+      setOrigin(centerPoint);
+    }
+    
+    // Mark as initialized
+    hasInitialized.current = true;
+  }, [initialPosition, canvasSize.width, canvasSize.height]);
   
   // Store the previous measurement unit and pixel ratio to handle unit changes
   const [prevUnit, setPrevUnit] = useState<MeasurementUnit>(measurementUnit);
   const [prevPixelsPerCm, setPrevPixelsPerCm] = useState<number>(pixelsPerCm);
-  
-  // Track if this is the initial render
-  const isInitialRender = useRef(true);
-  // Track if origin has been manually moved
-  const hasOriginMoved = useRef(false);
 
-  // Update origin when canvas size changes, but only on initial render or if origin hasn't been moved
-  useEffect(() => {
-    // Always center the grid on initial render or when canvas size changes
-    if (isInitialRender.current || canvasSize.width === 0 || canvasSize.height === 0) {
-      if (canvasSize.width > 0 && canvasSize.height > 0) {
-        setOrigin({
-          x: canvasSize.width / 2,
-          y: canvasSize.height / 2
-        });
-        
-        // If we have an initialPosition from a previous session, notify the parent
-        // but still start with the grid centered
-        if (onPositionChange) {
-          onPositionChange({
-            x: canvasSize.width / 2,
-            y: canvasSize.height / 2
-          });
-        }
-        
-        isInitialRender.current = false;
-      }
-    } else if (!hasOriginMoved.current) {
-      // Only update if the origin is at the default center position and hasn't been manually moved
-      if (
-        Math.abs(origin.x - (canvasSize.width / 2)) < 2 && 
-        Math.abs(origin.y - (canvasSize.height / 2)) < 2
-      ) {
-        setOrigin({
-          x: canvasSize.width / 2,
-          y: canvasSize.height / 2
-        });
-      }
-    }
-  }, [canvasSize, onPositionChange]);
-  
-  // Update origin when initialPosition changes, but only after initial render
-  useEffect(() => {
-    if (initialPosition && !isInitialRender.current) {
-      // Only update if the position has actually changed and we're not in the initial render
-      if (
-        initialPosition.x !== origin.x ||
-        initialPosition.y !== origin.y
-      ) {
-        setOrigin(initialPosition);
-      }
-    }
-  }, [initialPosition, origin.x, origin.y]);
+  // Add a ref for the position change timeout
+  const positionChangeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Custom origin change handler that also tracks if origin has been manually moved
   const handleOriginChange = (newOrigin: Point) => {
-    hasOriginMoved.current = true;
-    setOrigin(newOrigin);
+    // Skip if we're currently handling an external update
+    if (isHandlingExternalUpdate.current) {
+      console.log('CanvasGrid: Skipping handleOriginChange during external update');
+      return;
+    }
     
-    // Notify parent component of position change
-    if (onPositionChange) {
-      onPositionChange(newOrigin);
+    console.log('CanvasGrid: handleOriginChange called with', newOrigin);
+    
+    // Check if the change is significant enough to update
+    const isSignificantChange = !origin || 
+      Math.abs(newOrigin.x - origin.x) > 1 || 
+      Math.abs(newOrigin.y - origin.y) > 1;
+    
+    if (isSignificantChange) {
+      hasOriginMoved.current = true;
+      
+      // Use a local variable to prevent race conditions
+      const updatedOrigin = { ...newOrigin };
+      
+      // Set the origin state
+      setOrigin(updatedOrigin);
+      
+      // Notify parent component of position change, but only if it's a significant change
+      // This prevents too many updates during dragging
+      if (onPositionChange) {
+        // Debounce the position change notification to prevent too many updates
+        if (positionChangeTimeoutRef.current) {
+          clearTimeout(positionChangeTimeoutRef.current);
+        }
+        
+        // Only notify of position change when dragging stops or after a delay
+        positionChangeTimeoutRef.current = setTimeout(() => {
+          console.log('CanvasGrid: Notifying parent of position change (debounced)');
+          // Use the local variable to ensure we're using the correct value
+          onPositionChange(updatedOrigin);
+          positionChangeTimeoutRef.current = null;
+        }, 100); // 100ms debounce
+      }
+    } else {
+      console.log('CanvasGrid: Ignoring small origin change to prevent oscillation');
     }
   };
+
+  // Clean up the timeout when the component unmounts
+  useEffect(() => {
+    return () => {
+      if (positionChangeTimeoutRef.current) {
+        clearTimeout(positionChangeTimeoutRef.current);
+      }
+    };
+  }, []);
   
   // Handle measurement unit changes without moving the grid
   useEffect(() => {

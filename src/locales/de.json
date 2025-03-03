@@ -98,5 +98,6 @@
     "rotate": "Form drehen",
     "delete": "Ausgewählte löschen"
   },
-  "holdShiftToSnap15Degrees": "Shift-Taste halten, um beim Drehen in 15°-Schritten einzurasten"
+  "holdShiftToSnap15Degrees": "Halte Shift gedrückt, um beim Drehen in 15°-Schritten einzurasten",
+  "shareCanvas": "Leinwand-URL teilen"
 }

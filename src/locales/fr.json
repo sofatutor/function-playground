@@ -9,7 +9,8 @@
   "measurements": "Mesures",
   "selectShapeToViewMeasurements": "Sélectionnez une forme pour voir les mesures",
   "formula": "Formule",
-  "holdShiftToSnap15Degrees": "Maintenez Shift pour aligner sur des incréments de 15° lors de la rotation",
+  "holdShiftToSnap15Degrees": "Maintenez Shift pour aligner par incréments de 15° lors de la rotation",
+  "shareCanvas": "Partager l'URL du canevas",
   "units": {
     "label": "Unités de Mesure",
     "placeholder": "Sélectionnez une unité",
