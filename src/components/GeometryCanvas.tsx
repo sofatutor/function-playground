@@ -1,7 +1,7 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import ShapeControls from './ShapeControls';
-import { AnyShape, Circle, Rectangle, Triangle, Point, OperationMode } from '@/types/shapes';
+import { AnyShape, Circle, Rectangle, Triangle, Point, OperationMode, ShapeType } from '@/types/shapes';
 
 interface GeometryCanvasProps {
   shapes: AnyShape[];
@@ -34,6 +34,7 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
   const [originalSize, setOriginalSize] = useState<number | null>(null);
   const [rotateStart, setRotateStart] = useState<Point | null>(null);
   const [originalRotation, setOriginalRotation] = useState<number>(0);
+  const [currentShapeType, setCurrentShapeType] = useState<ShapeType>('rectangle');
 
   // Clean up any ongoing operations when the active mode changes
   useEffect(() => {
@@ -47,6 +48,16 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     setRotateStart(null);
     setOriginalRotation(0);
   }, [activeMode]);
+
+  // Try to infer the current shape type from the shapes array
+  useEffect(() => {
+    if (shapes.length > 0 && selectedShapeId) {
+      const selectedShape = shapes.find(s => s.id === selectedShapeId);
+      if (selectedShape) {
+        setCurrentShapeType(selectedShape.type);
+      }
+    }
+  }, [shapes, selectedShapeId]);
 
   const getCanvasPoint = (e: React.MouseEvent): Point => {
     const canvas = canvasRef.current;
@@ -413,114 +424,108 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     const width = Math.abs(drawCurrent.x - drawStart.x);
     const height = Math.abs(drawCurrent.y - drawStart.y);
     
-    switch (activeMode) {
-      case 'create': {
-        switch (activeShape?.type) {
-          case 'circle': {
-            const radius = Math.sqrt(
-              Math.pow(drawCurrent.x - drawStart.x, 2) + 
-              Math.pow(drawCurrent.y - drawStart.y, 2)
-            );
-            return (
-              <div
-                className="absolute rounded-full border-2 border-dashed"
-                style={{
-                  left: drawStart.x - radius,
-                  top: drawStart.y - radius,
-                  width: radius * 2,
-                  height: radius * 2,
-                  borderColor: 'rgba(85, 91, 110, 0.6)',
-                  backgroundColor: 'rgba(190, 227, 219, 0.2)'
-                }}
-              />
-            );
-          }
-          case 'rectangle':
-            return (
-              <div
-                className="absolute border-2 border-dashed"
-                style={{
-                  left: minX,
-                  top: minY,
-                  width,
-                  height,
-                  borderColor: 'rgba(85, 91, 110, 0.6)',
-                  backgroundColor: 'rgba(190, 227, 219, 0.2)'
-                }}
-              />
-            );
-          case 'triangle': {
-            // Create an equilateral triangle based on the drag distance and angle
-            const distance = Math.sqrt(
-              Math.pow(drawCurrent.x - drawStart.x, 2) + 
-              Math.pow(drawCurrent.y - drawStart.y, 2)
-            );
-            
-            const angle = Math.atan2(
-              drawCurrent.y - drawStart.y,
-              drawCurrent.x - drawStart.x
-            );
-            
-            const p1 = drawStart;
-            const p2 = {
-              x: drawStart.x + distance * Math.cos(angle),
-              y: drawStart.y + distance * Math.sin(angle)
-            };
-            const p3 = {
-              x: drawStart.x + distance * Math.cos(angle + (2 * Math.PI / 3)),
-              y: drawStart.y + distance * Math.sin(angle + (2 * Math.PI / 3))
-            };
-            
-            // Calculate bounding box
-            const boxMinX = Math.min(p1.x, p2.x, p3.x);
-            const boxMinY = Math.min(p1.y, p2.y, p3.y);
-            const boxMaxX = Math.max(p1.x, p2.x, p3.x);
-            const boxMaxY = Math.max(p1.y, p2.y, p3.y);
-            
-            const boxWidth = boxMaxX - boxMinX;
-            const boxHeight = boxMaxY - boxMinY;
-            
-            // Create SVG path for the triangle
-            const pathData = `
-              M ${p1.x - boxMinX} ${p1.y - boxMinY}
-              L ${p2.x - boxMinX} ${p2.y - boxMinY}
-              L ${p3.x - boxMinX} ${p3.y - boxMinY}
-              Z
-            `;
-            
-            return (
-              <div
-                className="absolute"
-                style={{
-                  left: boxMinX,
-                  top: boxMinY,
-                  width: boxWidth,
-                  height: boxHeight
-                }}
-              >
-                <svg width={boxWidth} height={boxHeight}>
-                  <path
-                    d={pathData}
-                    fill="rgba(190, 227, 219, 0.2)"
-                    stroke="rgba(85, 91, 110, 0.6)"
-                    strokeWidth={2}
-                    strokeDasharray="5,5"
-                  />
-                </svg>
-              </div>
-            );
-          }
-          default:
-            return null;
+    if (activeMode === 'create') {
+      switch (currentShapeType) {
+        case 'circle': {
+          const radius = Math.sqrt(
+            Math.pow(drawCurrent.x - drawStart.x, 2) + 
+            Math.pow(drawCurrent.y - drawStart.y, 2)
+          );
+          return (
+            <div
+              className="absolute rounded-full border-2 border-dashed"
+              style={{
+                left: drawStart.x - radius,
+                top: drawStart.y - radius,
+                width: radius * 2,
+                height: radius * 2,
+                borderColor: 'rgba(85, 91, 110, 0.6)',
+                backgroundColor: 'rgba(190, 227, 219, 0.2)'
+              }}
+            />
+          );
         }
+        case 'rectangle':
+          return (
+            <div
+              className="absolute border-2 border-dashed"
+              style={{
+                left: minX,
+                top: minY,
+                width,
+                height,
+                borderColor: 'rgba(85, 91, 110, 0.6)',
+                backgroundColor: 'rgba(190, 227, 219, 0.2)'
+              }}
+            />
+          );
+        case 'triangle': {
+          // Create an equilateral triangle based on the drag distance and angle
+          const distance = Math.sqrt(
+            Math.pow(drawCurrent.x - drawStart.x, 2) + 
+            Math.pow(drawCurrent.y - drawStart.y, 2)
+          );
+          
+          const angle = Math.atan2(
+            drawCurrent.y - drawStart.y,
+            drawCurrent.x - drawStart.x
+          );
+          
+          const p1 = drawStart;
+          const p2 = {
+            x: drawStart.x + distance * Math.cos(angle),
+            y: drawStart.y + distance * Math.sin(angle)
+          };
+          const p3 = {
+            x: drawStart.x + distance * Math.cos(angle + (2 * Math.PI / 3)),
+            y: drawStart.y + distance * Math.sin(angle + (2 * Math.PI / 3))
+          };
+          
+          // Calculate bounding box
+          const boxMinX = Math.min(p1.x, p2.x, p3.x);
+          const boxMinY = Math.min(p1.y, p2.y, p3.y);
+          const boxMaxX = Math.max(p1.x, p2.x, p3.x);
+          const boxMaxY = Math.max(p1.y, p2.y, p3.y);
+          
+          const boxWidth = boxMaxX - boxMinX;
+          const boxHeight = boxMaxY - boxMinY;
+          
+          // Create SVG path for the triangle
+          const pathData = `
+            M ${p1.x - boxMinX} ${p1.y - boxMinY}
+            L ${p2.x - boxMinX} ${p2.y - boxMinY}
+            L ${p3.x - boxMinX} ${p3.y - boxMinY}
+            Z
+          `;
+          
+          return (
+            <div
+              className="absolute"
+              style={{
+                left: boxMinX,
+                top: boxMinY,
+                width: boxWidth,
+                height: boxHeight
+              }}
+            >
+              <svg width={boxWidth} height={boxHeight}>
+                <path
+                  d={pathData}
+                  fill="rgba(190, 227, 219, 0.2)"
+                  stroke="rgba(85, 91, 110, 0.6)"
+                  strokeWidth={2}
+                  strokeDasharray="5,5"
+                />
+              </svg>
+            </div>
+          );
+        }
+        default:
+          return null;
       }
-      default:
-        return null;
     }
+    return null;
   };
-
-  // Find the currently active shape type for drawing preview
-  const activeShape = shapes.find(s => s.type === activeMode);
 
   return (
     <div 
