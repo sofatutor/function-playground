@@ -1,0 +1,103 @@
+{
+  "appTitle": "Geometrie-Visualisierer",
+  "appDescription": "Erstellen, manipulieren und verstehen Sie geometrische Formen interaktiv",
+  "clearCanvas": "Leinwand leeren",
+  "gettingStarted": "Erste Schritte",
+  "selectShapeTool": "Wählen Sie ein Formwerkzeug",
+  "clickAndDrag": "Klicken und ziehen Sie, um zu erstellen",
+  "useControls": "Verwenden Sie die Steuerung",
+  "measurements": "Messungen",
+  "selectShapeToViewMeasurements": "Wählen Sie eine Form aus, um Messungen anzuzeigen",
+  "formula": "Formel",
+  "units": {
+    "label": "Maßeinheiten",
+    "placeholder": "Einheit auswählen",
+    "centimeters": "Zentimeter",
+    "inches": "Zoll"
+  },
+  "shapeNames": {
+    "circle": "Kreis",
+    "rectangle": "Rechteck",
+    "triangle": "Dreieck",
+    "line": "Linie"
+  },
+  "measurementLabels": {
+    "radius": "Radius",
+    "diameter": "Durchmesser",
+    "width": "Breite",
+    "height": "Höhe",
+    "side1": "Seite 1",
+    "side2": "Seite 2",
+    "side3": "Seite 3",
+    "area": "Fläche",
+    "perimeter": "Umfang",
+    "circumference": "Kreisumfang",
+    "angles": "Innenwinkel",
+    "angle1": "Winkel 1",
+    "angle2": "Winkel 2",
+    "angle3": "Winkel 3",
+    "length": "Länge",
+    "angle": "Winkel"
+  },
+  "unitSuffixes": {
+    "area": "{unit}²",
+    "perimeter": "{unit}",
+    "circumference": "{unit}",
+    "side1": "{unit}",
+    "side2": "{unit}",
+    "side3": "{unit}",
+    "width": "{unit}",
+    "height": "{unit}",
+    "radius": "{unit}",
+    "diameter": "{unit}",
+    "angles": "°",
+    "angle1": "°",
+    "angle2": "°",
+    "angle3": "°",
+    "length": "{unit}",
+    "angle": "°"
+  },
+  "formulaExplanations": {
+    "circle": {
+      "radius": "Der Abstand vom Mittelpunkt zum Rand des Kreises.",
+      "diameter": "Der Abstand durch den Mittelpunkt des Kreises.",
+      "area": "Die Fläche innerhalb des Kreises.",
+      "perimeter": "Der Umfang des Kreises, auch Kreisumfang genannt.",
+      "circumference": "Der Umfang des Kreises, gleich 2πr oder πd."
+    },
+    "rectangle": {
+      "width": "Die horizontale Ausdehnung des Rechtecks.",
+      "height": "Die vertikale Ausdehnung des Rechtecks.",
+      "area": "Die Fläche innerhalb des Rechtecks.",
+      "perimeter": "Der Umfang des Rechtecks."
+    },
+    "triangle": {
+      "side1": "Die Länge einer Seite des Dreiecks.",
+      "side2": "Die Länge einer Seite des Dreiecks.",
+      "side3": "Die Länge einer Seite des Dreiecks.",
+      "area": "Die Fläche innerhalb des Dreiecks.",
+      "perimeter": "Der Umfang des Dreiecks (Summe aller Seiten).",
+      "height": "Der senkrechte Abstand von einer Ecke zur längsten Seite (als Basis verwendet).",
+      "angles": "Die Summe der Innenwinkel eines Dreiecks beträgt immer 180 Grad.",
+      "angle1": "Der Winkel zwischen Seite 3 und Seite 2. Wenn sich ein Winkel ändert, passen sich die anderen an, um eine Summe von 180° zu erhalten.",
+      "angle2": "Der Winkel zwischen Seite 1 und Seite 3. Wenn sich ein Winkel ändert, passen sich die anderen an, um eine Summe von 180° zu erhalten.",
+      "angle3": "Der Winkel zwischen Seite 1 und Seite 2. Wenn sich ein Winkel ändert, passen sich die anderen an, um eine Summe von 180° zu erhalten."
+    },
+    "line": {
+      "length": "Der direkte Abstand zwischen den beiden Endpunkten.",
+      "angle": "Der Winkel, den die Linie mit der horizontalen Achse bildet, gemessen in Grad."
+    }
+  },
+  "tooltips": {
+    "rectangle": "Rechteck",
+    "circle": "Kreis",
+    "triangle": "Dreieck",
+    "line": "Linie",
+    "lineExplanation": "Berechnet den direkten Abstand zwischen zwei Punkten",
+    "select": "Formen auswählen & bewegen",
+    "rotate": "Form drehen",
+    "delete": "Ausgewählte löschen"
+  },
+  "holdShiftToSnap15Degrees": "Halte Shift gedrückt, um beim Drehen in 15°-Schritten einzurasten",
+  "shareCanvas": "Leinwand-URL teilen"
+}

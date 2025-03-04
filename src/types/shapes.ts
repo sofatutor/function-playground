@@ -1,5 +1,6 @@
 
-export type ShapeType = 'circle' | 'rectangle' | 'triangle';
+export type ShapeType = 'circle' | 'rectangle' | 'triangle' | 'line';
+export type MeasurementUnit = 'cm' | 'in';
 
 export interface Point {
   x: number;
@@ -33,7 +34,14 @@ export interface Triangle extends Shape {
   points: [Point, Point, Point]; // Three points defining the triangle
 }
 
-export type AnyShape = Circle | Rectangle | Triangle;
+export interface Line extends Shape {
+  type: 'line';
+  startPoint: Point;
+  endPoint: Point;
+  length: number; // Store the length for easy access in measurements
+}
+
+export type AnyShape = Circle | Rectangle | Triangle | Line;
 
 export type OperationMode = 'select' | 'create' | 'move' | 'resize' | 'rotate';
 
