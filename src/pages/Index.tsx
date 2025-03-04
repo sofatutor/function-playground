@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useShapeOperations } from '@/hooks/useShapeOperations';
 import GeometryHeader from '@/components/GeometryHeader';
@@ -5,11 +6,14 @@ import GeometryCanvas from '@/components/GeometryCanvas';
 import Toolbar from '@/components/Toolbar';
 import MeasurementPanel from '@/components/MeasurementPanel';
 import UnitSelector from '@/components/UnitSelector';
+import FormulaEditor from '@/components/FormulaEditor';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Triangle, Circle, Square } from 'lucide-react';
 import { useTranslate } from '@/utils/translate';
 import { Point } from '@/types/shapes';
+import { Formula } from '@/types/formula';
+import { getStoredPixelsPerUnit } from '@/utils/geometry/common';
 
 const Index = () => {
   const {
@@ -36,6 +40,14 @@ const Index = () => {
   } = useShapeOperations();
 
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [formulas, setFormulas] = useState<Formula[]>([]);
+  const [isFormulaEditorOpen, setIsFormulaEditorOpen] = useState(false);
+  const [pixelsPerUnit, setPixelsPerUnit] = useState<number>(getStoredPixelsPerUnit(measurementUnit));
+
+  // Effect to update pixelsPerUnit when measurement unit changes
+  useEffect(() => {
+    setPixelsPerUnit(getStoredPixelsPerUnit(measurementUnit));
+  }, [measurementUnit]);
 
   // Check fullscreen status
   useEffect(() => {
@@ -47,6 +59,28 @@ const Index = () => {
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
     };
+  }, []);
+
+  // Toggle formula editor
+  const toggleFormulaEditor = useCallback(() => {
+    setIsFormulaEditorOpen(prevState => !prevState);
+  }, []);
+
+  // Handle formula operations
+  const handleAddFormula = useCallback((formula: Formula) => {
+    setFormulas(prevFormulas => [...prevFormulas, formula]);
+  }, []);
+
+  const handleUpdateFormula = useCallback((id: string, updates: Partial<Formula>) => {
+    setFormulas(prevFormulas => 
+      prevFormulas.map(formula => 
+        formula.id === id ? { ...formula, ...updates } : formula
+      )
+    );
+  }, []);
+
+  const handleDeleteFormula = useCallback((id: string) => {
+    setFormulas(prevFormulas => prevFormulas.filter(formula => formula.id !== id));
   }, []);
 
   const selectedShape = getSelectedShape();
@@ -98,6 +132,8 @@ const Index = () => {
                   onDelete={() => selectedShapeId && deleteShape(selectedShapeId)}
                   hasSelectedShape={!!selectedShapeId}
                   canDelete={!!selectedShapeId}
+                  onToggleFormulaEditor={toggleFormulaEditor}
+                  isFormulaEditorOpen={isFormulaEditorOpen}
                 />
                 
                 <Button 
@@ -109,6 +145,19 @@ const Index = () => {
                   {t('clearCanvas')}
                 </Button>
               </div>
+              
+              {isFormulaEditorOpen && (
+                <div className="mb-4">
+                  <FormulaEditor
+                    formulas={formulas}
+                    onAddFormula={handleAddFormula}
+                    onUpdateFormula={handleUpdateFormula}
+                    onDeleteFormula={handleDeleteFormula}
+                    measurementUnit={measurementUnit}
+                    isOpen={isFormulaEditorOpen}
+                  />
+                </div>
+              )}
               
               <GeometryCanvas
                 shapes={shapes}
@@ -126,6 +175,8 @@ const Index = () => {
                 onMoveAllShapes={handleMoveAllShapes}
                 gridPosition={gridPosition}
                 onGridPositionChange={handleGridPositionChange}
+                formulas={formulas}
+                pixelsPerUnit={pixelsPerUnit}
               />
             </div>
           </div>
