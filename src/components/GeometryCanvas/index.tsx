@@ -7,7 +7,7 @@ import CalibrationButton from './CalibrationButton';
 import FormulaGraph from '../FormulaGraph';
 import FormulaPointInfo from '../FormulaPointInfo';
 import { AnyShape, Point, OperationMode, ShapeType, MeasurementUnit } from '@/types/shapes';
-import { Formula } from '@/types/formula';
+import { Formula, FormulaPoint } from '@/types/formula';
 import { isGridDragging } from '@/components/CanvasGrid/GridDragHandler';
 import { 
   getStoredPixelsPerUnit, 
@@ -102,6 +102,16 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     mathX: number;
     mathY: number;
     formula: Formula;
+    pointIndex?: number;
+    allPoints?: FormulaPoint[];
+    navigationStepSize?: number;
+  } | null>(null);
+  
+  // Add state to track the current point index and all points for the selected formula
+  const [currentPointInfo, setCurrentPointInfo] = useState<{
+    formulaId: string;
+    pointIndex: number;
+    allPoints: FormulaPoint[];
   } | null>(null);
   
   // Add a ref to track if we're clicking on a path
@@ -112,9 +122,110 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     // Clear the selected point in the GeometryCanvas
     setSelectedPoint(null);
     
+    // Clear the current point info
+    setCurrentPointInfo(null);
+    
     // Reset the clicked on path flag
     clickedOnPathRef.current = false;
   }, []);
+  
+  // Function to navigate to the next/previous point
+  const navigateFormulaPoint = useCallback((direction: 'next' | 'previous', isShiftPressed = false) => {
+    console.log('navigateFormulaPoint called with direction:', direction, 'shift:', isShiftPressed);
+    
+    if (!selectedPoint) {
+      console.log('No selectedPoint, returning');
+      return;
+    }
+    
+    // Get the current point's mathematical X coordinate
+    const currentMathX = selectedPoint.mathX;
+    
+    // Round to 4 decimal places to handle floating point precision issues
+    const roundedCurrentX = Math.round(currentMathX * 10000) / 10000;
+    console.log('Current mathX (rounded):', roundedCurrentX);
+    
+    // Determine the step size based on whether Shift is pressed
+    const stepSize = selectedPoint.navigationStepSize || (isShiftPressed ? 1.0 : 0.1);
+    console.log('Using step size:', stepSize);
+    
+    // Determine the target X coordinate based on direction
+    let targetMathX;
+    
+    if (direction === 'previous') {
+      // When going left, we want the previous increment
+      targetMathX = Math.floor(roundedCurrentX / stepSize) * stepSize;
+      if (Math.abs(targetMathX - roundedCurrentX) < 0.0001) {
+        targetMathX -= stepSize;
+      }
+    } else { // next
+      // When going right, we want the next increment
+      targetMathX = Math.ceil(roundedCurrentX / stepSize) * stepSize;
+      if (Math.abs(targetMathX - roundedCurrentX) < 0.0001) {
+        targetMathX += stepSize;
+      }
+    }
+    
+    // Round to ensure we get exact increments
+    targetMathX = Math.round(targetMathX / stepSize) * stepSize;
+    
+    // Round to 4 decimal places to handle floating point precision issues
+    targetMathX = Math.round(targetMathX * 10000) / 10000;
+    
+    console.log('Final target mathX:', targetMathX.toFixed(4));
+    
+    // Get the formula expression
+    const formula = selectedPoint.formula;
+    const expression = formula.expression;
+    
+    try {
+      // Create a function from the expression
+      const fn = new Function('x', `
+        try {
+          const Math = window.Math;
+          return ${expression};
+        } catch (e) {
+          return NaN;
+        }
+      `);
+      
+      // Evaluate the function at the target X
+      const targetMathY = fn(targetMathX);
+      
+      // Check if the result is valid
+      if (isNaN(targetMathY) || !isFinite(targetMathY)) {
+        console.log('Evaluated Y is not valid, cannot navigate');
+        return;
+      }
+      
+      // Convert from mathematical coordinates to canvas coordinates
+      const targetCanvasX = (gridPosition?.x || 0) + targetMathX * pixelsPerUnit;
+      const targetCanvasY = (gridPosition?.y || 0) - targetMathY * pixelsPerUnit;
+      
+      console.log('Evaluated formula at x =', targetMathX.toFixed(4), 'y =', targetMathY.toFixed(4));
+      console.log('Canvas coordinates:', targetCanvasX.toFixed(4), targetCanvasY.toFixed(4));
+      
+      // Create a new selected point with all the necessary information
+      const newSelectedPoint = {
+        ...selectedPoint,
+        x: targetCanvasX,
+        y: targetCanvasY,
+        mathX: targetMathX,
+        mathY: targetMathY,
+        navigationStepSize: stepSize
+      };
+      
+      // Update the selected point
+      setSelectedPoint(newSelectedPoint);
+      
+      // Focus the canvas to ensure keyboard events continue to work
+      if (canvasRef.current) {
+        canvasRef.current.focus();
+      }
+    } catch (error) {
+      console.error('Error evaluating formula:', error);
+    }
+  }, [selectedPoint, gridPosition, pixelsPerUnit]);
   
   // Effect to update internal grid position when external grid position changes
   useEffect(() => {
@@ -152,12 +263,16 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
   // Track Shift and Alt key states
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      console.log('Key down:', e.key);
+      
       if (e.key === 'Shift') {
         setIsShiftPressed(true);
       }
       if (e.key === 'Alt') {
         setIsAltPressed(true);
       }
+      
+      // Note: Arrow key handling for formula point navigation is now done in the canvas onKeyDown handler
     };
     
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -169,14 +284,16 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
       }
     };
     
+    // Add event listeners to the window
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     
+    // Clean up event listeners when component unmounts
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, []);
+  }, [selectedPoint, currentPointInfo, navigateFormulaPoint, setIsShiftPressed, setIsAltPressed]);
   
   // Handle calibration completion
   const handleCalibrationComplete = (newPixelsPerUnit: number) => {
@@ -330,39 +447,46 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     }
   }, [selectedShapeId, clearAllSelectedPoints]);
 
-  const handleMouseMove = createHandleMouseMove({
-    canvasRef,
-    shapes,
-    activeMode,
-    activeShapeType,
-    selectedShapeId,
-    isDrawing,
-    drawStart,
-    drawCurrent,
-    dragStart,
-    originalPosition,
-    resizeStart,
-    originalSize,
-    rotateStart,
-    originalRotation,
-    pixelsPerUnit,
-    pixelsPerSmallUnit,
-    measurementUnit,
-    setIsDrawing,
-    setDrawStart,
-    setDrawCurrent,
-    setDragStart,
-    setOriginalPosition,
-    setResizeStart,
-    setOriginalSize,
-    setRotateStart,
-    setOriginalRotation,
-    onShapeSelect,
-    onShapeCreate,
-    onShapeMove,
-    onShapeResize,
-    onShapeRotate
-  });
+  // Handle mouse move
+  const handleMouseMove = (e: React.MouseEvent) => {
+    // Use the original handler from CanvasEventHandlers but don't clear selected points
+    const originalHandler = createHandleMouseMove({
+      canvasRef,
+      shapes,
+      activeMode,
+      activeShapeType,
+      selectedShapeId,
+      isDrawing,
+      drawStart,
+      drawCurrent,
+      dragStart,
+      originalPosition,
+      resizeStart,
+      originalSize,
+      rotateStart,
+      originalRotation,
+      pixelsPerUnit,
+      pixelsPerSmallUnit,
+      measurementUnit,
+      setIsDrawing,
+      setDrawStart,
+      setDrawCurrent,
+      setDragStart,
+      setOriginalPosition,
+      setResizeStart,
+      setOriginalSize,
+      setRotateStart,
+      setOriginalRotation,
+      onShapeSelect,
+      onShapeCreate,
+      onShapeMove,
+      onShapeResize,
+      onShapeRotate
+    });
+    
+    // Call the original handler
+    originalHandler(e);
+  };
 
   const handleMouseUp = createHandleMouseUp({
     canvasRef,
@@ -590,6 +714,9 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     mathX: number;
     mathY: number;
     formula: Formula;
+    pointIndex?: number;
+    allPoints?: FormulaPoint[];
+    navigationStepSize?: number;
   } | null) => {
     console.log('Point selected:', point);
     
@@ -601,6 +728,27 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
       // Set the clicked on path flag to true
       clickedOnPathRef.current = true;
       setSelectedPoint(point);
+      
+      // Store the current point index and all points if provided
+      if (point.pointIndex !== undefined && point.allPoints) {
+        setCurrentPointInfo({
+          formulaId: point.formula.id,
+          pointIndex: point.pointIndex,
+          allPoints: point.allPoints
+        });
+      } else {
+        setCurrentPointInfo(null);
+      }
+      
+      // Focus the canvas to enable keyboard navigation
+      if (canvasRef.current) {
+        console.log('Focusing canvas element');
+        canvasRef.current.focus();
+      } else {
+        console.log('Canvas ref is null, cannot focus');
+      }
+    } else {
+      setCurrentPointInfo(null);
     }
   };
 
@@ -693,24 +841,34 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     // Call the original mouseUp handler
     handleMouseUp(e);
     
-    // If the click is on a path (part of the formula graph), don't dismiss
-    if ((e.target as Element).tagName === 'path') {
-      return;
-    }
-    
-    // If the click is on the info box itself, don't dismiss
-    const infoBox = document.querySelector('.formula-point-info');
-    if (infoBox && infoBox.contains(e.target as Node)) {
-      return;
-    }
-    
-    // If we didn't click on a path, dismiss the info box
-    if (!clickedOnPathRef.current) {
+    // Only process point dismissal for mouseup events, not mouseleave
+    if (e.type === 'mouseup') {
+      // If the click is on a path (part of the formula graph), don't dismiss
+      if ((e.target as Element).tagName === 'path') {
+        // We're clicking on a path, so we'll set the flag but not dismiss
+        clickedOnPathRef.current = true;
+        return;
+      }
+      
+      // If the click is on the info box itself, don't dismiss
+      const infoBox = document.querySelector('.formula-point-info');
+      if (infoBox && infoBox.contains(e.target as Node)) {
+        return;
+      }
+      
+      // If the click is on the tool button or its container, don't dismiss
+      const toolButton = document.querySelector('.btn-tool');
+      if (toolButton && (toolButton === e.target || toolButton.contains(e.target as Node))) {
+        return;
+      }
+      
+      // At this point, we know we clicked somewhere else on the canvas
+      // So we should dismiss the info box immediately
       clearAllSelectedPoints();
+      
+      // Reset the flag for the next click
+      clickedOnPathRef.current = false;
     }
-    
-    // Reset the flag for the next click
-    clickedOnPathRef.current = false;
   };
 
   // Add a global handler to ensure the isGridDragging flag is properly reset
@@ -725,6 +883,14 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
       // No cleanup needed
     };
   }, []);
+
+  // Effect to focus the canvas when selectedPoint changes
+  useEffect(() => {
+    if (selectedPoint && canvasRef.current) {
+      console.log('selectedPoint changed, focusing canvas');
+      canvasRef.current.focus();
+    }
+  }, [selectedPoint]);
 
   return (
     <div className="relative w-full h-full">
@@ -744,12 +910,73 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
           cursor: activeMode === 'move' ? 'move' : 'default'
         }}
         tabIndex={0}
-        onKeyDown={handleKeyDown}
+        onKeyDown={(e) => {
+          console.log('Canvas keydown:', e.key);
+          
+          // Handle arrow keys for formula point navigation
+          if (selectedPoint) {
+            if (e.key === 'ArrowLeft') {
+              console.log('Canvas ArrowLeft pressed, shift:', e.shiftKey);
+              e.preventDefault();
+              navigateFormulaPoint('previous', e.shiftKey);
+            } else if (e.key === 'ArrowRight') {
+              console.log('Canvas ArrowRight pressed, shift:', e.shiftKey);
+              e.preventDefault();
+              navigateFormulaPoint('next', e.shiftKey);
+            } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+              // Handle up/down arrow keys to adjust the navigation step size
+              e.preventDefault();
+              
+              // Get the current step size
+              const currentStepSize = selectedPoint.navigationStepSize || 0.1;
+              
+              // Calculate the new step size
+              let newStepSize = currentStepSize;
+              if (e.key === 'ArrowUp') {
+                // Increase step size
+                newStepSize = Math.min(1.0, currentStepSize + 0.1);
+              } else {
+                // Decrease step size
+                newStepSize = Math.max(0.01, currentStepSize - 0.01);
+              }
+              
+              console.log(`Adjusting step size from ${currentStepSize} to ${newStepSize}`);
+              
+              // Update the selected point with the new step size
+              setSelectedPoint({
+                ...selectedPoint,
+                navigationStepSize: newStepSize
+              });
+            }
+          }
+        }}
         onKeyUp={handleKeyUp}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={customMouseUpHandler}
         onMouseLeave={customMouseUpHandler}
+        onClick={(e) => {
+          // If the click is on a path (part of the formula graph), don't dismiss
+          if ((e.target as Element).tagName === 'path') {
+            return;
+          }
+          
+          // If the click is on the info box itself, don't dismiss
+          const infoBox = document.querySelector('.formula-point-info');
+          if (infoBox && infoBox.contains(e.target as Node)) {
+            return;
+          }
+          
+          // If the click is on the tool button or its container, don't dismiss
+          const toolButton = document.querySelector('.btn-tool');
+          if (toolButton && (toolButton === e.target || toolButton.contains(e.target as Node))) {
+            return;
+          }
+          
+          // At this point, we know we clicked somewhere else on the canvas
+          // So we should dismiss the info box immediately
+          clearAllSelectedPoints();
+        }}
       >
         {/* Grid - Pass the persistent grid position */}
         <CanvasGrid
@@ -830,7 +1057,15 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
         
         {/* Display formula point info */}
         {selectedPoint && (
-          <div className="absolute bottom-4 right-4 w-80 z-50 formula-point-info-container">
+          <div 
+            className="absolute w-80 formula-point-info-container"
+            style={{
+              bottom: '1rem',
+              right: showCalibration ? 'calc(20rem + 1rem)' : '1rem',
+              zIndex: 60,
+              transition: 'right 0.2s ease-in-out'
+            }}
+          >
             <FormulaPointInfo point={selectedPoint} />
           </div>
         )}
