@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useShapeOperations } from '@/hooks/useShapeOperations';
+import { useServiceFactory } from '@/providers/ServiceProvider';
 import GeometryHeader from '@/components/GeometryHeader';
 import GeometryCanvas from '@/components/GeometryCanvas';
 import Toolbar from '@/components/Toolbar';
@@ -16,6 +17,9 @@ import { getStoredPixelsPerUnit } from '@/utils/geometry/common';
 import { createDefaultFormula } from '@/utils/formulaUtils';
 
 const Index = () => {
+  // Get the service factory
+  const serviceFactory = useServiceFactory();
+  
   const {
     shapes,
     selectedShapeId,
@@ -206,6 +210,7 @@ const Index = () => {
                 onGridPositionChange={handleGridPositionChange}
                 formulas={formulas}
                 pixelsPerUnit={pixelsPerUnit}
+                serviceFactory={serviceFactory}
               />
             </div>
           </div>
