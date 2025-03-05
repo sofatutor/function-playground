@@ -1,11 +1,11 @@
 import { Point } from '@/types/shapes';
+import { distanceBetweenPoints } from './pointOperations';
 
 // Helper functions for shape calculations
 export const generateId = (): string => Math.random().toString(36).substring(2, 9);
 
-export const distanceBetweenPoints = (p1: Point, p2: Point): number => {
-  return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
-};
+// Re-export the distanceBetweenPoints function for backward compatibility
+export { distanceBetweenPoints };
 
 // Default shape properties
 export const DEFAULT_FILL = 'rgba(190, 227, 219, 0.5)';

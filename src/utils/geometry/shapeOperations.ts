@@ -1,5 +1,5 @@
 import { AnyShape, Point, Triangle, Line } from '@/types/shapes';
-import { distanceBetweenPoints } from './common';
+import { distanceBetweenPoints, movePoint, scalePoint, rotatePoint } from './pointOperations';
 
 // Function to select a shape
 export const selectShape = (shapes: AnyShape[], id: string | null): AnyShape[] => {
@@ -24,9 +24,9 @@ export const moveShape = (shapes: AnyShape[], id: string, newPosition: Point): A
       
       // Move each point by the same delta
       const newPoints: [Point, Point, Point] = [
-        { x: tri.points[0].x + deltaX, y: tri.points[0].y + deltaY },
-        { x: tri.points[1].x + deltaX, y: tri.points[1].y + deltaY },
-        { x: tri.points[2].x + deltaX, y: tri.points[2].y + deltaY }
+        movePoint(tri.points[0], deltaX, deltaY),
+        movePoint(tri.points[1], deltaX, deltaY),
+        movePoint(tri.points[2], deltaX, deltaY)
       ];
       
       return {
@@ -40,21 +40,11 @@ export const moveShape = (shapes: AnyShape[], id: string, newPosition: Point): A
       // For lines, we need to update both start and end points
       const line = shape as Line;
       
-      const newStartPoint = {
-        x: line.startPoint.x + deltaX,
-        y: line.startPoint.y + deltaY
-      };
-      
-      const newEndPoint = {
-        x: line.endPoint.x + deltaX,
-        y: line.endPoint.y + deltaY
-      };
-      
       return {
         ...shape,
         position: newPosition,
-        startPoint: newStartPoint,
-        endPoint: newEndPoint
+        startPoint: movePoint(line.startPoint, deltaX, deltaY),
+        endPoint: movePoint(line.endPoint, deltaX, deltaY)
       };
     }
     
@@ -86,10 +76,9 @@ export const resizeShape = (shapes: AnyShape[], id: string, factor: number): Any
       case 'triangle': {
         const triangle = shape as Triangle;
         const center = triangle.position;
-        const newPoints = triangle.points.map(point => ({
-          x: center.x + (point.x - center.x) * absFactor,
-          y: center.y + (point.y - center.y) * absFactor
-        })) as [Point, Point, Point];
+        const newPoints = triangle.points.map(point => 
+          scalePoint(point, center, absFactor)
+        ) as [Point, Point, Point];
         
         return {
           ...triangle,
@@ -101,15 +90,8 @@ export const resizeShape = (shapes: AnyShape[], id: string, factor: number): Any
         const center = line.position;
         
         // Scale the start and end points from the center
-        const newStartPoint = {
-          x: center.x + (line.startPoint.x - center.x) * absFactor,
-          y: center.y + (line.startPoint.y - center.y) * absFactor
-        };
-        
-        const newEndPoint = {
-          x: center.x + (line.endPoint.x - center.x) * absFactor,
-          y: center.y + (line.endPoint.y - center.y) * absFactor
-        };
+        const newStartPoint = scalePoint(line.startPoint, center, absFactor);
+        const newEndPoint = scalePoint(line.endPoint, center, absFactor);
         
         // Calculate the new length
         const newLength = distanceBetweenPoints(newStartPoint, newEndPoint);
@@ -136,38 +118,10 @@ export const rotateShape = (shapes: AnyShape[], id: string, angle: number): AnyS
       const line = shape as Line;
       const center = line.position;
       
-      // Convert angle from degrees to radians
-      const angleRad = (angle * Math.PI) / 180;
-      const cos = Math.cos(angleRad);
-      const sin = Math.sin(angleRad);
-      
-      // Rotate start point around center
-      const startX = line.startPoint.x - center.x;
-      const startY = line.startPoint.y - center.y;
-      const rotatedStartX = startX * cos - startY * sin;
-      const rotatedStartY = startX * sin + startY * cos;
-      
-      // Rotate end point around center
-      const endX = line.endPoint.x - center.x;
-      const endY = line.endPoint.y - center.y;
-      const rotatedEndX = endX * cos - endY * sin;
-      const rotatedEndY = endX * sin + endY * cos;
-      
-      // Create new points
-      const newStartPoint = {
-        x: rotatedStartX + center.x,
-        y: rotatedStartY + center.y
-      };
-      
-      const newEndPoint = {
-        x: rotatedEndX + center.x,
-        y: rotatedEndY + center.y
-      };
-      
       return {
         ...line,
-        startPoint: newStartPoint,
-        endPoint: newEndPoint,
+        startPoint: rotatePoint(line.startPoint, center, angle),
+        endPoint: rotatePoint(line.endPoint, center, angle),
         rotation: angle
       };
     }
