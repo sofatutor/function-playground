@@ -20,10 +20,11 @@ import {
   createHandleKeyDown
 } from './CanvasEventHandlers';
 import FormulaGraph from '../FormulaGraph';
+import { Formula } from '@/types/formula';
 
 // Add formula support to GeometryCanvas
 interface FormulaCanvasProps extends GeometryCanvasProps {
-  formulas?: any[]; // Use the Formula type from your types folder
+  formulas?: Formula[]; // Use the Formula type from your types folder
   pixelsPerUnit?: number;
 }
 
@@ -46,7 +47,6 @@ interface GeometryCanvasProps {
 }
 
 const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
-  gridPosition,
   formulas = [],
   pixelsPerUnit = 0,
   shapes,
@@ -550,6 +550,9 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
   const renderFormulas = () => {
     if (!formulas || formulas.length === 0 || !gridPositionState) return null;
     
+    // Use the pixelsPerUnit prop if provided, otherwise fall back to the internal state
+    const ppu = pixelsPerUnit > 0 ? pixelsPerUnit : pixelsPerUnitState;
+    
     return (
       <svg className="absolute inset-0 pointer-events-none" width="100%" height="100%">
         {formulas.map(formula => (
@@ -557,7 +560,7 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
             key={formula.id}
             formula={formula}
             gridPosition={gridPositionState}
-            pixelsPerUnit={pixelsPerUnitState}
+            pixelsPerUnit={ppu}
           />
         ))}
       </svg>

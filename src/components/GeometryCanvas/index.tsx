@@ -1,10 +1,14 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect, useCallback, KeyboardEvent as ReactKeyboardEvent } from 'react';
 import ShapeControls from '../ShapeControls';
 import CanvasGrid from '../CanvasGrid/index';
 import ShapeRenderer from './ShapeRenderer';
 import PreviewShape from './PreviewShape';
 import CalibrationButton from './CalibrationButton';
+import FormulaGraph from '../FormulaGraph';
+import FormulaPointInfo from '../FormulaPointInfo';
 import { AnyShape, Point, OperationMode, ShapeType, MeasurementUnit } from '@/types/shapes';
+import { Formula } from '@/types/formula';
+import { isGridDragging } from '@/components/CanvasGrid/GridDragHandler';
 import { 
   getStoredPixelsPerUnit, 
   DEFAULT_PIXELS_PER_CM, 
@@ -19,6 +23,12 @@ import {
   createHandleRotateStart,
   createHandleKeyDown
 } from './CanvasEventHandlers';
+
+// Add formula support to GeometryCanvas
+interface FormulaCanvasProps extends GeometryCanvasProps {
+  formulas?: Formula[]; // Use the Formula type from your types folder
+  pixelsPerUnit?: number;
+}
 
 interface GeometryCanvasProps {
   shapes: AnyShape[];
@@ -38,7 +48,9 @@ interface GeometryCanvasProps {
   onGridPositionChange?: (newPosition: Point) => void;
 }
 
-const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
+const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
+  formulas = [],
+  pixelsPerUnit: externalPixelsPerUnit = 0,
   shapes,
   selectedShapeId,
   activeMode,
@@ -65,7 +77,10 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
   const [originalSize, setOriginalSize] = useState<number | null>(null);
   const [rotateStart, setRotateStart] = useState<Point | null>(null);
   const [originalRotation, setOriginalRotation] = useState<number>(0);
-  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+  const [canvasSize, setCanvasSize] = useState<{ width: number; height: number }>({
+    width: 0,
+    height: 0
+  });
   const [isShiftPressed, setIsShiftPressed] = useState(false);
   
   // Add state for calibration
@@ -79,6 +94,27 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
   
   // Add a new state for persistent grid position - initialize as null to allow the CanvasGrid to center it
   const [gridPosition, setGridPosition] = useState<Point | null>(externalGridPosition || null);
+  
+  // Add state for selected formula point
+  const [selectedPoint, setSelectedPoint] = useState<{
+    x: number;
+    y: number;
+    mathX: number;
+    mathY: number;
+    formula: Formula;
+  } | null>(null);
+  
+  // Add a ref to track if we're clicking on a path
+  const clickedOnPathRef = useRef(false);
+  
+  // Add a function to clear all selected points
+  const clearAllSelectedPoints = useCallback(() => {
+    // Clear the selected point in the GeometryCanvas
+    setSelectedPoint(null);
+    
+    // Reset the clicked on path flag
+    clickedOnPathRef.current = false;
+  }, []);
   
   // Effect to update internal grid position when external grid position changes
   useEffect(() => {
@@ -208,7 +244,7 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     setOriginalRotation(0);
   }, [activeMode]);
 
-  // Measure canvas on mount and resize
+  // Update canvas size when the component mounts, window resizes, or fullscreen state changes
   useEffect(() => {
     const updateCanvasSize = () => {
       if (canvasRef.current) {
@@ -216,30 +252,41 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
         setCanvasSize({ width, height });
       }
     };
-    
-    // Debounced resize handler for better performance
-    let resizeTimer: NodeJS.Timeout;
-    const debouncedResize = () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(updateCanvasSize, 100);
-    };
-    
+
     // Initial update
     updateCanvasSize();
-    
-    // Update after a short delay to ensure the DOM has fully rendered
-    const initialTimeout = setTimeout(updateCanvasSize, 100);
-    
-    // Update on window resize with debouncing
-    window.addEventListener('resize', debouncedResize);
-    
+
+    // Add a small delay to ensure DOM has updated after fullscreen change
+    const timeoutId = setTimeout(updateCanvasSize, 100);
+
+    // Add resize listener
+    window.addEventListener('resize', updateCanvasSize);
+
     // Cleanup
     return () => {
-      window.removeEventListener('resize', debouncedResize);
-      clearTimeout(initialTimeout);
-      clearTimeout(resizeTimer);
+      window.removeEventListener('resize', updateCanvasSize);
+      clearTimeout(timeoutId);
     };
-  }, []); // Only run on mount, not on every prop change
+  }, [isFullscreen]); // Add isFullscreen as a dependency
+
+  // Force canvas size update when fullscreen state changes
+  useEffect(() => {
+    // First update immediately
+    if (canvasRef.current) {
+      const { width, height } = canvasRef.current.getBoundingClientRect();
+      setCanvasSize({ width, height });
+    }
+    
+    // Then update again after a delay to ensure all DOM changes are complete
+    const timeoutId = setTimeout(() => {
+      if (canvasRef.current) {
+        const { width, height } = canvasRef.current.getBoundingClientRect();
+        setCanvasSize({ width, height });
+      }
+    }, 300);
+    
+    return () => clearTimeout(timeoutId);
+  }, [isFullscreen]);
 
   // Create event handlers using the factory functions
   const handleMouseDown = createHandleMouseDown({
@@ -275,6 +322,13 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     onShapeResize,
     onShapeRotate
   });
+  
+  // Clear selected points when a shape is selected
+  useEffect(() => {
+    if (selectedShapeId) {
+      clearAllSelectedPoints();
+    }
+  }, [selectedShapeId, clearAllSelectedPoints]);
 
   const handleMouseMove = createHandleMouseMove({
     canvasRef,
@@ -425,6 +479,18 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     // Call the parent component's handler with precise deltas
     onMoveAllShapes(dx, dy);
   }, [onMoveAllShapes]);
+  
+  // Clear selected points when mode changes
+  useEffect(() => {
+    clearAllSelectedPoints();
+  }, [activeMode, clearAllSelectedPoints]);
+  
+  // Clear selected points when grid position changes
+  useEffect(() => {
+    if (gridPosition) {
+      clearAllSelectedPoints();
+    }
+  }, [gridPosition, clearAllSelectedPoints]);
 
   // Handle grid position change
   const handleGridPositionChange = useCallback((newPosition: Point) => {
@@ -432,12 +498,12 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     
     // Only update if the position has actually changed
     if (!gridPosition || newPosition.x !== gridPosition.x || newPosition.y !== gridPosition.y) {
-      // Debounce the grid position updates
+      // Debounce the grid position updates for parent notification, but update local state immediately
       if (gridPositionTimeoutRef.current) {
         clearTimeout(gridPositionTimeoutRef.current);
       }
       
-      // Update the grid position immediately
+      // Update the grid position immediately to ensure formulas update in real-time
       setGridPosition(newPosition);
       
       // Notify parent after a delay to prevent too many updates
@@ -448,7 +514,7 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
           onGridPositionChange(newPosition);
         }
         gridPositionTimeoutRef.current = null;
-      }, 200); // 200ms debounce
+      }, 100); // Reduced from 200ms to 100ms for more responsive updates
     } else {
       console.log('GeometryCanvas: Skipping grid position update (no change)');
     }
@@ -485,56 +551,180 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
     }
   }, [canvasSize, gridPosition]);
 
-  // Create keyboard event handler
-  const handleKeyDown = createHandleKeyDown({
-    canvasRef,
-    shapes,
-    activeMode,
-    activeShapeType,
-    selectedShapeId,
-    isDrawing,
-    drawStart,
-    drawCurrent,
-    dragStart,
-    originalPosition,
-    resizeStart,
-    originalSize,
-    rotateStart,
-    originalRotation,
-    pixelsPerUnit,
-    pixelsPerSmallUnit,
-    measurementUnit,
-    setIsDrawing,
-    setDrawStart,
-    setDrawCurrent,
-    setDragStart,
-    setOriginalPosition,
-    setResizeStart,
-    setOriginalSize,
-    setRotateStart,
-    setOriginalRotation,
-    onShapeSelect,
-    onShapeCreate,
-    onShapeMove,
-    onShapeResize,
-    onShapeRotate
-  });
+  // Add keyboard event handlers if they don't exist
+  const handleKeyDown = useCallback((e: ReactKeyboardEvent<HTMLDivElement>) => {
+    // Add keyboard handling logic if needed
+    console.log('Key down:', e.key);
+  }, []);
+  
+  const handleKeyUp = useCallback((e: ReactKeyboardEvent<HTMLDivElement>) => {
+    // Add keyboard handling logic if needed
+    console.log('Key up:', e.key);
+  }, []);
 
-  // Set up keyboard event listener
-  useEffect(() => {
-    // Add event listener for keyboard events
-    window.addEventListener('keydown', handleKeyDown);
-    
-    // Clean up event listener on component unmount
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [handleKeyDown]);
+  // Add a ref to track if we're already updating the grid position
+  const isUpdatingGridPositionRef = useRef(false);
 
   // Add a useEffect to log when gridPosition changes
   useEffect(() => {
     console.log('GeometryCanvas: gridPosition changed:', gridPosition);
-  }, [gridPosition]);
+    
+    // Force a re-render of formulas when grid position changes
+    // This ensures formulas update smoothly during grid dragging
+    if (gridPosition && formulas && formulas.length > 0 && !isUpdatingGridPositionRef.current) {
+      // Set the flag to prevent infinite loops
+      isUpdatingGridPositionRef.current = true;
+      
+      // Using requestAnimationFrame to batch updates
+      requestAnimationFrame(() => {
+        // Clear the flag after the frame is rendered
+        isUpdatingGridPositionRef.current = false;
+      });
+    }
+  }, [gridPosition, formulas]);
+
+  // Handle formula point selection
+  const handleFormulaPointSelect = (point: {
+    x: number;
+    y: number;
+    mathX: number;
+    mathY: number;
+    formula: Formula;
+  } | null) => {
+    console.log('Point selected:', point);
+    
+    // Clear any existing selection first
+    clearAllSelectedPoints();
+    
+    // Then set the new selection (if any)
+    if (point) {
+      // Set the clicked on path flag to true
+      clickedOnPathRef.current = true;
+      setSelectedPoint(point);
+    }
+  };
+
+  // Effect to log when formulas change
+  useEffect(() => {
+    if (formulas) {
+      console.log(`GeometryCanvas: Formulas updated, count: ${formulas.length}`);
+    }
+    
+    // Clear selected point when formulas change
+    setSelectedPoint(null);
+  }, [formulas]);
+
+  // Render the formulas
+  const renderFormulas = () => {
+    if (!formulas || formulas.length === 0 || !gridPosition) {
+      return null;
+    }
+    
+    // Use the internal pixelsPerUnit value
+    const ppu = externalPixelsPerUnit || pixelsPerUnit;
+    
+    // Create a grid position key to force re-renders when grid moves
+    const gridKey = `${gridPosition.x.toFixed(1)}-${gridPosition.y.toFixed(1)}`;
+    
+    return formulas.map(formula => (
+      <FormulaGraph
+        key={`${formula.id}-${gridKey}`}
+        formula={formula}
+        gridPosition={gridPosition}
+        pixelsPerUnit={ppu}
+        onPointSelect={handleFormulaPointSelect}
+        globalSelectedPoint={selectedPoint}
+      />
+    ));
+  };
+
+  // Helper functions to get shape dimensions
+  const getShapeWidth = (shape: AnyShape): number => {
+    let xValues: number[] = [];
+    
+    switch (shape.type) {
+      case 'circle':
+        return shape.radius * 2;
+      case 'rectangle':
+        return shape.width;
+      case 'triangle':
+        // Calculate width from points
+        xValues = shape.points.map(p => p.x);
+        return Math.max(...xValues) - Math.min(...xValues);
+      case 'line':
+        // Calculate width from start and end points
+        return Math.abs(shape.endPoint.x - shape.startPoint.x);
+      default:
+        return 0;
+    }
+  };
+
+  const getShapeHeight = (shape: AnyShape): number => {
+    let yValues: number[] = [];
+    
+    switch (shape.type) {
+      case 'circle':
+        return shape.radius * 2;
+      case 'rectangle':
+        return shape.height;
+      case 'triangle':
+        // Calculate height from points
+        yValues = shape.points.map(p => p.y);
+        return Math.max(...yValues) - Math.min(...yValues);
+      case 'line':
+        // Calculate height from start and end points
+        return Math.abs(shape.endPoint.y - shape.startPoint.y);
+      default:
+        return 0;
+    }
+  };
+
+  // Create a custom mouseUp handler that combines the existing handleMouseUp with point dismissal logic
+  const customMouseUpHandler = (e: React.MouseEvent) => {
+    // Check if we're in the middle of a grid drag operation BEFORE doing anything else
+    if (isGridDragging.value) {
+      console.log('GeometryCanvas: Skipping customMouseUpHandler due to grid dragging');
+      return; // Exit immediately if grid is being dragged
+    }
+    
+    // Log the value of isGridDragging
+    console.log('GeometryCanvas: Before handleMouseUp, isGridDragging.value =', isGridDragging.value);
+    
+    // Call the original mouseUp handler
+    handleMouseUp(e);
+    
+    // If the click is on a path (part of the formula graph), don't dismiss
+    if ((e.target as Element).tagName === 'path') {
+      return;
+    }
+    
+    // If the click is on the info box itself, don't dismiss
+    const infoBox = document.querySelector('.formula-point-info');
+    if (infoBox && infoBox.contains(e.target as Node)) {
+      return;
+    }
+    
+    // If we didn't click on a path, dismiss the info box
+    if (!clickedOnPathRef.current) {
+      clearAllSelectedPoints();
+    }
+    
+    // Reset the flag for the next click
+    clickedOnPathRef.current = false;
+  };
+
+  // Add a global handler to ensure the isGridDragging flag is properly reset
+  useEffect(() => {
+    // We're removing the global mouseup handler that resets isGridDragging
+    // because it's causing conflicts with the GridDragHandler component.
+    // The GridDragHandler will handle resetting isGridDragging itself.
+    
+    // No longer adding a global mouseup handler here
+    
+    return () => {
+      // No cleanup needed
+    };
+  }, []);
 
   return (
     <div className="relative w-full h-full">
@@ -547,38 +737,74 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
         onCalibrationComplete={handleCalibrationComplete}
       />
       
-      <div
+      <div 
         ref={canvasRef}
-        className={`canvas-container ${activeMode === 'move' ? 'cursor-move' : ''} flex-grow relative`}
+        className="canvas-container relative w-full h-full overflow-hidden"
         style={{ 
-          minHeight: isFullscreen ? 'calc(100vh - 120px)' : '400px',
-          overflow: 'hidden' // Ensure content doesn't overflow
+          cursor: activeMode === 'move' ? 'move' : 'default'
         }}
+        tabIndex={0}
+        onKeyDown={handleKeyDown}
+        onKeyUp={handleKeyUp}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onMouseUp={customMouseUpHandler}
+        onMouseLeave={customMouseUpHandler}
       >
         {/* Grid - Pass the persistent grid position */}
-        <CanvasGrid 
-          key={`grid-${canvasSize.width > 0 && canvasSize.height > 0 ? 'loaded' : 'loading'}`}
+        <CanvasGrid
+          key={`grid-${canvasSize.width > 0 && canvasSize.height > 0 ? 'loaded' : 'loading'}-${isFullscreen ? 'fullscreen' : 'normal'}`}
           canvasSize={canvasSize} 
           pixelsPerCm={pixelsPerUnit} 
           pixelsPerMm={pixelsPerSmallUnit}
           measurementUnit={measurementUnit || 'cm'}
-          onMoveAllShapes={onMoveAllShapes}
+          onMoveAllShapes={handleMoveAllShapes}
           initialPosition={gridPosition}
           onPositionChange={handleGridPositionChange}
         />
         
         {/* Render all shapes */}
         {shapes.map(shape => (
-          <ShapeRenderer 
-            key={shape.id} 
-            shape={shape} 
-            isSelected={shape.id === selectedShapeId}
-            activeMode={activeMode}
-          />
+          <div 
+            key={shape.id}
+            onClick={() => onShapeSelect(shape.id)}
+            style={{ cursor: activeMode === 'select' ? 'pointer' : 'default' }}
+          >
+            <ShapeRenderer
+              shape={shape} 
+              isSelected={shape.id === selectedShapeId}
+              activeMode={activeMode}
+            />
+            
+            {/* Add resize and rotate handlers for selected shapes */}
+            {shape.id === selectedShapeId && (
+              <>
+                {/* Resize handle */}
+                <div 
+                  className="absolute w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center cursor-nwse-resize"
+                  style={{
+                    top: shape.position.y,
+                    left: shape.position.x + (shape.type === 'circle' ? shape.radius : 'width' in shape ? shape.width : 0),
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: 10
+                  }}
+                  onMouseDown={handleResizeStart}
+                />
+                
+                {/* Rotate handle */}
+                <div 
+                  className="absolute w-6 h-6 bg-green-500 rounded-full flex items-center justify-center cursor-move"
+                  style={{
+                    top: shape.position.y - (shape.type === 'circle' ? shape.radius : 'height' in shape ? shape.height : 0) - 20,
+                    left: shape.position.x,
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: 10
+                  }}
+                  onMouseDown={handleRotateStart}
+                />
+              </>
+            )}
+          </div>
         ))}
         
         {/* Preview shape while drawing */}
@@ -591,18 +817,26 @@ const GeometryCanvas: React.FC<GeometryCanvasProps> = ({
           pixelsPerSmallUnit={pixelsPerSmallUnit}
         />
         
-        {/* Controls for selected shape */}
-        {selectedShapeId && (
-          <ShapeControls
-            shape={shapes.find(s => s.id === selectedShapeId)!}
-            canvasRef={canvasRef}
-            onResizeStart={handleResizeStart}
-            onRotateStart={handleRotateStart}
-          />
+        {/* Dedicated formula layer with its own SVG */}
+        <div className="absolute inset-0" style={{ zIndex: 15, pointerEvents: 'none' }}>
+          <svg 
+            width="100%" 
+            height="100%" 
+            style={{ pointerEvents: 'none' }}
+          >
+            {renderFormulas()}
+          </svg>
+        </div>
+        
+        {/* Display formula point info */}
+        {selectedPoint && (
+          <div className="absolute bottom-4 right-4 w-80 z-50 formula-point-info-container">
+            <FormulaPointInfo point={selectedPoint} />
+          </div>
         )}
       </div>
     </div>
   );
 };
 
-export default GeometryCanvas; 
+export default GeometryCanvas;
