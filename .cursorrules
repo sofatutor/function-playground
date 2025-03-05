@@ -1,0 +1,43 @@
+# Cursor Rules for geo-playground
+
+## General Coding Guidelines
+- Follow KISS (Keep It Simple, Stupid), DRY (Don't Repeat Yourself), and SRP (Single Responsibility Principle)
+- Keep files small and structured
+- Add unit tests for all significant functional changes
+- Ensure code is properly typed with TypeScript
+
+## Translation Management
+- When adding or modifying user-facing text, update all translation files in src/locales (en.json, es.json, fr.json, de.json)
+- Use the translation keys consistently across the application
+- Run translation validation after updating translation files
+
+## Commands to Use
+- Use `npm run dev` to start the development server
+- Use `npm run lint` to check for linting issues
+- Use `npm run build` to create a production build
+- Use `npm run build:dev` to create a development build
+
+## Git Workflow
+- Make atomic commits with clear commit messages
+- Group related changes in logical commits
+- Prefix commit messages with the type of change (feat, fix, docs, style, refactor, test, chore)
+
+## Component Guidelines
+- Use Shadcn UI components when available
+- Follow the established project structure for new components
+- Ensure components are responsive and accessible
+
+## State Management
+- Use React context for global state
+- Use React Query for server state management
+- Prefer local component state when possible
+
+## Performance Considerations
+- Optimize expensive operations
+- Use memoization for complex calculations
+- Lazy load components and routes when appropriate
+
+## Security Best Practices
+- Validate all user inputs
+- Sanitize data before rendering
+- Don't expose sensitive information in client-side code 
