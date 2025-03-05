@@ -23,11 +23,13 @@ import {
   createHandleKeyDown
 } from './CanvasEventHandlers';
 import { RotateCw } from 'lucide-react';
+import { ShapeServiceFactory } from '@/services/ShapeService';
 
 // Add formula support to GeometryCanvas
 interface FormulaCanvasProps extends GeometryCanvasProps {
   formulas?: Formula[]; // Use the Formula type from your types folder
   pixelsPerUnit?: number;
+  serviceFactory?: ShapeServiceFactory;
 }
 
 interface GeometryCanvasProps {
@@ -37,7 +39,7 @@ interface GeometryCanvasProps {
   activeShapeType: ShapeType;
   measurementUnit: MeasurementUnit;
   isFullscreen?: boolean;
-  gridPosition?: Point | null;
+  gridPosition: Point | null;
   onShapeSelect: (id: string | null) => void;
   onShapeCreate: (start: Point, end: Point) => string;
   onShapeMove: (id: string, newPosition: Point) => void;
@@ -57,7 +59,7 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
   activeShapeType,
   measurementUnit,
   isFullscreen = false,
-  gridPosition: externalGridPosition,
+  gridPosition: externalGridPosition = null,
   onShapeSelect,
   onShapeCreate,
   onShapeMove,
@@ -65,7 +67,8 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
   onShapeRotate,
   onModeChange,
   onMoveAllShapes,
-  onGridPositionChange
+  onGridPositionChange,
+  serviceFactory
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -249,8 +252,8 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     if (externalGridPosition) {
       // Only update if there's a significant difference to avoid oscillation
       if (!gridPosition || 
-          Math.abs(externalGridPosition.x - gridPosition.x) > 1 || 
-          Math.abs(externalGridPosition.y - gridPosition.y) > 1) {
+         Math.abs(externalGridPosition.x - gridPosition.x) > 1 || 
+         Math.abs(externalGridPosition.y - gridPosition.y) > 1) {
         console.log('GeometryCanvas: Updating internal grid position from external');
         setGridPosition(externalGridPosition);
       } else {
@@ -954,7 +957,7 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
               let newStepSize = currentStepSize;
               if (e.key === 'ArrowUp') {
                 // Increase step size
-                newStepSize = Math.min(1.0, currentStepSize + 0.1);
+                newStepSize = Math.min(1.0, currentStepSize + 0.01);
               } else {
                 // Decrease step size
                 newStepSize = Math.max(0.01, currentStepSize - 0.01);
