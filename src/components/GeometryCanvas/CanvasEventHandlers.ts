@@ -445,8 +445,22 @@ export const createHandleKeyDown = (params: EventHandlerParams) => {
     pixelsPerUnit,
     pixelsPerSmallUnit,
     measurementUnit,
-    onShapeMove
+    gridPosition,
+    onShapeMove,
+    onShapeResize
   } = params;
+  
+  // Helper function to snap a point to the grid
+  const handleSnapToGrid = (point: Point): Point => {
+    return snapToGrid(
+      point,
+      gridPosition,
+      true,
+      'cm',
+      0,
+      pixelsPerSmallUnit
+    );
+  };
   
   return (e: KeyboardEvent) => {
     // Only handle keyboard events if a shape is selected
@@ -463,14 +477,22 @@ export const createHandleKeyDown = (params: EventHandlerParams) => {
     // Define movement distances
     // Small movement (mm or 1/10 inch) when using arrow keys
     // Large movement (cm or inch) when using Shift+arrow keys
-    const smallDistance = pixelsPerSmallUnit;
-    const largeDistance = pixelsPerUnit;
+    const smallDistance = pixelsPerSmallUnit || 1;
+    const largeDistance = pixelsPerUnit || 10;
     
     // Determine the distance to move based on whether Shift key is pressed
     const distance = e.shiftKey ? largeDistance : smallDistance;
     
-    // Handle arrow key presses
+    // Define scaling factors
+    const smallScaleFactor = 1.05; // 5% increase/decrease
+    const largeScaleFactor = 1.1;  // 10% increase/decrease
+    
+    // Determine the scale factor based on whether Shift key is pressed
+    const scaleFactor = e.shiftKey ? largeScaleFactor : smallScaleFactor;
+    
+    // Handle key presses
     switch (e.key) {
+      // Movement keys
       case 'ArrowUp':
         newPosition.y -= distance;
         e.preventDefault();
@@ -487,11 +509,68 @@ export const createHandleKeyDown = (params: EventHandlerParams) => {
         newPosition.x += distance;
         e.preventDefault();
         break;
+        
+      // Scaling keys
+      case '+':
+      case '=': // = is on the same key as + without shift
+        // Scale up
+        onShapeResize(selectedShapeId, scaleFactor);
+        e.preventDefault();
+        console.log(`Scaled shape ${selectedShapeId} up by factor ${scaleFactor}`);
+        return; // Exit early as we don't need to move the shape
+        
+      case '-':
+      case '_': // _ is on the same key as - with shift
+        // Scale down
+        onShapeResize(selectedShapeId, 1 / scaleFactor);
+        e.preventDefault();
+        console.log(`Scaled shape ${selectedShapeId} down by factor ${1 / scaleFactor}`);
+        return; // Exit early as we don't need to move the shape
+        
       default:
-        return; // Exit if not an arrow key
+        return; // Exit if not a handled key
+    }
+    
+    // Snap to grid if enabled (not pressing Alt key)
+    if (!e.altKey && pixelsPerSmallUnit && pixelsPerSmallUnit > 0 && gridPosition) {
+      // Apply different snapping logic based on shape type
+      if (selectedShape.type === 'circle') {
+        // For circles, we want to snap the left and top edges
+        const leftEdge = { x: newPosition.x - selectedShape.radius, y: newPosition.y };
+        const topEdge = { x: newPosition.x, y: newPosition.y - selectedShape.radius };
+        
+        // Snap the edges to the grid
+        const snappedLeftEdge = handleSnapToGrid(leftEdge);
+        const snappedTopEdge = handleSnapToGrid(topEdge);
+        
+        // Adjust the position to maintain the snapped edges
+        newPosition.x = snappedLeftEdge.x + selectedShape.radius;
+        newPosition.y = snappedTopEdge.y + selectedShape.radius;
+      } else if (selectedShape.type === 'rectangle') {
+        // For rectangles, we want to snap the top-left corner
+        const topLeft = { 
+          x: newPosition.x - selectedShape.width / 2, 
+          y: newPosition.y - selectedShape.height / 2 
+        };
+        
+        // Snap the top-left corner to the grid
+        const snappedTopLeft = handleSnapToGrid(topLeft);
+        
+        // Adjust the position to maintain the snapped corner
+        newPosition.x = snappedTopLeft.x + selectedShape.width / 2;
+        newPosition.y = snappedTopLeft.y + selectedShape.height / 2;
+      } else {
+        // For other shapes, just snap the center
+        const snappedPosition = handleSnapToGrid(newPosition);
+        newPosition.x = snappedPosition.x;
+        newPosition.y = snappedPosition.y;
+      }
     }
     
     // Move the shape to the new position
     onShapeMove(selectedShapeId, newPosition);
+    
+    // Log the movement for debugging
+    console.log(`Moved shape ${selectedShapeId} with key ${e.key} to`, newPosition);
   };
 }; 

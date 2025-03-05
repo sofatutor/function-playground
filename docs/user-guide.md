@@ -209,6 +209,10 @@ Geo-Playground supports the following keyboard shortcuts:
 | Ctrl+0         | Reset zoom               |
 | Arrow keys     | Move selected shape(s)   |
 | Shift+Arrow    | Move by larger increment |
+| + or =         | Scale selected shape up  |
+| - or _         | Scale selected shape down|
+| Shift++ or +=  | Scale up by larger factor|
+| Shift+- or +_  | Scale down by larger factor|
 | R              | Activate Rectangle tool  |
 | C              | Activate Circle tool     |
 | T              | Activate Triangle tool   |
