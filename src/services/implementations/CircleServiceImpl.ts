@@ -3,7 +3,7 @@ import { CircleService } from '../CircleService';
 import { v4 as uuidv4 } from 'uuid';
 import { distanceBetweenPoints } from '@/utils/geometry/common';
 import { convertFromPixels } from '@/utils/geometry/measurements';
-import { getStoredPixelsPerUnit } from '@/utils/geometry/common';
+import { getStoredPixelsPerUnit, getNextShapeColor } from '@/utils/geometry/common';
 
 /**
  * Implementation of the CircleService interface
@@ -18,7 +18,7 @@ export class CircleServiceImpl implements CircleService {
   createShape(params: Record<string, unknown>): Circle {
     const center = params.center as Point || { x: 0, y: 0 };
     const radius = (params.radius as number) || 50;
-    const color = (params.color as string) || '#4CAF50';
+    const color = (params.color as string) || getNextShapeColor();
     const id = (params.id as string) || uuidv4();
     
     return this.createCircle(center, radius, color, id);
@@ -40,8 +40,8 @@ export class CircleServiceImpl implements CircleService {
       radius: Math.max(1, radius), // Ensure minimum radius of 1
       rotation: 0,
       selected: false,
-      fill: color || '#4CAF50',
-      stroke: '#000000',
+      fill: color || getNextShapeColor(),
+      stroke: getNextShapeColor(0.9, 0.3, 1.0),
       strokeWidth: 1
     };
   }

@@ -263,30 +263,21 @@ export const createHandleMouseMove = (params: EventHandlerParams) => {
       const selectedShape = shapes.find(s => s.id === selectedShapeId);
       if (!selectedShape) return;
       
-      // Calculate the angle between the shape center, the rotate start, and the current point
-      const center = selectedShape.position;
+      // Calculate mouse movement
+      const dx = point.x - rotateStart.x;
       
-      // Calculate the angle of the initial vector (center to rotateStart)
-      const startAngle = Math.atan2(
-        rotateStart.y - center.y,
-        rotateStart.x - center.x
-      ) * (180 / Math.PI);
+      // Use a fixed rotation speed based on mouse movement
+      // This approach is independent of where the handle was clicked
+      const ROTATION_SPEED = 0.002; // radians per pixel of mouse movement
+      let angleDiff = dx * ROTATION_SPEED;
       
-      // Calculate the angle of the current vector (center to current point)
-      const currentAngle = Math.atan2(
-        point.y - center.y,
-        point.x - center.x
-      ) * (180 / Math.PI);
-      
-      // Calculate the angle difference
-      let angleDiff = currentAngle - startAngle;
-      
-      // If shift key is pressed, snap to absolute multiples of 15 degrees
+      // If shift key is pressed, snap to absolute multiples of 15 degrees (π/12 radians)
       if (shiftPressed) {
         // Calculate the new rotation angle
         const newRotation = originalRotation + angleDiff;
-        // Snap to the nearest absolute multiple of 15 degrees (0, 15, 30, 45, etc.)
-        const snappedRotation = Math.round(newRotation / 15) * 15;
+        // Snap to the nearest absolute multiple of 15 degrees (π/12 radians)
+        const snapAngle = Math.PI / 12; // 15 degrees in radians
+        const snappedRotation = Math.round(newRotation / snapAngle) * snapAngle;
         // Adjust the angle difference to achieve the snapped rotation
         angleDiff = snappedRotation - originalRotation;
       }

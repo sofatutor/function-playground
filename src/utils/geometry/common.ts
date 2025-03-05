@@ -44,9 +44,9 @@ let currentHue = Math.random();
  * @returns A distinct color in rgba format
  */
 export const getNextShapeColor = (
-  saturation = 0.7, 
-  lightness = 0.8, 
-  alpha = 0.5
+  saturation = 0.9, 
+  lightness = 0.5, 
+  alpha = 0.8
 ): string => {
   // Use golden ratio to generate next hue
   currentHue = (currentHue + GOLDEN_RATIO_CONJUGATE) % 1;
@@ -67,12 +67,15 @@ export const getNextShapeColor = (
  * @returns A random color in rgba format
  */
 export const getRandomShapeColor = (
-  saturation = 0.7, 
-  lightness = 0.8, 
-  alpha = 0.5
+  saturation = 0.9, 
+  lightness = 0.5, 
+  alpha = 0.8
 ): string => {
+  // Generate a random hue
   const hue = Math.random() * 360;
   const rgb = hslToRgb(hue, saturation, lightness);
+  
+  // Return as rgba string
   return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})`;
 };
 

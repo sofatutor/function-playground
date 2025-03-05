@@ -2,7 +2,7 @@ import { Rectangle, Point, ShapeType, MeasurementUnit } from '@/types/shapes';
 import { RectangleService } from '../RectangleService';
 import { v4 as uuidv4 } from 'uuid';
 import { convertFromPixels } from '@/utils/geometry/measurements';
-import { getStoredPixelsPerUnit } from '@/utils/geometry/common';
+import { getStoredPixelsPerUnit, getNextShapeColor } from '@/utils/geometry/common';
 
 /**
  * Implementation of the RectangleService interface
@@ -18,7 +18,7 @@ export class RectangleServiceImpl implements RectangleService {
     const position = params.position as Point || { x: 0, y: 0 };
     const width = (params.width as number) || 100;
     const height = (params.height as number) || 80;
-    const color = (params.color as string) || '#4CAF50';
+    const color = (params.color as string) || getNextShapeColor();
     const id = (params.id as string) || uuidv4();
     const rotation = (params.rotation as number) || 0;
     
@@ -51,7 +51,7 @@ export class RectangleServiceImpl implements RectangleService {
       height: Math.max(1, height), // Ensure minimum height of 1
       rotation: rotation || 0,
       selected: false,
-      fill: color || '#4CAF50',
+      fill: color || getNextShapeColor(),
       stroke: '#000000',
       strokeWidth: 1
     };

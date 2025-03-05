@@ -3,7 +3,7 @@ import { TriangleService } from '../TriangleService';
 import { v4 as uuidv4 } from 'uuid';
 import { distanceBetweenPoints } from '@/utils/geometry/common';
 import { convertFromPixels } from '@/utils/geometry/measurements';
-import { getStoredPixelsPerUnit } from '@/utils/geometry/common';
+import { getStoredPixelsPerUnit, getNextShapeColor } from '@/utils/geometry/common';
 
 /**
  * Implementation of the TriangleService interface
@@ -16,12 +16,20 @@ export class TriangleServiceImpl implements TriangleService {
    * @returns A new Triangle instance
    */
   createShape(params: Record<string, unknown>): Triangle {
-    const position = params.position as Point || { x: 0, y: 0 };
-    const points = params.points as [Point, Point, Point] || this.generateDefaultPoints(position);
-    const color = params.color as string || '#2196F3';
-    const id = params.id as string || uuidv4();
-    
-    return this.createTriangle(points, color, id);
+    if (params.points) {
+      const points = params.points as [Point, Point, Point];
+      const color = (params.color as string) || getNextShapeColor();
+      const id = (params.id as string) || uuidv4();
+      
+      return this.createTriangle(points, color, id);
+    } else {
+      const position = params.position as Point || { x: 0, y: 0 };
+      const color = (params.color as string) || getNextShapeColor();
+      const id = (params.id as string) || uuidv4();
+      
+      const points = this.generateDefaultPoints(position);
+      return this.createTriangle(points, color, id);
+    }
   }
   
   /**
@@ -39,8 +47,8 @@ export class TriangleServiceImpl implements TriangleService {
       position: this.calculateCentroid(points),
       rotation: 0,
       selected: false,
-      fill: color || '#2196F3',
-      stroke: '#000000',
+      fill: color || getNextShapeColor(),
+      stroke: getNextShapeColor(0.9, 0.3, 1.0),
       strokeWidth: 1
     };
   }

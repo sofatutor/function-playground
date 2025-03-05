@@ -23,6 +23,7 @@ import {
   createHandleRotateStart,
   createHandleKeyDown
 } from './CanvasEventHandlers';
+import { RotateCw } from 'lucide-react';
 
 // Add formula support to GeometryCanvas
 interface FormulaCanvasProps extends GeometryCanvasProps {
@@ -1016,32 +1017,27 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
               activeMode={activeMode}
             />
             
-            {/* Add resize and rotate handlers for selected shapes */}
-            {shape.id === selectedShapeId && (
+            {/* Add rotate handlers for selected shapes only when in rotate mode */}
+            {shape.id === selectedShapeId && activeMode === 'rotate' && (
               <>
-                {/* Resize handle */}
-                <div 
-                  className="absolute w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center cursor-nwse-resize"
-                  style={{
-                    top: shape.position.y,
-                    left: shape.position.x + (shape.type === 'circle' ? shape.radius : 'width' in shape ? shape.width : 0),
-                    transform: 'translate(-50%, -50%)',
-                    zIndex: 10
-                  }}
-                  onMouseDown={handleResizeStart}
-                />
-                
                 {/* Rotate handle */}
                 <div 
-                  className="absolute w-6 h-6 bg-green-500 rounded-full flex items-center justify-center cursor-move"
+                  className="absolute flex items-center justify-center"
                   style={{
                     top: shape.position.y - (shape.type === 'circle' ? shape.radius : 'height' in shape ? shape.height : 0) - 20,
                     left: shape.position.x,
                     transform: 'translate(-50%, -50%)',
-                    zIndex: 10
+                    zIndex: 10,
+                    width: '24px',
+                    height: '24px',
+                    cursor: 'ew-resize'
                   }}
                   onMouseDown={handleRotateStart}
-                />
+                >
+                  <div className="w-5 h-5 bg-white border-2 border-geometry-primary rounded-full flex items-center justify-center">
+                    <RotateCw size={12} className="text-geometry-primary" />
+                  </div>
+                </div>
               </>
             )}
           </div>

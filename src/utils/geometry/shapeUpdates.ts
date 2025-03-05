@@ -13,6 +13,7 @@ import { AnyShape, Circle, Rectangle, Triangle, Point, Line, ShapeType, Shape, i
 import { updateTriangleFromSideLength, updateTriangleFromAngle, calculateTriangleAngles } from './triangle';
 import { distanceBetweenPoints } from './common';
 import { calculateShapeCenter } from './shapeOperations';
+import { degreesToRadians, toCounterclockwiseAngle } from './rotation';
 
 // Type for measurement update handlers
 type MeasurementUpdateHandler<T extends AnyShape> = (shape: T, measurementKey: string, newValue: number, valueInPixels: number) => T;
@@ -541,7 +542,7 @@ const updateLineLength = (
 /**
  * Updates a line based on an angle change
  * @param line The line to update
- * @param newValue The new angle value in degrees
+ * @param newValue The new angle value in degrees (clockwise from UI)
  * @returns A new line with the updated angle
  */
 const updateLineAngle = (
@@ -550,11 +551,11 @@ const updateLineAngle = (
 ): Line => {
   const center = line.position;
   
-  // Use the exact angle value provided by the user
-  const angleValue = newValue;
+  // Convert UI angle (clockwise) to mathematical angle (counterclockwise)
+  const newValueCounterclockwise = toCounterclockwiseAngle(newValue);
   
-  // Convert angle to radians
-  const angleRad = (angleValue * Math.PI) / 180;
+  // Convert angle from degrees (counterclockwise) to radians (counterclockwise)
+  const angleRad = degreesToRadians(newValueCounterclockwise);
   
   // Calculate the current length
   const currentLength = line.length;
@@ -577,7 +578,7 @@ const updateLineAngle = (
     ...line,
     startPoint: newStartPoint,
     endPoint: newEndPoint,
-    rotation: angleValue
+    rotation: newValue // Store rotation in degrees in the model (clockwise from UI)
   };
 };
 

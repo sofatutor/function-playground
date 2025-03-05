@@ -2,7 +2,16 @@ import { Line, Point, ShapeType, MeasurementUnit } from '@/types/shapes';
 import { LineService } from '../LineService';
 import { v4 as uuidv4 } from 'uuid';
 import { convertFromPixels } from '@/utils/geometry/measurements';
-import { getStoredPixelsPerUnit } from '@/utils/geometry/common';
+import { getStoredPixelsPerUnit, getNextShapeColor } from '@/utils/geometry/common';
+import { 
+  rotatePointRadians, 
+  calculateAngleRadians, 
+  degreesToRadians, 
+  radiansToDegrees,
+  normalizeAngleRadians,
+  toClockwiseAngle,
+  toCounterclockwiseAngle
+} from '@/utils/geometry/rotation';
 
 /**
  * Implementation of the LineService interface
@@ -17,7 +26,10 @@ export class LineServiceImpl implements LineService {
   createShape(params: Record<string, unknown>): Line {
     const start = params.start as Point || { x: 0, y: 0 };
     const end = params.end as Point || { x: 100, y: 100 };
-    const color = params.color as string || '#000000';
+    
+    // If a color is provided, use it; otherwise get a new color with full opacity
+    const color = params.color as string || getNextShapeColor(0.9, 0.4, 1.0);
+    
     const id = params.id as string || uuidv4();
     
     return this.createLine(start, end, color, id);
@@ -34,6 +46,9 @@ export class LineServiceImpl implements LineService {
   createLine(start: Point, end: Point, color?: string, id?: string): Line {
     const length = this.calculateLengthFromPoints(start, end);
     
+    // If a color is provided, use it; otherwise get a new color with full opacity
+    const lineColor = color || getNextShapeColor(0.9, 0.4, 1.0);
+    
     return {
       id: id || uuidv4(),
       type: 'line',
@@ -42,8 +57,8 @@ export class LineServiceImpl implements LineService {
       position: this.calculateMidpoint(start, end),
       rotation: this.calculateAngleFromPoints(start, end),
       selected: false,
-      stroke: color || '#000000',
-      strokeWidth: 2,
+      stroke: lineColor,
+      strokeWidth: 3,
       fill: 'transparent',
       length
     };
@@ -75,43 +90,20 @@ export class LineServiceImpl implements LineService {
     const rotationCenter = center || shape.position;
     
     // Rotate the start and end points around the center
-    const newStart = this.rotatePoint(shape.startPoint, rotationCenter, angle);
-    const newEnd = this.rotatePoint(shape.endPoint, rotationCenter, angle);
+    const newStart = rotatePointRadians(shape.startPoint, rotationCenter, angle);
+    const newEnd = rotatePointRadians(shape.endPoint, rotationCenter, angle);
     const length = this.calculateLengthFromPoints(newStart, newEnd);
+    
+    // Normalize the rotation angle to keep it in the range [-π, π]
+    const newRotation = normalizeAngleRadians(shape.rotation + angle);
     
     return {
       ...shape,
       startPoint: newStart,
       endPoint: newEnd,
       position: this.calculateMidpoint(newStart, newEnd),
-      rotation: (shape.rotation + angle) % (2 * Math.PI),
+      rotation: newRotation,
       length
-    };
-  }
-  
-  /**
-   * Rotates a point around a center by an angle
-   * @param point The point to rotate
-   * @param center The center of rotation
-   * @param angle The angle to rotate by (in radians)
-   * @returns The rotated point
-   */
-  private rotatePoint(point: Point, center: Point, angle: number): Point {
-    const cos = Math.cos(angle);
-    const sin = Math.sin(angle);
-    
-    // Translate point to origin
-    const x = point.x - center.x;
-    const y = point.y - center.y;
-    
-    // Rotate point
-    const xNew = x * cos - y * sin;
-    const yNew = x * sin + y * cos;
-    
-    // Translate point back
-    return {
-      x: xNew + center.x,
-      y: yNew + center.y
     };
   }
   
@@ -158,14 +150,22 @@ export class LineServiceImpl implements LineService {
     
     // Calculate measurements in pixels
     const lengthInPixels = shape.length;
-    const angle = this.calculateAngle(shape);
     
-    // Convert to the specified unit
+    // Get angle in radians
+    const angleRadians = this.calculateAngle(shape);
+    
+    // Convert angle to degrees (counterclockwise)
+    const angleDegreesCounterclockwise = radiansToDegrees(angleRadians);
+    
+    // Convert to clockwise angle for UI display
+    const angleDegreesClockwise = toClockwiseAngle(angleDegreesCounterclockwise);
+    
+    // Convert length to the specified unit
     const length = convertFromPixelsFn(lengthInPixels);
     
     return {
       length,
-      angle
+      angle: angleDegreesClockwise
     };
   }
   
@@ -197,11 +197,26 @@ export class LineServiceImpl implements LineService {
         return this.scaleLine(shape, scaleFactor);
       }
       case 'angle': {
-        // Rotate the line to achieve the new angle
-        // Angle is already in degrees, so we can use newValue directly
-        const currentAngle = this.calculateAngle(shape);
-        const angleDifference = newValue - currentAngle;
-        return this.rotateShape(shape, angleDifference);
+        // IMPORTANT: UI works with degrees (clockwise), internal model uses radians (counterclockwise)
+        // newValue is in degrees (clockwise from UI)
+        
+        // Convert UI angle (clockwise) to mathematical angle (counterclockwise)
+        const newValueCounterclockwise = toCounterclockwiseAngle(newValue);
+        
+        // Get current angle in radians from the shape
+        const currentAngleRadians = this.calculateAngle(shape);
+        
+        // Convert current angle to degrees (counterclockwise)
+        const currentAngleDegreesCounterclockwise = radiansToDegrees(currentAngleRadians);
+        
+        // Calculate the difference in degrees (in counterclockwise direction)
+        const angleDifferenceDegrees = newValueCounterclockwise - currentAngleDegreesCounterclockwise;
+        
+        // Convert the difference back to radians for the rotation operation
+        const angleDifferenceRadians = degreesToRadians(angleDifferenceDegrees);
+        
+        // Apply the rotation
+        return this.rotateShape(shape, angleDifferenceRadians);
       }
       default:
         console.warn(`Unhandled measurement key: "${measurementKey}" for line. Supported keys are: length, angle.`);
@@ -336,7 +351,7 @@ export class LineServiceImpl implements LineService {
    * @returns The angle in radians
    */
   private calculateAngleFromPoints(start: Point, end: Point): number {
-    return Math.atan2(end.y - start.y, end.x - start.x);
+    return calculateAngleRadians(start, end);
   }
   
   /**

@@ -268,7 +268,7 @@ export const resizeShape = (shapes: AnyShape[], shapeId: string, factor: number)
  * Rotates a shape by a specified angle
  * @param shapes Array of shapes
  * @param shapeId ID of the shape to rotate
- * @param angle Rotation angle in degrees
+ * @param angle Rotation angle in radians
  * @returns New array with the rotated shape
  */
 export const rotateShape = (shapes: AnyShape[], shapeId: string, angle: number): AnyShape[] => {
