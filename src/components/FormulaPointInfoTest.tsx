@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Formula } from '@/types/formula';
-import { Point } from '@/types/shapes';
+import { Formula, FormulaPoint } from '@/types/formula';
+import { Point, MeasurementUnit } from '@/types/shapes';
 import FormulaGraph from './FormulaGraph';
 import FormulaPointInfo from './FormulaPointInfo';
 import { Card, CardContent } from './ui/card';
 import { useTranslate } from '@/utils/translate';
 
+// Define an extended FormulaPoint type that includes the additional properties
+interface ExtendedFormulaPoint extends FormulaPoint {
+  mathX: number;
+  mathY: number;
+  formula: Formula;
+  navigationStepSize?: number;
+}
+
 const FormulaPointInfoTest: React.FC = () => {
   const t = useTranslate();
-  const [selectedPoint, setSelectedPoint] = useState<{
-    x: number;
-    y: number;
-    mathX: number;
-    mathY: number;
-    formula: Formula;
-  } | null>(null);
+  const [selectedPoint, setSelectedPoint] = useState<ExtendedFormulaPoint | null>(null);
+  const [measurementUnit] = useState<MeasurementUnit>('cm');
+  const pixelsPerUnit = 50;
 
   // Sample formulas for testing multiple functions
   const testFormulas: Formula[] = [
@@ -55,13 +59,7 @@ const FormulaPointInfoTest: React.FC = () => {
     y: 300  // Center y position
   };
 
-  const handlePointSelect = (point: {
-    x: number;
-    y: number;
-    mathX: number;
-    mathY: number;
-    formula: Formula;
-  } | null) => {
+  const handlePointSelect = (point: ExtendedFormulaPoint | null) => {
     setSelectedPoint(point);
   };
 
@@ -98,15 +96,21 @@ const FormulaPointInfoTest: React.FC = () => {
             key={formula.id}
             formula={formula}
             gridPosition={gridPosition}
-            pixelsPerUnit={50}
+            pixelsPerUnit={pixelsPerUnit}
             onPointSelect={handlePointSelect}
+            globalSelectedPoint={selectedPoint}
           />
         ))}
       </svg>
 
       {selectedPoint && (
         <div className="absolute bottom-4 right-4 w-80 point-info-box">
-          <FormulaPointInfo point={selectedPoint} />
+          <FormulaPointInfo 
+            point={selectedPoint} 
+            gridPosition={gridPosition}
+            pixelsPerUnit={pixelsPerUnit}
+            measurementUnit={measurementUnit}
+          />
         </div>
       )}
 
