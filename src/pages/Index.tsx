@@ -7,8 +7,6 @@ import Toolbar from '@/components/Toolbar';
 import UnitSelector from '@/components/UnitSelector';
 import FormulaEditor from '@/components/FormulaEditor';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Triangle, Circle, Square } from 'lucide-react';
 import { useTranslate } from '@/utils/translate';
 import { Point } from '@/types/shapes';
 import { Formula } from '@/types/formula';
@@ -151,8 +149,8 @@ const Index = () => {
       <div className={`${isFullscreen ? 'max-w-full p-2' : 'container py-8'} transition-all duration-200 h-[calc(100vh-2rem)]`}>
         <GeometryHeader isFullscreen={isFullscreen} />
         
-        <div className={`grid ${isFullscreen ? 'grid-cols-12 gap-2' : 'grid-cols-1 lg:grid-cols-4 gap-6'} h-[calc(100%-4rem)]`}>
-          <div className={`${isFullscreen ? 'col-span-10' : 'lg:col-span-3'} h-full`}>
+        <div className="h-[calc(100%-4rem)]">
+          <div className="h-full">
             <div className="flex flex-col h-full">
               <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between ${isFullscreen ? 'space-y-1 sm:space-y-0 sm:space-x-1' : 'space-y-2 sm:space-y-0 sm:space-x-2'} mb-2`}>
                 <div className="flex flex-row items-center space-x-2">
@@ -222,30 +220,6 @@ const Index = () => {
                 serviceFactory={serviceFactory}
                 onMeasurementUpdate={updateMeasurement}
               />
-            </div>
-          </div>
-          
-          <div className={`${isFullscreen ? 'col-span-2' : 'lg:col-span-1'}`}>
-            <div className={`flex flex-col ${isFullscreen ? 'space-y-2' : 'space-y-4'}`}>
-              {!isFullscreen && (
-                <Card className="p-4">
-                  <h3 className="text-sm font-medium mb-2">{t('gettingStarted')}</h3>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li className="flex items-center space-x-2">
-                      <Square size={16} className="text-geometry-primary" />
-                      <span>{t('selectShapeTool')}</span>
-                    </li>
-                    <li className="flex items-center space-x-2">
-                      <Circle size={16} className="text-geometry-primary" />
-                      <span>{t('clickAndDrag')}</span>
-                    </li>
-                    <li className="flex items-center space-x-2">
-                      <Triangle size={16} className="text-geometry-primary" />
-                      <span>{t('useControls')}</span>
-                    </li>
-                  </ul>
-                </Card>
-              )}
             </div>
           </div>
         </div>

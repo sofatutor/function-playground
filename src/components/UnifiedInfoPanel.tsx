@@ -253,13 +253,6 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
     return null;
   };
 
-  // Get the appropriate title based on what's selected
-  const getPanelTitle = () => {
-    if (selectedShape) return t('shapeInfo');
-    if (point) return t('pointInfo');
-    return t('infoPanel');
-  };
-
   return (
     <Card 
       className="w-full shadow-lg border-2 bg-card/95 backdrop-blur-sm unified-info-panel"
@@ -270,13 +263,7 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
       onPointerDown={(e) => e.stopPropagation()}
       onPointerUp={(e) => e.stopPropagation()}
     >
-      <CardHeader className="py-3 px-4">
-        <CardTitle className="text-sm">
-          {getPanelTitle()}
-        </CardTitle>
-      </CardHeader>
-      
-      <CardContent className="p-4 pt-0">
+      <CardContent className="p-4">
         {renderContent()}
       </CardContent>
     </Card>
