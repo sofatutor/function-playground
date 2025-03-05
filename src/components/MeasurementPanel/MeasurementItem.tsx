@@ -44,7 +44,8 @@ const MeasurementItem: React.FC<MeasurementItemProps> = ({
     if (key.startsWith('angle')) {
       return Math.round(parseFloat(value)).toString();
     }
-    return value;
+    // For all other measurements, ensure they have at most 2 decimal places
+    return parseFloat(value).toFixed(2);
   };
   
   // Determine which measurements are editable
@@ -92,13 +93,16 @@ const MeasurementItem: React.FC<MeasurementItemProps> = ({
       measureKey === 'angle3'
     ));
 
+  // Get the translated label for this measurement
+  const measurementLabel = t(`measurementLabels.${measureKey}`);
+
   return (
     <div className="flex flex-col">
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
             <span className="text-xs text-muted-foreground cursor-help flex items-center">
-              {t(`measurementLabels.${measureKey}`)}
+              {measurementLabel}
               {hasFormula && (
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1 h-3 w-3 text-muted-foreground">
                   <circle cx="12" cy="12" r="10"></circle>

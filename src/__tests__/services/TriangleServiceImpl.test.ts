@@ -1,5 +1,12 @@
 import { Triangle, Point } from '@/types/shapes';
 import { TriangleServiceImpl } from '@/services/implementations/TriangleServiceImpl';
+import * as commonUtils from '@/utils/geometry/common';
+
+// Mock the getStoredPixelsPerUnit function
+jest.mock('@/utils/geometry/common', () => ({
+  ...jest.requireActual('@/utils/geometry/common'),
+  getStoredPixelsPerUnit: jest.fn().mockReturnValue(60) // Mock 60 pixels per unit
+}));
 
 describe('TriangleServiceImpl', () => {
   let service: TriangleServiceImpl;
@@ -14,6 +21,10 @@ describe('TriangleServiceImpl', () => {
       { x: 150, y: 50 }
     ];
     triangle = service.createTriangle(trianglePoints, '#ff0000');
+    
+    // Reset the mock before each test
+    jest.clearAllMocks();
+    (commonUtils.getStoredPixelsPerUnit as jest.Mock).mockReturnValue(60);
   });
 
   describe('createShape', () => {
@@ -159,12 +170,19 @@ describe('TriangleServiceImpl', () => {
   });
 
   describe('updateFromMeasurement', () => {
+    const pixelsPerUnit = 60;
+    
     it('should update area correctly by scaling the triangle', () => {
       const originalArea = service.calculateArea(triangle);
       const newArea = originalArea * 2;
+      
+      // Convert the new area to pixels
+      const newAreaInPixels = newArea * pixelsPerUnit * pixelsPerUnit;
+      
       const updated = service.updateFromMeasurement(triangle, 'area', newArea, originalArea);
       
-      expect(service.calculateArea(updated)).toBeCloseTo(newArea);
+      // The area should be scaled by the factor that includes the unit conversion
+      expect(service.calculateArea(updated)).toBeCloseTo(newAreaInPixels);
     });
 
     it('should return the original shape for unhandled measurement keys', () => {

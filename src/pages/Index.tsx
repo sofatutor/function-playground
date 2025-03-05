@@ -108,13 +108,19 @@ const Index = () => {
 
   const selectedShape = getSelectedShape();
   
-  // Convert measurements from numbers to strings
+  // Convert measurements from numbers to strings with proper formatting
   const rawMeasurements = selectedShape ? getShapeMeasurements(selectedShape) : {};
   const measurements: Record<string, string> = {};
   
-  // Convert each measurement to a string
+  // Format each measurement properly
   Object.entries(rawMeasurements).forEach(([key, value]) => {
-    measurements[key] = value.toString();
+    // For angles, display as integers
+    if (key.startsWith('angle')) {
+      measurements[key] = Math.round(value).toString();
+    } else {
+      // For all other measurements, ensure they have at most 2 decimal places
+      measurements[key] = value.toFixed(2);
+    }
   });
 
   const t = useTranslate();

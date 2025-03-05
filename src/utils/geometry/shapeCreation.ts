@@ -1,5 +1,5 @@
 import { ShapeType, Point, AnyShape, Circle, Rectangle, Triangle, Line } from '@/types/shapes';
-import { generateId, distanceBetweenPoints, DEFAULT_FILL, DEFAULT_STROKE, DEFAULT_STROKE_WIDTH } from './common';
+import { generateId, distanceBetweenPoints, DEFAULT_STROKE, DEFAULT_STROKE_WIDTH, getNextShapeColor } from './common';
 
 /**
  * Validates that the input points are valid (not null/undefined and have numeric x,y values)
@@ -39,7 +39,7 @@ export const createCircle = (startPoint: Point, endPoint: Point, id: string): Ci
     radius,
     rotation: 0,
     selected: true,
-    fill: DEFAULT_FILL,
+    fill: getNextShapeColor(),
     stroke: DEFAULT_STROKE,
     strokeWidth: DEFAULT_STROKE_WIDTH
   };
@@ -73,7 +73,7 @@ export const createRectangle = (startPoint: Point, endPoint: Point, id: string):
     height,
     rotation: 0,
     selected: true,
-    fill: DEFAULT_FILL,
+    fill: getNextShapeColor(),
     stroke: DEFAULT_STROKE,
     strokeWidth: DEFAULT_STROKE_WIDTH
   };
@@ -135,7 +135,7 @@ export const createTriangle = (startPoint: Point, endPoint: Point, id: string): 
     points: [p1, p2, p3],
     rotation: 0,
     selected: true,
-    fill: DEFAULT_FILL,
+    fill: getNextShapeColor(),
     stroke: DEFAULT_STROKE,
     strokeWidth: DEFAULT_STROKE_WIDTH
   };
@@ -172,7 +172,7 @@ export const createLine = (startPoint: Point, endPoint: Point, id: string): Line
     rotation: 0,
     selected: true,
     fill: 'transparent', // Lines don't have fill
-    stroke: '#9b87f5', // Use a distinct color for lines
+    stroke: getNextShapeColor(), // Use a distinct color for lines
     strokeWidth: 2
   };
 };

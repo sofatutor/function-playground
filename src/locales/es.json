@@ -39,7 +39,8 @@
     "angle2": "Ángulo 2",
     "angle3": "Ángulo 3",
     "length": "Longitud",
-    "angle": "Ángulo"
+    "angle": "Ángulo",
+    "diagonal": "Diagonal"
   },
   "unitSuffixes": {
     "area": "{unit}²",
@@ -57,7 +58,8 @@
     "angle2": "°",
     "angle3": "°",
     "length": "{unit}",
-    "angle": "°"
+    "angle": "°",
+    "diagonal": "{unit}"
   },
   "formulaExplanations": {
     "circle": {
@@ -71,7 +73,8 @@
       "width": "La dimensión horizontal del rectángulo.",
       "height": "La dimensión vertical del rectángulo.",
       "area": "El espacio dentro del rectángulo.",
-      "perimeter": "La distancia alrededor del rectángulo."
+      "perimeter": "La distancia alrededor del rectángulo.",
+      "diagonal": "La distancia en línea recta entre esquinas opuestas del rectángulo."
     },
     "triangle": {
       "side1": "La longitud de uno de los lados del triángulo.",

@@ -175,20 +175,25 @@ export class LineServiceImpl implements LineService {
    * @param measurementKey The measurement being changed
    * @param newValue The new value for the measurement
    * @param originalValue The original value (for calculating scale factors)
+   * @param unit The unit of the measurement
    * @returns The updated shape
    */
   updateFromMeasurement(
     shape: Line, 
     measurementKey: string, 
     newValue: number, 
-    originalValue: number
+    originalValue: number,
+    unit: MeasurementUnit = 'cm'
   ): Line {
+    // Get the conversion factor for the current unit
+    const pixelsPerUnit = getStoredPixelsPerUnit(unit);
+    
     switch (measurementKey) {
       case 'length': {
-        // Scale the line to achieve the new length
-        // newValue is the target length in the current unit
+        // Convert the new length from units to pixels
+        const newLengthInPixels = newValue * pixelsPerUnit;
         const currentLength = this.calculateLength(shape);
-        const scaleFactor = newValue / currentLength;
+        const scaleFactor = newLengthInPixels / currentLength;
         return this.scaleLine(shape, scaleFactor);
       }
       case 'angle': {
@@ -199,7 +204,7 @@ export class LineServiceImpl implements LineService {
         return this.rotateShape(shape, angleDifference);
       }
       default:
-        console.warn(`Unhandled measurement update: ${measurementKey} for line`);
+        console.warn(`Unhandled measurement key: "${measurementKey}" for line. Supported keys are: length, angle.`);
         return shape;
     }
   }

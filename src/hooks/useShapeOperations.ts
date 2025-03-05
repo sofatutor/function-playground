@@ -424,8 +424,9 @@ export function useShapeOperations() {
     // Get the service for this shape
     const shapeService = serviceFactory.getServiceForShape(selectedShape);
     
-    // Convert the value to pixels if needed
-    const valueInPixels = handleConvertToPixels(numValue);
+    // Get the current measurements to find the original value
+    const currentMeasurements = shapeService.getMeasurements(selectedShape, measurementUnit);
+    const originalValue = currentMeasurements[key] || 0;
     
     setShapes(prevShapes => {
       const updatedShapes = prevShapes.map(shape => {
@@ -436,7 +437,8 @@ export function useShapeOperations() {
           shape,
           key,
           numValue,
-          valueInPixels
+          originalValue,
+          measurementUnit
         );
       });
       
@@ -446,7 +448,7 @@ export function useShapeOperations() {
     });
     
     toast.success("Shape updated");
-  }, [selectedShapeId, getSelectedShape, handleConvertToPixels, gridPosition, serviceFactory]);
+  }, [selectedShapeId, getSelectedShape, measurementUnit, gridPosition, serviceFactory]);
   
   // Function to share the current canvas state via URL
   const shareCanvasUrl = useCallback(() => {

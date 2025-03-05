@@ -206,29 +206,36 @@ export class TriangleServiceImpl implements TriangleService {
    * @param measurementKey The measurement being changed
    * @param newValue The new value for the measurement
    * @param originalValue The original value (for calculating scale factors)
+   * @param unit The unit of the measurement
    * @returns The updated shape
    */
   updateFromMeasurement(
     shape: Triangle, 
     measurementKey: string, 
     newValue: number, 
-    originalValue: number
+    originalValue: number,
+    unit: MeasurementUnit = 'cm'
   ): Triangle {
+    // Get the conversion factor for the current unit
+    const pixelsPerUnit = getStoredPixelsPerUnit(unit);
+    
     switch (measurementKey) {
       case 'area': {
         // Scale the triangle to achieve the new area
-        // newValue is the target area in the current unit
+        // Convert the new area from square units to square pixels
+        const newAreaInPixels = newValue * pixelsPerUnit * pixelsPerUnit;
         const currentAreaInPixels = this.calculateArea(shape);
-        // Calculate scale factor using newValue (target area) divided by current area
-        const scaleFactor = Math.sqrt(newValue / currentAreaInPixels);
+        // Calculate scale factor using newAreaInPixels (target area) divided by current area
+        const scaleFactor = Math.sqrt(newAreaInPixels / currentAreaInPixels);
         return this.scaleTriangle(shape, scaleFactor);
       }
       case 'perimeter': {
         // Scale the triangle to achieve the new perimeter
-        // newValue is the target perimeter in the current unit
+        // Convert the new perimeter from units to pixels
+        const newPerimeterInPixels = newValue * pixelsPerUnit;
         const currentPerimeterInPixels = this.calculatePerimeter(shape);
-        // Calculate scale factor using newValue (target perimeter) divided by current perimeter
-        const scaleFactor = newValue / currentPerimeterInPixels;
+        // Calculate scale factor using newPerimeterInPixels (target perimeter) divided by current perimeter
+        const scaleFactor = newPerimeterInPixels / currentPerimeterInPixels;
         return this.scaleTriangle(shape, scaleFactor);
       }
       case 'side1':
@@ -237,8 +244,10 @@ export class TriangleServiceImpl implements TriangleService {
         // Get the index of the side (0, 1, or 2)
         const sideIndex = measurementKey === 'side1' ? 0 : measurementKey === 'side2' ? 1 : 2;
         const sides = this.calculateSideLengths(shape);
-        // originalValue is already in pixels, so we can use it directly
-        const scaleFactor = originalValue / sides[sideIndex];
+        
+        // Convert the new side length from units to pixels
+        const newSideLengthInPixels = newValue * pixelsPerUnit;
+        const scaleFactor = newSideLengthInPixels / sides[sideIndex];
         
         // For simplicity, we'll scale the entire triangle
         // In a more sophisticated implementation, you might want to keep the other sides fixed
@@ -246,9 +255,10 @@ export class TriangleServiceImpl implements TriangleService {
       }
       case 'height': {
         // Scale the triangle to achieve the new height
-        // originalValue is already in pixels, so we can use it directly
+        // Convert the new height from units to pixels
+        const newHeightInPixels = newValue * pixelsPerUnit;
         const currentHeightInPixels = this.calculateHeight(shape);
-        const scaleFactor = originalValue / currentHeightInPixels;
+        const scaleFactor = newHeightInPixels / currentHeightInPixels;
         // For height, we need to scale only in the Y direction
         return this.scaleTriangleInternal(shape, 1, scaleFactor);
       }
@@ -257,10 +267,10 @@ export class TriangleServiceImpl implements TriangleService {
       case 'angle3':
         // Changing angles would require more complex transformations
         // For simplicity, we'll just warn and return the original shape
-        console.warn(`Updating angles directly is not supported: ${measurementKey}`);
+        console.warn(`Updating angles directly is not supported: ${measurementKey}. Try adjusting sides instead.`);
         return shape;
       default:
-        console.warn(`Unhandled measurement update: ${measurementKey} for triangle`);
+        console.warn(`Unhandled measurement key: "${measurementKey}" for triangle. Supported keys are: area, perimeter, side1, side2, side3, height.`);
         return shape;
     }
   }

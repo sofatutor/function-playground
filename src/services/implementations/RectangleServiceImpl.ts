@@ -163,53 +163,80 @@ export class RectangleServiceImpl implements RectangleService {
    * @param measurementKey The measurement being changed
    * @param newValue The new value for the measurement
    * @param originalValue The original value (for calculating scale factors)
+   * @param unit The unit of the measurement
    * @returns The updated shape
    */
   updateFromMeasurement(
     shape: Rectangle, 
     measurementKey: string, 
     newValue: number, 
-    originalValue: number
+    originalValue: number,
+    unit: MeasurementUnit = 'cm'
   ): Rectangle {
+    // Get the conversion factor for the current unit
+    const pixelsPerUnit = getStoredPixelsPerUnit(unit);
+    
     switch (measurementKey) {
-      case 'width':
-        return this.updateWidth(shape, newValue);
-      case 'height':
-        return this.updateHeight(shape, newValue);
+      case 'width': {
+        // Convert width from units to pixels
+        const newWidthInPixels = newValue * pixelsPerUnit;
+        return this.updateWidth(shape, newWidthInPixels);
+      }
+      case 'height': {
+        // Convert height from units to pixels
+        const newHeightInPixels = newValue * pixelsPerUnit;
+        return this.updateHeight(shape, newHeightInPixels);
+      }
       case 'area': {
-        // For area, we'll maintain the aspect ratio
-        const currentArea = shape.width * shape.height;
-        const scaleFactor = Math.sqrt(newValue / currentArea);
-        return {
-          ...shape,
-          width: shape.width * scaleFactor,
-          height: shape.height * scaleFactor
-        };
+        // Convert area from square units to square pixels
+        const newAreaInPixels = newValue * pixelsPerUnit * pixelsPerUnit;
+        const currentArea = this.calculateArea(shape);
+        
+        // Calculate scale factor using square root of area ratio
+        const scaleFactor = Math.sqrt(newAreaInPixels / currentArea);
+        
+        // Scale both width and height by the same factor to maintain aspect ratio
+        return this.scaleRectangle(shape, scaleFactor, scaleFactor);
       }
       case 'perimeter': {
-        // For perimeter, we'll maintain the aspect ratio
-        const currentPerimeter = 2 * (shape.width + shape.height);
-        const scaleFactor = newValue / currentPerimeter;
-        return {
-          ...shape,
-          width: shape.width * scaleFactor,
-          height: shape.height * scaleFactor
-        };
+        // Convert perimeter from units to pixels
+        const newPerimeterInPixels = newValue * pixelsPerUnit;
+        const currentPerimeter = this.calculatePerimeter(shape);
+        
+        // Calculate scale factor using perimeter ratio
+        const scaleFactor = newPerimeterInPixels / currentPerimeter;
+        
+        // Scale both width and height by the same factor to maintain aspect ratio
+        return this.scaleRectangle(shape, scaleFactor, scaleFactor);
       }
       case 'diagonal': {
-        // For diagonal, we'll maintain the aspect ratio
-        const currentDiagonal = Math.sqrt(shape.width * shape.width + shape.height * shape.height);
-        const scaleFactor = newValue / currentDiagonal;
-        return {
-          ...shape,
-          width: shape.width * scaleFactor,
-          height: shape.height * scaleFactor
-        };
+        // Convert diagonal from units to pixels
+        const newDiagonalInPixels = newValue * pixelsPerUnit;
+        const currentDiagonal = this.calculateDiagonal(shape);
+        
+        // Calculate scale factor using diagonal ratio
+        const scaleFactor = newDiagonalInPixels / currentDiagonal;
+        
+        // Scale both width and height by the same factor to maintain aspect ratio
+        return this.scaleRectangle(shape, scaleFactor, scaleFactor);
       }
       default:
-        console.warn(`Unhandled measurement update: ${measurementKey} for rectangle`);
+        console.warn(`Unhandled measurement key: "${measurementKey}" for rectangle. Supported keys are: width, height, area, perimeter, diagonal.`);
         return shape;
     }
+  }
+  
+  /**
+   * Gets the pixels per unit for the current measurement unit
+   * @returns The number of pixels per unit
+   */
+  private getPixelsPerUnit(): number {
+    // Get the current measurement unit from the application context
+    // For now, we'll use a fixed value of 'cm' as the default unit
+    const measurementUnit = 'cm';
+    
+    // Get the pixels per unit for the current measurement unit
+    return getStoredPixelsPerUnit(measurementUnit);
   }
   
   /**
@@ -264,7 +291,7 @@ export class RectangleServiceImpl implements RectangleService {
   }
   
   /**
-   * Updates the width of the rectangle
+   * Updates the width of a rectangle
    * @param rectangle The rectangle to update
    * @param width The new width
    * @param maintainAspectRatio Whether to maintain the aspect ratio
@@ -276,14 +303,13 @@ export class RectangleServiceImpl implements RectangleService {
     maintainAspectRatio = false
   ): Rectangle {
     if (width <= 0) {
-      console.warn(`Invalid width: ${width}. Must be greater than 0.`);
-      return rectangle;
+      console.warn(`Invalid width: ${width}. Using minimum value of 1 pixel instead.`);
+      width = 1; // Set to minimum value instead of returning the original
     }
     
     if (maintainAspectRatio) {
-      const aspectRatio = rectangle.width / rectangle.height;
-      const newHeight = width / aspectRatio;
-      
+      const aspectRatio = rectangle.height / rectangle.width;
+      const newHeight = width * aspectRatio;
       return {
         ...rectangle,
         width,
@@ -298,7 +324,7 @@ export class RectangleServiceImpl implements RectangleService {
   }
   
   /**
-   * Updates the height of the rectangle
+   * Updates the height of a rectangle
    * @param rectangle The rectangle to update
    * @param height The new height
    * @param maintainAspectRatio Whether to maintain the aspect ratio
@@ -310,14 +336,13 @@ export class RectangleServiceImpl implements RectangleService {
     maintainAspectRatio = false
   ): Rectangle {
     if (height <= 0) {
-      console.warn(`Invalid height: ${height}. Must be greater than 0.`);
-      return rectangle;
+      console.warn(`Invalid height: ${height}. Using minimum value of 1 pixel instead.`);
+      height = 1; // Set to minimum value instead of returning the original
     }
     
     if (maintainAspectRatio) {
       const aspectRatio = rectangle.width / rectangle.height;
       const newWidth = height * aspectRatio;
-      
       return {
         ...rectangle,
         width: newWidth,

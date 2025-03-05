@@ -1,5 +1,12 @@
 import { Circle, Point } from '@/types/shapes';
 import { CircleServiceImpl } from '@/services/implementations/CircleServiceImpl';
+import * as commonUtils from '@/utils/geometry/common';
+
+// Mock the getStoredPixelsPerUnit function
+jest.mock('@/utils/geometry/common', () => ({
+  ...jest.requireActual('@/utils/geometry/common'),
+  getStoredPixelsPerUnit: jest.fn().mockReturnValue(60) // Mock 60 pixels per unit
+}));
 
 describe('CircleServiceImpl', () => {
   let service: CircleServiceImpl;
@@ -7,11 +14,21 @@ describe('CircleServiceImpl', () => {
 
   beforeEach(() => {
     service = new CircleServiceImpl();
-    circle = service.createCircle(
-      { x: 100, y: 100 },
-      50,
-      '#ff0000'
-    );
+    circle = {
+      id: '1',
+      type: 'circle',
+      position: { x: 100, y: 100 },
+      radius: 50,
+      rotation: 0,
+      selected: false,
+      fill: '#4CAF50',
+      stroke: '#000000',
+      strokeWidth: 1
+    };
+    
+    // Reset the mock before each test
+    jest.clearAllMocks();
+    (commonUtils.getStoredPixelsPerUnit as jest.Mock).mockReturnValue(60);
   });
 
   describe('createShape', () => {
@@ -116,20 +133,25 @@ describe('CircleServiceImpl', () => {
   describe('updateFromMeasurement', () => {
     it('should update radius correctly', () => {
       const newRadius = 75;
+      const pixelsPerUnit = 60;
       const updated = service.updateFromMeasurement(circle, 'radius', newRadius, circle.radius);
       
-      expect(updated.radius).toBe(newRadius);
+      // The radius should be updated to the new value in pixels
+      expect(updated.radius).toBe(newRadius * pixelsPerUnit);
     });
 
     it('should update diameter correctly', () => {
       const newDiameter = 150;
+      const pixelsPerUnit = 60;
       const updated = service.updateFromMeasurement(circle, 'diameter', newDiameter, 2 * circle.radius);
       
-      expect(updated.radius).toBe(newDiameter / 2);
+      // The radius should be updated to half the diameter in pixels
+      expect(updated.radius).toBe((newDiameter / 2) * pixelsPerUnit);
     });
 
     it('should update circumference correctly', () => {
       const newCircumference = 2 * Math.PI * 75;
+      const pixelsPerUnit = 60;
       const updated = service.updateFromMeasurement(
         circle, 
         'circumference', 
@@ -137,11 +159,13 @@ describe('CircleServiceImpl', () => {
         2 * Math.PI * circle.radius
       );
       
-      expect(updated.radius).toBeCloseTo(75);
+      // The radius should be updated to C/(2π) in pixels
+      expect(updated.radius).toBeCloseTo((newCircumference / (2 * Math.PI)) * pixelsPerUnit);
     });
 
     it('should update area correctly', () => {
       const newArea = Math.PI * 75 * 75;
+      const pixelsPerUnit = 60;
       const updated = service.updateFromMeasurement(
         circle, 
         'area', 
@@ -149,7 +173,8 @@ describe('CircleServiceImpl', () => {
         Math.PI * circle.radius * circle.radius
       );
       
-      expect(updated.radius).toBeCloseTo(75);
+      // The radius should be updated to √(A/π) in pixels
+      expect(updated.radius).toBeCloseTo(Math.sqrt(newArea / Math.PI) * pixelsPerUnit);
     });
 
     it('should return the original shape for unhandled measurement keys', () => {
@@ -201,17 +226,18 @@ describe('CircleServiceImpl', () => {
   });
 
   describe('updateRadius', () => {
-    it('should update the radius', () => {
+    it('should update radius correctly', () => {
       const newRadius = 75;
       const updated = service.updateRadius(circle, newRadius);
       
       expect(updated.radius).toBe(newRadius);
     });
-
-    it('should not update radius if value is invalid', () => {
+    
+    it('should use minimum value of 1 when radius is invalid', () => {
       const updated = service.updateRadius(circle, -10);
       
-      expect(updated).toEqual(circle);
+      // Expect radius to be set to minimum value of 1
+      expect(updated.radius).toBe(1);
     });
   });
 

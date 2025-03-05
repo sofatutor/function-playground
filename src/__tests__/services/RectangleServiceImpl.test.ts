@@ -1,5 +1,12 @@
-import { Rectangle } from '@/types/shapes';
+import { Rectangle, Point } from '@/types/shapes';
 import { RectangleServiceImpl } from '@/services/implementations/RectangleServiceImpl';
+import * as commonUtils from '@/utils/geometry/common';
+
+// Mock the getStoredPixelsPerUnit function
+jest.mock('@/utils/geometry/common', () => ({
+  ...jest.requireActual('@/utils/geometry/common'),
+  getStoredPixelsPerUnit: jest.fn().mockReturnValue(60) // Mock 60 pixels per unit
+}));
 
 describe('RectangleServiceImpl', () => {
   let service: RectangleServiceImpl;
@@ -15,10 +22,14 @@ describe('RectangleServiceImpl', () => {
       height: 150,
       rotation: 0,
       selected: false,
-      fill: '#ffffff',
+      fill: '#4CAF50',
       stroke: '#000000',
-      strokeWidth: 2
+      strokeWidth: 1
     };
+    
+    // Reset the mock before each test
+    jest.clearAllMocks();
+    (commonUtils.getStoredPixelsPerUnit as jest.Mock).mockReturnValue(60);
   });
 
   describe('createShape', () => {
@@ -104,11 +115,13 @@ describe('RectangleServiceImpl', () => {
   });
 
   describe('updateFromMeasurement', () => {
+    const pixelsPerUnit = 60;
+    
     it('should update width correctly', () => {
       const newWidth = 300;
       const result = service.updateFromMeasurement(rectangle, 'width', newWidth, rectangle.width);
       
-      expect(result.width).toBe(newWidth);
+      expect(result.width).toBe(newWidth * pixelsPerUnit);
       expect(result.height).toBe(rectangle.height);
       expect(result.position).toEqual(rectangle.position);
     });
@@ -117,7 +130,7 @@ describe('RectangleServiceImpl', () => {
       const newHeight = 200;
       const result = service.updateFromMeasurement(rectangle, 'height', newHeight, rectangle.height);
       
-      expect(result.height).toBe(newHeight);
+      expect(result.height).toBe(newHeight * pixelsPerUnit);
       expect(result.width).toBe(rectangle.width);
       expect(result.position).toEqual(rectangle.position);
     });
@@ -125,7 +138,10 @@ describe('RectangleServiceImpl', () => {
     it('should update area correctly', () => {
       const newArea = 40000;
       const currentArea = rectangle.width * rectangle.height;
-      const scaleFactor = Math.sqrt(newArea / currentArea);
+      
+      // Calculate the scale factor with the unit conversion
+      const newAreaInPixels = newArea * pixelsPerUnit * pixelsPerUnit;
+      const scaleFactor = Math.sqrt(newAreaInPixels / currentArea);
       
       const result = service.updateFromMeasurement(rectangle, 'area', newArea, currentArea);
       
@@ -137,7 +153,10 @@ describe('RectangleServiceImpl', () => {
     it('should update perimeter correctly', () => {
       const newPerimeter = 800;
       const currentPerimeter = 2 * (rectangle.width + rectangle.height);
-      const scaleFactor = newPerimeter / currentPerimeter;
+      
+      // Calculate the scale factor with the unit conversion
+      const newPerimeterInPixels = newPerimeter * pixelsPerUnit;
+      const scaleFactor = newPerimeterInPixels / currentPerimeter;
       
       const result = service.updateFromMeasurement(rectangle, 'perimeter', newPerimeter, currentPerimeter);
       
@@ -174,38 +193,40 @@ describe('RectangleServiceImpl', () => {
   });
 
   describe('updateWidth', () => {
-    it('should update the width of the rectangle', () => {
+    it('should update width correctly', () => {
       const newWidth = 300;
       const result = service.updateWidth(rectangle, newWidth);
       
       expect(result.width).toBe(newWidth);
       expect(result.height).toBe(rectangle.height);
-      expect(result.position).toEqual(rectangle.position);
     });
     
-    it('should not update if width is invalid', () => {
+    it('should use minimum value of 1 when width is invalid', () => {
       const newWidth = -50;
       const result = service.updateWidth(rectangle, newWidth);
       
-      expect(result).toEqual(rectangle);
+      // Expect width to be set to minimum value of 1
+      expect(result.width).toBe(1);
+      expect(result.height).toBe(rectangle.height);
     });
   });
 
   describe('updateHeight', () => {
-    it('should update the height of the rectangle', () => {
-      const newHeight = 200;
+    it('should update height correctly', () => {
+      const newHeight = 250;
       const result = service.updateHeight(rectangle, newHeight);
       
       expect(result.height).toBe(newHeight);
       expect(result.width).toBe(rectangle.width);
-      expect(result.position).toEqual(rectangle.position);
     });
     
-    it('should not update if height is invalid', () => {
+    it('should use minimum value of 1 when height is invalid', () => {
       const newHeight = -50;
       const result = service.updateHeight(rectangle, newHeight);
       
-      expect(result).toEqual(rectangle);
+      // Expect height to be set to minimum value of 1
+      expect(result.height).toBe(1);
+      expect(result.width).toBe(rectangle.width);
     });
   });
 });

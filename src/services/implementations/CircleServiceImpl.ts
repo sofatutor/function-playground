@@ -140,31 +140,45 @@ export class CircleServiceImpl implements CircleService {
    * @param measurementKey The measurement being changed
    * @param newValue The new value for the measurement
    * @param originalValue The original value (for calculating scale factors)
+   * @param unit The unit of the measurement
    * @returns The updated shape
    */
   updateFromMeasurement(
     shape: Circle, 
     measurementKey: string, 
     newValue: number, 
-    originalValue: number
+    originalValue: number,
+    unit: MeasurementUnit = 'cm'
   ): Circle {
+    // Get the conversion factor for the current unit
+    const pixelsPerUnit = getStoredPixelsPerUnit(unit);
+    
+    // Convert the new value from units to pixels
+    let newValueInPixels: number;
+    let areaInPixels: number;
+    
     switch (measurementKey) {
       case 'radius':
-        // newValue is the target radius in the current unit
-        return this.updateRadius(shape, newValue);
+        // Convert radius from units to pixels
+        newValueInPixels = newValue * pixelsPerUnit;
+        return this.updateRadius(shape, newValueInPixels);
       case 'diameter':
-        // newValue is the target diameter in the current unit
-        return this.updateRadius(shape, newValue / 2);
+        // Convert diameter from units to pixels, then divide by 2 for radius
+        newValueInPixels = (newValue * pixelsPerUnit) / 2;
+        return this.updateRadius(shape, newValueInPixels);
       case 'circumference':
-        // newValue is the target circumference in the current unit
+        // Convert circumference from units to pixels
         // C = 2πr, so r = C/(2π)
-        return this.updateRadius(shape, newValue / (2 * Math.PI));
+        newValueInPixels = (newValue * pixelsPerUnit) / (2 * Math.PI);
+        return this.updateRadius(shape, newValueInPixels);
       case 'area':
-        // newValue is the target area in the current unit
+        // Convert area from square units to square pixels
         // A = πr², so r = √(A/π)
-        return this.updateRadius(shape, Math.sqrt(newValue / Math.PI));
+        areaInPixels = newValue * pixelsPerUnit * pixelsPerUnit;
+        newValueInPixels = Math.sqrt(areaInPixels / Math.PI);
+        return this.updateRadius(shape, newValueInPixels);
       default:
-        console.warn(`Unhandled measurement update: ${measurementKey} for circle`);
+        console.warn(`Unhandled measurement key: "${measurementKey}" for circle. Supported keys are: radius, diameter, circumference, area.`);
         return shape;
     }
   }
@@ -202,15 +216,15 @@ export class CircleServiceImpl implements CircleService {
   }
   
   /**
-   * Updates the radius of the circle
+   * Updates the radius of a circle
    * @param circle The circle to update
-   * @param radius The new radius
+   * @param radius The new radius value
    * @returns The updated circle
    */
   updateRadius(circle: Circle, radius: number): Circle {
     if (radius <= 0) {
-      console.warn(`Invalid radius: ${radius}. Must be greater than 0.`);
-      return circle;
+      console.warn(`Invalid radius: ${radius}. Using minimum value of 1 pixel instead.`);
+      radius = 1; // Set to minimum value instead of returning the original
     }
     
     return {

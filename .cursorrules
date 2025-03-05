@@ -1,43 +1,41 @@
-# Cursor Rules for geo-playground
+# geo-playground CLI guidelines
 
-## General Coding Guidelines
-- Follow KISS (Keep It Simple, Stupid), DRY (Don't Repeat Yourself), and SRP (Single Responsibility Principle)
+## Code
+- Follow KISS, DRY, SRP principles
+- Use TypeScript with proper typing
 - Keep files small and structured
-- Add unit tests for all significant functional changes
-- Ensure code is properly typed with TypeScript
+- Update all translation files when changing text or adding new translations
 
-## Translation Management
-- When adding or modifying user-facing text, update all translation files in src/locales (en.json, es.json, fr.json, de.json)
-- Use the translation keys consistently across the application
-- Run translation validation after updating translation files
+## Commands
+- `npm run dev` - start dev server
+- `npm run lint` - check code quality
+- `npm run build` - production build
+- `npm run build:dev` - development build
 
-## Commands to Use
-- Use `npm run dev` to start the development server
-- Use `npm run lint` to check for linting issues
-- Use `npm run build` to create a production build
-- Use `npm run build:dev` to create a development build
+## Git
+- Make atomic commits with prefixes: feat, fix, docs, style, refactor, test, chore
+- Group related changes logically
 
-## Git Workflow
-- Make atomic commits with clear commit messages
-- Group related changes in logical commits
-- Prefix commit messages with the type of change (feat, fix, docs, style, refactor, test, chore)
+## Components
+- Use Shadcn UI components
+- Follow project structure
+- Ensure accessibility
 
-## Component Guidelines
-- Use Shadcn UI components when available
-- Follow the established project structure for new components
-- Ensure components are responsive and accessible
+## State
+- React context for global state
+- React Query for server state
+- Local state when possible
 
-## State Management
-- Use React context for global state
-- Use React Query for server state management
-- Prefer local component state when possible
+## Testing
+- Jest for unit tests
+- React Testing Library for components
+- Write tests before fixing bugs
+- Use pattern: "should [expected behavior] when [condition]"
+- Run relevant tests after changes
 
-## Performance Considerations
-- Optimize expensive operations
-- Use memoization for complex calculations
-- Lazy load components and routes when appropriate
-
-## Security Best Practices
-- Validate all user inputs
-- Sanitize data before rendering
-- Don't expose sensitive information in client-side code 
+## Performance/Security
+- Memoize complex calculations
+- Lazy load when appropriate
+- Validate inputs, sanitize output
+- Don't expose sensitive data client-side
+- Avoid attaching event handlers excessively
