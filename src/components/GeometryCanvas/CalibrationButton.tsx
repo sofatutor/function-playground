@@ -35,7 +35,7 @@ const CalibrationButton: React.FC<CalibrationButtonProps> = ({
       
       {/* Calibration tool */}
       {showCalibration && (
-        <div className="absolute top-14 right-2 z-10 w-80">
+        <div className="absolute top-14 right-2 z-50 w-80">
           <CalibrationTool
             measurementUnit={measurementUnit}
             onCalibrationComplete={onCalibrationComplete}
