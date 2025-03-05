@@ -1,5 +1,8 @@
 # Welcome to your Lovable project
 
+[![Test](https://github.com/manuelfittko/geo-playground/actions/workflows/test.yml/badge.svg)](https://github.com/manuelfittko/geo-playground/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/manuelfittko/geo-playground/branch/main/graph/badge.svg)](https://codecov.io/gh/manuelfittko/geo-playground)
+
 ## Project info
 
 **URL**: https://lovable.dev/projects/61b9f1ed-c0ae-4354-87f1-e6f0c952760b

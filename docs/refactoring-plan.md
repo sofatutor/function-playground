@@ -63,12 +63,13 @@ These utilities are critical to the application's functionality and would benefi
   - [x] Set up test fixtures for common shapes
   - [x] Create helper functions for assertions
 
-- [ ] **Setup CI (GitHub actions)
-  - [ ] Create GitHub workflow file for running tests
-  - [ ] Configure workflow to run on pull requests and pushes to main
-  - [ ] Set up test reporting in GitHub actions
-  - [ ] Configure code coverage reporting in CI
-  - [ ] Add status badges to README.md
+- [x] **Setup CI (GitHub actions)**
+  - [x] Create GitHub workflow file for running tests
+  - [x] Configure workflow to run on pull requests and pushes to main
+  - [x] Set up test reporting in GitHub actions
+  - [x] Configure code coverage reporting in CI
+  - [x] Add status badges to README.md
+  - [x] Set up pre-commit hooks to run tests
 
 ### Phase 2: Unit Tests for Existing Functionality
 
@@ -211,15 +212,15 @@ We make sure to fix any actual issues in the implementation, if identified with 
 ## Progress Tracking
 
 ### Current Status
-- Phase: Phase 2 - Unit Tests for Existing Functionality
-- Completed tasks: 24
-- In progress tasks: 1
+- Phase: Phase 3 - Refactoring Shape Operations
+- Completed tasks: 36
+- In progress tasks: 5
 - Remaining tasks: 25+
 
 ### Milestones
 - [x] Testing infrastructure complete
-- [ ] Unit tests for all shape operations complete
-- [ ] Shape operations refactored
+- [x] Unit tests for all shape operations complete
+- [ ] Shape operations refactored (in progress)
 - [ ] Service-based architecture implemented
 - [ ] All tests passing with >80% coverage
 
