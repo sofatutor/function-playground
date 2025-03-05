@@ -64,7 +64,8 @@
       "radius": "La distancia desde el centro hasta el borde del círculo.",
       "diameter": "La distancia a través del círculo pasando por el centro.",
       "area": "El espacio dentro del círculo.",
-      "perimeter": "La distancia alrededor del círculo, también llamada circunferencia."
+      "perimeter": "La distancia alrededor del círculo, también llamada circunferencia.",
+      "circumference": "La distancia alrededor del círculo, igual a 2πr o πd."
     },
     "rectangle": {
       "width": "La dimensión horizontal del rectángulo.",
@@ -98,5 +99,13 @@
     "select": "Seleccionar y Mover Formas",
     "rotate": "Rotar Forma",
     "delete": "Eliminar Seleccionado"
-  }
+  },
+  "pointX": "X",
+  "pointY": "Y",
+  "calculation": "Cálculo",
+  "calculationError": "Error al calcular el valor",
+  "parametricPointInfo": "Función paramétrica (valor t no disponible)",
+  "polarPointInfo": "Función polar (valor θ no disponible)",
+  "pointInfoTitle": "Información del Punto",
+  "clickOnCurveInstruction": "Haz clic en la curva para seleccionar un punto y ver su información."
 } 

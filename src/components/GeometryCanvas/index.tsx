@@ -146,8 +146,10 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     console.log('Current mathX (rounded):', roundedCurrentX);
     
     // Determine the step size based on whether Shift is pressed
-    const stepSize = selectedPoint.navigationStepSize || (isShiftPressed ? 1.0 : 0.1);
-    console.log('Using step size:', stepSize);
+    // When Shift is pressed, we temporarily use 1.0, but we don't change the stored value
+    const currentStepSize = selectedPoint.navigationStepSize || 0.1;
+    const stepSize = isShiftPressed ? 1.0 : currentStepSize;
+    console.log('Using step size:', stepSize, isShiftPressed ? '(Shift pressed)' : '');
     
     // Determine the target X coordinate based on direction
     let targetMathX;
@@ -198,11 +200,15 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
         return;
       }
       
+      // Apply the formula's scale factor
+      const scaledMathY = targetMathY * formula.scaleFactor;
+      
       // Convert from mathematical coordinates to canvas coordinates
       const targetCanvasX = (gridPosition?.x || 0) + targetMathX * pixelsPerUnit;
-      const targetCanvasY = (gridPosition?.y || 0) - targetMathY * pixelsPerUnit;
+      const targetCanvasY = (gridPosition?.y || 0) - scaledMathY * pixelsPerUnit;
       
       console.log('Evaluated formula at x =', targetMathX.toFixed(4), 'y =', targetMathY.toFixed(4));
+      console.log('After scale factor:', formula.scaleFactor, 'y =', scaledMathY.toFixed(4));
       console.log('Canvas coordinates:', targetCanvasX.toFixed(4), targetCanvasY.toFixed(4));
       
       // Create a new selected point with all the necessary information
@@ -211,8 +217,8 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
         x: targetCanvasX,
         y: targetCanvasY,
         mathX: targetMathX,
-        mathY: targetMathY,
-        navigationStepSize: stepSize
+        mathY: scaledMathY,
+        navigationStepSize: currentStepSize // Preserve the original step size
       };
       
       // Update the selected point
@@ -225,7 +231,7 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     } catch (error) {
       console.error('Error evaluating formula:', error);
     }
-  }, [selectedPoint, gridPosition, pixelsPerUnit]);
+  }, [selectedPoint, gridPosition, pixelsPerUnit, isShiftPressed]);
   
   // Effect to update internal grid position when external grid position changes
   useEffect(() => {
@@ -727,7 +733,14 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     if (point) {
       // Set the clicked on path flag to true
       clickedOnPathRef.current = true;
-      setSelectedPoint(point);
+      
+      // Always ensure navigationStepSize has a default value
+      const pointWithStepSize = {
+        ...point,
+        navigationStepSize: point.navigationStepSize || 0.1
+      };
+      
+      setSelectedPoint(pointWithStepSize);
       
       // Store the current point index and all points if provided
       if (point.pointIndex !== undefined && point.allPoints) {
@@ -1066,7 +1079,12 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
               transition: 'right 0.2s ease-in-out'
             }}
           >
-            <FormulaPointInfo point={selectedPoint} />
+            <FormulaPointInfo 
+              point={{
+                ...selectedPoint,
+                navigationStepSize: isShiftPressed ? 1.0 : selectedPoint.navigationStepSize
+              }} 
+            />
           </div>
         )}
       </div>

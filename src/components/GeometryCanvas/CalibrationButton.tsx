@@ -17,13 +17,28 @@ const CalibrationButton: React.FC<CalibrationButtonProps> = ({
   pixelsPerUnit,
   onCalibrationComplete
 }) => {
+  // Handler to stop event propagation
+  const handleButtonInteraction = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
   return (
     <>
       {/* Calibration button */}
-      <div className="absolute top-2 right-2 z-10">
+      <div 
+        className="absolute top-2 right-2 z-10"
+        onMouseDown={handleButtonInteraction}
+        onMouseUp={handleButtonInteraction}
+        onMouseMove={handleButtonInteraction}
+        onMouseEnter={handleButtonInteraction}
+        onMouseLeave={handleButtonInteraction}
+      >
         <button
           className="btn-tool"
-          onClick={toggleCalibration}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleCalibration();
+          }}
           title="Calibrate Screen"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -35,7 +50,14 @@ const CalibrationButton: React.FC<CalibrationButtonProps> = ({
       
       {/* Calibration tool */}
       {showCalibration && (
-        <div className="absolute top-14 right-2 z-50 w-80">
+        <div 
+          className="absolute top-14 right-2 z-50 w-80"
+          onMouseDown={handleButtonInteraction}
+          onMouseUp={handleButtonInteraction}
+          onMouseMove={handleButtonInteraction}
+          onMouseEnter={handleButtonInteraction}
+          onMouseLeave={handleButtonInteraction}
+        >
           <CalibrationTool
             measurementUnit={measurementUnit}
             onCalibrationComplete={onCalibrationComplete}

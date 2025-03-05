@@ -99,5 +99,13 @@
     "delete": "Ausgewählte löschen"
   },
   "holdShiftToSnap15Degrees": "Halte Shift gedrückt, um beim Drehen in 15°-Schritten einzurasten",
-  "shareCanvas": "Leinwand-URL teilen"
+  "shareCanvas": "Leinwand-URL teilen",
+  "pointX": "X",
+  "pointY": "Y",
+  "calculation": "Berechnung",
+  "calculationError": "Fehler bei der Berechnung des Wertes",
+  "parametricPointInfo": "Parametrische Funktion (t-Wert nicht verfügbar)",
+  "polarPointInfo": "Polarfunktion (θ-Wert nicht verfügbar)",
+  "pointInfoTitle": "Punktinformation",
+  "clickOnCurveInstruction": "Klicken Sie auf die Kurve, um einen Punkt auszuwählen und seine Informationen anzuzeigen."
 }

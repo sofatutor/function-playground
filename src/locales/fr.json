@@ -99,5 +99,13 @@
     "select": "Sélectionner et Déplacer les Formes",
     "rotate": "Faire Pivoter la Forme",
     "delete": "Supprimer la Sélection"
-  }
+  },
+  "pointX": "X",
+  "pointY": "Y",
+  "calculation": "Calcul",
+  "calculationError": "Erreur de calcul de la valeur",
+  "parametricPointInfo": "Fonction paramétrique (valeur t non disponible)",
+  "polarPointInfo": "Fonction polaire (valeur θ non disponible)",
+  "pointInfoTitle": "Information du Point",
+  "clickOnCurveInstruction": "Cliquez sur la courbe pour sélectionner un point et afficher ses informations."
 } 

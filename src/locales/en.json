@@ -99,5 +99,13 @@
     "select": "Select & Move Shapes",
     "rotate": "Rotate Shape",
     "delete": "Delete Selected"
-  }
+  },
+  "pointX": "X",
+  "pointY": "Y",
+  "calculation": "Calculation",
+  "calculationError": "Error calculating value",
+  "parametricPointInfo": "Parametric function (t value not available)",
+  "polarPointInfo": "Polar function (θ value not available)",
+  "pointInfoTitle": "Point Information",
+  "clickOnCurveInstruction": "Click on the curve to select a point and view its information."
 }

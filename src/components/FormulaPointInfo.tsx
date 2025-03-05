@@ -110,11 +110,12 @@ const FormulaPointInfo: React.FC<FormulaPointInfoProps> = ({ point }) => {
           <div className="text-sm mt-1 pt-2 border-t">
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Navigation:</span>
-              {point.navigationStepSize && (
-                <span className="font-mono text-xs bg-muted px-2 py-1 rounded">
-                  Step: {point.navigationStepSize.toFixed(2)}
-                </span>
-              )}
+              <span className="font-mono text-xs bg-muted px-2 py-1 rounded">
+                Step: {(point.navigationStepSize || 0.1).toFixed(2)}
+                {point.navigationStepSize === 1.0 && (
+                  <span className="ml-1 text-amber-500">(Shift)</span>
+                )}
+              </span>
             </div>
             <div className="text-xs text-muted-foreground mt-1 flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
@@ -132,6 +133,9 @@ const FormulaPointInfo: React.FC<FormulaPointInfoProps> = ({ point }) => {
                 <path d="M12 5v14M19 12l-7 7-7-7"/>
               </svg>
               Adjust step size
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Hold <span className="font-mono bg-muted px-1 rounded">Shift</span> to temporarily use 1.0 step size
             </div>
           </div>
         </div>
