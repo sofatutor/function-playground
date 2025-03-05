@@ -38,6 +38,9 @@ const CanvasGrid: React.FC<CanvasGridProps> = ({
   // State for the grid origin point
   const [origin, setOrigin] = useState<Point>({ x: 0, y: 0 });
   
+  // Track previous canvas size to detect significant changes
+  const prevCanvasSizeRef = useRef({ width: 0, height: 0 });
+  
   // Initialize the grid position once
   useEffect(() => {
     // Skip if we've already initialized
@@ -192,6 +195,39 @@ const CanvasGrid: React.FC<CanvasGridProps> = ({
       setPrevPixelsPerCm(pixelsPerCm);
     }
   }, [measurementUnit, pixelsPerCm, prevUnit, prevPixelsPerCm]);
+
+  // Force re-render when canvas size changes significantly (like in fullscreen mode)
+  useEffect(() => {
+    const prevSize = prevCanvasSizeRef.current;
+    const currentSize = canvasSize;
+    
+    // Check if canvas size has changed significantly (more than 100px in either dimension)
+    const hasSignificantChange = 
+      Math.abs(prevSize.width - currentSize.width) > 100 || 
+      Math.abs(prevSize.height - currentSize.height) > 100;
+    
+    if (hasSignificantChange && currentSize.width > 0 && currentSize.height > 0) {
+      console.log('CanvasGrid: Significant canvas size change detected, updating grid');
+      
+      // Update the previous size reference
+      prevCanvasSizeRef.current = { ...currentSize };
+      
+      // If we haven't moved the origin manually, center it in the new canvas
+      if (!hasOriginMoved.current) {
+        const newOrigin = {
+          x: Math.floor(currentSize.width / 2),
+          y: Math.floor(currentSize.height / 2)
+        };
+        
+        setOrigin(newOrigin);
+        
+        // Notify parent of the position change
+        if (onPositionChange) {
+          onPositionChange(newOrigin);
+        }
+      }
+    }
+  }, [canvasSize, onPositionChange]);
 
   return (
     <div 
