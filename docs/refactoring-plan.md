@@ -70,6 +70,7 @@ These utilities are critical to the application's functionality and would benefi
   - [x] Configure code coverage reporting in CI
   - [x] Add status badges to README.md
   - [x] Set up pre-commit hooks to run tests
+  - [x] Configure Husky for Git hooks
 
 ### Phase 2: Unit Tests for Existing Functionality
 
