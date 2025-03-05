@@ -10,6 +10,7 @@ interface FormulaPointInfoProps {
     mathX: number;
     mathY: number;
     formula: Formula;
+    navigationStepSize?: number;
   } | null;
 }
 
@@ -84,15 +85,11 @@ const FormulaPointInfo: React.FC<FormulaPointInfoProps> = ({ point }) => {
             className="w-3 h-3 rounded-full mr-2" 
             style={{ backgroundColor: formula.color }}
           />
-          {t('pointInfoTitle')}
+          {formatExpression(formula.expression)}
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4 pt-0">
         <div className="space-y-2">
-          <div className="font-medium">
-            {formatExpression(formula.expression)}
-          </div>
-          
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div>
               <span className="text-muted-foreground">{t('pointX')}:</span> {formatNumber(mathX)}
@@ -106,6 +103,35 @@ const FormulaPointInfo: React.FC<FormulaPointInfoProps> = ({ point }) => {
             <span className="text-muted-foreground">{t('calculation')}:</span>
             <div className="font-mono text-xs bg-muted p-2 rounded mt-1 overflow-x-auto">
               {calculateY()}
+            </div>
+          </div>
+          
+          {/* Navigation step size and keyboard controls */}
+          <div className="text-sm mt-1 pt-2 border-t">
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Navigation:</span>
+              {point.navigationStepSize && (
+                <span className="font-mono text-xs bg-muted px-2 py-1 rounded">
+                  Step: {point.navigationStepSize.toFixed(2)}
+                </span>
+              )}
+            </div>
+            <div className="text-xs text-muted-foreground mt-1 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+              </svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+              Navigate points
+              <span className="mx-2">•</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                <path d="M12 19V5M5 12l7-7 7 7"/>
+              </svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                <path d="M12 5v14M19 12l-7 7-7-7"/>
+              </svg>
+              Adjust step size
             </div>
           </div>
         </div>
