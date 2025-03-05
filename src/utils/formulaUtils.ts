@@ -416,11 +416,15 @@ export const createDefaultFormula = (type: FormulaType = 'function'): Formula =>
   // This range is large enough to cover most practical use cases
   const xRange: [number, number] = [-10000, 10000];
 
+  // Generate a random color and ensure it has 6 digits
+  const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+  const paddedColor = randomColor.padStart(6, '0');
+
   return {
     id: generateFormulaId(),
     type: formulaType,
     expression: 'x*x', // Default to a simple quadratic function
-    color: '#' + Math.floor(Math.random() * 16777215).toString(16), // Random color
+    color: '#' + paddedColor, // Random color with 6 digits
     strokeWidth: 2,
     xRange: xRange,
     samples: 500, // Increase samples for smoother curves
