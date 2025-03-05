@@ -4,7 +4,6 @@ import { useServiceFactory } from '@/providers/ServiceProvider';
 import GeometryHeader from '@/components/GeometryHeader';
 import GeometryCanvas from '@/components/GeometryCanvas';
 import Toolbar from '@/components/Toolbar';
-import MeasurementPanel from '@/components/MeasurementPanel';
 import UnitSelector from '@/components/UnitSelector';
 import FormulaEditor from '@/components/FormulaEditor';
 import { Button } from '@/components/ui/button';
@@ -156,18 +155,29 @@ const Index = () => {
           <div className={`${isFullscreen ? 'col-span-10' : 'lg:col-span-3'} h-full`}>
             <div className="flex flex-col h-full">
               <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between ${isFullscreen ? 'space-y-1 sm:space-y-0 sm:space-x-1' : 'space-y-2 sm:space-y-0 sm:space-x-2'} mb-2`}>
-                <Toolbar
-                  activeMode={activeMode}
-                  activeShapeType={activeShapeType}
-                  onModeChange={setActiveMode}
-                  onShapeTypeChange={setActiveShapeType}
-                  onClear={deleteAllShapes}
-                  onDelete={() => selectedShapeId && deleteShape(selectedShapeId)}
-                  hasSelectedShape={!!selectedShapeId}
-                  canDelete={!!selectedShapeId}
-                  onToggleFormulaEditor={toggleFormulaEditor}
-                  isFormulaEditorOpen={isFormulaEditorOpen}
-                />
+                <div className="flex flex-row items-center space-x-2">
+                  <Toolbar
+                    activeMode={activeMode}
+                    activeShapeType={activeShapeType}
+                    onModeChange={setActiveMode}
+                    onShapeTypeChange={setActiveShapeType}
+                    onClear={deleteAllShapes}
+                    onDelete={() => selectedShapeId && deleteShape(selectedShapeId)}
+                    hasSelectedShape={!!selectedShapeId}
+                    canDelete={!!selectedShapeId}
+                    onToggleFormulaEditor={toggleFormulaEditor}
+                    isFormulaEditorOpen={isFormulaEditorOpen}
+                  />
+                  
+                  <div className="h-8 w-px bg-gray-200 mx-1" />
+                  
+                  <div className="w-24">
+                    <UnitSelector
+                      value={measurementUnit}
+                      onChange={setMeasurementUnit}
+                    />
+                  </div>
+                </div>
                 
                 <Button 
                   variant="outline"
@@ -194,11 +204,13 @@ const Index = () => {
               
               <GeometryCanvas
                 shapes={shapes}
+                formulas={formulas}
                 selectedShapeId={selectedShapeId}
                 activeMode={activeMode}
                 activeShapeType={activeShapeType}
                 measurementUnit={measurementUnit}
                 isFullscreen={isFullscreen}
+                gridPosition={gridPosition}
                 onShapeSelect={selectShape}
                 onShapeCreate={createShape}
                 onShapeMove={moveShape}
@@ -206,31 +218,15 @@ const Index = () => {
                 onShapeRotate={rotateShape}
                 onModeChange={setActiveMode}
                 onMoveAllShapes={handleMoveAllShapes}
-                gridPosition={gridPosition}
                 onGridPositionChange={handleGridPositionChange}
-                formulas={formulas}
-                pixelsPerUnit={pixelsPerUnit}
                 serviceFactory={serviceFactory}
+                onMeasurementUpdate={updateMeasurement}
               />
             </div>
           </div>
           
           <div className={`${isFullscreen ? 'col-span-2' : 'lg:col-span-1'}`}>
             <div className={`flex flex-col ${isFullscreen ? 'space-y-2' : 'space-y-4'}`}>
-              <Card className={`${isFullscreen ? 'p-2' : 'p-4'}`}>
-                <UnitSelector
-                  value={measurementUnit}
-                  onChange={setMeasurementUnit}
-                />
-              </Card>
-              
-              <MeasurementPanel
-                selectedShape={selectedShape}
-                measurements={measurements}
-                measurementUnit={measurementUnit}
-                onMeasurementUpdate={updateMeasurement}
-              />
-              
               {!isFullscreen && (
                 <Card className="p-4">
                   <h3 className="text-sm font-medium mb-2">{t('gettingStarted')}</h3>

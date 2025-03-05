@@ -4,7 +4,7 @@ import ShapeRenderer from './ShapeRenderer';
 import PreviewShape from './PreviewShape';
 import CalibrationButton from './CalibrationButton';
 import FormulaGraph from '../FormulaGraph';
-import FormulaPointInfo from '../FormulaPointInfo';
+import UnifiedInfoPanel from '../UnifiedInfoPanel';
 import { AnyShape, Point, OperationMode, ShapeType, MeasurementUnit } from '@/types/shapes';
 import { Formula, FormulaPoint } from '@/types/formula';
 import { isGridDragging } from '@/components/CanvasGrid/GridDragHandler';
@@ -24,6 +24,7 @@ import {
 } from './CanvasEventHandlers';
 import { RotateCw } from 'lucide-react';
 import { ShapeServiceFactory } from '@/services/ShapeService';
+import { getShapeMeasurements } from '@/utils/geometry/measurements';
 
 // Add formula support to GeometryCanvas
 interface FormulaCanvasProps extends GeometryCanvasProps {
@@ -48,6 +49,7 @@ interface GeometryCanvasProps {
   onModeChange?: (mode: OperationMode) => void;
   onMoveAllShapes?: (dx: number, dy: number) => void;
   onGridPositionChange?: (newPosition: Point) => void;
+  onMeasurementUpdate?: (key: string, value: string) => void;
 }
 
 const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
@@ -68,7 +70,8 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
   onModeChange,
   onMoveAllShapes,
   onGridPositionChange,
-  serviceFactory
+  serviceFactory,
+  onMeasurementUpdate
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -1036,6 +1039,112 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     }
   }, [selectedPoint]);
 
+  // Get measurements for the selected shape
+  const getMeasurementsForSelectedShape = (): Record<string, string> => {
+    if (!selectedShapeId) return {};
+    
+    const selectedShape = shapes.find(s => s.id === selectedShapeId);
+    if (!selectedShape) return {};
+    
+    // Convert pixels to the current measurement unit
+    const convertFromPixels = (pixels: number): number => {
+      return pixels / (externalPixelsPerUnit || pixelsPerUnit);
+    };
+    
+    // Get the measurements as numbers
+    const measurementsAsNumbers = getShapeMeasurements(selectedShape, convertFromPixels);
+    
+    // Convert to strings for display
+    const measurementsAsStrings: Record<string, string> = {};
+    Object.entries(measurementsAsNumbers).forEach(([key, value]) => {
+      measurementsAsStrings[key] = value.toString();
+    });
+    
+    return measurementsAsStrings;
+  };
+  
+  // Handle measurement updates
+  const handleMeasurementUpdate = (key: string, value: string): void => {
+    if (!selectedShapeId) return;
+    
+    // Instead of trying to handle the update internally, pass it to the parent component
+    // The parent component has access to the shape services that know how to properly update each shape type
+    if (onMeasurementUpdate) {
+      onMeasurementUpdate(key, value);
+      return;
+    }
+    
+    // If no onMeasurementUpdate is provided, fall back to the basic implementation
+    const selectedShape = shapes.find(s => s.id === selectedShapeId);
+    if (!selectedShape) return;
+    
+    // Convert the value to a number
+    const numericValue = parseFloat(value);
+    if (isNaN(numericValue)) return;
+    
+    // Convert from measurement unit to pixels
+    const convertToPixels = (unitValue: number): number => {
+      return unitValue * (externalPixelsPerUnit || pixelsPerUnit);
+    };
+    
+    // Create a copy of the shape to modify
+    const updatedShape = { ...selectedShape };
+    
+    // Update the shape based on the measurement key
+    switch (key) {
+      case 'width':
+        if ('width' in updatedShape) {
+          updatedShape.width = convertToPixels(numericValue);
+        }
+        break;
+      case 'height':
+        if ('height' in updatedShape) {
+          updatedShape.height = convertToPixels(numericValue);
+        }
+        break;
+      case 'radius':
+        if ('radius' in updatedShape) {
+          updatedShape.radius = convertToPixels(numericValue);
+        }
+        break;
+      case 'diameter':
+        if ('radius' in updatedShape) {
+          // Diameter is twice the radius
+          updatedShape.radius = convertToPixels(numericValue) / 2;
+        }
+        break;
+      case 'circumference':
+        if ('radius' in updatedShape) {
+          // Circumference = 2πr, so r = C/(2π)
+          updatedShape.radius = convertToPixels(numericValue) / (2 * Math.PI);
+        }
+        break;
+      case 'angle':
+        if ('rotation' in updatedShape) {
+          updatedShape.rotation = numericValue;
+        }
+        break;
+    }
+    
+    // Update the shape in the parent component
+    if (onShapeResize && 'width' in updatedShape && 'width' in selectedShape) {
+      // For width/height changes, calculate the resize factor
+      const widthFactor = updatedShape.width / selectedShape.width;
+      onShapeResize(selectedShapeId, widthFactor);
+    } else if (onShapeResize && 'radius' in updatedShape && 'radius' in selectedShape) {
+      // For radius changes, calculate the resize factor
+      const radiusFactor = updatedShape.radius / selectedShape.radius;
+      onShapeResize(selectedShapeId, radiusFactor);
+    } else if (onShapeRotate && 'rotation' in updatedShape && 'rotation' in selectedShape) {
+      // For rotation changes
+      onShapeRotate(selectedShapeId, updatedShape.rotation);
+    } else if (key.startsWith('side') || key.startsWith('angle') || key === 'length') {
+      // For triangle sides, angles, and line lengths, we need a special approach
+      // Trigger a small movement to force a redraw with the updated shape
+      onShapeMove(selectedShapeId, { x: 0, y: 0 });
+    }
+  };
+
   return (
     <div className="relative w-full h-full">
       {/* Calibration button and tool */}
@@ -1195,10 +1304,10 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
           </svg>
         </div>
         
-        {/* Display formula point info */}
-        {selectedPoint && (
+        {/* Display unified info panel */}
+        {(selectedPoint || selectedShapeId) && (
           <div 
-            className="absolute w-80 formula-point-info-container"
+            className="absolute w-80 unified-info-panel-container"
             style={{
               bottom: '1rem',
               right: showCalibration ? 'calc(20rem + 1rem)' : '1rem',
@@ -1206,15 +1315,21 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
               transition: 'right 0.2s ease-in-out'
             }}
           >
-            <FormulaPointInfo 
-              point={{
+            <UnifiedInfoPanel 
+              // Point info props
+              point={selectedPoint ? {
                 ...selectedPoint,
                 navigationStepSize: isShiftPressed ? 1.0 : selectedPoint.navigationStepSize,
                 isValid: true
-              }} 
+              } : null}
               gridPosition={gridPosition}
               pixelsPerUnit={pixelsPerUnit}
-              measurementUnit={measurementUnit}
+              
+              // Shape info props
+              selectedShape={selectedShapeId ? shapes.find(s => s.id === selectedShapeId) || null : null}
+              measurements={selectedShapeId ? getMeasurementsForSelectedShape() : {}}
+              measurementUnit={measurementUnit || 'cm'}
+              onMeasurementUpdate={handleMeasurementUpdate}
             />
           </div>
         )}
