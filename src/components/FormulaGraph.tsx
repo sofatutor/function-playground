@@ -8,8 +8,16 @@ interface FormulaGraphProps {
   formula: Formula;
   gridPosition: Point;
   pixelsPerUnit: number;
-  onPointSelect?: (point: { x: number, y: number, mathX: number, mathY: number, formula: Formula } | null) => void;
-  globalSelectedPoint?: { x: number, y: number, mathX: number, mathY: number, formula: Formula } | null;
+  onPointSelect?: (point: { x: number, y: number, mathX: number, mathY: number, formula: Formula, pointIndex: number, allPoints: FormulaPoint[] } | null) => void;
+  globalSelectedPoint?: { 
+    x: number, 
+    y: number, 
+    mathX: number, 
+    mathY: number, 
+    formula: Formula,
+    pointIndex?: number,
+    allPoints?: FormulaPoint[]
+  } | null;
 }
 
 const FormulaGraph: React.FC<FormulaGraphProps> = ({ 
@@ -25,14 +33,6 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
   const lastGridPositionRef = useRef<Point | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedPoint, setSelectedPoint] = useState<{ index: number, point: FormulaPoint } | null>(null);
-  
-  // Update local selected point when global selected point changes
-  useEffect(() => {
-    // If there's no global selected point or it's for a different formula, clear local selection
-    if (!globalSelectedPoint || globalSelectedPoint.formula.id !== formula.id) {
-      setSelectedPoint(null);
-    }
-  }, [globalSelectedPoint, formula.id]);
   
   // Force re-evaluation when grid position changes significantly
   const gridPositionKey = useMemo(() => {
@@ -97,6 +97,75 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
     }
   }, [formula, gridPositionKey, pixelsPerUnit]); // Use gridPositionKey instead of gridPosition
 
+  // Update local selected point when global selected point changes
+  useEffect(() => {
+    console.log('FormulaGraph: globalSelectedPoint changed:', globalSelectedPoint);
+    console.log('FormulaGraph: current formula id:', formula.id);
+    
+    // If there's no global selected point or it's for a different formula, clear local selection
+    if (!globalSelectedPoint || globalSelectedPoint.formula.id !== formula.id) {
+      console.log('FormulaGraph: Clearing local selection');
+      setSelectedPoint(null);
+      return;
+    }
+    
+    console.log('FormulaGraph: Global selected point is for this formula');
+    
+    // If we have a global selected point for this formula, update the local selection
+    if (globalSelectedPoint.pointIndex !== undefined && points.length > 0) {
+      console.log('FormulaGraph: Using pointIndex to update local selection:', globalSelectedPoint.pointIndex);
+      // Make sure the index is valid
+      const index = globalSelectedPoint.pointIndex;
+      if (index >= 0 && index < points.length) {
+        console.log('FormulaGraph: Setting local selected point to index:', index);
+        setSelectedPoint({
+          index,
+          point: points[index]
+        });
+      } else {
+        console.log('FormulaGraph: Invalid index:', index, 'points length:', points.length);
+      }
+    } else if (points.length > 0) {
+      console.log('FormulaGraph: No pointIndex, finding closest point');
+      // If we don't have a pointIndex but we have coordinates, find the closest point
+      const closestPointIndex = findClosestPointIndex(globalSelectedPoint.x, globalSelectedPoint.y);
+      if (closestPointIndex >= 0) {
+        console.log('FormulaGraph: Found closest point at index:', closestPointIndex);
+        setSelectedPoint({
+          index: closestPointIndex,
+          point: points[closestPointIndex]
+        });
+      } else {
+        console.log('FormulaGraph: No closest point found');
+      }
+    } else {
+      console.log('FormulaGraph: No points available');
+    }
+  }, [globalSelectedPoint, formula.id, points]);
+  
+  // Helper function to find the closest point to given coordinates
+  const findClosestPointIndex = (x: number, y: number): number => {
+    if (!points || points.length === 0) return -1;
+    
+    let closestIndex = -1;
+    let minDistance = Number.MAX_VALUE;
+    
+    points.forEach((point, index) => {
+      if (!point.isValid) return;
+      
+      const dx = point.x - x;
+      const dy = point.y - y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestIndex = index;
+      }
+    });
+    
+    return closestIndex;
+  };
+  
   // Log when points are updated
   useEffect(() => {
     if (points.length > 0) {
@@ -224,7 +293,9 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
         y: point.y,
         mathX,
         mathY,
-        formula
+        formula,
+        pointIndex: closestPointIndex,
+        allPoints: points
       });
     } else {
       // If no point is close enough, clear the selection
@@ -340,10 +411,10 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
       )}
       
       {/* Only render the selected point if this formula has the selected point */}
-      {selectedPoint && globalSelectedPoint && globalSelectedPoint.formula.id === formula.id && (
+      {globalSelectedPoint && globalSelectedPoint.formula.id === formula.id && (
         <circle
-          cx={selectedPoint.point.x}
-          cy={selectedPoint.point.y}
+          cx={globalSelectedPoint.x}
+          cy={globalSelectedPoint.y}
           r={5}
           fill={formula.color}
           stroke="white"
