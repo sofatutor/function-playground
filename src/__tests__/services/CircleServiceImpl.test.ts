@@ -100,10 +100,16 @@ describe('CircleServiceImpl', () => {
     it('should return correct measurements for a circle', () => {
       const measurements = service.getMeasurements(circle, 'cm');
       
-      expect(measurements.radius).toBe(circle.radius);
-      expect(measurements.diameter).toBe(2 * circle.radius);
-      expect(measurements.circumference).toBeCloseTo(2 * Math.PI * circle.radius);
-      expect(measurements.area).toBeCloseTo(Math.PI * circle.radius * circle.radius);
+      const pixelsPerCm = 60; // This is the default conversion rate in the service
+      
+      const radiusInCm = circle.radius / pixelsPerCm;
+      const areaInPixels = Math.PI * circle.radius * circle.radius;
+      const areaInCm = areaInPixels / (pixelsPerCm * pixelsPerCm);
+      
+      expect(measurements.radius).toBeCloseTo(radiusInCm);
+      expect(measurements.diameter).toBeCloseTo(2 * radiusInCm);
+      expect(measurements.circumference).toBeCloseTo(2 * Math.PI * radiusInCm);
+      expect(measurements.area).toBeCloseTo(areaInCm);
     });
   });
 

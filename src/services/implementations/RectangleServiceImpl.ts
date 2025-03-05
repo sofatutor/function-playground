@@ -1,6 +1,8 @@
 import { Rectangle, Point, ShapeType, MeasurementUnit } from '@/types/shapes';
 import { RectangleService } from '../RectangleService';
 import { v4 as uuidv4 } from 'uuid';
+import { convertFromPixels } from '@/utils/geometry/measurements';
+import { getStoredPixelsPerUnit } from '@/utils/geometry/common';
 
 /**
  * Implementation of the RectangleService interface
@@ -18,8 +20,9 @@ export class RectangleServiceImpl implements RectangleService {
     const height = (params.height as number) || 80;
     const color = (params.color as string) || '#4CAF50';
     const id = (params.id as string) || uuidv4();
+    const rotation = (params.rotation as number) || 0;
     
-    return this.createRectangle(position, width, height, color, id);
+    return this.createRectangle(position, width, height, color, id, rotation);
   }
   
   /**
@@ -29,6 +32,7 @@ export class RectangleServiceImpl implements RectangleService {
    * @param height The height of the rectangle
    * @param color The color of the rectangle (optional)
    * @param id The ID of the rectangle (optional)
+   * @param rotation The rotation angle in radians (optional)
    * @returns A new Rectangle instance
    */
   createRectangle(
@@ -36,7 +40,8 @@ export class RectangleServiceImpl implements RectangleService {
     width: number, 
     height: number, 
     color?: string, 
-    id?: string
+    id?: string,
+    rotation?: number
   ): Rectangle {
     return {
       id: id || uuidv4(),
@@ -44,7 +49,7 @@ export class RectangleServiceImpl implements RectangleService {
       position: { ...position },
       width: Math.max(1, width), // Ensure minimum width of 1
       height: Math.max(1, height), // Ensure minimum height of 1
-      rotation: 0,
+      rotation: rotation || 0,
       selected: false,
       fill: color || '#4CAF50',
       stroke: '#000000',
@@ -112,19 +117,42 @@ export class RectangleServiceImpl implements RectangleService {
    * @returns A record of measurement names and their values
    */
   getMeasurements(shape: Rectangle, unit: MeasurementUnit): Record<string, number> {
-    // For simplicity, we're not doing unit conversion here
-    // In a real implementation, you would convert from pixels to the specified unit
-    const width = shape.width;
-    const height = shape.height;
-    const area = width * height;
-    const perimeter = 2 * (width + height);
-    const diagonal = Math.sqrt(width * width + height * height);
+    // Get the calibrated pixels per unit values
+    const pixelsPerCm = getStoredPixelsPerUnit('cm');
+    const pixelsPerInch = getStoredPixelsPerUnit('in');
+    
+    // Create a conversion function
+    const convertFromPixelsFn = (pixels: number): number => {
+      return convertFromPixels(pixels, unit, pixelsPerCm, pixelsPerInch);
+    };
+    
+    // Create a conversion function for area (square units)
+    const convertAreaFromPixelsFn = (pixelsSquared: number): number => {
+      if (unit === 'in') {
+        return pixelsSquared / (pixelsPerInch * pixelsPerInch);
+      }
+      return pixelsSquared / (pixelsPerCm * pixelsPerCm);
+    };
+    
+    // Calculate measurements in pixels
+    const widthInPixels = shape.width;
+    const heightInPixels = shape.height;
+    const perimeterInPixels = 2 * (widthInPixels + heightInPixels);
+    const areaInPixels = widthInPixels * heightInPixels;
+    const diagonalInPixels = Math.sqrt(widthInPixels * widthInPixels + heightInPixels * heightInPixels);
+    
+    // Convert to the specified unit
+    const width = convertFromPixelsFn(widthInPixels);
+    const height = convertFromPixelsFn(heightInPixels);
+    const perimeter = convertFromPixelsFn(perimeterInPixels);
+    const area = convertAreaFromPixelsFn(areaInPixels);
+    const diagonal = convertFromPixelsFn(diagonalInPixels);
     
     return {
       width,
       height,
-      area,
       perimeter,
+      area,
       diagonal
     };
   }
@@ -150,41 +178,32 @@ export class RectangleServiceImpl implements RectangleService {
         return this.updateHeight(shape, newValue);
       case 'area': {
         // For area, we'll maintain the aspect ratio
-        const aspectRatio = shape.width / shape.height;
-        const newHeight = Math.sqrt(newValue / aspectRatio);
-        const newWidth = newHeight * aspectRatio;
+        const currentArea = shape.width * shape.height;
+        const scaleFactor = Math.sqrt(newValue / currentArea);
         return {
           ...shape,
-          width: newWidth,
-          height: newHeight
+          width: shape.width * scaleFactor,
+          height: shape.height * scaleFactor
         };
       }
       case 'perimeter': {
         // For perimeter, we'll maintain the aspect ratio
-        const aspectRatio = shape.width / shape.height;
-        // P = 2w + 2h, with w = aspectRatio * h
-        // P = 2(aspectRatio * h) + 2h = 2h(aspectRatio + 1)
-        // h = P / (2(aspectRatio + 1))
-        const newHeight = newValue / (2 * (aspectRatio + 1));
-        const newWidth = aspectRatio * newHeight;
+        const currentPerimeter = 2 * (shape.width + shape.height);
+        const scaleFactor = newValue / currentPerimeter;
         return {
           ...shape,
-          width: newWidth,
-          height: newHeight
+          width: shape.width * scaleFactor,
+          height: shape.height * scaleFactor
         };
       }
       case 'diagonal': {
         // For diagonal, we'll maintain the aspect ratio
-        // d² = w² + h², with w = aspectRatio * h
-        // d² = (aspectRatio * h)² + h² = h²(aspectRatio² + 1)
-        // h = d / √(aspectRatio² + 1)
-        const aspectRatio = shape.width / shape.height;
-        const newHeight = newValue / Math.sqrt(aspectRatio * aspectRatio + 1);
-        const newWidth = aspectRatio * newHeight;
+        const currentDiagonal = Math.sqrt(shape.width * shape.width + shape.height * shape.height);
+        const scaleFactor = newValue / currentDiagonal;
         return {
           ...shape,
-          width: newWidth,
-          height: newHeight
+          width: shape.width * scaleFactor,
+          height: shape.height * scaleFactor
         };
       }
       default:

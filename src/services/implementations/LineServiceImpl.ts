@@ -1,6 +1,8 @@
 import { Line, Point, ShapeType, MeasurementUnit } from '@/types/shapes';
 import { LineService } from '../LineService';
 import { v4 as uuidv4 } from 'uuid';
+import { convertFromPixels } from '@/utils/geometry/measurements';
+import { getStoredPixelsPerUnit } from '@/utils/geometry/common';
 
 /**
  * Implementation of the LineService interface
@@ -145,10 +147,21 @@ export class LineServiceImpl implements LineService {
    * @returns A record of measurement names and their values
    */
   getMeasurements(shape: Line, unit: MeasurementUnit): Record<string, number> {
-    // For simplicity, we're not doing unit conversion here
-    // In a real implementation, you would convert from pixels to the specified unit
-    const length = shape.length;
+    // Get the calibrated pixels per unit values
+    const pixelsPerCm = getStoredPixelsPerUnit('cm');
+    const pixelsPerInch = getStoredPixelsPerUnit('in');
+    
+    // Create a conversion function
+    const convertFromPixelsFn = (pixels: number): number => {
+      return convertFromPixels(pixels, unit, pixelsPerCm, pixelsPerInch);
+    };
+    
+    // Calculate measurements in pixels
+    const lengthInPixels = shape.length;
     const angle = this.calculateAngle(shape);
+    
+    // Convert to the specified unit
+    const length = convertFromPixelsFn(lengthInPixels);
     
     return {
       length,
@@ -173,11 +186,14 @@ export class LineServiceImpl implements LineService {
     switch (measurementKey) {
       case 'length': {
         // Scale the line to achieve the new length
-        const scaleFactor = newValue / shape.length;
+        // newValue is the target length in the current unit
+        const currentLength = this.calculateLength(shape);
+        const scaleFactor = newValue / currentLength;
         return this.scaleLine(shape, scaleFactor);
       }
       case 'angle': {
         // Rotate the line to achieve the new angle
+        // Angle is already in degrees, so we can use newValue directly
         const currentAngle = this.calculateAngle(shape);
         const angleDifference = newValue - currentAngle;
         return this.rotateShape(shape, angleDifference);

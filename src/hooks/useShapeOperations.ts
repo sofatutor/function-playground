@@ -6,10 +6,7 @@ import { toast } from 'sonner';
 
 // Import utility functions
 import { getStoredPixelsPerUnit } from '@/utils/geometry/common';
-import { createShape } from '@/utils/geometry/shapeCreation';
-import { selectShape, moveShape, resizeShape, rotateShape } from '@/utils/geometry/shapeOperations';
 import { getShapeMeasurements, convertToPixels, convertFromPixels } from '@/utils/geometry/measurements';
-import { updateShapeFromMeasurement } from '@/utils/geometry/shapeUpdates';
 // Import URL encoding utilities
 import { 
   updateUrlWithShapes, 
@@ -17,6 +14,9 @@ import {
   getGridPositionFromUrl 
 } from '@/utils/urlEncoding';
 import { snapToGrid, isSignificantGridChange, getGridModifiers } from '@/utils/grid/gridUtils';
+
+// Import service factory
+import { useServiceFactory } from '@/providers/ServiceProvider';
 
 export function useShapeOperations() {
   const [shapes, setShapes] = useState<AnyShape[]>([]);
@@ -39,6 +39,9 @@ export function useShapeOperations() {
   const isDraggingGrid = useRef(false);
   // Add a ref for the grid position update timeout
   const gridUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Get the service factory
+  const serviceFactory = useServiceFactory();
   
   // Load shapes and grid position from URL when component mounts
   useEffect(() => {
@@ -134,21 +137,87 @@ export function useShapeOperations() {
   
   // Create a new shape
   const handleCreateShape = useCallback((startPoint: Point, endPoint: Point) => {
-    const newShape = createShape(startPoint, endPoint, activeShapeType);
+    // Get the appropriate service for the active shape type
+    const shapeService = serviceFactory.getService(activeShapeType);
+    
+    // Create shape parameters based on shape type
+    let params: Record<string, unknown>;
+    
+    switch (activeShapeType) {
+      case 'circle': {
+        // For circles, calculate center and radius from start and end points
+        const center = startPoint;
+        const radius = Math.sqrt(
+          Math.pow(endPoint.x - startPoint.x, 2) + 
+          Math.pow(endPoint.y - startPoint.y, 2)
+        );
+        params = { center, radius };
+        break;
+      }
+      case 'rectangle': {
+        // For rectangles, calculate position, width, and height
+        const position = {
+          x: Math.min(startPoint.x, endPoint.x),
+          y: Math.min(startPoint.y, endPoint.y)
+        };
+        const width = Math.abs(endPoint.x - startPoint.x);
+        const height = Math.abs(endPoint.y - startPoint.y);
+        params = { position, width, height };
+        break;
+      }
+      case 'triangle': {
+        // For triangles, create a right triangle with the right angle at the bottom left
+        const points: [Point, Point, Point] = [
+          { x: startPoint.x, y: startPoint.y }, // Top point
+          { x: startPoint.x, y: endPoint.y },   // Bottom left (right angle)
+          { x: endPoint.x, y: endPoint.y }      // Bottom right
+        ];
+        const position = {
+          x: (points[0].x + points[1].x + points[2].x) / 3,
+          y: (points[0].y + points[1].y + points[2].y) / 3
+        };
+        params = { points, position };
+        break;
+      }
+      case 'line': {
+        // For lines, use start and end points directly
+        params = { 
+          start: startPoint, 
+          end: endPoint,
+          position: {
+            x: (startPoint.x + endPoint.x) / 2,
+            y: (startPoint.y + endPoint.y) / 2
+          }
+        };
+        break;
+      }
+      default:
+        throw new Error(`Unsupported shape type: ${activeShapeType}`);
+    }
+    
+    // Create the new shape using the service
+    const newShape = shapeService.createShape(params);
+    
     setShapes(prevShapes => {
       const updatedShapes = [...prevShapes, newShape];
       // Update URL with the new shapes
       updateUrlWithShapes(updatedShapes, gridPosition);
       return updatedShapes;
     });
+    
     setSelectedShapeId(newShape.id);
     toast.success(`${activeShapeType} created!`);
     return newShape.id;
-  }, [activeShapeType, gridPosition]);
+  }, [activeShapeType, gridPosition, serviceFactory]);
   
   // Select a shape
   const handleSelectShape = useCallback((id: string | null) => {
-    setShapes(prevShapes => selectShape(prevShapes, id));
+    setShapes(prevShapes => 
+      prevShapes.map(shape => ({
+        ...shape,
+        selected: shape.id === id
+      }))
+    );
     setSelectedShapeId(id);
   }, []);
   
@@ -165,88 +234,116 @@ export function useShapeOperations() {
     );
   }, [gridPosition, measurementUnit, pixelsPerCm, pixelsPerMm, pixelsPerInch]);
   
-  // Update the move shape function to use our new utility and handle shape-specific snapping
+  // Update the move shape function to use our services
   const handleMoveShape = useCallback((id: string, newPosition: Point) => {
     // Get keyboard modifiers from the current event
     const event = window.event as KeyboardEvent | MouseEvent | undefined;
     const { shiftPressed, altPressed } = getGridModifiers(event);
     
+    // Find the shape we're moving
+    const shape = shapes.find(s => s.id === id);
+    if (!shape) return;
+    
+    // Get the service for this shape
+    const shapeService = serviceFactory.getServiceForShape(shape);
+    
     // Only apply snapping if shift is pressed and alt is not pressed
     if (shiftPressed && !altPressed) {
-      // Find the shape we're moving
-      const shape = shapes.find(s => s.id === id);
-      if (shape) {
-        let finalPosition = { ...newPosition };
+      let finalPosition = { ...newPosition };
+      
+      // Apply different snapping logic based on shape type
+      if (shape.type === 'circle') {
+        // For circles, we want to snap the left and top edges
+        // Calculate the left and top edge positions
+        const leftEdge = { x: newPosition.x - shape.radius, y: newPosition.y };
+        const topEdge = { x: newPosition.x, y: newPosition.y - shape.radius };
         
-        // Apply different snapping logic based on shape type
-        if (shape.type === 'circle') {
-          // For circles, we want to snap the left and top edges
-          // Calculate the left and top edge positions
-          const leftEdge = { x: newPosition.x - shape.radius, y: newPosition.y };
-          const topEdge = { x: newPosition.x, y: newPosition.y - shape.radius };
-          
-          // Snap the edges to the grid
-          const snappedLeftEdge = handleSnapToGrid(leftEdge);
-          const snappedTopEdge = handleSnapToGrid(topEdge);
-          
-          // Adjust the position to maintain the snapped edges
-          finalPosition = {
-            x: snappedLeftEdge.x + shape.radius,
-            y: snappedTopEdge.y + shape.radius
-          };
-        } else if (shape.type === 'rectangle') {
-          // For rectangles, just snap the center for simplicity
-          finalPosition = handleSnapToGrid(newPosition);
-          
-          console.log('Rectangle snapping (center only):', {
-            original: newPosition,
-            final: finalPosition
-          });
-        } else {
-          // For other shapes, just snap the center
-          finalPosition = handleSnapToGrid(newPosition);
-        }
+        // Snap the edges to the grid
+        const snappedLeftEdge = handleSnapToGrid(leftEdge);
+        const snappedTopEdge = handleSnapToGrid(topEdge);
         
-        // Update the shapes with the snapped position
-        setShapes(prevShapes => {
-          const updatedShapes = moveShape(prevShapes, id, finalPosition);
-          // Update URL with the new shape positions
-          updateUrlWithShapes(updatedShapes, gridPosition);
-          return updatedShapes;
+        // Adjust the position to maintain the snapped edges
+        finalPosition = {
+          x: snappedLeftEdge.x + shape.radius,
+          y: snappedTopEdge.y + shape.radius
+        };
+      } else {
+        // For other shapes, just snap the center
+        finalPosition = handleSnapToGrid(newPosition);
+      }
+      
+      // Calculate the delta between the original position and the final position
+      const dx = finalPosition.x - shape.position.x;
+      const dy = finalPosition.y - shape.position.y;
+      
+      // Update the shapes with the snapped position
+      setShapes(prevShapes => {
+        const updatedShapes = prevShapes.map(s => {
+          if (s.id !== id) return s;
+          return shapeService.moveShape(s, dx, dy);
         });
         
-        return;
-      }
+        // Update URL with the new shape positions
+        updateUrlWithShapes(updatedShapes, gridPosition);
+        return updatedShapes;
+      });
+      
+      return;
     }
     
-    // If no snapping or shape not found, just move normally
+    // If no snapping or shape not found, calculate the delta and move normally
+    const dx = newPosition.x - shape.position.x;
+    const dy = newPosition.y - shape.position.y;
+    
     setShapes(prevShapes => {
-      const updatedShapes = moveShape(prevShapes, id, newPosition);
+      const updatedShapes = prevShapes.map(s => {
+        if (s.id !== id) return s;
+        return shapeService.moveShape(s, dx, dy);
+      });
+      
       // Update URL with the new shape positions
       updateUrlWithShapes(updatedShapes, gridPosition);
       return updatedShapes;
     });
-  }, [gridPosition, handleSnapToGrid, shapes]);
+  }, [gridPosition, handleSnapToGrid, shapes, serviceFactory]);
   
-  // Resize a shape
+  // Resize a shape using the service
   const handleResizeShape = useCallback((id: string, factor: number) => {
     setShapes(prevShapes => {
-      const updatedShapes = resizeShape(prevShapes, id, factor);
+      const updatedShapes = prevShapes.map(shape => {
+        if (shape.id !== id) return shape;
+        
+        // Get the service for this shape
+        const shapeService = serviceFactory.getServiceForShape(shape);
+        
+        // Use the service to resize the shape
+        return shapeService.resizeShape(shape, { scale: factor });
+      });
+      
       // Update URL with the resized shapes
       updateUrlWithShapes(updatedShapes, gridPosition);
       return updatedShapes;
     });
-  }, [gridPosition]);
+  }, [gridPosition, serviceFactory]);
   
-  // Rotate a shape
+  // Rotate a shape using the service
   const handleRotateShape = useCallback((id: string, angle: number) => {
     setShapes(prevShapes => {
-      const updatedShapes = rotateShape(prevShapes, id, angle);
+      const updatedShapes = prevShapes.map(shape => {
+        if (shape.id !== id) return shape;
+        
+        // Get the service for this shape
+        const shapeService = serviceFactory.getServiceForShape(shape);
+        
+        // Use the service to rotate the shape
+        return shapeService.rotateShape(shape, angle);
+      });
+      
       // Update URL with the rotated shapes
       updateUrlWithShapes(updatedShapes, gridPosition);
       return updatedShapes;
     });
-  }, [gridPosition]);
+  }, [gridPosition, serviceFactory]);
   
   // Delete a shape
   const handleDeleteShape = useCallback((id: string) => {
@@ -295,10 +392,14 @@ export function useShapeOperations() {
     return convertFromPixels(pixels, measurementUnit, pixelsPerCm, pixelsPerInch);
   }, [measurementUnit, pixelsPerCm, pixelsPerInch]);
   
-  // Get measurements for a shape in the current unit
+  // Get measurements for a shape using the service
   const handleGetShapeMeasurements = useCallback((shape: AnyShape) => {
-    return getShapeMeasurements(shape, handleConvertFromPixels);
-  }, [handleConvertFromPixels]);
+    // Get the service for this shape
+    const shapeService = serviceFactory.getServiceForShape(shape);
+    
+    // Use the service to get measurements
+    return shapeService.getMeasurements(shape, measurementUnit);
+  }, [serviceFactory, measurementUnit]);
   
   // Get the selected shape
   const getSelectedShape = useCallback(() => {
@@ -306,7 +407,7 @@ export function useShapeOperations() {
     return shapes.find(shape => shape.id === selectedShapeId) || null;
   }, [shapes, selectedShapeId]);
   
-  // Update shape based on measurement changes
+  // Update shape based on measurement changes using the service
   const handleUpdateMeasurement = useCallback((key: string, value: string) => {
     if (!selectedShapeId) return;
     
@@ -320,6 +421,9 @@ export function useShapeOperations() {
     const selectedShape = getSelectedShape();
     if (!selectedShape) return;
     
+    // Get the service for this shape
+    const shapeService = serviceFactory.getServiceForShape(selectedShape);
+    
     // Convert the value to pixels if needed
     const valueInPixels = handleConvertToPixels(numValue);
     
@@ -327,8 +431,13 @@ export function useShapeOperations() {
       const updatedShapes = prevShapes.map(shape => {
         if (shape.id !== selectedShapeId) return shape;
         
-        // Use our helper function to update the shape
-        return updateShapeFromMeasurement(shape, key, numValue, valueInPixels);
+        // Use the service to update the shape from measurement
+        return shapeService.updateFromMeasurement(
+          shape,
+          key,
+          numValue,
+          valueInPixels
+        );
       });
       
       // Update URL with the updated shapes
@@ -337,7 +446,7 @@ export function useShapeOperations() {
     });
     
     toast.success("Shape updated");
-  }, [selectedShapeId, getSelectedShape, handleConvertToPixels, gridPosition]);
+  }, [selectedShapeId, getSelectedShape, handleConvertToPixels, gridPosition, serviceFactory]);
   
   // Function to share the current canvas state via URL
   const shareCanvasUrl = useCallback(() => {
@@ -376,7 +485,6 @@ export function useShapeOperations() {
     setActiveShapeType,
     getShapeMeasurements: handleGetShapeMeasurements,
     getSelectedShape,
-    updateShapeFromMeasurement,
     updateMeasurement: handleUpdateMeasurement,
     shareCanvasUrl,
     snapToGrid: handleSnapToGrid

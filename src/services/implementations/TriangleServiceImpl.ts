@@ -1,6 +1,9 @@
 import { Triangle, Point, ShapeType, MeasurementUnit } from '@/types/shapes';
 import { TriangleService } from '../TriangleService';
 import { v4 as uuidv4 } from 'uuid';
+import { distanceBetweenPoints } from '@/utils/geometry/common';
+import { convertFromPixels } from '@/utils/geometry/measurements';
+import { getStoredPixelsPerUnit } from '@/utils/geometry/common';
 
 /**
  * Implementation of the TriangleService interface
@@ -154,23 +157,46 @@ export class TriangleServiceImpl implements TriangleService {
    * @returns A record of measurement names and their values
    */
   getMeasurements(shape: Triangle, unit: MeasurementUnit): Record<string, number> {
-    // For simplicity, we're not doing unit conversion here
-    // In a real implementation, you would convert from pixels to the specified unit
-    const area = this.calculateArea(shape);
-    const perimeter = this.calculatePerimeter(shape);
-    const sides = this.calculateSideLengths(shape);
+    // Get the calibrated pixels per unit values
+    const pixelsPerCm = getStoredPixelsPerUnit('cm');
+    const pixelsPerInch = getStoredPixelsPerUnit('in');
+    
+    // Create a conversion function
+    const convertFromPixelsFn = (pixels: number): number => {
+      return convertFromPixels(pixels, unit, pixelsPerCm, pixelsPerInch);
+    };
+    
+    // Create a conversion function for area (square units)
+    const convertAreaFromPixelsFn = (pixelsSquared: number): number => {
+      if (unit === 'in') {
+        return pixelsSquared / (pixelsPerInch * pixelsPerInch);
+      }
+      return pixelsSquared / (pixelsPerCm * pixelsPerCm);
+    };
+    
+    // Calculate measurements in pixels
+    const areaInPixels = this.calculateArea(shape);
+    const perimeterInPixels = this.calculatePerimeter(shape);
+    const sidesInPixels = this.calculateSideLengths(shape);
     const angles = this.calculateAngles(shape);
+    const heightInPixels = this.calculateHeight(shape);
+    
+    // Convert to the specified unit
+    const area = convertAreaFromPixelsFn(areaInPixels);
+    const perimeter = convertFromPixelsFn(perimeterInPixels);
+    const sides = sidesInPixels.map(side => convertFromPixelsFn(side));
+    const height = convertFromPixelsFn(heightInPixels);
     
     return {
       area,
       perimeter,
-      'side-a': sides[0],
-      'side-b': sides[1],
-      'side-c': sides[2],
-      'angle-a': angles[0],
-      'angle-b': angles[1],
-      'angle-c': angles[2],
-      height: this.calculateHeight(shape)
+      side1: sides[0],
+      side2: sides[1],
+      side3: sides[2],
+      angle1: angles[0],
+      angle2: angles[1],
+      angle3: angles[2],
+      height
     };
   }
   
@@ -191,21 +217,28 @@ export class TriangleServiceImpl implements TriangleService {
     switch (measurementKey) {
       case 'area': {
         // Scale the triangle to achieve the new area
-        const scaleFactor = Math.sqrt(newValue / this.calculateArea(shape));
+        // newValue is the target area in the current unit
+        const currentAreaInPixels = this.calculateArea(shape);
+        // Calculate scale factor using newValue (target area) divided by current area
+        const scaleFactor = Math.sqrt(newValue / currentAreaInPixels);
         return this.scaleTriangle(shape, scaleFactor);
       }
       case 'perimeter': {
         // Scale the triangle to achieve the new perimeter
-        const scaleFactor = newValue / this.calculatePerimeter(shape);
+        // newValue is the target perimeter in the current unit
+        const currentPerimeterInPixels = this.calculatePerimeter(shape);
+        // Calculate scale factor using newValue (target perimeter) divided by current perimeter
+        const scaleFactor = newValue / currentPerimeterInPixels;
         return this.scaleTriangle(shape, scaleFactor);
       }
-      case 'side-a':
-      case 'side-b':
-      case 'side-c': {
+      case 'side1':
+      case 'side2':
+      case 'side3': {
         // Get the index of the side (0, 1, or 2)
-        const sideIndex = measurementKey === 'side-a' ? 0 : measurementKey === 'side-b' ? 1 : 2;
+        const sideIndex = measurementKey === 'side1' ? 0 : measurementKey === 'side2' ? 1 : 2;
         const sides = this.calculateSideLengths(shape);
-        const scaleFactor = newValue / sides[sideIndex];
+        // originalValue is already in pixels, so we can use it directly
+        const scaleFactor = originalValue / sides[sideIndex];
         
         // For simplicity, we'll scale the entire triangle
         // In a more sophisticated implementation, you might want to keep the other sides fixed
@@ -213,13 +246,15 @@ export class TriangleServiceImpl implements TriangleService {
       }
       case 'height': {
         // Scale the triangle to achieve the new height
-        const scaleFactor = newValue / this.calculateHeight(shape);
+        // originalValue is already in pixels, so we can use it directly
+        const currentHeightInPixels = this.calculateHeight(shape);
+        const scaleFactor = originalValue / currentHeightInPixels;
         // For height, we need to scale only in the Y direction
         return this.scaleTriangleInternal(shape, 1, scaleFactor);
       }
-      case 'angle-a':
-      case 'angle-b':
-      case 'angle-c':
+      case 'angle1':
+      case 'angle2':
+      case 'angle3':
         // Changing angles would require more complex transformations
         // For simplicity, we'll just warn and return the original shape
         console.warn(`Updating angles directly is not supported: ${measurementKey}`);
@@ -346,9 +381,9 @@ export class TriangleServiceImpl implements TriangleService {
   }
   
   /**
-   * Calculates the angles of the triangle in radians
+   * Calculates the angles of the triangle
    * @param triangle The triangle to calculate angles for
-   * @returns An array of the three angles in radians
+   * @returns The three angles of the triangle in degrees
    */
   calculateAngles(triangle: Triangle): [number, number, number] {
     const [a, b, c] = this.calculateSideLengths(triangle);
@@ -358,7 +393,12 @@ export class TriangleServiceImpl implements TriangleService {
     const angleB = Math.acos((a * a + c * c - b * b) / (2 * a * c));
     const angleC = Math.acos((a * a + b * b - c * c) / (2 * a * b));
     
-    return [angleA, angleB, angleC];
+    // Convert from radians to degrees
+    const angleADegrees = angleA * (180 / Math.PI);
+    const angleBDegrees = angleB * (180 / Math.PI);
+    const angleCDegrees = angleC * (180 / Math.PI);
+    
+    return [angleADegrees, angleBDegrees, angleCDegrees];
   }
   
   /**

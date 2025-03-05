@@ -121,8 +121,40 @@ describe('TriangleServiceImpl', () => {
     it('should return correct measurements for a triangle', () => {
       const measurements = service.getMeasurements(triangle, 'cm');
       
-      expect(measurements.area).toBeCloseTo(service.calculateArea(triangle));
-      expect(measurements.perimeter).toBeCloseTo(service.calculatePerimeter(triangle));
+      // Since measurements are converted to cm, we need to compare with the converted values
+      // The conversion is done in the service, so we need to use the same conversion here
+      const pixelsPerCm = 60; // This is the default conversion rate in the service
+      
+      // Get the side lengths in pixels and convert them to cm
+      const sideLengths = service.calculateSideLengths(triangle);
+      const sideLengthsInCm = sideLengths.map(side => side / pixelsPerCm);
+      
+      // Calculate the area in pixels first
+      const s = (sideLengths[0] + sideLengths[1] + sideLengths[2]) / 2;
+      const areaInPixels = Math.sqrt(
+        s * (s - sideLengths[0]) * (s - sideLengths[1]) * (s - sideLengths[2])
+      );
+      // Then convert to cm² by dividing by pixelsPerCm²
+      const areaInCm = areaInPixels / (pixelsPerCm * pixelsPerCm);
+      
+      expect(measurements.area).toBeCloseTo(areaInCm);
+      expect(measurements.perimeter).toBeCloseTo(sideLengthsInCm[0] + sideLengthsInCm[1] + sideLengthsInCm[2]);
+      
+      // Check that side lengths are converted correctly
+      expect(measurements.side1).toBeCloseTo(sideLengthsInCm[0]);
+      expect(measurements.side2).toBeCloseTo(sideLengthsInCm[1]);
+      expect(measurements.side3).toBeCloseTo(sideLengthsInCm[2]);
+      
+      // Check that angles are calculated correctly
+      const angles = service.calculateAngles(triangle);
+      expect(measurements.angle1).toBeCloseTo(angles[0]);
+      expect(measurements.angle2).toBeCloseTo(angles[1]);
+      expect(measurements.angle3).toBeCloseTo(angles[2]);
+      
+      // Check that height is converted correctly
+      const heightInPixels = service.calculateHeight(triangle);
+      const heightInCm = heightInPixels / pixelsPerCm;
+      expect(measurements.height).toBeCloseTo(heightInCm);
     });
   });
 
@@ -205,6 +237,44 @@ describe('TriangleServiceImpl', () => {
       }
       
       expect(service.calculatePerimeter(triangle)).toBeCloseTo(perimeter);
+    });
+  });
+
+  describe('calculateAngles', () => {
+    it('should return angles in degrees that sum to approximately 180', () => {
+      const angles = service.calculateAngles(triangle);
+      
+      // Check that we have three angles
+      expect(angles).toHaveLength(3);
+      
+      // Check that each angle is in degrees (between 0 and 180)
+      angles.forEach(angle => {
+        expect(angle).toBeGreaterThan(0);
+        expect(angle).toBeLessThan(180);
+      });
+      
+      // Check that the sum of angles is approximately 180 degrees
+      const sum = angles.reduce((acc, angle) => acc + angle, 0);
+      expect(sum).toBeCloseTo(180, 1); // Allow for small floating point errors
+    });
+    
+    it('should calculate correct angles for a right triangle', () => {
+      // Create a 3-4-5 right triangle
+      const rightTrianglePoints: [Point, Point, Point] = [
+        { x: 0, y: 0 },
+        { x: 3, y: 0 },
+        { x: 0, y: 4 }
+      ];
+      const rightTriangle = service.createTriangle(rightTrianglePoints, '#ff0000');
+      
+      const angles = service.calculateAngles(rightTriangle);
+      
+      // One angle should be 90 degrees (π/2 radians)
+      expect(angles.some(angle => Math.abs(angle - 90) < 0.1)).toBe(true);
+      
+      // The other two angles should be approximately 36.87 and 53.13 degrees
+      expect(angles.some(angle => Math.abs(angle - 36.87) < 0.1)).toBe(true);
+      expect(angles.some(angle => Math.abs(angle - 53.13) < 0.1)).toBe(true);
     });
   });
 
