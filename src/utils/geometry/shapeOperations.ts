@@ -68,24 +68,27 @@ export const resizeShape = (shapes: AnyShape[], id: string, factor: number): Any
   return shapes.map(shape => {
     if (shape.id !== id) return shape;
     
+    // Use absolute value of factor to ensure positive scaling
+    const absFactor = Math.abs(factor);
+    
     switch (shape.type) {
       case 'circle':
         return {
           ...shape,
-          radius: shape.radius * factor
+          radius: shape.radius * absFactor
         };
       case 'rectangle':
         return {
           ...shape,
-          width: shape.width * factor,
-          height: shape.height * factor
+          width: shape.width * absFactor,
+          height: shape.height * absFactor
         };
       case 'triangle': {
         const triangle = shape as Triangle;
         const center = triangle.position;
         const newPoints = triangle.points.map(point => ({
-          x: center.x + (point.x - center.x) * factor,
-          y: center.y + (point.y - center.y) * factor
+          x: center.x + (point.x - center.x) * absFactor,
+          y: center.y + (point.y - center.y) * absFactor
         })) as [Point, Point, Point];
         
         return {
@@ -99,13 +102,13 @@ export const resizeShape = (shapes: AnyShape[], id: string, factor: number): Any
         
         // Scale the start and end points from the center
         const newStartPoint = {
-          x: center.x + (line.startPoint.x - center.x) * factor,
-          y: center.y + (line.startPoint.y - center.y) * factor
+          x: center.x + (line.startPoint.x - center.x) * absFactor,
+          y: center.y + (line.startPoint.y - center.y) * absFactor
         };
         
         const newEndPoint = {
-          x: center.x + (line.endPoint.x - center.x) * factor,
-          y: center.y + (line.endPoint.y - center.y) * factor
+          x: center.x + (line.endPoint.x - center.x) * absFactor,
+          y: center.y + (line.endPoint.y - center.y) * absFactor
         };
         
         // Calculate the new length
