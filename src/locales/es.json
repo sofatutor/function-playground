@@ -110,5 +110,22 @@
   "parametricPointInfo": "Función paramétrica (valor t no disponible)",
   "polarPointInfo": "Función polar (valor θ no disponible)",
   "pointInfoTitle": "Información del Punto",
-  "clickOnCurveInstruction": "Haz clic en la curva para seleccionar un punto y ver su información."
+  "clickOnCurveInstruction": "Haz clic en la curva para seleccionar un punto y ver su información.",
+  "categories": {
+    "basic": "Funciones básicas",
+    "trigonometric": "Funciones trigonométricas",
+    "exponential": "Exponenciales y logarítmicas",
+    "parametric": "Curvas paramétricas",
+    "special": "Funciones especiales",
+    "polynomial": "Polinomios"
+  },
+  "naturalLanguageTitle": "Describir tu función",
+  "naturalLanguagePlaceholder": "Describe la función en lenguaje natural, p.ej., 'una parábola que se abre hacia arriba' o 'onda sinusoidal con período de 2π'",
+  "naturalLanguageDescription": "Utiliza lenguaje natural o pseudocódigo para describir la función que deseas crear. OpenAI la convertirá en una expresión matemática.",
+  "naturalLanguageGenerate": "Generar expresión",
+  "naturalLanguageProcessing": "Procesando...",
+  "naturalLanguageTooltip": "Generar desde descripción",
+  "naturalLanguageSuccess": "Expresión generada con éxito",
+  "naturalLanguageError": "Error al generar la expresión",
+  "naturalLanguageEmpty": "Por favor, introduce una descripción"
 } 
