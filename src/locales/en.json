@@ -101,7 +101,9 @@
     "lineExplanation": "Calculates the straight-line distance between two points",
     "select": "Select & Move Shapes",
     "rotate": "Rotate Shape",
-    "delete": "Delete Selected"
+    "delete": "Delete Selected",
+    "plot": "Plot Functions",
+    "plotDescription": "Create and visualize mathematical functions"
   },
   "pointX": "X",
   "pointY": "Y",
@@ -113,5 +115,29 @@
   "clickOnCurveInstruction": "Click on the curve to select a point and view its information.",
   "infoPanel": "Information Panel",
   "shapeInfo": "Shape Info",
-  "pointInfo": "Point Info"
+  "pointInfo": "Point Info",
+  "scaleFactor": "Scale Factor",
+  "scaleFactorHint": "Adjust the scale factor to stretch or compress the graph vertically",
+  "scaleMin": "0.001x",
+  "scaleDefault": "1.0x",
+  "scaleMax": "10x",
+  "zoomIn": "Zoom In",
+  "zoomOut": "Zoom Out",
+  "functionExpression": "Function Expression",
+  "functionExpressionHint": "Use x as the variable, e.g. x*x, Math.sin(x), etc.",
+  "color": "Color",
+  "colorPicker": "Pick a color",
+  "newFormula": "New Function",
+  "formulaDefault": "New Function",
+  "formulaPlaceholder": "Enter a function expression",
+  "deleteFormulaTooltip": "Delete function",
+  "browseExamples": "Browse examples",
+  "categories": {
+    "basic": "Basic Functions",
+    "trigonometric": "Trigonometric Functions",
+    "exponential": "Exponential & Logarithmic",
+    "parametric": "Parametric Curves",
+    "special": "Special Functions",
+    "polynomial": "Polynomials"
+  }
 }

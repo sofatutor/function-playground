@@ -43,6 +43,7 @@ const Index = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [formulas, setFormulas] = useState<Formula[]>([]);
   const [isFormulaEditorOpen, setIsFormulaEditorOpen] = useState(false);
+  const [selectedFormulaId, setSelectedFormulaId] = useState<string | null>(null);
   const [pixelsPerUnit, setPixelsPerUnit] = useState<number>(getStoredPixelsPerUnit(measurementUnit));
 
   // Effect to update pixelsPerUnit when measurement unit changes
@@ -66,6 +67,7 @@ const Index = () => {
   const handleAddFormula = useCallback((formula: Formula) => {
     console.log('Adding formula:', formula);
     setFormulas(prevFormulas => [...prevFormulas, formula]);
+    setSelectedFormulaId(formula.id);
   }, []);
 
   const handleUpdateFormula = useCallback((id: string, updates: Partial<Formula>) => {
@@ -84,11 +86,15 @@ const Index = () => {
       // switch back to the shape selection tool
       if (updatedFormulas.length === 0 && isFormulaEditorOpen) {
         setActiveMode('select');
+        setSelectedFormulaId(null);
+      } else if (id === selectedFormulaId && updatedFormulas.length > 0) {
+        // If the selected formula was deleted, select the first available formula
+        setSelectedFormulaId(updatedFormulas[0].id);
       }
       
       return updatedFormulas;
     });
-  }, [isFormulaEditorOpen, setActiveMode]);
+  }, [isFormulaEditorOpen, setActiveMode, selectedFormulaId]);
 
   // Toggle formula editor
   const toggleFormulaEditor = useCallback(() => {
@@ -101,11 +107,14 @@ const Index = () => {
         // Set a default expression of x^2 instead of empty
         newFormula.expression = "x*x";
         handleAddFormula(newFormula);
+      } else if (newState && formulas.length > 0 && !selectedFormulaId) {
+        // If opening and there are formulas but none selected, select the first one
+        setSelectedFormulaId(formulas[0].id);
       }
       
       return newState;
     });
-  }, [formulas.length, handleAddFormula]);
+  }, [formulas.length, handleAddFormula, selectedFormulaId]);
 
   const selectedShape = getSelectedShape();
   
@@ -196,6 +205,8 @@ const Index = () => {
                     onDeleteFormula={handleDeleteFormula}
                     measurementUnit={measurementUnit}
                     isOpen={isFormulaEditorOpen}
+                    selectedFormulaId={selectedFormulaId}
+                    onSelectFormula={setSelectedFormulaId}
                   />
                 </div>
               )}
