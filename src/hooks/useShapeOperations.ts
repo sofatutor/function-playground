@@ -363,12 +363,12 @@ export function useShapeOperations() {
   const handleDeleteAllShapes = useCallback(() => {
     setShapes([]);
     setSelectedShapeId(null);
-    // Reset grid position to null (center of canvas)
-    setGridPosition(null);
-    // Clear shapes and grid position from URL
-    updateUrlWithShapes([], null);
-    toast.info("All shapes cleared");
-  }, []);
+    // Don't reset grid position to preserve formulas/plots at their current position
+    // setGridPosition(null);
+    // Update URL with empty shapes but keep the current grid position
+    updateUrlWithShapes([], gridPosition);
+    toast.info("All shapes cleared, plots preserved");
+  }, [gridPosition]);
   
   // Update the grid position update function to use our new utility
   const updateGridPosition = useCallback((newPosition: Point) => {
