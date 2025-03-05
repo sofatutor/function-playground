@@ -201,16 +201,22 @@ const CanvasGrid: React.FC<CanvasGridProps> = ({
     const prevSize = prevCanvasSizeRef.current;
     const currentSize = canvasSize;
     
-    // Check if canvas size has changed significantly (more than 100px in either dimension)
-    const hasSignificantChange = 
-      Math.abs(prevSize.width - currentSize.width) > 100 || 
-      Math.abs(prevSize.height - currentSize.height) > 100;
+    // Always update the previous size reference to track changes
+    prevCanvasSizeRef.current = { ...currentSize };
     
-    if (hasSignificantChange && currentSize.width > 0 && currentSize.height > 0) {
-      console.log('CanvasGrid: Significant canvas size change detected, updating grid');
-      
-      // Update the previous size reference
-      prevCanvasSizeRef.current = { ...currentSize };
+    // Check if canvas size has changed significantly (more than 50px in either dimension)
+    // or if this is the first meaningful size (width and height > 0)
+    const hasSignificantChange = 
+      (Math.abs(prevSize.width - currentSize.width) > 50 || 
+       Math.abs(prevSize.height - currentSize.height) > 50) &&
+      currentSize.width > 0 && currentSize.height > 0;
+    
+    const isFirstMeaningfulSize = 
+      (prevSize.width === 0 || prevSize.height === 0) && 
+      currentSize.width > 0 && currentSize.height > 0;
+    
+    if (hasSignificantChange || isFirstMeaningfulSize) {
+      console.log('CanvasGrid: Canvas size change detected, updating grid');
       
       // If we haven't moved the origin manually, center it in the new canvas
       if (!hasOriginMoved.current) {
