@@ -96,7 +96,7 @@ export function useShapeOperations() {
         console.log('useShapeOperations: Updating URL with shapes and grid position');
         updateUrlWithShapes(shapes, gridPosition);
         gridUpdateTimeoutRef.current = null;
-      }, 100);
+      }, 300);
     }
     
     return () => {

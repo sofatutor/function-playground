@@ -1,4 +1,3 @@
-
 export const translations = {
   en: {
     formulaEditor: "Formula Plotter",
@@ -37,7 +36,28 @@ export const translations = {
     tooltips: {
       plot: "Plot formula",
       plotDescription: "Create mathematical graphs on the grid"
-    }
+    },
+    scaleFactor: "Scale Factor",
+    scaleFactorHint: "Adjust to make the graph flatter or steeper",
+    scaleMin: "0.001x",
+    scaleDefault: "1.0x",
+    scaleMax: "10.0x",
+    formulaPlaceholder: "x*x",
+    formulaDefault: "f(x)",
+    exampleCategory: "Category",
+    exampleName: "Name",
+    exampleDescription: "Description",
+    colorPicker: "Pick a color",
+    deleteFormulaTooltip: "Delete this formula",
+    browseExamples: "Browse examples",
+    pointX: "X",
+    pointY: "Y",
+    calculation: "Calculation",
+    calculationError: "Error calculating value",
+    parametricPointInfo: "Parametric function (t value not available)",
+    polarPointInfo: "Polar function (θ value not available)",
+    pointInfoTitle: "Point Information",
+    clickOnCurveInstruction: "Click on the curve to select a point and view its information."
   },
   es: {
     formulaEditor: "Trazador de Fórmulas",
@@ -76,7 +96,28 @@ export const translations = {
     tooltips: {
       plot: "Graficar fórmula",
       plotDescription: "Crear gráficos matemáticos en la cuadrícula"
-    }
+    },
+    scaleFactor: "Factor de Escala",
+    scaleFactorHint: "Ajuste para hacer el gráfico más plano o más pronunciado",
+    scaleMin: "0.001x",
+    scaleDefault: "1.0x",
+    scaleMax: "10.0x",
+    formulaPlaceholder: "x*x",
+    formulaDefault: "f(x)",
+    exampleCategory: "Categoría",
+    exampleName: "Nombre",
+    exampleDescription: "Descripción",
+    colorPicker: "Elegir un color",
+    deleteFormulaTooltip: "Eliminar esta fórmula",
+    browseExamples: "Explorar ejemplos",
+    pointX: "X",
+    pointY: "Y",
+    calculation: "Cálculo",
+    calculationError: "Error al calcular el valor",
+    parametricPointInfo: "Función paramétrica (valor t no disponible)",
+    polarPointInfo: "Función polar (valor θ no disponible)",
+    pointInfoTitle: "Información del Punto",
+    clickOnCurveInstruction: "Haz clic en la curva para seleccionar un punto y ver su información."
   },
   fr: {
     formulaEditor: "Traceur de Formules",
@@ -115,7 +156,28 @@ export const translations = {
     tooltips: {
       plot: "Tracer formule",
       plotDescription: "Créer des graphiques mathématiques sur la grille"
-    }
+    },
+    scaleFactor: "Facteur d'Échelle",
+    scaleFactorHint: "Ajustez pour rendre le graphique plus plat ou plus raide",
+    scaleMin: "0.001x",
+    scaleDefault: "1.0x",
+    scaleMax: "10.0x",
+    formulaPlaceholder: "x*x",
+    formulaDefault: "f(x)",
+    exampleCategory: "Catégorie",
+    exampleName: "Nom",
+    exampleDescription: "Description",
+    colorPicker: "Choisir une couleur",
+    deleteFormulaTooltip: "Supprimer cette formule",
+    browseExamples: "Parcourir les exemples",
+    pointX: "X",
+    pointY: "Y",
+    calculation: "Calcul",
+    calculationError: "Erreur de calcul de la valeur",
+    parametricPointInfo: "Fonction paramétrique (valeur t non disponible)",
+    polarPointInfo: "Fonction polaire (valeur θ non disponible)",
+    pointInfoTitle: "Information du Point",
+    clickOnCurveInstruction: "Cliquez sur la courbe pour sélectionner un point et afficher ses informations."
   },
   de: {
     formulaEditor: "Formelplotter",
@@ -154,6 +216,27 @@ export const translations = {
     tooltips: {
       plot: "Formel plotten",
       plotDescription: "Erstellen Sie mathematische Graphen auf dem Raster"
-    }
+    },
+    scaleFactor: "Skalierungsfaktor",
+    scaleFactorHint: "Anpassen, um den Graphen flacher oder steiler zu machen",
+    scaleMin: "0.001x",
+    scaleDefault: "1.0x",
+    scaleMax: "10.0x",
+    formulaPlaceholder: "x*x",
+    formulaDefault: "f(x)",
+    exampleCategory: "Kategorie",
+    exampleName: "Name",
+    exampleDescription: "Beschreibung",
+    colorPicker: "Farbe auswählen",
+    deleteFormulaTooltip: "Diese Formel löschen",
+    browseExamples: "Beispiele durchsuchen",
+    pointX: "X",
+    pointY: "Y",
+    calculation: "Berechnung",
+    calculationError: "Fehler bei der Berechnung des Wertes",
+    parametricPointInfo: "Parametrische Funktion (t-Wert nicht verfügbar)",
+    polarPointInfo: "Polarfunktion (θ-Wert nicht verfügbar)",
+    pointInfoTitle: "Punktinformation",
+    clickOnCurveInstruction: "Klicken Sie auf die Kurve, um einen Punkt auszuwählen und seine Informationen anzuzeigen."
   }
 };

@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
-import { Square, Circle, Triangle, MousePointer, Move, RotateCw, Trash, Ruler, Function } from 'lucide-react';
+import { Square, Circle, Triangle, MousePointer, Move, RotateCw, Trash, Ruler, FunctionSquare } from 'lucide-react';
 import 'katex/dist/katex.min.css';
 import { InlineMath } from 'react-katex';
 import type { ShapeType, OperationMode } from '@/types/shapes';
@@ -113,7 +113,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             tooltip={t('tooltips.plot')}
             formulaExplanation={t('tooltips.plotDescription')}
           >
-            <Function size={18} />
+            <FunctionSquare size={18} />
           </ToolButton>
           
           <Separator orientation="vertical" className="h-8 mx-1" />

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useShapeOperations } from '@/hooks/useShapeOperations';
 import GeometryHeader from '@/components/GeometryHeader';
@@ -14,6 +13,7 @@ import { useTranslate } from '@/utils/translate';
 import { Point } from '@/types/shapes';
 import { Formula } from '@/types/formula';
 import { getStoredPixelsPerUnit } from '@/utils/geometry/common';
+import { createDefaultFormula } from '@/utils/formulaUtils';
 
 const Index = () => {
   const {
@@ -61,13 +61,9 @@ const Index = () => {
     };
   }, []);
 
-  // Toggle formula editor
-  const toggleFormulaEditor = useCallback(() => {
-    setIsFormulaEditorOpen(prevState => !prevState);
-  }, []);
-
   // Handle formula operations
   const handleAddFormula = useCallback((formula: Formula) => {
+    console.log('Adding formula:', formula);
     setFormulas(prevFormulas => [...prevFormulas, formula]);
   }, []);
 
@@ -80,8 +76,35 @@ const Index = () => {
   }, []);
 
   const handleDeleteFormula = useCallback((id: string) => {
-    setFormulas(prevFormulas => prevFormulas.filter(formula => formula.id !== id));
-  }, []);
+    setFormulas(prevFormulas => {
+      const updatedFormulas = prevFormulas.filter(formula => formula.id !== id);
+      
+      // If the last formula was deleted and the formula editor is open,
+      // switch back to the shape selection tool
+      if (updatedFormulas.length === 0 && isFormulaEditorOpen) {
+        setActiveMode('select');
+      }
+      
+      return updatedFormulas;
+    });
+  }, [isFormulaEditorOpen, setActiveMode]);
+
+  // Toggle formula editor
+  const toggleFormulaEditor = useCallback(() => {
+    setIsFormulaEditorOpen(prevState => {
+      const newState = !prevState;
+      
+      // If opening the formula editor and there are no formulas, create a default one
+      if (newState && formulas.length === 0) {
+        const newFormula = createDefaultFormula('function');
+        // Set a default expression of x^2 instead of empty
+        newFormula.expression = "x*x";
+        handleAddFormula(newFormula);
+      }
+      
+      return newState;
+    });
+  }, [formulas.length, handleAddFormula]);
 
   const selectedShape = getSelectedShape();
   
