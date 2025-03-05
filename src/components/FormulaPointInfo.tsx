@@ -2,6 +2,7 @@ import React from 'react';
 import { Formula } from '@/types/formula';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslate } from '@/utils/translate';
+import { Point, MeasurementUnit } from '@/types/shapes';
 
 interface FormulaPointInfoProps {
   point: {
@@ -11,15 +12,24 @@ interface FormulaPointInfoProps {
     mathY: number;
     formula: Formula;
     navigationStepSize?: number;
+    isValid?: boolean;
   } | null;
+  gridPosition?: Point;
+  pixelsPerUnit?: number;
+  measurementUnit?: MeasurementUnit;
 }
 
-const FormulaPointInfo: React.FC<FormulaPointInfoProps> = ({ point }) => {
+const FormulaPointInfo: React.FC<FormulaPointInfoProps> = ({ 
+  point, 
+  gridPosition, 
+  pixelsPerUnit, 
+  measurementUnit 
+}) => {
   const t = useTranslate();
 
   if (!point) return null;
 
-  const { mathX, mathY, formula } = point;
+  const { mathX, mathY, formula, isValid } = point;
   
   // Format the coordinates with appropriate precision
   const formatNumber = (num: number): string => {
