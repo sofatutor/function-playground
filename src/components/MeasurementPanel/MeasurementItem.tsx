@@ -7,6 +7,7 @@ import { AnyShape, MeasurementUnit } from '@/types/shapes';
 import { useTranslate } from '@/utils/translate';
 import { getFormula } from '@/utils/geometryUtils';
 import { useConfig } from '@/context/ConfigContext';
+import { normalizeAngleDegrees } from '@/utils/geometry/rotation';
 
 interface MeasurementItemProps {
   measureKey: string;
@@ -40,9 +41,10 @@ const MeasurementItem: React.FC<MeasurementItemProps> = ({
   
   // Format measurement values
   const formatValue = (key: string, value: string): string => {
-    // For angles, display as integers
+    // For angles, display as integers in the range [-180, 180]
     if (key.startsWith('angle')) {
-      return Math.round(parseFloat(value)).toString();
+      const angle = parseFloat(value);
+      return Math.round(angle).toString();
     }
     // For all other measurements, ensure they have at most 2 decimal places
     return parseFloat(value).toFixed(2);
@@ -70,8 +72,8 @@ const MeasurementItem: React.FC<MeasurementItemProps> = ({
     if (key.startsWith('angle')) {
       return {
         step: "1",
-        min: "0",
-        max: "179"
+        min: "-180",
+        max: "180"
       };
     }
     return {

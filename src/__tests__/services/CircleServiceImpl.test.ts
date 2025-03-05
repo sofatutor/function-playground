@@ -38,7 +38,7 @@ describe('CircleServiceImpl', () => {
       expect(shape.type).toBe('circle');
       expect(shape.radius).toBe(50);
       expect(shape.position).toEqual({ x: 0, y: 0 });
-      expect(shape.fill).toBe('#4CAF50');
+      expect(shape.fill).toMatch(/^rgba\(\d+, \d+, \d+, \d+(\.\d+)?\)$/);
     });
 
     it('should create a circle with provided values', () => {

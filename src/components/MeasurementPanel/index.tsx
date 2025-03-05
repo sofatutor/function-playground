@@ -4,6 +4,7 @@ import { AnyShape, MeasurementUnit } from '@/types/shapes';
 import { useTranslate } from '@/utils/translate';
 import MeasurementItem from './MeasurementItem';
 import ShapeIcon from './ShapeIcon';
+import { normalizeAngleDegrees } from '@/utils/geometry/rotation';
 
 interface MeasurementPanelProps {
   selectedShape: AnyShape | null;
@@ -33,9 +34,12 @@ const MeasurementPanel: React.FC<MeasurementPanelProps> = ({
   // Function to handle saving the edited value
   const handleSaveEdit = () => {
     if (editingKey) {
-      // For angles, ensure we're using integer values
+      // For angles, ensure we're using normalized integer values
       if (editingKey.startsWith('angle')) {
-        const intValue = Math.round(parseFloat(editValue)).toString();
+        const angleValue = parseFloat(editValue);
+        // Normalize angle to the range [-180, 180]
+        const normalizedAngle = normalizeAngleDegrees(angleValue);
+        const intValue = Math.round(normalizedAngle).toString();
         onMeasurementUpdate(editingKey, intValue);
       } else {
         onMeasurementUpdate(editingKey, editValue);

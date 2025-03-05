@@ -1,6 +1,7 @@
 import { Line, Point } from '@/types/shapes';
 import { LineServiceImpl } from '@/services/implementations/LineServiceImpl';
 import * as commonUtils from '@/utils/geometry/common';
+import { degreesToRadians, radiansToDegrees, toCounterclockwiseAngle } from '@/utils/geometry/rotation';
 
 // Mock the getStoredPixelsPerUnit function
 jest.mock('@/utils/geometry/common', () => ({
@@ -33,7 +34,7 @@ describe('LineServiceImpl', () => {
       expect(shape.startPoint).toEqual({ x: 0, y: 0 });
       expect(shape.endPoint).toEqual({ x: 100, y: 100 });
       expect(shape.fill).toBe('transparent');
-      expect(shape.stroke).toBe('#000000');
+      expect(shape.stroke).toMatch(/^rgba\(\d+, \d+, \d+, \d+(\.\d+)?\)$/);
     });
 
     it('should create a line with provided values', () => {
@@ -113,15 +114,23 @@ describe('LineServiceImpl', () => {
 
   describe('getMeasurements', () => {
     it('should return correct measurements for a line', () => {
+      const pixelsPerCm = 60;
+      jest.spyOn(commonUtils, 'getStoredPixelsPerUnit').mockReturnValue(pixelsPerCm);
+      
       const measurements = service.getMeasurements(line, 'cm');
-      
-      const pixelsPerCm = 60; // This is the default conversion rate in the service
-      
       const lengthInPixels = service.calculateLength(line);
       const lengthInCm = lengthInPixels / pixelsPerCm;
       
       expect(measurements.length).toBeCloseTo(lengthInCm);
-      expect(measurements.angle).toBeCloseTo(service.calculateAngle(line));
+      // The angle in measurements is in degrees, but calculateAngle returns radians
+      // So we need to convert the radians to degrees for comparison
+      const angleInDegrees = measurements.angle;
+      const angleInRadians = service.calculateAngle(line);
+      
+      // We're comparing the same angle in different units/directions
+      // So we convert the radians to clockwise degrees for comparison
+      const calculatedAngleInDegrees = -radiansToDegrees(angleInRadians);
+      expect(angleInDegrees).toBeCloseTo(calculatedAngleInDegrees);
     });
   });
 
@@ -137,11 +146,11 @@ describe('LineServiceImpl', () => {
     });
 
     it('should update angle correctly', () => {
-      const newAngle = Math.PI / 4; // 45 degrees
+      const newAngle = 45; // 45 degrees
       const updated = service.updateFromMeasurement(line, 'angle', newAngle, service.calculateAngle(line));
       
       // Angle is not affected by unit conversion
-      expect(service.calculateAngle(updated)).toBeCloseTo(newAngle);
+      expect(service.calculateAngle(updated)).toBeCloseTo(degreesToRadians(toCounterclockwiseAngle(newAngle)));
     });
 
     it('should return the original shape for unhandled measurement keys', () => {

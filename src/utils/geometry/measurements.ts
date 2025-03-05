@@ -1,6 +1,7 @@
 import { AnyShape, Circle, Rectangle, Triangle, Line, MeasurementUnit } from '@/types/shapes';
 import { distanceBetweenPoints } from './common';
 import { calculateTriangleArea, calculateTriangleAngles } from './triangle';
+import { radiansToDegrees } from './rotation';
 
 // Helper function to convert physical measurements to pixels
 export const convertToPixels = (
@@ -111,13 +112,11 @@ export const getShapeMeasurements = (
       // For a line, we only need to display its length
       measurements.length = parseFloat(length.toFixed(2));
       
-      // Calculate the angle with respect to the horizontal
-      const dx = line.endPoint.x - line.startPoint.x;
-      const dy = line.endPoint.y - line.startPoint.y;
-      let angle = Math.atan2(dy, dx) * (180 / Math.PI);
-      
-      // Normalize angle to 0-360 degrees
-      if (angle < 0) angle += 360;
+      // IMPORTANT: Internal model uses radians, UI displays degrees
+      // Convert the line's rotation from radians to degrees for display
+      // The rotation property is set using Math.atan2 which returns angles in the range -π to π
+      // This means our angles in the UI will be in the range -180° to 180°
+      const angle = radiansToDegrees(line.rotation);
       
       measurements.angle = Math.round(angle);
       break;

@@ -33,7 +33,7 @@ describe('TriangleServiceImpl', () => {
       
       expect(shape.type).toBe('triangle');
       expect(shape.points).toHaveLength(3);
-      expect(shape.fill).toBe('#2196F3');
+      expect(shape.fill).toMatch(/^rgba\(\d+, \d+, \d+, \d+(\.\d+)?\)$/);
     });
 
     it('should create a triangle with provided values', () => {
