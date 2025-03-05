@@ -299,12 +299,66 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     
-    // Clean up event listeners when component unmounts
+    // Clean up event listeners on unmount
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [selectedPoint, currentPointInfo, navigateFormulaPoint, setIsShiftPressed, setIsAltPressed]);
+  }, []);
+  
+  // Create a keyboard event handler for shape movement
+  const handleShapeKeyDown = createHandleKeyDown({
+    canvasRef,
+    shapes,
+    activeMode,
+    activeShapeType,
+    selectedShapeId,
+    isDrawing,
+    drawStart,
+    drawCurrent,
+    dragStart,
+    originalPosition,
+    resizeStart,
+    originalSize,
+    rotateStart,
+    originalRotation,
+    pixelsPerUnit,
+    pixelsPerSmallUnit,
+    measurementUnit,
+    gridPosition,
+    setIsDrawing,
+    setDrawStart,
+    setDrawCurrent,
+    setDragStart,
+    setOriginalPosition,
+    setResizeStart,
+    setOriginalSize,
+    setRotateStart,
+    setOriginalRotation,
+    onShapeSelect,
+    onShapeCreate,
+    onShapeMove,
+    onShapeResize,
+    onShapeRotate,
+    onModeChange,
+    serviceFactory
+  });
+  
+  // Function to focus the canvas container
+  const focusCanvas = useCallback(() => {
+    if (canvasRef.current) {
+      canvasRef.current.focus();
+    }
+  }, [canvasRef]);
+
+  // Handle shape selection with focus
+  const handleShapeSelect = useCallback((id: string) => {
+    // Focus the canvas container so keyboard events work
+    focusCanvas();
+    
+    // Call the original onShapeSelect function
+    onShapeSelect(id);
+  }, [onShapeSelect, focusCanvas]);
   
   // Handle calibration completion
   const handleCalibrationComplete = (newPixelsPerUnit: number) => {
@@ -417,7 +471,7 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     };
   }, []); // Only run on mount, not on every prop change
 
-  // Create event handlers using the factory functions
+  // Create mouse event handlers
   const handleMouseDown = createHandleMouseDown({
     canvasRef,
     shapes,
@@ -436,6 +490,51 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     pixelsPerUnit,
     pixelsPerSmallUnit,
     measurementUnit,
+    gridPosition,
+    setIsDrawing,
+    setDrawStart,
+    setDrawCurrent,
+    setDragStart,
+    setOriginalPosition,
+    setResizeStart,
+    setOriginalSize,
+    setRotateStart,
+    setOriginalRotation,
+    onShapeSelect: (id: string | null) => {
+      // Focus the canvas when a shape is selected
+      if (id !== null) {
+        focusCanvas();
+      }
+      onShapeSelect(id);
+    },
+    onShapeCreate,
+    onShapeMove,
+    onShapeResize,
+    onShapeRotate,
+    onModeChange,
+    serviceFactory
+  });
+  
+  // Create keyboard event handler
+  const handleKeyDown = createHandleKeyDown({
+    canvasRef,
+    shapes,
+    activeMode,
+    activeShapeType,
+    selectedShapeId,
+    isDrawing,
+    drawStart,
+    drawCurrent,
+    dragStart,
+    originalPosition,
+    resizeStart,
+    originalSize,
+    rotateStart,
+    originalRotation,
+    pixelsPerUnit,
+    pixelsPerSmallUnit,
+    measurementUnit,
+    gridPosition,
     setIsDrawing,
     setDrawStart,
     setDrawCurrent,
@@ -452,6 +551,33 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     onShapeRotate
   });
   
+  // Simple key up handler
+  const handleKeyUp = useCallback((e: ReactKeyboardEvent<HTMLDivElement>) => {
+    // Add keyboard handling logic if needed
+    console.log('Key up:', e.key);
+  }, []);
+
+  // Add a ref to track if we're already updating the grid position
+  const isUpdatingGridPositionRef = useRef(false);
+
+  // Add a useEffect to log when gridPosition changes
+  useEffect(() => {
+    console.log('GeometryCanvas: gridPosition changed:', gridPosition);
+    
+    // Force a re-render of formulas when grid position changes
+    // This ensures formulas update smoothly during grid dragging
+    if (gridPosition && formulas && formulas.length > 0 && !isUpdatingGridPositionRef.current) {
+      // Set the flag to prevent infinite loops
+      isUpdatingGridPositionRef.current = true;
+      
+      // Using requestAnimationFrame to batch updates
+      requestAnimationFrame(() => {
+        // Clear the flag after the frame is rendered
+        isUpdatingGridPositionRef.current = false;
+      });
+    }
+  }, [gridPosition, formulas]);
+  
   // Clear selected points when a shape is selected
   useEffect(() => {
     if (selectedShapeId) {
@@ -460,45 +586,48 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
   }, [selectedShapeId, clearAllSelectedPoints]);
 
   // Handle mouse move
-  const handleMouseMove = (e: React.MouseEvent) => {
-    // Use the original handler from CanvasEventHandlers but don't clear selected points
-    const originalHandler = createHandleMouseMove({
-      canvasRef,
-      shapes,
-      activeMode,
-      activeShapeType,
-      selectedShapeId,
-      isDrawing,
-      drawStart,
-      drawCurrent,
-      dragStart,
-      originalPosition,
-      resizeStart,
-      originalSize,
-      rotateStart,
-      originalRotation,
-      pixelsPerUnit,
-      pixelsPerSmallUnit,
-      measurementUnit,
-      setIsDrawing,
-      setDrawStart,
-      setDrawCurrent,
-      setDragStart,
-      setOriginalPosition,
-      setResizeStart,
-      setOriginalSize,
-      setRotateStart,
-      setOriginalRotation,
-      onShapeSelect,
-      onShapeCreate,
-      onShapeMove,
-      onShapeResize,
-      onShapeRotate
-    });
-    
-    // Call the original handler
-    originalHandler(e);
-  };
+  const handleMouseMove = createHandleMouseMove({
+    canvasRef,
+    shapes,
+    activeMode,
+    activeShapeType,
+    selectedShapeId,
+    isDrawing,
+    drawStart,
+    drawCurrent,
+    dragStart,
+    originalPosition,
+    resizeStart,
+    originalSize,
+    rotateStart,
+    originalRotation,
+    pixelsPerUnit,
+    pixelsPerSmallUnit,
+    measurementUnit,
+    gridPosition,
+    setIsDrawing,
+    setDrawStart,
+    setDrawCurrent,
+    setDragStart,
+    setOriginalPosition,
+    setResizeStart,
+    setOriginalSize,
+    setRotateStart,
+    setOriginalRotation,
+    onShapeSelect: (id: string | null) => {
+      // Focus the canvas when a shape is selected during mouse move
+      if (id !== null) {
+        focusCanvas();
+      }
+      onShapeSelect(id);
+    },
+    onShapeCreate,
+    onShapeMove,
+    onShapeResize,
+    onShapeRotate,
+    onModeChange,
+    serviceFactory
+  });
 
   const handleMouseUp = createHandleMouseUp({
     canvasRef,
@@ -518,6 +647,7 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     pixelsPerUnit,
     pixelsPerSmallUnit,
     measurementUnit,
+    gridPosition,
     setIsDrawing,
     setDrawStart,
     setDrawCurrent,
@@ -527,12 +657,19 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     setOriginalSize,
     setRotateStart,
     setOriginalRotation,
-    onShapeSelect,
+    onShapeSelect: (id: string | null) => {
+      // Focus the canvas when a shape is selected during mouse up
+      if (id !== null) {
+        focusCanvas();
+      }
+      onShapeSelect(id);
+    },
     onShapeCreate,
     onShapeMove,
     onShapeResize,
     onShapeRotate,
-    onModeChange
+    onModeChange,
+    serviceFactory
   });
 
   const handleResizeStart = createHandleResizeStart({
@@ -562,11 +699,19 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     setOriginalSize,
     setRotateStart,
     setOriginalRotation,
-    onShapeSelect,
+    onShapeSelect: (id: string | null) => {
+      // Focus the canvas when a shape is selected for resizing
+      if (id !== null) {
+        focusCanvas();
+      }
+      onShapeSelect(id);
+    },
     onShapeCreate,
     onShapeMove,
     onShapeResize,
-    onShapeRotate
+    onShapeRotate,
+    onModeChange,
+    serviceFactory
   });
 
   const handleRotateStart = createHandleRotateStart({
@@ -596,11 +741,19 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     setOriginalSize,
     setRotateStart,
     setOriginalRotation,
-    onShapeSelect,
+    onShapeSelect: (id: string | null) => {
+      // Focus the canvas when a shape is selected for rotation
+      if (id !== null) {
+        focusCanvas();
+      }
+      onShapeSelect(id);
+    },
     onShapeCreate,
     onShapeMove,
     onShapeResize,
-    onShapeRotate
+    onShapeRotate,
+    onModeChange,
+    serviceFactory
   });
 
   // Toggle calibration tool
@@ -686,38 +839,6 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
       isFirstLoad.current = false;
     }
   }, [canvasSize, gridPosition]);
-
-  // Add keyboard event handlers if they don't exist
-  const handleKeyDown = useCallback((e: ReactKeyboardEvent<HTMLDivElement>) => {
-    // Add keyboard handling logic if needed
-    console.log('Key down:', e.key);
-  }, []);
-  
-  const handleKeyUp = useCallback((e: ReactKeyboardEvent<HTMLDivElement>) => {
-    // Add keyboard handling logic if needed
-    console.log('Key up:', e.key);
-  }, []);
-
-  // Add a ref to track if we're already updating the grid position
-  const isUpdatingGridPositionRef = useRef(false);
-
-  // Add a useEffect to log when gridPosition changes
-  useEffect(() => {
-    console.log('GeometryCanvas: gridPosition changed:', gridPosition);
-    
-    // Force a re-render of formulas when grid position changes
-    // This ensures formulas update smoothly during grid dragging
-    if (gridPosition && formulas && formulas.length > 0 && !isUpdatingGridPositionRef.current) {
-      // Set the flag to prevent infinite loops
-      isUpdatingGridPositionRef.current = true;
-      
-      // Using requestAnimationFrame to batch updates
-      requestAnimationFrame(() => {
-        // Clear the flag after the frame is rendered
-        isUpdatingGridPositionRef.current = false;
-      });
-    }
-  }, [gridPosition, formulas]);
 
   // Handle formula point selection
   const handleFormulaPointSelect = (point: {
@@ -971,6 +1092,9 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
                 navigationStepSize: newStepSize
               });
             }
+          } else if (selectedShapeId) {
+            // If a shape is selected and no formula point is selected, use the shape movement handler
+            handleShapeKeyDown(e as unknown as KeyboardEvent);
           }
         }}
         onKeyUp={handleKeyUp}
@@ -979,26 +1103,24 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
         onMouseUp={customMouseUpHandler}
         onMouseLeave={customMouseUpHandler}
         onClick={(e) => {
+          // Focus the canvas container when clicking on it
+          focusCanvas();
+          
           // If the click is on a path (part of the formula graph), don't dismiss
           if ((e.target as Element).tagName === 'path') {
             return;
           }
           
-          // If the click is on the info box itself, don't dismiss
-          const infoBox = document.querySelector('.formula-point-info');
-          if (infoBox && infoBox.contains(e.target as Node)) {
+          // If we clicked on a path in this render cycle, don't dismiss
+          if (clickedOnPathRef.current) {
             return;
           }
           
-          // If the click is on the tool button or its container, don't dismiss
-          const toolButton = document.querySelector('.btn-tool');
-          if (toolButton && (toolButton === e.target || toolButton.contains(e.target as Node))) {
-            return;
-          }
-          
-          // At this point, we know we clicked somewhere else on the canvas
-          // So we should dismiss the info box immediately
+          // Otherwise, clear any selected formula point
           clearAllSelectedPoints();
+          
+          // Reset the flag for the next click
+          clickedOnPathRef.current = false;
         }}
       >
         {/* Grid - Pass the persistent grid position */}
@@ -1017,7 +1139,7 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
         {shapes.map(shape => (
           <div 
             key={shape.id}
-            onClick={() => onShapeSelect(shape.id)}
+            onClick={() => handleShapeSelect(shape.id)}
             style={{ cursor: activeMode === 'select' ? 'pointer' : 'default' }}
           >
             <ShapeRenderer
