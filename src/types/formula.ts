@@ -1,4 +1,3 @@
-
 import { Point } from "./shapes";
 
 export type FormulaType = 'function' | 'parametric' | 'polar';
@@ -12,7 +11,7 @@ export interface Formula {
   xRange: [number, number]; // For function and parametric
   tRange?: [number, number]; // For parametric and polar
   samples: number; // Number of points to sample
-  visible: boolean;
+  scaleFactor: number; // Scale factor to stretch or flatten the graph (1.0 is normal)
 }
 
 export interface FormulaPoint {
@@ -21,7 +20,7 @@ export interface FormulaPoint {
   isValid: boolean; // Flag to track discontinuities/undefined points
 }
 
-export type FormulaExampleCategory = 'basic' | 'trigonometric' | 'exponential' | 'parametric' | 'special';
+export type FormulaExampleCategory = 'basic' | 'trigonometric' | 'exponential' | 'parametric' | 'special' | 'polynomial';
 
 export interface FormulaExample {
   name: string;
