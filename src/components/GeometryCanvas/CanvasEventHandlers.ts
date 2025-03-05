@@ -2,8 +2,9 @@ import React from 'react';
 import { AnyShape, Point, OperationMode, ShapeType, Circle, Rectangle, Triangle } from '@/types/shapes';
 import { getCanvasPoint, getShapeAtPosition, rotatePoint } from './CanvasUtils';
 import { snapToGrid, getGridModifiers } from '@/utils/grid/gridUtils';
+import { ShapeServiceFactory } from '@/services/ShapeService';
 
-interface EventHandlerParams {
+export interface EventHandlerParams {
   canvasRef: React.RefObject<HTMLDivElement>;
   shapes: AnyShape[];
   activeMode: OperationMode;
@@ -37,6 +38,7 @@ interface EventHandlerParams {
   onShapeResize: (id: string, factor: number) => void;
   onShapeRotate: (id: string, angle: number) => void;
   onModeChange?: (mode: OperationMode) => void;
+  serviceFactory?: ShapeServiceFactory;
 }
 
 export const createHandleMouseDown = (params: EventHandlerParams) => {

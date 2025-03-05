@@ -8,16 +8,22 @@ interface FormulaGraphProps {
   formula: Formula;
   gridPosition: Point;
   pixelsPerUnit: number;
-  onPointSelect?: (point: { x: number, y: number, mathX: number, mathY: number, formula: Formula, pointIndex: number, allPoints: FormulaPoint[] } | null) => void;
-  globalSelectedPoint?: { 
-    x: number, 
-    y: number, 
-    mathX: number, 
-    mathY: number, 
-    formula: Formula,
-    pointIndex?: number,
-    allPoints?: FormulaPoint[]
-  } | null;
+  onPointSelect?: (point: FormulaPoint & {
+    mathX: number;
+    mathY: number;
+    formula: Formula;
+    pointIndex?: number;
+    allPoints?: FormulaPoint[];
+    navigationStepSize?: number;
+  } | null) => void;
+  globalSelectedPoint?: (FormulaPoint & {
+    mathX: number;
+    mathY: number;
+    formula: Formula;
+    pointIndex?: number;
+    allPoints?: FormulaPoint[];
+    navigationStepSize?: number;
+  }) | null;
 }
 
 const FormulaGraph: React.FC<FormulaGraphProps> = ({ 
@@ -291,6 +297,7 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
       onPointSelect({
         x: point.x,
         y: point.y,
+        isValid: true,
         mathX,
         mathY,
         formula,
