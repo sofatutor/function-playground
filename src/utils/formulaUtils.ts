@@ -2,7 +2,7 @@ import { Formula, FormulaPoint, FormulaExample, FormulaExampleCategory, FormulaT
 import { Point } from "@/types/shapes";
 
 // Constants for formula evaluation
-const MAX_SAMPLES = 1000;
+const MAX_SAMPLES = 2000;
 const MIN_SAMPLES = 100;
 
 /**
@@ -42,6 +42,28 @@ export const evaluateFunction = (
                         expression.includes('log(') ||
                         expression.includes('ln(');
   
+  // Check if this is a high-frequency trigonometric function
+  const hasTrigFunction = expression.includes('Math.sin(') || 
+                          expression.includes('Math.cos(') ||
+                          expression.includes('sin(') || 
+                          expression.includes('cos(');
+                          
+  // Check for multipliers that indicate high frequency
+  const hasHighFrequency = hasTrigFunction && (
+    expression.includes('* x') || 
+    expression.includes('*x') ||
+    expression.includes('x *') ||
+    expression.includes('x*')
+  );
+  
+  // If the expression contains log(x) directly, we need x > 0
+  // If it contains log(-x) or log(Math.abs(x)), we can allow negative values
+  const allowsNegativeX = isLogarithmic && (
+    expression.includes('Math.abs(x)') || 
+    expression.includes('-x') ||
+    expression.includes('(-x)')
+  );
+  
   // For tangent functions, we need to restrict the domain to avoid multiple periods
   let visibleXRange: [number, number];
   
@@ -57,6 +79,25 @@ export const evaluateFunction = (
     
     visibleXRange = [periodStart, periodEnd];
     console.log(`Plotting tangent function with central period: [${periodStart}, ${periodEnd}]`);
+  } else if (isLogarithmic) {
+    // For logarithmic functions, restrict the domain to positive values
+    // Use a small positive value as the minimum to avoid the asymptote at x=0
+    const minX = 0.00001; // Even smaller minimum value for better coverage
+    
+    // Set the visible range based on the expression
+    if (allowsNegativeX) {
+      visibleXRange = [
+        Math.max(leftEdgeX, xRange[0]), 
+        Math.min(rightEdgeX, xRange[1])
+      ];
+      console.log(`Plotting logarithmic function with abs/negative handling: [${visibleXRange[0]}, ${visibleXRange[1]}]`);
+    } else {
+      visibleXRange = [
+        Math.max(minX, leftEdgeX, xRange[0]), 
+        Math.min(rightEdgeX, xRange[1])
+      ];
+      console.log(`Plotting logarithmic function with restricted domain: [${visibleXRange[0]}, ${visibleXRange[1]}]`);
+    }
   } else {
     // For other functions, use the visible range of the grid
     visibleXRange = [
@@ -65,8 +106,112 @@ export const evaluateFunction = (
     ];
   }
   
+  // For high-frequency trigonometric functions, we need to ensure we have enough samples
+  // to capture the oscillations. We'll estimate the number of oscillations in the visible range
+  // and adjust the number of samples accordingly.
+  let adjustedSamples = actualSamples;
+  
+  if (hasHighFrequency) {
+    // Try to estimate the frequency by looking for multipliers
+    let frequencyFactor = 1;
+    
+    // Look for patterns like "2 * Math.PI * x" or similar
+    if (expression.includes('Math.PI')) {
+      // Extract the coefficient before Math.PI if possible
+      const piMatch = expression.match(/(\d+)\s*\*\s*Math\.PI/);
+      if (piMatch && piMatch[1]) {
+        frequencyFactor = parseInt(piMatch[1], 10);
+      } else {
+        frequencyFactor = 1; // Default if we can't extract a specific value
+      }
+    }
+    
+    // Estimate the number of oscillations in the visible range
+    const visibleRange = visibleXRange[1] - visibleXRange[0];
+    const estimatedOscillations = frequencyFactor * visibleRange;
+    
+    // We want at least 20 samples per oscillation for smooth rendering
+    const recommendedSamples = Math.ceil(estimatedOscillations * 20);
+    
+    // Use the higher of our original samples or the recommended samples
+    adjustedSamples = Math.max(actualSamples, recommendedSamples);
+    
+    // Cap at MAX_SAMPLES to avoid performance issues
+    adjustedSamples = Math.min(adjustedSamples, MAX_SAMPLES);
+    
+    console.log(`High-frequency function detected. Estimated oscillations: ${estimatedOscillations}, using ${adjustedSamples} samples`);
+  }
+  
   // Calculate the step size based on the visible range and number of samples
-  const xStep = (visibleXRange[1] - visibleXRange[0]) / actualSamples;
+  const xStep = (visibleXRange[1] - visibleXRange[0]) / (hasHighFrequency ? adjustedSamples : actualSamples);
+  
+  // For logarithmic functions, use adaptive sampling to concentrate more points near the asymptote
+  const xValues: number[] = [];
+  if (isLogarithmic && !allowsNegativeX) {
+    // Create a logarithmically spaced set of x values to better capture the curve near x=0
+    // This puts more points near the asymptote where the function changes rapidly
+    const logStart = Math.log(visibleXRange[0]);
+    const logEnd = Math.log(visibleXRange[1]);
+    const logStep = (logEnd - logStart) / (hasHighFrequency ? adjustedSamples : actualSamples);
+    
+    for (let i = 0; i <= (hasHighFrequency ? adjustedSamples : actualSamples); i++) {
+      const logX = logStart + i * logStep;
+      xValues.push(Math.exp(logX));
+    }
+    
+    // Add some extra points very close to the asymptote
+    if (visibleXRange[0] < 0.1) {
+      // Add more extra points between minX and 0.1 for better coverage
+      const extraPoints = 40; // Increased from 20 to 40
+      const extraMinX = 0.00001; // Even smaller minimum value
+      const extraMaxX = 0.1;
+      const extraLogStart = Math.log(extraMinX);
+      const extraLogEnd = Math.log(extraMaxX);
+      const extraLogStep = (extraLogEnd - extraLogStart) / extraPoints;
+      
+      for (let i = 0; i <= extraPoints; i++) {
+        const logX = extraLogStart + i * extraLogStep;
+        const x = Math.exp(logX);
+        if (!xValues.includes(x)) {
+          xValues.push(x);
+        }
+      }
+      
+      // Add even more points extremely close to zero for better asymptote visualization
+      const microPoints = 20;
+      const microMinX = 0.000001; // Extremely small value
+      const microMaxX = 0.0001;
+      const microLogStart = Math.log(microMinX);
+      const microLogEnd = Math.log(microMaxX);
+      const microLogStep = (microLogEnd - microLogStart) / microPoints;
+      
+      for (let i = 0; i <= microPoints; i++) {
+        const logX = microLogStart + i * microLogStep;
+        const x = Math.exp(logX);
+        if (!xValues.includes(x)) {
+          xValues.push(x);
+        }
+      }
+      
+      // Sort the x values
+      xValues.sort((a, b) => a - b);
+    }
+    
+    console.log(`Using ${xValues.length} adaptive sample points for logarithmic function`);
+  } else if (hasHighFrequency) {
+    // For high-frequency functions, use a higher density of points
+    // Use the adjusted samples value we calculated earlier
+    for (let i = 0; i <= adjustedSamples; i++) {
+      xValues.push(visibleXRange[0] + i * xStep);
+    }
+    
+    console.log(`Using ${adjustedSamples + 1} sample points for high-frequency function`);
+  } else {
+    // For other functions, use regular linear spacing
+    for (let i = 0; i <= actualSamples; i++) {
+      xValues.push(visibleXRange[0] + i * xStep);
+    }
+  }
   
   // Generate points
   const points: FormulaPoint[] = [];
@@ -87,17 +232,19 @@ export const evaluateFunction = (
       }
     `);
     
-    // Sample the function at regular intervals
-    for (let i = 0; i <= actualSamples; i++) {
-      const x = visibleXRange[0] + i * xStep;
+    // Sample the function at the calculated x values
+    for (const x of xValues) {
       let y: number;
       
       try {
-        // For logarithmic functions with expressions like Math.log(2/x),
-        // we need to handle the case where x approaches 0
-        if (isLogarithmic && expression.includes('/x') && Math.abs(x) < 0.001) {
-          // Skip points very close to the asymptote
-          y = NaN;
+        // For logarithmic functions, we need to handle domain restrictions
+        if (isLogarithmic) {
+          // Skip evaluation for non-positive values unless the expression handles them
+          if (x <= 0 && !allowsNegativeX) {
+            y = NaN;
+          } else {
+            y = fn(x);
+          }
         } else {
           y = fn(x);
         }
@@ -272,10 +419,10 @@ export const evaluatePolar = (
 };
 
 /**
- * Generate points for any type of formula
+ * Evaluate a formula and generate points for rendering
  */
 export const evaluateFormula = (
-  formula: Formula, 
+  formula: Formula,
   gridPosition: Point,
   pixelsPerUnit: number,
   isDragging: boolean = false
@@ -295,12 +442,59 @@ export const evaluateFormula = (
                         formula.expression.includes('log(') ||
                         formula.expression.includes('ln(');
   
+  // Check if this is a high-frequency trigonometric function
+  const hasTrigFunction = formula.expression.includes('Math.sin(') || 
+                          formula.expression.includes('Math.cos(') ||
+                          formula.expression.includes('sin(') || 
+                          formula.expression.includes('cos(');
+                          
+  // Check for multipliers that indicate high frequency
+  const hasHighFrequency = hasTrigFunction && (
+    formula.expression.includes('* x') || 
+    formula.expression.includes('*x') ||
+    formula.expression.includes('x *') ||
+    formula.expression.includes('x*')
+  );
+  
   // For logarithmic functions, especially those with asymptotes like Math.log(2/x),
   // we need more samples for better resolution
   let samples = dragSamples;
   if (isLogarithmic && !isDragging) {
-    // Use more samples for logarithmic functions when not dragging
+    // Use significantly more samples for logarithmic functions when not dragging
+    samples = Math.min(formula.samples * 4, MAX_SAMPLES);
+    console.log(`Using ${samples} samples for logarithmic function`);
+  } else if (isTangent && !isDragging) {
+    // Use more samples for tangent functions when not dragging
     samples = Math.min(formula.samples * 2, MAX_SAMPLES);
+  } else if (hasHighFrequency && !isDragging) {
+    // Use many more samples for high-frequency trigonometric functions
+    // The higher the frequency, the more samples we need
+    
+    // Try to estimate the frequency by looking for multipliers
+    let frequencyMultiplier = 1;
+    
+    // Look for patterns like "2 * Math.PI * x" or similar
+    if (formula.expression.includes('Math.PI')) {
+      // If we have PI in the expression, it's likely a frequency multiplier
+      if (formula.expression.includes('2 * Math.PI') || formula.expression.includes('2*Math.PI')) {
+        frequencyMultiplier = 4; // Double frequency needs 4x samples
+      } else if (formula.expression.includes('3 * Math.PI') || formula.expression.includes('3*Math.PI')) {
+        frequencyMultiplier = 6; // Triple frequency needs 6x samples
+      } else if (formula.expression.includes('4 * Math.PI') || formula.expression.includes('4*Math.PI')) {
+        frequencyMultiplier = 8; // Quadruple frequency needs 8x samples
+      } else if (formula.expression.includes('5 * Math.PI') || formula.expression.includes('5*Math.PI')) {
+        frequencyMultiplier = 10; // 5x frequency needs 10x samples
+      } else {
+        frequencyMultiplier = 3; // Default for any PI-based frequency
+      }
+    } else {
+      // For other high-frequency patterns, use a default multiplier
+      frequencyMultiplier = 3;
+    }
+    
+    // Calculate samples based on frequency
+    samples = Math.min(formula.samples * frequencyMultiplier, MAX_SAMPLES);
+    console.log(`Using ${samples} samples for high-frequency trigonometric function (multiplier: ${frequencyMultiplier})`);
   }
   
   // Always use function evaluation for all formula types

@@ -77,6 +77,12 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
                         formula.expression.includes('log(') ||
                         formula.expression.includes('ln(');
 
+  // Check if this is a trigonometric function
+  const hasTrigFunction = formula.expression.includes('Math.sin(') || 
+                          formula.expression.includes('Math.cos(') ||
+                          formula.expression.includes('sin(') || 
+                          formula.expression.includes('cos(');
+
   // Calculate points for the formula
   const points = useMemo(() => {
     // Set updating state to true
@@ -203,9 +209,13 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
     // Function to check if a point is within the visible canvas area with some margin
     const isWithinCanvas = (x: number, y: number): boolean => {
       // Use a larger margin for logarithmic functions to allow for asymptotic behavior
-      const margin = isLogarithmic ? 5000 : 1000; // Increased margin for logarithmic functions
+      const margin = isLogarithmic ? 20000 : 1000; // Even larger margin for logarithmic functions
+      
+      // For logarithmic functions, be more permissive with y-bounds to capture the full curve
+      const yMargin = isLogarithmic ? 50000 : 1000;
+      
       return x >= -margin && x <= canvasWidth + margin && 
-             y >= -margin && y <= canvasHeight + margin;
+             y >= -yMargin && y <= canvasHeight + yMargin;
     };
 
     // Function to detect large jumps in y values that indicate discontinuities
@@ -218,7 +228,50 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
       if (isTangent) {
         MAX_JUMP = 50; // Stricter for tangent functions
       } else if (isLogarithmic) {
-        MAX_JUMP = 500; // More lenient for logarithmic functions
+        MAX_JUMP = 2000; // Much more lenient for logarithmic functions
+        
+        // For logarithmic functions, also check for horizontal proximity to the y-axis
+        // This helps detect the asymptote at x=0
+        const isNearYAxis = (Math.abs(p1.x - gridPosition.x) < 10 * pixelsPerUnit) || 
+                            (Math.abs(p2.x - gridPosition.x) < 10 * pixelsPerUnit);
+        
+        if (isNearYAxis) {
+          // Check if the points are on opposite sides of the y-axis
+          const p1Left = p1.x < gridPosition.x;
+          const p2Left = p2.x < gridPosition.x;
+          
+          if (p1Left !== p2Left) {
+            return true; // Force a discontinuity when crossing the y-axis
+          }
+          
+          // Also check for extreme y-value differences near the y-axis
+          if (Math.abs(p2.y - p1.y) > MAX_JUMP / 2) {
+            return true;
+          }
+        }
+      } else if (hasTrigFunction) {
+        // For high-frequency trigonometric functions, we need to be more lenient
+        // with discontinuity detection to avoid breaking the curve unnecessarily
+        
+        // Check if this is likely a high-frequency function
+        const hasHighFrequency = formula.expression.includes('Math.PI') || 
+                                formula.expression.includes('* x') || 
+                                formula.expression.includes('*x');
+        
+        if (hasHighFrequency) {
+          // For high-frequency functions, use a more lenient threshold
+          MAX_JUMP = 200;
+          
+          // Also check the horizontal distance between points
+          // If points are very close horizontally but far apart vertically,
+          // it's more likely to be a legitimate steep curve rather than a discontinuity
+          const horizontalDistance = Math.abs(p2.x - p1.x);
+          
+          // If points are very close horizontally, be more lenient with vertical jumps
+          if (horizontalDistance < 2) {
+            MAX_JUMP = 400; // Even more lenient for very close points
+          }
+        }
       }
       
       return Math.abs(p2.y - p1.y) > MAX_JUMP;
