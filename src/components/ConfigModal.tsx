@@ -22,20 +22,26 @@ const ConfigModal: React.FC = () => {
   const [apiKeyInput, setApiKeyInput] = useState(openaiApiKey || '');
   const t = useTranslate();
   
+  // Update input when openaiApiKey changes (e.g., on initial load)
+  useEffect(() => {
+    setApiKeyInput(openaiApiKey || '');
+  }, [openaiApiKey]);
+  
   // Auto-save API key when it changes
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
+    const timeoutId = setTimeout(async () => {
       if (apiKeyInput !== openaiApiKey) {
-        setOpenaiApiKey(apiKeyInput.trim() || null);
+        console.log('Saving API key:', apiKeyInput ? '(key provided)' : '(empty)');
+        await setOpenaiApiKey(apiKeyInput.trim() || null);
       }
     }, 500); // Debounce for 500ms
     
     return () => clearTimeout(timeoutId);
   }, [apiKeyInput, openaiApiKey, setOpenaiApiKey]);
   
-  const handleClearApiKey = () => {
+  const handleClearApiKey = async () => {
     setApiKeyInput('');
-    setOpenaiApiKey(null);
+    await setOpenaiApiKey(null);
   };
   
   const handleLanguageChange = (value: string) => {
