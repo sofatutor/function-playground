@@ -2,7 +2,6 @@ import React, { useRef, useState, useEffect, useCallback, KeyboardEvent as React
 import CanvasGrid from '../CanvasGrid/index';
 import ShapeRenderer from './ShapeRenderer';
 import PreviewShape from './PreviewShape';
-import CalibrationButton from './CalibrationButton';
 import FormulaGraph from '../FormulaGraph';
 import UnifiedInfoPanel from '../UnifiedInfoPanel';
 import { AnyShape, Point, OperationMode, ShapeType, MeasurementUnit } from '@/types/shapes';
@@ -386,6 +385,8 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
   
   // Update pixel values when measurement unit changes
   useEffect(() => {
+    console.log('GeometryCanvas: Measurement unit changed to', measurementUnit);
+    
     // Default to 'cm' if measurementUnit is undefined
     const unit = measurementUnit || 'cm';
     
@@ -401,9 +402,15 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
       setPixelsPerSmallUnit(storedValue / 10); // 1mm = 1/10th of a cm
     }
     
-    // We don't need to adjust any positions here since the CanvasGrid component
-    // will maintain its position when the unit changes
-  }, [measurementUnit]);
+    // Force a redraw of the canvas
+    if (canvasRef.current) {
+      const rect = canvasRef.current.getBoundingClientRect();
+      setCanvasSize({
+        width: rect.width,
+        height: rect.height
+      });
+    }
+  }, [measurementUnit, canvasRef]);
 
   // Clear existing calibration values and use the new defaults
   // This effect should only run once on mount
@@ -1147,15 +1154,6 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
 
   return (
     <div className="relative w-full h-full">
-      {/* Calibration button and tool */}
-      <CalibrationButton
-        showCalibration={showCalibration}
-        toggleCalibration={toggleCalibration}
-        measurementUnit={measurementUnit}
-        pixelsPerUnit={pixelsPerUnit}
-        onCalibrationComplete={handleCalibrationComplete}
-      />
-      
       <div 
         ref={canvasRef}
         className="canvas-container relative w-full h-full overflow-hidden"
