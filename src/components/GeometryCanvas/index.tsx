@@ -45,6 +45,7 @@ interface GeometryCanvasProps {
   onShapeMove: (id: string, newPosition: Point) => void;
   onShapeResize: (id: string, factor: number) => void;
   onShapeRotate: (id: string, angle: number) => void;
+  onShapeDelete?: (id: string) => void;
   onModeChange?: (mode: OperationMode) => void;
   onMoveAllShapes?: (dx: number, dy: number) => void;
   onGridPositionChange?: (newPosition: Point) => void;
@@ -66,6 +67,7 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
   onShapeMove,
   onShapeResize,
   onShapeRotate,
+  onShapeDelete,
   onModeChange,
   onMoveAllShapes,
   onGridPositionChange,
@@ -342,6 +344,7 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     onShapeMove,
     onShapeResize,
     onShapeRotate,
+    onShapeDelete,
     onModeChange,
     serviceFactory
   });
@@ -563,7 +566,8 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     onShapeCreate,
     onShapeMove,
     onShapeResize,
-    onShapeRotate
+    onShapeRotate,
+    onShapeDelete
   });
   
   // Simple key up handler

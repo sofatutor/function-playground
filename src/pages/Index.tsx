@@ -253,6 +253,7 @@ const Index = () => {
                 onShapeMove={moveShape}
                 onShapeResize={resizeShape}
                 onShapeRotate={rotateShape}
+                onShapeDelete={deleteShape}
                 onModeChange={setActiveMode}
                 onMoveAllShapes={handleMoveAllShapes}
                 onGridPositionChange={handleGridPositionChange}
