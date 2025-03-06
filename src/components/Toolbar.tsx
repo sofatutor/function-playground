@@ -104,8 +104,15 @@ const Toolbar: React.FC<ToolbarProps> = ({
         <Ruler className="h-3 w-3 sm:h-4 sm:w-4" />
       </ToolButton>
       
-      <Separator orientation="vertical" className="h-6 sm:h-8 mx-0.5 sm:mx-1" />
-      
+      <ToolButton 
+        active={activeMode === 'rotate'}
+        onClick={() => onModeChange('rotate')}
+        disabled={!hasSelectedShape}
+        tooltip={t('tooltips.rotate')}
+      >
+        <RotateCw className="h-3 w-3 sm:h-4 sm:w-4" />
+      </ToolButton>
+
       {onToggleFormulaEditor && (
         <>
           <ToolButton 
@@ -120,26 +127,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
           <Separator orientation="vertical" className="h-6 sm:h-8 mx-0.5 sm:mx-1" />
         </>
       )}
-      
-      <ToolButton 
-        active={activeMode === 'rotate'}
-        onClick={() => onModeChange('rotate')}
-        disabled={!hasSelectedShape}
-        tooltip={t('tooltips.rotate')}
-      >
-        <RotateCw className="h-3 w-3 sm:h-4 sm:w-4" />
-      </ToolButton>
-      
-      <Separator orientation="vertical" className="h-6 sm:h-8 mx-0.5 sm:mx-1" />
-      
-      <ToolButton 
-        onClick={onDelete}
-        disabled={!canDelete}
-        tooltip={t('tooltips.delete')}
-        variant="destructive"
-      >
-        <Trash className="h-3 w-3 sm:h-4 sm:w-4" />
-      </ToolButton>
     </div>
   );
 };
