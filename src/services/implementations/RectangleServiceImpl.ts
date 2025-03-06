@@ -74,6 +74,10 @@ export class RectangleServiceImpl implements RectangleService {
       result = this.updateHeight(result, params.height);
     }
     
+    if (params.scale !== undefined) {
+      result = this.scaleRectangle(result, params.scale, params.scale);
+    }
+    
     return result;
   }
   
@@ -188,36 +192,42 @@ export class RectangleServiceImpl implements RectangleService {
         return this.updateHeight(shape, newHeightInPixels);
       }
       case 'area': {
-        // Convert area from square units to square pixels
-        const newAreaInPixels = newValue * pixelsPerUnit * pixelsPerUnit;
-        const currentArea = this.calculateArea(shape);
+        // Calculate current area in square units
+        const currentWidthInUnits = shape.width / pixelsPerUnit;
+        const currentHeightInUnits = shape.height / pixelsPerUnit;
+        const currentAreaInUnits = currentWidthInUnits * currentHeightInUnits;
         
         // Calculate scale factor using square root of area ratio
-        const scaleFactor = Math.sqrt(newAreaInPixels / currentArea);
+        const scaleFactor = Math.sqrt(newValue / currentAreaInUnits);
         
-        // Scale both width and height by the same factor to maintain aspect ratio
+        // Scale both width and height by the same factor
         return this.scaleRectangle(shape, scaleFactor, scaleFactor);
       }
       case 'perimeter': {
-        // Convert perimeter from units to pixels
-        const newPerimeterInPixels = newValue * pixelsPerUnit;
-        const currentPerimeter = this.calculatePerimeter(shape);
+        // Calculate current perimeter in units
+        const currentWidthInUnits = shape.width / pixelsPerUnit;
+        const currentHeightInUnits = shape.height / pixelsPerUnit;
+        const currentPerimeterInUnits = 2 * (currentWidthInUnits + currentHeightInUnits);
         
         // Calculate scale factor using perimeter ratio
-        const scaleFactor = newPerimeterInPixels / currentPerimeter;
+        const scaleFactor = newValue / currentPerimeterInUnits;
         
-        // Scale both width and height by the same factor to maintain aspect ratio
+        // Scale both width and height by the same factor
         return this.scaleRectangle(shape, scaleFactor, scaleFactor);
       }
       case 'diagonal': {
-        // Convert diagonal from units to pixels
-        const newDiagonalInPixels = newValue * pixelsPerUnit;
-        const currentDiagonal = this.calculateDiagonal(shape);
+        // Calculate current diagonal in units
+        const currentWidthInUnits = shape.width / pixelsPerUnit;
+        const currentHeightInUnits = shape.height / pixelsPerUnit;
+        const currentDiagonalInUnits = Math.sqrt(
+          currentWidthInUnits * currentWidthInUnits + 
+          currentHeightInUnits * currentHeightInUnits
+        );
         
         // Calculate scale factor using diagonal ratio
-        const scaleFactor = newDiagonalInPixels / currentDiagonal;
+        const scaleFactor = newValue / currentDiagonalInUnits;
         
-        // Scale both width and height by the same factor to maintain aspect ratio
+        // Scale both width and height by the same factor
         return this.scaleRectangle(shape, scaleFactor, scaleFactor);
       }
       default:
