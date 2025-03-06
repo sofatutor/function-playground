@@ -909,11 +909,8 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
         onFormulaSelect(point.formula.id);
       }
       
-      // If we have a mode change handler, switch to formula mode
-      // This will open the formula editor if it's not already open
-      if (onModeChange) {
-        onModeChange('select');
-      }
+      // We no longer automatically change the mode or open the formula editor
+      // This allows the user to view formula points without opening the editor
     } else {
       setSelectedPoint(null);
       setCurrentPointInfo(null);

@@ -248,6 +248,9 @@ const Index = () => {
       } else if (newState && formulas.length > 0 && !selectedFormulaId) {
         // If opening and there are formulas but none selected, select the first one
         setSelectedFormulaId(formulas[0].id);
+      } else if (!newState) {
+        // If closing the editor, we should clear the selected formula to prevent auto-reopening
+        setSelectedFormulaId(null);
       }
       
       return newState;
@@ -257,7 +260,9 @@ const Index = () => {
   // Open formula editor when a formula is selected (e.g., by clicking a point on the graph)
   useEffect(() => {
     // If a formula is selected but the editor is not open, open it
+    // But only if the selection wasn't triggered by the toggle function
     if (selectedFormulaId && !isFormulaEditorOpen) {
+      // This is typically triggered when clicking on a formula point in the graph
       setIsFormulaEditorOpen(true);
     }
   }, [selectedFormulaId, isFormulaEditorOpen]);
