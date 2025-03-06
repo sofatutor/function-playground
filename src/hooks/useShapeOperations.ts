@@ -10,7 +10,7 @@ import { getStoredPixelsPerUnit } from '@/utils/geometry/common';
 import { getShapeMeasurements, convertToPixels, convertFromPixels } from '@/utils/geometry/measurements';
 // Import URL encoding utilities
 import { 
-  updateUrlWithShapes, 
+  updateUrlWithData, 
   getShapesFromUrl, 
   getGridPositionFromUrl 
 } from '@/utils/urlEncoding';
@@ -84,7 +84,7 @@ export function useShapeOperations() {
       }
 
       gridUpdateTimeoutRef.current = setTimeout(() => {
-        updateUrlWithShapes(shapes, gridPosition);
+        updateUrlWithData(shapes, [], gridPosition);
         gridUpdateTimeoutRef.current = null;
       }, 300);
     }
@@ -183,7 +183,7 @@ export function useShapeOperations() {
     setShapes(prevShapes => {
       const updatedShapes = [...prevShapes, newShape];
       // Update URL with the new shapes
-      updateUrlWithShapes(updatedShapes, gridPosition);
+      updateUrlWithData(updatedShapes, [], gridPosition);
       return updatedShapes;
     });
     
@@ -266,7 +266,7 @@ export function useShapeOperations() {
         });
         
         // Update URL with the new shape positions
-        updateUrlWithShapes(updatedShapes, gridPosition);
+        updateUrlWithData(updatedShapes, [], gridPosition);
         return updatedShapes;
       });
       
@@ -284,7 +284,7 @@ export function useShapeOperations() {
       });
       
       // Update URL with the new shape positions
-      updateUrlWithShapes(updatedShapes, gridPosition);
+      updateUrlWithData(updatedShapes, [], gridPosition);
       return updatedShapes;
     });
   }, [gridPosition, handleSnapToGrid, shapes, serviceFactory]);
@@ -303,7 +303,7 @@ export function useShapeOperations() {
       });
       
       // Update URL with the resized shapes
-      updateUrlWithShapes(updatedShapes, gridPosition);
+      updateUrlWithData(updatedShapes, [], gridPosition);
       return updatedShapes;
     });
   }, [gridPosition, serviceFactory]);
@@ -322,7 +322,7 @@ export function useShapeOperations() {
       });
       
       // Update URL with the rotated shapes
-      updateUrlWithShapes(updatedShapes, gridPosition);
+      updateUrlWithData(updatedShapes, [], gridPosition);
       return updatedShapes;
     });
   }, [gridPosition, serviceFactory]);
@@ -332,7 +332,7 @@ export function useShapeOperations() {
     setShapes(prevShapes => {
       const updatedShapes = prevShapes.filter(shape => shape.id !== id);
       // Update URL after deleting the shape
-      updateUrlWithShapes(updatedShapes, gridPosition);
+      updateUrlWithData(updatedShapes, [], gridPosition);
       return updatedShapes;
     });
     if (selectedShapeId === id) {
@@ -348,7 +348,7 @@ export function useShapeOperations() {
     // Don't reset grid position to preserve formulas/plots at their current position
     // setGridPosition(null);
     // Update URL with empty shapes but keep the current grid position
-    updateUrlWithShapes([], gridPosition);
+    updateUrlWithData([], [], gridPosition);
     toast.info("All shapes cleared, plots preserved");
   }, [gridPosition]);
   
@@ -420,7 +420,7 @@ export function useShapeOperations() {
       });
       
       // Update URL with the updated shapes
-      updateUrlWithShapes(updatedShapes, gridPosition);
+      updateUrlWithData(updatedShapes, [], gridPosition);
       return updatedShapes;
     });
     
@@ -430,7 +430,7 @@ export function useShapeOperations() {
   // Function to share the current canvas state via URL
   const shareCanvasUrl = useCallback(() => {
     // Create a URL with the current shapes and grid position
-    updateUrlWithShapes(shapes, gridPosition);
+    updateUrlWithData(shapes, [], gridPosition);
     
     // Copy the URL to clipboard
     navigator.clipboard.writeText(window.location.href)
