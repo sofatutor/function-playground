@@ -131,7 +131,7 @@
   "configModal": {
     "title": "Configuración",
     "description": "Gestionar ajustes y preferencias de la aplicación",
-    "openButton": "Abrir Ajustes",
+    "openButton": "Ajustes Globales",
     "tabs": {
       "general": "General",
       "openai": "API de OpenAI",
@@ -139,7 +139,9 @@
     },
     "general": {
       "title": "Ajustes Generales",
-      "description": "Configurar ajustes básicos de la aplicación"
+      "description": "Configurar ajustes básicos de la aplicación",
+      "languageLabel": "Idioma",
+      "languagePlaceholder": "Seleccionar idioma"
     },
     "openai": {
       "title": "Ajustes de la API de OpenAI",
@@ -164,6 +166,19 @@
       "pixelsPerUnit": "píxeles por {unit}",
       "cancelButton": "Cancelar",
       "applyButton": "Aplicar Calibración"
+    }
+  },
+  "componentConfigModal": {
+    "title": "Ajustes del Lienzo",
+    "description": "Configurar ajustes específicos del lienzo y calibración",
+    "openButton": "Ajustes del Lienzo",
+    "tabs": {
+      "units": "Unidades de Medida",
+      "calibration": "Calibración de Pantalla"
+    },
+    "units": {
+      "title": "Unidades de Medida",
+      "description": "Configurar las unidades utilizadas para mediciones en este lienzo"
     }
   },
   "enterFullscreen": "Entrar en Pantalla Completa",

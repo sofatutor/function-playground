@@ -131,7 +131,7 @@
   "configModal": {
     "title": "Konfiguration",
     "description": "Anwendungseinstellungen und Präferenzen verwalten",
-    "openButton": "Einstellungen öffnen",
+    "openButton": "Globale Einstellungen",
     "tabs": {
       "general": "Allgemein",
       "openai": "OpenAI API",
@@ -139,7 +139,9 @@
     },
     "general": {
       "title": "Allgemeine Einstellungen",
-      "description": "Grundlegende Anwendungseinstellungen konfigurieren"
+      "description": "Grundlegende Anwendungseinstellungen konfigurieren",
+      "languageLabel": "Sprache",
+      "languagePlaceholder": "Sprache auswählen"
     },
     "openai": {
       "title": "OpenAI API Einstellungen",
@@ -164,6 +166,19 @@
       "pixelsPerUnit": "Pixel pro {unit}",
       "cancelButton": "Abbrechen",
       "applyButton": "Kalibrierung anwenden"
+    }
+  },
+  "componentConfigModal": {
+    "title": "Leinwand-Einstellungen",
+    "description": "Leinwand-spezifische Einstellungen und Kalibrierung konfigurieren",
+    "openButton": "Leinwand-Einstellungen",
+    "tabs": {
+      "units": "Maßeinheiten",
+      "calibration": "Bildschirmkalibrierung"
+    },
+    "units": {
+      "title": "Maßeinheiten",
+      "description": "Konfigurieren Sie die in dieser Leinwand verwendeten Maßeinheiten"
     }
   },
   "enterFullscreen": "Vollbildmodus aktivieren",

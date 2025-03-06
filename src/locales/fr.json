@@ -131,7 +131,7 @@
   "configModal": {
     "title": "Configuration",
     "description": "Gérer les paramètres et préférences de l'application",
-    "openButton": "Ouvrir les Paramètres",
+    "openButton": "Paramètres Globaux",
     "tabs": {
       "general": "Général",
       "openai": "API OpenAI",
@@ -139,7 +139,9 @@
     },
     "general": {
       "title": "Paramètres Généraux",
-      "description": "Configurer les paramètres de base de l'application"
+      "description": "Configurer les paramètres de base de l'application",
+      "languageLabel": "Langue",
+      "languagePlaceholder": "Sélectionner la langue"
     },
     "openai": {
       "title": "Paramètres de l'API OpenAI",
@@ -164,6 +166,19 @@
       "pixelsPerUnit": "pixels par {unit}",
       "cancelButton": "Annuler",
       "applyButton": "Appliquer la Calibration"
+    }
+  },
+  "componentConfigModal": {
+    "title": "Paramètres du Canevas",
+    "description": "Configurer les paramètres spécifiques au canevas et la calibration",
+    "openButton": "Paramètres du Canevas",
+    "tabs": {
+      "units": "Unités de Mesure",
+      "calibration": "Calibration d'Écran"
+    },
+    "units": {
+      "title": "Unités de Mesure",
+      "description": "Configurer les unités utilisées pour les mesures dans ce canevas"
     }
   },
   "enterFullscreen": "Passer en Plein Écran",

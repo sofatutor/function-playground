@@ -152,7 +152,7 @@
   "configModal": {
     "title": "Configuration",
     "description": "Manage application settings and preferences",
-    "openButton": "Open Settings",
+    "openButton": "Global Settings",
     "tabs": {
       "general": "General",
       "openai": "OpenAI API",
@@ -160,7 +160,9 @@
     },
     "general": {
       "title": "General Settings",
-      "description": "Configure basic application settings"
+      "description": "Configure basic application settings",
+      "languageLabel": "Language",
+      "languagePlaceholder": "Select language"
     },
     "openai": {
       "title": "OpenAI API Settings",
@@ -185,6 +187,19 @@
       "pixelsPerUnit": "pixels per {unit}",
       "cancelButton": "Cancel",
       "applyButton": "Apply Calibration"
+    }
+  },
+  "componentConfigModal": {
+    "title": "Canvas Settings",
+    "description": "Configure canvas-specific settings and calibration",
+    "openButton": "Canvas Settings",
+    "tabs": {
+      "units": "Measurement Units",
+      "calibration": "Screen Calibration"
+    },
+    "units": {
+      "title": "Measurement Units",
+      "description": "Configure the units used for measurements in this canvas"
     }
   },
   "enterFullscreen": "Enter Fullscreen",
