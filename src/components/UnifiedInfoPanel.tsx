@@ -271,7 +271,7 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
       onPointerDown={(e) => e.stopPropagation()}
       onPointerUp={(e) => e.stopPropagation()}
     >
-      <CardContent className="p-1 sm:p-2 md:p-4 max-h-[calc(100vh-8rem)] overflow-y-auto no-scrollbar">
+      <CardContent className="p-0.5 sm:p-1 md:p-2 lg:p-4 max-h-[calc(100vh-8rem)] overflow-y-auto no-scrollbar">
         {renderContent()}
       </CardContent>
     </Card>

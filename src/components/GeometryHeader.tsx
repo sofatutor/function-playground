@@ -53,13 +53,13 @@ const GeometryHeader: React.FC<GeometryHeaderProps> = ({ isFullscreen, onToggleF
   }, []);
 
   return (
-    <header className="flex items-center justify-between p-1 sm:p-2 md:p-4 bg-background border-b">
-      <div className="flex items-center space-x-1 sm:space-x-2">
+    <header className="flex items-center justify-between p-0.5 sm:p-1 md:p-2 lg:p-4 bg-background border-b">
+      <div className="flex items-center space-x-1 sm:space-x-2 ml-1 sm:ml-0">
         <h1 className="text-base sm:text-lg md:text-xl font-bold">{t('appTitle')}</h1>
         <p className="hidden md:block text-xs sm:text-sm text-muted-foreground">{t('appDescription')}</p>
       </div>
       
-      <div className="flex items-center space-x-1 sm:space-x-2">
+      <div className="flex items-center space-x-1 sm:space-x-2 mr-1 sm:mr-0">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>

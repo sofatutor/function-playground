@@ -199,7 +199,7 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
 
   return (
     <Card className="w-full shadow-lg">
-      <CardContent className="p-1 sm:p-2 md:p-4">
+      <CardContent className="p-0.5 sm:p-1 md:p-2 lg:p-4">
         <div className="grid gap-1 sm:gap-2 md:gap-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-2">
             <div className="flex gap-1 overflow-x-auto pb-1 w-full max-w-full no-scrollbar">

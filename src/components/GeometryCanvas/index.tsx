@@ -1326,8 +1326,8 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
           <div 
             className={`absolute unified-info-panel-container z-40 transition-all duration-200 ease-in-out
               ${showCalibration 
-                ? 'right-[calc(20rem+1rem)] bottom-4 w-72 sm:w-80' 
-                : 'right-2 sm:right-4 bottom-2 sm:bottom-4 w-[calc(100%-1rem)] sm:w-72 md:w-80'
+                ? 'right-[calc(20rem+0.5rem)] bottom-2 sm:bottom-4 w-72 sm:w-80' 
+                : 'right-1 sm:right-2 md:right-4 bottom-1 sm:bottom-2 md:bottom-4 w-[calc(100%-0.5rem)] sm:w-72 md:w-80'
               }`}
           >
             <UnifiedInfoPanel 

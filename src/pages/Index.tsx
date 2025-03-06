@@ -102,9 +102,11 @@ const Index = () => {
         }
       });
     } else if ('webkitRequestFullscreen' in elem) {
-      (elem as any).webkitRequestFullscreen();
+      // Use type assertion with a more specific type
+      (elem as HTMLElement & { webkitRequestFullscreen(): Promise<void> }).webkitRequestFullscreen();
     } else if ('msRequestFullscreen' in elem) {
-      (elem as any).msRequestFullscreen();
+      // Use type assertion with a more specific type
+      (elem as HTMLElement & { msRequestFullscreen(): Promise<void> }).msRequestFullscreen();
     } else {
       // Fallback for devices that don't support fullscreen API
       document.body.style.position = 'fixed';
@@ -124,9 +126,11 @@ const Index = () => {
         console.error(`Error attempting to exit fullscreen: ${err.message}`);
       });
     } else if ('webkitExitFullscreen' in document) {
-      (document as any).webkitExitFullscreen();
+      // Use type assertion with a more specific type
+      (document as Document & { webkitExitFullscreen(): Promise<void> }).webkitExitFullscreen();
     } else if ('msExitFullscreen' in document) {
-      (document as any).msExitFullscreen();
+      // Use type assertion with a more specific type
+      (document as Document & { msExitFullscreen(): Promise<void> }).msExitFullscreen();
     }
     
     // Reset any manual fullscreen styles we might have applied
@@ -296,8 +300,8 @@ const Index = () => {
   }, [updateGridPosition]);
 
   return (
-    <div className={`min-h-screen bg-gray-50 ${isFullscreen ? 'p-0 sm:p-1' : ''}`}>
-      <div className={`${isFullscreen ? 'max-w-full p-0 sm:p-1' : 'container py-2 sm:py-4 md:py-8'} transition-all duration-200 h-[calc(100vh-0.5rem)] sm:h-[calc(100vh-1rem)]`}>
+    <div className={`min-h-screen bg-gray-50 ${isFullscreen ? 'p-0' : ''}`}>
+      <div className={`${isFullscreen ? 'max-w-full p-0' : 'container py-0 sm:py-2 md:py-4 lg:py-8 px-0 sm:px-2 md:px-4'} transition-all duration-200 h-[calc(100vh-0rem)] sm:h-[calc(100vh-0.5rem)]`}>
         <GeometryHeader isFullscreen={isFullscreen} onToggleFullscreen={toggleFullscreen} />
         
         {/* Include both modals */}
@@ -307,7 +311,7 @@ const Index = () => {
         <div className="h-[calc(100%-3rem)] sm:h-[calc(100%-4rem)]">
           <div className="h-full">
             <div className="flex flex-col h-full">
-              <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between ${isFullscreen ? 'space-y-1 sm:space-y-0 sm:space-x-1' : 'space-y-1 sm:space-y-0 sm:space-x-2'} mb-1 sm:mb-2`}>
+              <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between ${isFullscreen ? 'space-y-1 sm:space-y-0 sm:space-x-1 px-1' : 'space-y-1 sm:space-y-0 sm:space-x-2 px-1 sm:px-2'} mb-1 sm:mb-2`}>
                 <div className="flex flex-row items-center space-x-1 sm:space-x-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 no-scrollbar">
                   <Toolbar
                     activeMode={activeMode}
