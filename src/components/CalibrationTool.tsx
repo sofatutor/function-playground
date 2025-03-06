@@ -53,6 +53,13 @@ const CalibrationTool: React.FC<CalibrationToolProps> = ({
 
   const completeCalibration = () => {
     onCalibrationComplete(currentPixelsPerUnit);
+    
+    // Store the calibration value in localStorage
+    localStorage.setItem(`pixelsPerUnit_${measurementUnit}`, currentPixelsPerUnit.toString());
+    
+    // Force a refresh of the component to ensure the changes are applied
+    window.dispatchEvent(new Event('resize'));
+    
     setIsCalibrating(false);
   };
 
@@ -66,7 +73,7 @@ const CalibrationTool: React.FC<CalibrationToolProps> = ({
 
   return (
     <Card className="relative p-4 w-full max-w-md mx-auto z-[100]">
-      <CardHeader>
+      <CardHeader className="pb-2">
         <CardTitle>{t('configModal.calibration.title')}</CardTitle>
         <CardDescription>{t('configModal.calibration.description')}</CardDescription>
       </CardHeader>
@@ -98,21 +105,25 @@ const CalibrationTool: React.FC<CalibrationToolProps> = ({
           </>
         ) : (
           <>
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-sm text-muted-foreground mb-2">
               {t('configModal.calibration.placeRuler')}
             </p>
-            <div className="relative mb-8 z-50">
-              <div 
-                ref={lineRef}
-                className="relative h-6 bg-transparent border-2 border-primary rounded-md z-50" 
-                style={{ width: `${calibrationLength * currentPixelsPerUnit}px` }}
-              ></div>
-              <div className="absolute -bottom-6 left-0 right-0 text-center text-sm">
-                {t('configModal.calibration.lineDescription', { length: String(calibrationLength), unit: unitLabel })}
+            
+            {/* Centered calibration line */}
+            <div className="flex justify-center items-center mb-6">
+              <div className="relative">
+                <div 
+                  ref={lineRef}
+                  className="relative h-6 bg-gradient-to-r from-green-400 to-green-500 rounded-md z-50 shadow-[0_0_8px_rgba(74,222,128,0.6)]" 
+                  style={{ width: `${calibrationLength * currentPixelsPerUnit}px` }}
+                ></div>
+                <div className="absolute -bottom-6 left-0 right-0 text-center text-sm">
+                  {t('configModal.calibration.lineDescription', { length: String(calibrationLength), unit: unitLabel })}
+                </div>
               </div>
             </div>
             
-            <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>{t('configModal.calibration.coarseAdjustment')}</Label>
                 <div className="flex items-center space-x-2 mt-2">
@@ -136,25 +147,28 @@ const CalibrationTool: React.FC<CalibrationToolProps> = ({
                   </Button>
                 </div>
               </div>
-              
-              <div className="mt-4 p-2 bg-muted rounded-md">
-                <div className="flex justify-between">
-                  <span className="text-sm">{t('configModal.calibration.currentValue')}:</span>
-                  <span className="text-sm font-medium">
-                    {currentPixelsPerUnit.toFixed(2)} {t('configModal.calibration.pixelsPerUnit', { unit: unitAbbr })}
-                  </span>
-                </div>
+            </div>
+            
+            <div className="mt-2 p-2 bg-muted rounded-md">
+              <div className="flex justify-between">
+                <span className="text-sm">{t('configModal.calibration.currentValue')}:</span>
+                <span className="text-sm font-medium">
+                  {currentPixelsPerUnit.toFixed(2)} {t('configModal.calibration.pixelsPerUnit', { unit: unitAbbr })}
+                </span>
               </div>
+            </div>
+            
+            <div className="flex justify-between mt-4">
+              <Button variant="outline" onClick={cancelCalibration}>
+                {t('configModal.calibration.cancelButton')}
+              </Button>
+              <Button onClick={completeCalibration}>
+                {t('configModal.calibration.applyButton')}
+              </Button>
             </div>
           </>
         )}
       </CardContent>
-      {isCalibrating && (
-        <CardFooter className="flex justify-between">
-          <Button variant="outline" onClick={cancelCalibration}>{t('configModal.calibration.cancelButton')}</Button>
-          <Button onClick={completeCalibration}>{t('configModal.calibration.applyButton')}</Button>
-        </CardFooter>
-      )}
     </Card>
   );
 };
