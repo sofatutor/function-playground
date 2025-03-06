@@ -2,8 +2,8 @@ import { Formula, FormulaPoint, FormulaExample, FormulaExampleCategory, FormulaT
 import { Point } from "@/types/shapes";
 
 // Constants for formula evaluation
-const MAX_SAMPLES = 2000;
-const MIN_SAMPLES = 100;
+const MAX_SAMPLES = 20000;
+const MIN_SAMPLES = 20;
 
 /**
  * Generate points for a mathematical function of the form y = f(x)
@@ -55,6 +55,22 @@ export const evaluateFunction = (
     expression.includes('x *') ||
     expression.includes('x*')
   );
+
+  // Check for very high frequency functions (e.g., sin(10*x))
+  const hasVeryHighFrequency = hasTrigFunction && (
+    expression.match(/sin\((\d{2,})\s*\*\s*x\)/i) || 
+    expression.match(/cos\((\d{2,})\s*\*\s*x\)/i) ||
+    expression.match(/(\d{2,})\s*\*\s*Math\.PI/i)
+  );
+
+  // Check for complex expressions that might need more samples
+  const isComplex = expression.includes('**') || // Power operations
+                   expression.includes('Math.pow') || // Power operations
+                   expression.includes('Math.sqrt') || // Square root
+                   (expression.match(/[+\-*/]/g) || []).length > 2; // More than 2 operators
+  
+  // Check for combined functions that need even more samples
+  const isCombined = hasTrigFunction && isComplex;
   
   // If the expression contains log(x) directly, we need x > 0
   // If it contains log(-x) or log(Math.abs(x)), we can allow negative values
@@ -111,7 +127,43 @@ export const evaluateFunction = (
   // and adjust the number of samples accordingly.
   let adjustedSamples = actualSamples;
   
-  if (hasHighFrequency) {
+  if (hasVeryHighFrequency) {
+    // Try to estimate the frequency by looking for multipliers
+    let frequencyFactor = 1;
+    
+    // Look for patterns like "10 * Math.PI * x" or similar
+    if (expression.includes('Math.PI')) {
+      // Extract the coefficient before Math.PI if possible
+      const piMatch = expression.match(/(\d+)\s*\*\s*Math\.PI/);
+      if (piMatch && piMatch[1]) {
+        frequencyFactor = parseInt(piMatch[1], 10);
+      } else {
+        frequencyFactor = 1; // Default if we can't extract a specific value
+      }
+    } else {
+      // Look for direct multipliers like "10*x" in sin(10*x)
+      const directMatch = expression.match(/sin\((\d+)\s*\*\s*x\)/i) || 
+                          expression.match(/cos\((\d+)\s*\*\s*x\)/i);
+      if (directMatch && directMatch[1]) {
+        frequencyFactor = parseInt(directMatch[1], 10);
+      }
+    }
+    
+    // Estimate the number of oscillations in the visible range
+    const visibleRange = visibleXRange[1] - visibleXRange[0];
+    const estimatedOscillations = frequencyFactor * visibleRange;
+    
+    // We want at least 80 samples per oscillation for very high frequency functions
+    const recommendedSamples = Math.ceil(estimatedOscillations * 80);
+    
+    // Use the higher of our original samples or the recommended samples
+    adjustedSamples = Math.max(actualSamples, recommendedSamples);
+    
+    // Cap at MAX_SAMPLES to avoid performance issues
+    adjustedSamples = Math.min(adjustedSamples, MAX_SAMPLES);
+    
+    console.log(`Very high-frequency function detected. Estimated oscillations: ${estimatedOscillations}, using ${adjustedSamples} samples`);
+  } else if (hasHighFrequency) {
     // Try to estimate the frequency by looking for multipliers
     let frequencyFactor = 1;
     
@@ -124,14 +176,21 @@ export const evaluateFunction = (
       } else {
         frequencyFactor = 1; // Default if we can't extract a specific value
       }
+    } else {
+      // Look for direct multipliers like "5*x" in sin(5*x)
+      const directMatch = expression.match(/sin\((\d+)\s*\*\s*x\)/i) || 
+                          expression.match(/cos\((\d+)\s*\*\s*x\)/i);
+      if (directMatch && directMatch[1]) {
+        frequencyFactor = parseInt(directMatch[1], 10);
+      }
     }
     
     // Estimate the number of oscillations in the visible range
     const visibleRange = visibleXRange[1] - visibleXRange[0];
     const estimatedOscillations = frequencyFactor * visibleRange;
     
-    // We want at least 20 samples per oscillation for smooth rendering
-    const recommendedSamples = Math.ceil(estimatedOscillations * 20);
+    // We want at least 50 samples per oscillation for smooth rendering (increased from 30)
+    const recommendedSamples = Math.ceil(estimatedOscillations * 50);
     
     // Use the higher of our original samples or the recommended samples
     adjustedSamples = Math.max(actualSamples, recommendedSamples);
@@ -140,10 +199,18 @@ export const evaluateFunction = (
     adjustedSamples = Math.min(adjustedSamples, MAX_SAMPLES);
     
     console.log(`High-frequency function detected. Estimated oscillations: ${estimatedOscillations}, using ${adjustedSamples} samples`);
+  } else if (isCombined) {
+    // For combined complex functions, increase samples by 100%
+    adjustedSamples = Math.min(actualSamples * 2, MAX_SAMPLES);
+    console.log(`Combined complex function detected. Using ${adjustedSamples} samples`);
+  } else if (isComplex) {
+    // For complex functions, increase samples by 75% (up from 50%)
+    adjustedSamples = Math.min(Math.ceil(actualSamples * 1.75), MAX_SAMPLES);
+    console.log(`Complex function detected. Using ${adjustedSamples} samples`);
   }
   
   // Calculate the step size based on the visible range and number of samples
-  const xStep = (visibleXRange[1] - visibleXRange[0]) / (hasHighFrequency ? adjustedSamples : actualSamples);
+  const xStep = (visibleXRange[1] - visibleXRange[0]) / (hasHighFrequency || hasVeryHighFrequency || isComplex || isCombined ? adjustedSamples : actualSamples);
   
   // For logarithmic functions, use adaptive sampling to concentrate more points near the asymptote
   const xValues: number[] = [];
