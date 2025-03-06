@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { distanceBetweenPoints } from '@/utils/geometry/common';
 import { convertFromPixels } from '@/utils/geometry/measurements';
 import { getStoredPixelsPerUnit, getNextShapeColor } from '@/utils/geometry/common';
+import { updateTriangleFromAngle } from '@/utils/geometry/triangle';
 
 /**
  * Implementation of the TriangleService interface
@@ -272,13 +273,36 @@ export class TriangleServiceImpl implements TriangleService {
       }
       case 'angle1':
       case 'angle2':
-      case 'angle3':
-        // Changing angles would require more complex transformations
-        // For simplicity, we'll just warn and return the original shape
-        console.warn(`Updating angles directly is not supported: ${measurementKey}. Try adjusting sides instead.`);
-        return shape;
+      case 'angle3': {
+        // Get the angle index (0, 1, or 2)
+        // In the triangle.ts utility, angles are mapped to vertices:
+        // angle0 is at vertex 0 (points[0])
+        // angle1 is at vertex 1 (points[1])
+        // angle2 is at vertex 2 (points[2])
+        const angleIndex = parseInt(measurementKey.slice(-1)) - 1;
+        
+        // Ensure the angle value is valid
+        const angleValue = Math.max(1, Math.min(178, Math.round(newValue)));
+        
+        // Calculate current angles
+        const currentAngles = this.calculateAngles(shape);
+        
+        // Use the utility function to update the triangle points based on the new angle
+        const newPoints = updateTriangleFromAngle(
+          shape.points,
+          angleIndex,
+          angleValue,
+          currentAngles
+        );
+        
+        // Return the updated triangle with new points
+        return {
+          ...shape,
+          points: newPoints
+        };
+      }
       default:
-        console.warn(`Unhandled measurement key: "${measurementKey}" for triangle. Supported keys are: area, perimeter, side1, side2, side3, height.`);
+        console.warn(`Unhandled measurement key: "${measurementKey}" for triangle. Supported keys are: area, perimeter, side1, side2, side3, height, angle1, angle2, angle3.`);
         return shape;
     }
   }

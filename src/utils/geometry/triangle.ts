@@ -119,20 +119,33 @@ export const updateTriangleFromAngle = (
   // Set the new value for the angle we're changing
   newAngles[angleIndex] = newAngleDegrees;
   
-  // When changing angle 1, adjust angle 2 (and angle 3 gets the remainder)
-  // When changing angle 2, adjust angle 3 (and angle 1 gets the remainder)
-  // When changing angle 3, adjust angle 1 (and angle 2 gets the remainder)
-  const adjustIndex = (angleIndex + 1) % 3;
-  const thirdIndex = (angleIndex + 2) % 3;
+  // Get the indices of the other two angles
+  const otherIndices = [0, 1, 2].filter(i => i !== angleIndex);
   
-  // Calculate the difference
-  const angleDiff = newAngleDegrees - currentAngles[angleIndex];
+  // Calculate how much the sum of the other two angles needs to be
+  const remainingAngleSum = 180 - newAngleDegrees;
   
-  // Adjust the second angle by the opposite of the difference
-  newAngles[adjustIndex] = Math.max(1, Math.min(178, currentAngles[adjustIndex] - angleDiff));
+  // Calculate the original sum and proportion of the other two angles
+  const originalOtherSum = currentAngles[otherIndices[0]] + currentAngles[otherIndices[1]];
   
-  // The third angle is whatever is needed to make the sum 180
-  newAngles[thirdIndex] = 180 - newAngles[angleIndex] - newAngles[adjustIndex];
+  if (originalOtherSum > 0) {
+    // Maintain the proportion between the other two angles
+    const ratio0 = currentAngles[otherIndices[0]] / originalOtherSum;
+    const ratio1 = currentAngles[otherIndices[1]] / originalOtherSum;
+    
+    // Distribute the remaining angle sum according to the original proportions
+    newAngles[otherIndices[0]] = Math.max(1, Math.min(178, remainingAngleSum * ratio0));
+    newAngles[otherIndices[1]] = Math.max(1, Math.min(178, remainingAngleSum * ratio1));
+    
+    // Ensure the sum is exactly 180 by adjusting the last angle
+    const adjustedSum = newAngles[angleIndex] + newAngles[otherIndices[0]];
+    newAngles[otherIndices[1]] = 180 - adjustedSum;
+  } else {
+    // If the original sum is 0 (shouldn't happen in a valid triangle), 
+    // just split the remaining angle equally
+    newAngles[otherIndices[0]] = remainingAngleSum / 2;
+    newAngles[otherIndices[1]] = remainingAngleSum / 2;
+  }
   
   // Convert angles to radians
   const angleRads = newAngles.map(a => a * (Math.PI / 180));

@@ -551,11 +551,11 @@ const updateLineAngle = (
 ): Line => {
   const center = line.position;
   
-  // Convert UI angle (clockwise) to mathematical angle (counterclockwise)
-  const newValueCounterclockwise = toCounterclockwiseAngle(newValue);
+  // We'll directly use the angle value from the UI
+  const uiAngle = newValue;
   
-  // Convert angle from degrees (counterclockwise) to radians (counterclockwise)
-  const angleRad = degreesToRadians(newValueCounterclockwise);
+  // Convert to radians for calculations
+  const angleRad = degreesToRadians(uiAngle);
   
   // Calculate the current length
   const currentLength = line.length;
@@ -564,21 +564,24 @@ const updateLineAngle = (
   const halfLength = currentLength / 2;
   
   // Calculate new endpoints based on the angle
+  // For UI angles (clockwise), we need to adjust the calculation
+  // In UI, 0° points right, 90° points down, 180° points left, -90° points up
   const newStartPoint = {
-    x: center.x - Math.cos(angleRad) * halfLength,
-    y: center.y - Math.sin(angleRad) * halfLength
+    x: center.x - (Math.cos(angleRad) * halfLength),
+    y: center.y - (Math.sin(angleRad) * halfLength)
   };
   
   const newEndPoint = {
-    x: center.x + Math.cos(angleRad) * halfLength,
-    y: center.y + Math.sin(angleRad) * halfLength
+    x: center.x + (Math.cos(angleRad) * halfLength),
+    y: center.y + (Math.sin(angleRad) * halfLength)
   };
   
   return {
     ...line,
     startPoint: newStartPoint,
     endPoint: newEndPoint,
-    rotation: newValue // Store rotation in degrees in the model (clockwise from UI)
+    rotation: uiAngle, // Store the UI angle directly
+    length: currentLength // Ensure length is preserved
   };
 };
 

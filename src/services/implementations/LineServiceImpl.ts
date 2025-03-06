@@ -151,21 +151,23 @@ export class LineServiceImpl implements LineService {
     // Calculate measurements in pixels
     const lengthInPixels = shape.length;
     
-    // Get angle in radians
-    const angleRadians = this.calculateAngle(shape);
-    
-    // Convert angle to degrees (counterclockwise)
-    const angleDegreesCounterclockwise = radiansToDegrees(angleRadians);
-    
-    // Convert to clockwise angle for UI display
-    const angleDegreesClockwise = toClockwiseAngle(angleDegreesCounterclockwise);
+    // If the shape has a stored rotation value, use it directly
+    let angle = 0;
+    if ('rotation' in shape && typeof shape.rotation === 'number') {
+      angle = shape.rotation;
+    } else {
+      // Calculate angle from the line's direction as a fallback
+      const dx = shape.endPoint.x - shape.startPoint.x;
+      const dy = shape.endPoint.y - shape.startPoint.y;
+      angle = Math.round(Math.atan2(dy, dx) * (180 / Math.PI));
+    }
     
     // Convert length to the specified unit
     const length = convertFromPixelsFn(lengthInPixels);
     
     return {
       length,
-      angle: angleDegreesClockwise
+      angle
     };
   }
   
@@ -198,25 +200,41 @@ export class LineServiceImpl implements LineService {
       }
       case 'angle': {
         // IMPORTANT: UI works with degrees (clockwise), internal model uses radians (counterclockwise)
-        // newValue is in degrees (clockwise from UI)
+        // newValue is in degrees (clockwise from UI) in the range [-180, 180]
         
-        // Convert UI angle (clockwise) to mathematical angle (counterclockwise)
-        const newValueCounterclockwise = toCounterclockwiseAngle(newValue);
+        // We'll directly use the angle value from the UI
+        const uiAngle = newValue;
         
-        // Get current angle in radians from the shape
-        const currentAngleRadians = this.calculateAngle(shape);
+        // Convert to radians for calculations
+        const angleRad = degreesToRadians(uiAngle);
         
-        // Convert current angle to degrees (counterclockwise)
-        const currentAngleDegreesCounterclockwise = radiansToDegrees(currentAngleRadians);
+        // Calculate the current length
+        const currentLength = this.calculateLength(shape);
         
-        // Calculate the difference in degrees (in counterclockwise direction)
-        const angleDifferenceDegrees = newValueCounterclockwise - currentAngleDegreesCounterclockwise;
+        // Calculate the half-length (distance from center to endpoint)
+        const halfLength = currentLength / 2;
         
-        // Convert the difference back to radians for the rotation operation
-        const angleDifferenceRadians = degreesToRadians(angleDifferenceDegrees);
+        // Calculate new endpoints based on the angle
+        // For UI angles (clockwise), we need to adjust the calculation
+        // In UI, 0° points right, 90° points down, 180° points left, -90° points up
+        const center = shape.position;
+        const newStartPoint = {
+          x: center.x - (Math.cos(angleRad) * halfLength),
+          y: center.y - (Math.sin(angleRad) * halfLength)
+        };
         
-        // Apply the rotation
-        return this.rotateShape(shape, angleDifferenceRadians);
+        const newEndPoint = {
+          x: center.x + (Math.cos(angleRad) * halfLength),
+          y: center.y + (Math.sin(angleRad) * halfLength)
+        };
+        
+        return {
+          ...shape,
+          startPoint: newStartPoint,
+          endPoint: newEndPoint,
+          rotation: uiAngle, // Store the UI angle directly
+          length: currentLength // Ensure length is preserved
+        };
       }
       default:
         console.warn(`Unhandled measurement key: "${measurementKey}" for line. Supported keys are: length, angle.`);
