@@ -389,9 +389,11 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     
     // Default to 'cm' if measurementUnit is undefined
     const unit = measurementUnit || 'cm';
+    console.log('Using unit:', unit);
     
     // Get the stored calibration value for this unit
     const storedValue = getStoredPixelsPerUnit(unit);
+    console.log('Retrieved stored pixels per unit:', storedValue);
     
     // Update the pixel values without affecting the grid position
     if (unit === 'in') {
@@ -401,6 +403,8 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
       setPixelsPerUnit(storedValue);
       setPixelsPerSmallUnit(storedValue / 10); // 1mm = 1/10th of a cm
     }
+    console.log('Updated pixelsPerUnit:', storedValue);
+    console.log('Updated pixelsPerSmallUnit:', storedValue / 10);
     
     // Force a redraw of the canvas
     if (canvasRef.current) {
@@ -409,6 +413,7 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
         width: rect.width,
         height: rect.height
       });
+      console.log('Canvas size set to:', rect.width, rect.height);
     }
   }, [measurementUnit, canvasRef]);
 
@@ -914,16 +919,19 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     setSelectedPoint(null);
   }, [formulas]);
 
-  // Render the formulas
+  // Inside the GeometryCanvas component, add logging to trace rendering
+  console.log('Rendering GeometryCanvas with pixelsPerUnit:', pixelsPerUnit, 'and measurementUnit:', measurementUnit);
+
+  // Add logging to the renderFormulas function
   const renderFormulas = () => {
+    console.log('Rendering formulas with gridPosition:', gridPosition, 'and pixelsPerUnit:', pixelsPerUnit);
     if (!formulas || formulas.length === 0 || !gridPosition) {
       return null;
     }
     
-    console.log(`Rendering ${formulas.length} formulas:`, formulas.map(f => f.id));
-    
     // Use the internal pixelsPerUnit value
     const ppu = externalPixelsPerUnit || pixelsPerUnit;
+    console.log('Using pixels per unit for rendering formulas:', ppu);
     
     // Create a grid position key to force re-renders when grid moves
     const gridKey = `${gridPosition.x.toFixed(1)}-${gridPosition.y.toFixed(1)}`;

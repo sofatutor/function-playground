@@ -39,21 +39,26 @@ const ComponentConfigModal: React.FC = () => {
   };
   
   const handleUnitChange = (value: string) => {
+    console.log('handleUnitChange called with value:', value);
     const newUnit = value as 'cm' | 'in';
     
     // Store the unit selection in localStorage
     localStorage.setItem('measurement_unit', newUnit);
+    console.log('Stored measurement unit in localStorage:', newUnit);
     
     // Update the unit in the context
     setMeasurementUnit(newUnit);
+    console.log('Updated measurement unit in context:', newUnit);
     
     // Update the pixels per unit based on the new unit
     const newPixelsPerUnit = getStoredPixelsPerUnit(newUnit);
     setPixelsPerUnit(newPixelsPerUnit);
+    console.log('Updated pixels per unit in context:', newPixelsPerUnit);
     
     // Force a refresh of the component to ensure the changes are applied
     // This is important to trigger the useEffect in GeometryCanvas
     window.dispatchEvent(new Event('resize'));
+    console.log('Dispatched resize event');
   };
   
   return (
