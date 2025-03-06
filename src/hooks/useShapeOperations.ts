@@ -3,6 +3,7 @@ import {
   AnyShape, Point, ShapeType, OperationMode, MeasurementUnit
 } from '@/types/shapes';
 import { toast } from 'sonner';
+import { useComponentConfig } from '@/context/ConfigContext';
 
 // Import utility functions
 import { getStoredPixelsPerUnit } from '@/utils/geometry/common';
@@ -23,7 +24,6 @@ export function useShapeOperations() {
   const [selectedShapeId, setSelectedShapeId] = useState<string | null>(null);
   const [activeMode, setActiveMode] = useState<OperationMode>('select');
   const [activeShapeType, setActiveShapeType] = useState<ShapeType>('rectangle');
-  const [measurementUnit, setMeasurementUnit] = useState<MeasurementUnit>('cm');
   const [dragStart, setDragStart] = useState<Point | null>(null);
   
   // Add state for grid position
@@ -43,65 +43,52 @@ export function useShapeOperations() {
   // Get the service factory
   const serviceFactory = useServiceFactory();
   
+  // Get the measurement unit from the context
+  const { measurementUnit, setMeasurementUnit } = useComponentConfig();
+  
   // Load shapes and grid position from URL when component mounts
   useEffect(() => {
     if (hasLoadedFromUrl.current) {
-      console.log('useShapeOperations: Already loaded from URL, skipping');
       return;
     }
-    
-    console.log('useShapeOperations: Loading shapes and grid position from URL');
-    
+
     // Load shapes from URL
     const shapesFromUrl = getShapesFromUrl();
     if (shapesFromUrl && shapesFromUrl.length > 0) {
-      console.log('useShapeOperations: Loaded shapes from URL:', shapesFromUrl.length, 'shapes');
       setShapes(shapesFromUrl);
       toast.success(`Loaded ${shapesFromUrl.length} shapes from URL`);
-    } else {
-      console.log('useShapeOperations: No shapes found in URL');
     }
-    
+
     // Load grid position from URL
     const gridPositionFromUrl = getGridPositionFromUrl();
     if (gridPositionFromUrl) {
-      console.log('useShapeOperations: Loaded grid position from URL:', gridPositionFromUrl);
-      // Ensure we set the grid position with the exact values from the URL
       setGridPosition({
         x: gridPositionFromUrl.x,
         y: gridPositionFromUrl.y
       });
-    } else {
-      console.log('useShapeOperations: No grid position found in URL');
-      // Important: Don't set a default grid position here, let the CanvasGrid component handle it
     }
-    
+
     // Mark as loaded from URL
     hasLoadedFromUrl.current = true;
   }, []);
   
   // Update URL whenever shapes or grid position change, but only after initial load
   useEffect(() => {
-    // Skip the first render to avoid overwriting the URL before we've loaded from it
     if (!hasLoadedFromUrl.current) {
-      console.log('useShapeOperations: Skipping URL update until loaded from URL');
       return;
     }
-    
-    // Only update URL if we have shapes or a grid position
+
     if (shapes.length > 0 || gridPosition) {
-      // Use a debounce to prevent too many URL updates
       if (gridUpdateTimeoutRef.current) {
         clearTimeout(gridUpdateTimeoutRef.current);
       }
-      
+
       gridUpdateTimeoutRef.current = setTimeout(() => {
-        console.log('useShapeOperations: Updating URL with shapes and grid position');
         updateUrlWithShapes(shapes, gridPosition);
         gridUpdateTimeoutRef.current = null;
       }, 300);
     }
-    
+
     return () => {
       if (gridUpdateTimeoutRef.current) {
         clearTimeout(gridUpdateTimeoutRef.current);
@@ -113,11 +100,6 @@ export function useShapeOperations() {
   useEffect(() => {
     setRefreshCalibration(prev => prev + 1);
   }, []);
-  
-  // Force refresh of calibration values when measurement unit changes
-  useEffect(() => {
-    setRefreshCalibration(prev => prev + 1);
-  }, [measurementUnit]);
   
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const pixelsPerCm = useMemo(() => getStoredPixelsPerUnit('cm'), [refreshCalibration]);
@@ -372,13 +354,8 @@ export function useShapeOperations() {
   
   // Update the grid position update function to use our new utility
   const updateGridPosition = useCallback((newPosition: Point) => {
-    console.log('useShapeOperations: Updating grid position:', newPosition);
-    
-    // Check if the change is significant enough to update
     if (isSignificantGridChange(newPosition, gridPosition)) {
       setGridPosition(newPosition);
-    } else {
-      console.log('useShapeOperations: Ignoring small grid position change to prevent oscillation');
     }
   }, [gridPosition]);
   
