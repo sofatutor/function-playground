@@ -95,6 +95,47 @@
   }
 }
 
+@layer utilities {
+  /* Hide scrollbar but maintain scrolling functionality */
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;     /* Firefox */
+  }
+  
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;             /* Chrome, Safari and Opera */
+  }
+  
+  /* Responsive sizing utilities */
+  .text-responsive {
+    font-size: clamp(0.75rem, 2vw, 1rem);
+  }
+  
+  .p-responsive {
+    padding: clamp(0.25rem, 1vw, 1rem);
+  }
+  
+  .m-responsive {
+    margin: clamp(0.25rem, 1vw, 1rem);
+  }
+  
+  /* Better touch targets for mobile */
+  @media (max-width: 640px) {
+    button, 
+    [role="button"],
+    .interactive-element {
+      min-height: 36px;
+      min-width: 36px;
+    }
+    
+    input, 
+    select, 
+    textarea {
+      font-size: 16px; /* Prevents iOS zoom on focus */
+    }
+  }
+}
+
 @layer components {
   .btn-tool {
     @apply flex h-10 w-10 items-center justify-center rounded-md border border-border bg-background text-foreground transition-all hover:bg-secondary hover:text-secondary-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;

@@ -8,15 +8,21 @@ import { useGlobalConfig } from '@/context/ConfigContext';
 
 interface GeometryHeaderProps {
   isFullscreen: boolean;
+  onToggleFullscreen?: () => void;
 }
 
-const GeometryHeader: React.FC<GeometryHeaderProps> = ({ isFullscreen }) => {
+const GeometryHeader: React.FC<GeometryHeaderProps> = ({ isFullscreen, onToggleFullscreen }) => {
   const t = useTranslate();
   const [isFullscreenState, setIsFullscreenState] = useState(isFullscreen);
   const { shareCanvasUrl, shapes } = useShapeOperations();
   const { setGlobalConfigModalOpen } = useGlobalConfig();
 
   const toggleFullscreen = () => {
+    if (onToggleFullscreen) {
+      onToggleFullscreen();
+      return;
+    }
+
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().then(() => {
         setIsFullscreenState(true);
@@ -47,22 +53,23 @@ const GeometryHeader: React.FC<GeometryHeaderProps> = ({ isFullscreen }) => {
   }, []);
 
   return (
-    <header className="flex items-center justify-between p-4 bg-background border-b">
-      <div className="flex items-center space-x-2">
-        <h1 className="text-xl font-bold">{t('appTitle')}</h1>
-        <p className="hidden md:block text-sm text-muted-foreground">{t('appDescription')}</p>
+    <header className="flex items-center justify-between p-1 sm:p-2 md:p-4 bg-background border-b">
+      <div className="flex items-center space-x-1 sm:space-x-2">
+        <h1 className="text-base sm:text-lg md:text-xl font-bold">{t('appTitle')}</h1>
+        <p className="hidden md:block text-xs sm:text-sm text-muted-foreground">{t('appDescription')}</p>
       </div>
       
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-1 sm:space-x-2">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button 
                 variant="outline" 
                 size="icon" 
+                className="h-7 w-7 sm:h-8 sm:w-8"
                 onClick={() => setGlobalConfigModalOpen(true)}
               >
-                <Settings className="h-4 w-4" />
+                <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
@@ -77,10 +84,11 @@ const GeometryHeader: React.FC<GeometryHeaderProps> = ({ isFullscreen }) => {
               <Button
                 variant="outline"
                 size="icon"
+                className="h-7 w-7 sm:h-8 sm:w-8"
                 onClick={shareCanvasUrl}
                 disabled={shapes.length === 0}
               >
-                <Share2 className="h-4 w-4" />
+                <Share2 className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
@@ -95,12 +103,13 @@ const GeometryHeader: React.FC<GeometryHeaderProps> = ({ isFullscreen }) => {
               <Button
                 variant="outline"
                 size="icon"
+                className="h-7 w-7 sm:h-8 sm:w-8"
                 onClick={toggleFullscreen}
               >
                 {isFullscreen ? (
-                  <Minimize2 className="h-4 w-4" />
+                  <Minimize2 className="h-3 w-3 sm:h-4 sm:w-4" />
                 ) : (
-                  <Maximize2 className="h-4 w-4" />
+                  <Maximize2 className="h-3 w-3 sm:h-4 sm:w-4" />
                 )}
               </Button>
             </TooltipTrigger>

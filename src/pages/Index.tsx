@@ -80,6 +80,79 @@ const Index = () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
     };
   }, []);
+
+  // Function to request fullscreen with better mobile support
+  const requestFullscreen = useCallback(() => {
+    const elem = document.documentElement;
+    
+    // Try different fullscreen methods for better cross-browser and mobile support
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+        // Try alternative approach for iOS
+        if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+          // For iOS, we can use a different approach
+          document.body.style.position = 'fixed';
+          document.body.style.top = '0';
+          document.body.style.left = '0';
+          document.body.style.width = '100%';
+          document.body.style.height = '100%';
+          document.body.style.zIndex = '9999';
+          setIsFullscreen(true);
+        }
+      });
+    } else if ('webkitRequestFullscreen' in elem) {
+      (elem as any).webkitRequestFullscreen();
+    } else if ('msRequestFullscreen' in elem) {
+      (elem as any).msRequestFullscreen();
+    } else {
+      // Fallback for devices that don't support fullscreen API
+      document.body.style.position = 'fixed';
+      document.body.style.top = '0';
+      document.body.style.left = '0';
+      document.body.style.width = '100%';
+      document.body.style.height = '100%';
+      document.body.style.zIndex = '9999';
+      setIsFullscreen(true);
+    }
+  }, []);
+
+  // Function to exit fullscreen with better mobile support
+  const exitFullscreen = useCallback(() => {
+    if (document.exitFullscreen) {
+      document.exitFullscreen().catch(err => {
+        console.error(`Error attempting to exit fullscreen: ${err.message}`);
+      });
+    } else if ('webkitExitFullscreen' in document) {
+      (document as any).webkitExitFullscreen();
+    } else if ('msExitFullscreen' in document) {
+      (document as any).msExitFullscreen();
+    }
+    
+    // Reset any manual fullscreen styles we might have applied
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.width = '';
+    document.body.style.height = '';
+    document.body.style.zIndex = '';
+    
+    // If we're using the fallback approach, manually set fullscreen state
+    if (!document.fullscreenElement && 
+        !('webkitFullscreenElement' in document) && 
+        !('msFullscreenElement' in document)) {
+      setIsFullscreen(false);
+    }
+  }, []);
+
+  // Toggle fullscreen
+  const toggleFullscreen = useCallback(() => {
+    if (!isFullscreen) {
+      requestFullscreen();
+    } else {
+      exitFullscreen();
+    }
+  }, [isFullscreen, requestFullscreen, exitFullscreen]);
   
   // Load formulas from URL when component mounts
   useEffect(() => {
@@ -177,6 +250,14 @@ const Index = () => {
     });
   }, [formulas.length, handleAddFormula, selectedFormulaId]);
 
+  // Open formula editor when a formula is selected (e.g., by clicking a point on the graph)
+  useEffect(() => {
+    // If a formula is selected but the editor is not open, open it
+    if (selectedFormulaId && !isFormulaEditorOpen) {
+      setIsFormulaEditorOpen(true);
+    }
+  }, [selectedFormulaId, isFormulaEditorOpen]);
+
   const selectedShape = getSelectedShape();
   
   // Convert measurements from numbers to strings with proper formatting
@@ -215,19 +296,19 @@ const Index = () => {
   }, [updateGridPosition]);
 
   return (
-    <div className={`min-h-screen bg-gray-50 ${isFullscreen ? 'p-2' : ''}`}>
-      <div className={`${isFullscreen ? 'max-w-full p-2' : 'container py-8'} transition-all duration-200 h-[calc(100vh-2rem)]`}>
-        <GeometryHeader isFullscreen={isFullscreen} />
+    <div className={`min-h-screen bg-gray-50 ${isFullscreen ? 'p-0 sm:p-1' : ''}`}>
+      <div className={`${isFullscreen ? 'max-w-full p-0 sm:p-1' : 'container py-2 sm:py-4 md:py-8'} transition-all duration-200 h-[calc(100vh-0.5rem)] sm:h-[calc(100vh-1rem)]`}>
+        <GeometryHeader isFullscreen={isFullscreen} onToggleFullscreen={toggleFullscreen} />
         
         {/* Include both modals */}
         <ConfigModal />
         <ComponentConfigModal />
         
-        <div className="h-[calc(100%-4rem)]">
+        <div className="h-[calc(100%-3rem)] sm:h-[calc(100%-4rem)]">
           <div className="h-full">
             <div className="flex flex-col h-full">
-              <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between ${isFullscreen ? 'space-y-1 sm:space-y-0 sm:space-x-1' : 'space-y-2 sm:space-y-0 sm:space-x-2'} mb-2`}>
-                <div className="flex flex-row items-center space-x-2">
+              <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between ${isFullscreen ? 'space-y-1 sm:space-y-0 sm:space-x-1' : 'space-y-1 sm:space-y-0 sm:space-x-2'} mb-1 sm:mb-2`}>
+                <div className="flex flex-row items-center space-x-1 sm:space-x-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 no-scrollbar">
                   <Toolbar
                     activeMode={activeMode}
                     activeShapeType={activeShapeType}
@@ -242,16 +323,17 @@ const Index = () => {
                   />
                 </div>
                 
-                <div className="flex space-x-2">
+                <div className="flex space-x-1 sm:space-x-2 w-full sm:w-auto justify-end">
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button 
                           variant="outline"
                           size="icon"
+                          className="h-7 w-7 sm:h-8 sm:w-8"
                           onClick={() => setComponentConfigModalOpen(true)}
                         >
-                          <Wrench className="h-4 w-4" />
+                          <Wrench className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -266,9 +348,10 @@ const Index = () => {
                         <Button 
                           variant="outline"
                           size="icon"
+                          className="h-7 w-7 sm:h-8 sm:w-8"
                           onClick={deleteAllShapes}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -280,7 +363,7 @@ const Index = () => {
               </div>
               
               {isFormulaEditorOpen && (
-                <div className="mb-4">
+                <div className="mb-1 sm:mb-2 md:mb-4">
                   <FormulaEditor
                     formulas={formulas}
                     onAddFormula={handleAddFormula}
@@ -314,6 +397,7 @@ const Index = () => {
                 onGridPositionChange={handleGridPositionChange}
                 serviceFactory={serviceFactory}
                 onMeasurementUpdate={updateMeasurement}
+                onFormulaSelect={setSelectedFormulaId}
               />
             </div>
           </div>

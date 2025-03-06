@@ -50,6 +50,7 @@ interface GeometryCanvasProps {
   onMoveAllShapes?: (dx: number, dy: number) => void;
   onGridPositionChange?: (newPosition: Point) => void;
   onMeasurementUpdate?: (key: string, value: string) => void;
+  onFormulaSelect?: (formulaId: string) => void;
 }
 
 const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
@@ -72,7 +73,8 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
   onMoveAllShapes,
   onGridPositionChange,
   serviceFactory,
-  onMeasurementUpdate
+  onMeasurementUpdate,
+  onFormulaSelect
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -901,14 +903,19 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
         setCurrentPointInfo(null);
       }
       
-      // Focus the canvas to enable keyboard navigation
-      if (canvasRef.current) {
-        console.log('Focusing canvas element');
-        canvasRef.current.focus();
-      } else {
-        console.log('Canvas ref is null, cannot focus');
+      // Select the formula in the function tool
+      // This will notify the parent component to update the selected formula
+      if (onFormulaSelect) {
+        onFormulaSelect(point.formula.id);
+      }
+      
+      // If we have a mode change handler, switch to formula mode
+      // This will open the formula editor if it's not already open
+      if (onModeChange) {
+        onModeChange('select');
       }
     } else {
+      setSelectedPoint(null);
       setCurrentPointInfo(null);
     }
   };
@@ -1317,9 +1324,11 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
         {/* Display unified info panel */}
         {(selectedPoint || selectedShapeId) && (
           <div 
-            className={`absolute w-80 unified-info-panel-container bottom-4 z-40 transition-all duration-200 ease-in-out ${
-              showCalibration ? 'right-[calc(20rem+1rem)]' : 'right-4'
-            }`}
+            className={`absolute unified-info-panel-container z-40 transition-all duration-200 ease-in-out
+              ${showCalibration 
+                ? 'right-[calc(20rem+1rem)] bottom-4 w-72 sm:w-80' 
+                : 'right-2 sm:right-4 bottom-2 sm:bottom-4 w-[calc(100%-1rem)] sm:w-72 md:w-80'
+              }`}
           >
             <UnifiedInfoPanel 
               // Point info props

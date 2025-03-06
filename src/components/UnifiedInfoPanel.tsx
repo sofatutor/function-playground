@@ -6,6 +6,7 @@ import { useTranslate } from '@/utils/translate';
 import MeasurementItem from './MeasurementPanel/MeasurementItem';
 import ShapeIcon from './MeasurementPanel/ShapeIcon';
 import { normalizeAngleDegrees } from '@/utils/geometry/rotation';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface UnifiedInfoPanelProps {
   // Shape info props
@@ -41,6 +42,7 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
   pixelsPerUnit
 }) => {
   const t = useTranslate();
+  const isMobile = useIsMobile();
   
   // State to track which measurement is being edited
   const [editingKey, setEditingKey] = useState<string | null>(null);
@@ -153,13 +155,13 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
     if (selectedShape) {
       return (
         <>
-          <div className="flex items-center space-x-2 mb-3">
+          <div className="flex items-center space-x-2 mb-2 sm:mb-3">
             <ShapeIcon shapeType={selectedShape.type} />
-            <span className="text-sm font-medium">
+            <span className="text-xs sm:text-sm font-medium">
               {t(`shapeNames.${selectedShape.type}`)}
             </span>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-2">
             {Object.entries(measurements).map(([key, value]) => (
               <MeasurementItem
                 key={key}
@@ -185,18 +187,18 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
     if (point) {
       return (
         <>
-          <div className="flex items-center mb-3">
+          <div className="flex items-center mb-2 sm:mb-3">
             <div 
-              className="w-3 h-3 rounded-full mr-2" 
+              className="w-2 h-2 sm:w-3 sm:h-3 rounded-full mr-1 sm:mr-2" 
               style={{ backgroundColor: point.formula.color }}
             />
-            <span className="text-sm font-medium">
+            <span className="text-xs sm:text-sm font-medium truncate max-w-[200px] sm:max-w-full">
               {formatExpression(point.formula.expression)}
             </span>
           </div>
           
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="space-y-2 sm:space-y-3">
+            <div className="grid grid-cols-2 gap-1 sm:gap-2 text-xs sm:text-sm">
               <div>
                 <span className="text-muted-foreground">{t('pointX')}:</span> {formatNumber(point.mathX)}
               </div>
@@ -205,44 +207,50 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
               </div>
             </div>
             
-            <div className="text-sm pt-2 border-t">
+            <div className="text-xs sm:text-sm pt-1 sm:pt-2 border-t">
               <span className="text-muted-foreground">{t('calculation')}:</span>
-              <div className="font-mono text-xs bg-muted p-2 rounded mt-1 overflow-x-auto">
+              <div className="font-mono text-[10px] sm:text-xs bg-muted p-1 sm:p-2 rounded mt-1 overflow-x-auto">
                 {calculateY()}
               </div>
             </div>
             
             {/* Navigation step size and keyboard controls */}
-            <div className="text-sm pt-2 border-t">
+            <div className="text-xs sm:text-sm pt-1 sm:pt-2 border-t">
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Navigation:</span>
-                <span className="font-mono text-xs bg-muted px-2 py-1 rounded">
+                <span className="text-muted-foreground text-[10px] sm:text-xs">Navigation:</span>
+                <span className="font-mono text-[10px] sm:text-xs bg-muted px-1 sm:px-2 py-0.5 sm:py-1 rounded">
                   Step: {(point.navigationStepSize || 0.1).toFixed(2)}
                   {point.navigationStepSize === 1.0 && (
                     <span className="ml-1 text-amber-500">(Shift)</span>
                   )}
                 </span>
               </div>
-              <div className="text-xs text-muted-foreground mt-1 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+              <div className="text-[10px] sm:text-xs text-muted-foreground mt-1 flex flex-wrap items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
                   <path d="M19 12H5M12 19l-7-7 7-7"/>
                 </svg>
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
                   <path d="M5 12h14M12 5l7 7-7 7"/>
                 </svg>
-                Navigate points
-                <span className="mx-2">•</span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
-                  <path d="M12 19V5M5 12l7-7 7 7"/>
-                </svg>
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
-                  <path d="M12 5v14M19 12l-7 7-7-7"/>
-                </svg>
-                Adjust step size
+                <span className="mr-1">Navigate points</span>
+                {!isMobile && (
+                  <>
+                    <span className="mx-1">•</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                      <path d="M12 19V5M5 12l7-7 7 7"/>
+                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                      <path d="M12 5v14M19 12l-7 7-7-7"/>
+                    </svg>
+                    <span>Adjust step size</span>
+                  </>
+                )}
               </div>
-              <div className="text-xs text-muted-foreground mt-1">
-                Hold <span className="font-mono bg-muted px-1 rounded">Shift</span> to temporarily use 1.0 step size
-              </div>
+              {!isMobile && (
+                <div className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                  Hold <span className="font-mono bg-muted px-1 rounded">Shift</span> to temporarily use 1.0 step size
+                </div>
+              )}
             </div>
           </div>
         </>
@@ -263,11 +271,11 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
       onPointerDown={(e) => e.stopPropagation()}
       onPointerUp={(e) => e.stopPropagation()}
     >
-      <CardContent className="p-4">
+      <CardContent className="p-1 sm:p-2 md:p-4 max-h-[calc(100vh-8rem)] overflow-y-auto no-scrollbar">
         {renderContent()}
       </CardContent>
     </Card>
   );
 };
 
-export default UnifiedInfoPanel; 
+export default UnifiedInfoPanel;

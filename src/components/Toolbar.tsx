@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -10,6 +9,7 @@ import type { ShapeType, OperationMode } from '@/types/shapes';
 import { useTranslate } from '@/utils/translate';
 import { useConfig } from '@/context/ConfigContext';
 import { getFormula } from '@/utils/geometryUtils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ToolbarProps {
   activeMode: OperationMode;
@@ -38,6 +38,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
 }) => {
   const t = useTranslate();
   const { language } = useConfig();
+  const isMobile = useIsMobile();
   
   return (
     <div className="flex items-center space-x-1 p-1 bg-white rounded-lg shadow-sm border border-gray-200 animate-fade-in">
@@ -46,10 +47,10 @@ const Toolbar: React.FC<ToolbarProps> = ({
         onClick={() => onModeChange('select')}
         tooltip={t('tooltips.select')}
       >
-        <MousePointer size={18} />
+        <MousePointer className="h-3 w-3 sm:h-4 sm:w-4" />
       </ToolButton>
       
-      <Separator orientation="vertical" className="h-8 mx-1" />
+      <Separator orientation="vertical" className="h-6 sm:h-8 mx-0.5 sm:mx-1" />
       
       <ToolButton 
         active={activeMode === 'create' && activeShapeType === 'rectangle'}
@@ -61,7 +62,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
         formula={getFormula('rectangle', 'area', language)}
         formulaExplanation={t('formulaExplanations.rectangle.area')}
       >
-        <Square size={18} />
+        <Square className="h-3 w-3 sm:h-4 sm:w-4" />
       </ToolButton>
       
       <ToolButton 
@@ -74,7 +75,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
         formula={getFormula('circle', 'area', language)}
         formulaExplanation={t('formulaExplanations.circle.area')}
       >
-        <Circle size={18} />
+        <Circle className="h-3 w-3 sm:h-4 sm:w-4" />
       </ToolButton>
       
       <ToolButton 
@@ -87,7 +88,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
         formula={getFormula('triangle', 'area', language)}
         formulaExplanation={t('formulaExplanations.triangle.area')}
       >
-        <Triangle size={18} />
+        <Triangle className="h-3 w-3 sm:h-4 sm:w-4" />
       </ToolButton>
       
       <ToolButton 
@@ -100,10 +101,10 @@ const Toolbar: React.FC<ToolbarProps> = ({
         formula="d = \\sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}"
         formulaExplanation={t('tooltips.lineExplanation') || "Calculates the straight-line distance between two points"}
       >
-        <Ruler size={18} />
+        <Ruler className="h-3 w-3 sm:h-4 sm:w-4" />
       </ToolButton>
       
-      <Separator orientation="vertical" className="h-8 mx-1" />
+      <Separator orientation="vertical" className="h-6 sm:h-8 mx-0.5 sm:mx-1" />
       
       {onToggleFormulaEditor && (
         <>
@@ -113,10 +114,10 @@ const Toolbar: React.FC<ToolbarProps> = ({
             tooltip={t('tooltips.plot')}
             formulaExplanation={t('tooltips.plotDescription')}
           >
-            <FunctionSquare size={18} />
+            <FunctionSquare className="h-3 w-3 sm:h-4 sm:w-4" />
           </ToolButton>
           
-          <Separator orientation="vertical" className="h-8 mx-1" />
+          <Separator orientation="vertical" className="h-6 sm:h-8 mx-0.5 sm:mx-1" />
         </>
       )}
       
@@ -126,10 +127,10 @@ const Toolbar: React.FC<ToolbarProps> = ({
         disabled={!hasSelectedShape}
         tooltip={t('tooltips.rotate')}
       >
-        <RotateCw size={18} />
+        <RotateCw className="h-3 w-3 sm:h-4 sm:w-4" />
       </ToolButton>
       
-      <Separator orientation="vertical" className="h-8 mx-1" />
+      <Separator orientation="vertical" className="h-6 sm:h-8 mx-0.5 sm:mx-1" />
       
       <ToolButton 
         onClick={onDelete}
@@ -137,7 +138,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
         tooltip={t('tooltips.delete')}
         variant="destructive"
       >
-        <Trash size={18} />
+        <Trash className="h-3 w-3 sm:h-4 sm:w-4" />
       </ToolButton>
     </div>
   );
@@ -165,6 +166,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
   variant = 'default'
 }) => {
   const t = useTranslate();
+  const isMobile = useIsMobile();
   
   return (
     <TooltipProvider>
@@ -175,27 +177,27 @@ const ToolButton: React.FC<ToolButtonProps> = ({
             size="icon"
             onClick={onClick}
             disabled={disabled}
-            className={`h-9 w-9 transition-all ${active ? 'bg-geometry-primary text-white' : ''} 
+            className={`h-7 w-7 sm:h-9 sm:w-9 transition-all ${active ? 'bg-geometry-primary text-white' : ''} 
               ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {children}
           </Button>
         </TooltipTrigger>
-        <TooltipContent side="bottom" align="center" className={formula ? "max-w-xs p-4" : ""}>
+        <TooltipContent side={isMobile ? "bottom" : "bottom"} align="center" className={formula ? "max-w-xs p-2 sm:p-4" : ""}>
           {formula ? (
-            <div className="space-y-2">
-              <p className="text-xs font-medium">{tooltip}</p>
-              <div className="katex-formula pt-1">
+            <div className="space-y-1 sm:space-y-2">
+              <p className="text-[10px] sm:text-xs font-medium">{tooltip}</p>
+              <div className="katex-formula pt-1 text-xs sm:text-sm">
                 <InlineMath math={formula} />
               </div>
               {formulaExplanation && (
-                <div className="text-xs text-muted-foreground mt-1">
+                <div className="text-[10px] sm:text-xs text-muted-foreground mt-1">
                   {formulaExplanation}
                 </div>
               )}
             </div>
           ) : (
-            <p className="text-xs">{tooltip}</p>
+            <p className="text-[10px] sm:text-xs">{tooltip}</p>
           )}
         </TooltipContent>
       </Tooltip>

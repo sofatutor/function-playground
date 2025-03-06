@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { convertNaturalLanguageToExpression } from '@/services/openaiService';
 import { toast } from 'sonner';
 import { useConfig } from '@/context/ConfigContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FormulaEditorProps {
   formulas: Formula[];
@@ -42,6 +43,7 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
   const [isNaturalLanguageOpen, setIsNaturalLanguageOpen] = useState(false);
   const [naturalLanguageInput, setNaturalLanguageInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const isMobile = useIsMobile();
 
   // Function to find the selected formula
   const findSelectedFormula = (): Formula | undefined => {
@@ -197,28 +199,28 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
 
   return (
     <Card className="w-full shadow-lg">
-      <CardContent className="p-4">
-        <div className="grid gap-4">
-          <div className="flex justify-between items-center">
-            <div className="flex gap-2 overflow-x-auto pb-1">
+      <CardContent className="p-1 sm:p-2 md:p-4">
+        <div className="grid gap-1 sm:gap-2 md:gap-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-2">
+            <div className="flex gap-1 overflow-x-auto pb-1 w-full max-w-full no-scrollbar">
               {formulas.map((formula) => (
                 <Button
                   key={formula.id}
                   variant={formula.id === selectedFormulaId ? "secondary" : "outline"}
                   size="sm"
-                  className="flex items-center gap-1 text-xs"
+                  className="flex items-center gap-1 text-[10px] sm:text-xs h-6 sm:h-7 px-1 sm:px-2 min-w-0 flex-shrink-0"
                   onClick={() => onSelectFormula && onSelectFormula(formula.id)}
                 >
                   <div 
-                    className="w-3 h-3 rounded-full" 
+                    className="w-2 h-2 sm:w-2 sm:h-2 rounded-full flex-shrink-0" 
                     style={{ backgroundColor: formula.color }}
                   />
-                  <span className="max-w-[100px] truncate">
+                  <span className="max-w-[40px] sm:max-w-[60px] md:max-w-[80px] truncate">
                     {formula.expression ? formula.expression : t('formulaDefault')}
                   </span>
                   {formula.id === selectedFormulaId && (
                     <span 
-                      className="ml-1 opacity-70 hover:opacity-100 text-destructive cursor-pointer"
+                      className="ml-1 opacity-70 hover:opacity-100 text-destructive cursor-pointer flex-shrink-0"
                       onClick={(e) => {
                         e.stopPropagation();
                         onDeleteFormula(formula.id);
@@ -230,38 +232,38 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
                       }}
                       title={t('deleteFormulaTooltip')}
                     >
-                      <Trash2 size={14} />
+                      <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                     </span>
                   )}
                 </Button>
               ))}
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-1 sm:gap-2 flex-shrink-0 w-full sm:w-auto">
               <Button 
                 variant="outline" 
                 size="sm"
                 onClick={handleCreateFormula}
-                className="flex items-center gap-1"
+                className="flex items-center gap-1 h-6 sm:h-7 text-[10px] sm:text-xs px-1 sm:px-2 w-full sm:w-auto"
               >
-                <PlusCircle size={14} />
+                <PlusCircle className="h-3 w-3 sm:h-4 sm:w-4" />
                 {t('newFormula')}
               </Button>
             </div>
           </div>
 
           {selectedFormulaId && (
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-1 sm:gap-2">
               {/* Expression Input */}
-              <div className="flex-1 min-w-[200px]">
+              <div className="flex-1 min-w-[150px] sm:min-w-[200px] w-full sm:w-auto">
                 <div className="relative">
                   <Input 
                     id="formula-expression"
                     value={findSelectedFormula()?.expression ?? t('formulaPlaceholder')}
                     onChange={(e) => handleUpdateFormula('expression', e.target.value)}
                     placeholder={t('formulaPlaceholder')}
-                    className="pr-20"
+                    className="pr-12 sm:pr-16 h-7 sm:h-8 text-[10px] sm:text-xs"
                   />
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+                  <div className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 flex gap-1">
                     <Popover open={isNaturalLanguageOpen} onOpenChange={setIsNaturalLanguageOpen}>
                       <PopoverTrigger asChild>
                         <button 
@@ -269,34 +271,34 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
                           type="button"
                           title={t('naturalLanguageTooltip')}
                         >
-                          <Sparkles size={16} />
+                          <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
                         </button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-80 p-4" align="end">
-                        <div className="space-y-4">
-                          <h3 className="font-medium text-sm">{t('naturalLanguageTitle')}</h3>
+                      <PopoverContent className="w-[200px] sm:w-[250px] md:w-[280px] p-2 sm:p-3" align="end">
+                        <div className="space-y-2 sm:space-y-3">
+                          <h3 className="font-medium text-[10px] sm:text-xs">{t('naturalLanguageTitle')}</h3>
                           <Textarea
                             placeholder={t('naturalLanguagePlaceholder')}
                             value={naturalLanguageInput}
                             onChange={(e) => setNaturalLanguageInput(e.target.value)}
-                            className="min-h-[100px]"
+                            className="min-h-[60px] sm:min-h-[80px] text-[10px] sm:text-xs"
                           />
-                          <div className="text-xs text-muted-foreground">
+                          <div className="text-[8px] sm:text-[10px] text-muted-foreground">
                             {t('naturalLanguageDescription')}
                           </div>
                           <Button 
                             onClick={handleNaturalLanguageConversion}
                             disabled={isProcessing || !naturalLanguageInput.trim()}
-                            className="w-full"
+                            className="w-full h-6 sm:h-8 text-[10px] sm:text-xs"
                           >
                             {isProcessing ? (
                               <>
-                                <Loader2 size={16} className="mr-2 animate-spin" />
+                                <Loader2 className="h-3 w-3 mr-1 animate-spin sm:h-4 sm:w-4 sm:mr-2" />
                                 {t('naturalLanguageProcessing')}
                               </>
                             ) : (
                               <>
-                                <Sparkles size={16} className="mr-2" />
+                                <Sparkles className="h-3 w-3 mr-1 sm:h-4 sm:w-4 sm:mr-2" />
                                 {t('naturalLanguageGenerate')}
                               </>
                             )}
@@ -311,24 +313,24 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
                           type="button"
                           title={t('browseExamples')}
                         >
-                          <BookOpen size={16} />
+                          <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" />
                         </button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-80 max-h-96 overflow-y-auto p-0" align="end">
-                        <div className="p-4 space-y-4">
+                      <PopoverContent className="w-[200px] sm:w-[250px] md:w-[280px] max-h-60 sm:max-h-80 overflow-y-auto p-0" align="end">
+                        <div className="p-2 sm:p-3 space-y-2 sm:space-y-3">
                           {Object.entries(examplesByCategory).map(([category, categoryExamples]) => (
                             <div key={category}>
-                              <h3 className="font-medium mb-2 capitalize text-sm">{t(`categories.${category}`)}</h3>
+                              <h3 className="font-medium mb-1 capitalize text-[10px] sm:text-xs">{t(`categories.${category}`)}</h3>
                               <div className="space-y-1">
                                 {categoryExamples.map((example) => (
                                   <div 
                                     key={example.name} 
-                                    className="flex items-center p-2 hover:bg-muted rounded-md cursor-pointer"
+                                    className="flex items-center p-1 hover:bg-muted rounded-md cursor-pointer"
                                     onClick={() => handleLoadExample(example)}
                                   >
                                     <div className="flex-1">
-                                      <div className="font-medium text-sm">{example.name}</div>
-                                      <div className="text-xs text-muted-foreground">{example.description}</div>
+                                      <div className="font-medium text-[10px] sm:text-xs">{example.name}</div>
+                                      <div className="text-[8px] sm:text-[10px] text-muted-foreground">{example.description}</div>
                                     </div>
                                   </div>
                                 ))}
@@ -342,107 +344,110 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
                 </div>
               </div>
 
-              {/* Color Picker */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    className="h-9 w-9 relative"
-                    title={t('colorPicker')}
-                  >
-                    <div 
-                      className="absolute inset-0 m-2 rounded-sm" 
-                      style={{ backgroundColor: findSelectedFormula()?.color || '#ff0000' }}
-                    />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-3">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Input 
-                        id="formula-color" 
-                        type="color" 
-                        value={findSelectedFormula()?.color || '#ff0000'}
-                        onChange={(e) => handleUpdateFormula('color', e.target.value)}
-                        className="w-8 h-8 p-0 border-0"
+              {/* Controls Row */}
+              <div className="flex flex-wrap gap-1 sm:gap-2 w-full sm:w-auto">
+                {/* Color Picker */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      className="h-7 w-7 sm:h-8 sm:w-8 relative flex-shrink-0"
+                      title={t('colorPicker')}
+                    >
+                      <div 
+                        className="absolute inset-0 m-1 sm:m-2 rounded-sm" 
+                        style={{ backgroundColor: findSelectedFormula()?.color || '#ff0000' }}
                       />
-                      <Input 
-                        id="formula-color-text" 
-                        type="text" 
-                        value={findSelectedFormula()?.color || '#ff0000'}
-                        onChange={(e) => handleUpdateFormula('color', e.target.value)}
-                        className="w-24 h-8"
-                      />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-1 sm:p-2">
+                    <div className="space-y-1 sm:space-y-2">
+                      <div className="flex items-center gap-1">
+                        <Input 
+                          id="formula-color" 
+                          type="color" 
+                          value={findSelectedFormula()?.color || '#ff0000'}
+                          onChange={(e) => handleUpdateFormula('color', e.target.value)}
+                          className="w-5 h-5 sm:w-6 sm:h-6 p-0 border-0"
+                        />
+                        <Input 
+                          id="formula-color-text" 
+                          type="text" 
+                          value={findSelectedFormula()?.color || '#ff0000'}
+                          onChange={(e) => handleUpdateFormula('color', e.target.value)}
+                          className="w-16 sm:w-20 h-6 sm:h-7 text-[10px] sm:text-xs"
+                        />
+                      </div>
                     </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
+                  </PopoverContent>
+                </Popover>
 
-              {/* Scale Factor Control */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="h-9 px-2 flex items-center gap-1"
-                    title={t('scaleFactor')}
-                  >
-                    <ZoomIn size={14} />
-                    <span className="text-xs">
-                      {currentScaleFactor < 0.01 
-                        ? currentScaleFactor.toFixed(3) 
-                        : currentScaleFactor.toFixed(2)}x
-                    </span>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-64 p-4">
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">{t('scaleFactor')}</span>
-                      <span className="text-xs text-muted-foreground">
+                {/* Scale Factor Control */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 sm:h-8 px-1 sm:px-2 flex items-center gap-1 flex-shrink-0"
+                      title={t('scaleFactor')}
+                    >
+                      <ZoomIn className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <span className="text-[10px] sm:text-xs">
                         {currentScaleFactor < 0.01 
                           ? currentScaleFactor.toFixed(3) 
                           : currentScaleFactor.toFixed(2)}x
                       </span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-48 sm:w-56 p-2 sm:p-3">
+                    <div className="space-y-1 sm:space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] sm:text-xs font-medium">{t('scaleFactor')}</span>
+                        <span className="text-[8px] sm:text-[10px] text-muted-foreground">
+                          {currentScaleFactor < 0.01 
+                            ? currentScaleFactor.toFixed(3) 
+                            : currentScaleFactor.toFixed(2)}x
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-5 w-5 sm:h-6 sm:w-6" 
+                          onClick={handleZoomOut}
+                        >
+                          <ZoomOut className="h-3 w-3 sm:h-4 sm:w-4" />
+                        </Button>
+                        <Slider
+                          defaultValue={[logScaleFactor]}
+                          min={-3} // 10^-3 = 0.001
+                          max={1}  // 10^1 = 10
+                          step={0.01}
+                          onValueChange={handleScaleFactorChange}
+                          className="flex-1"
+                        />
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-5 w-5 sm:h-6 sm:w-6" 
+                          onClick={handleZoomIn}
+                        >
+                          <ZoomIn className="h-3 w-3 sm:h-4 sm:w-4" />
+                        </Button>
+                      </div>
+                      <div className="flex justify-between text-[8px] sm:text-[10px] text-muted-foreground mt-1">
+                        <span>0.001x</span>
+                        <span>1.0x</span>
+                        <span>10x</span>
+                      </div>
+                      <p className="text-[8px] sm:text-[10px] text-muted-foreground mt-1">
+                        {t('scaleFactorHint')}
+                      </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="icon" 
-                        className="h-7 w-7" 
-                        onClick={handleZoomOut}
-                      >
-                        <ZoomOut size={14} />
-                      </Button>
-                      <Slider
-                        defaultValue={[logScaleFactor]}
-                        min={-3} // 10^-3 = 0.001
-                        max={1}  // 10^1 = 10
-                        step={0.01}
-                        onValueChange={handleScaleFactorChange}
-                        className="flex-1"
-                      />
-                      <Button 
-                        variant="outline" 
-                        size="icon" 
-                        className="h-7 w-7" 
-                        onClick={handleZoomIn}
-                      >
-                        <ZoomIn size={14} />
-                      </Button>
-                    </div>
-                    <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                      <span>0.001x</span>
-                      <span>1.0x</span>
-                      <span>10x</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {t('scaleFactorHint')}
-                    </p>
-                  </div>
-                </PopoverContent>
-              </Popover>
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
           )}
         </div>
