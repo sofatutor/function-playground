@@ -2,6 +2,13 @@ import React, { createContext, ReactNode, useContext, useEffect, useState } from
 import { MeasurementUnit } from '@/types/shapes';
 import { encryptData, decryptData } from '@/utils/encryption';
 
+// Constants for localStorage keys (non-human readable)
+const STORAGE_KEYS = {
+  LANGUAGE: 'lang',
+  OPENAI_API_KEY: '_gp_oai_k',
+  MEASUREMENT_UNIT: 'mu'
+};
+
 // Separate types for global vs component settings
 type GlobalConfigContextType = {
   // Global application settings
@@ -44,7 +51,7 @@ const ComponentConfigContext = createContext<ComponentConfigContextType | undefi
 const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // Global settings
   const [language, setLanguage] = useState<string>(() => {
-    const storedLanguage = localStorage.getItem('language');
+    const storedLanguage = localStorage.getItem(STORAGE_KEYS.LANGUAGE);
     return storedLanguage || navigator.language.split('-')[0] || 'en';
   });
   
@@ -54,7 +61,7 @@ const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // Component-specific settings
   const [pixelsPerUnit, setPixelsPerUnit] = useState<number>(60); // Default: 60 pixels per unit
   const [measurementUnit, setMeasurementUnit] = useState<MeasurementUnit>(() => {
-    const storedUnit = localStorage.getItem('measurement_unit');
+    const storedUnit = localStorage.getItem(STORAGE_KEYS.MEASUREMENT_UNIT);
     return (storedUnit as MeasurementUnit) || 'cm';
   });
   
@@ -63,7 +70,7 @@ const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // Load the API key from localStorage on initial render
   useEffect(() => {
     const loadApiKey = async () => {
-      const storedKey = localStorage.getItem('openai_api_key');
+      const storedKey = localStorage.getItem(STORAGE_KEYS.OPENAI_API_KEY);
       console.log('Retrieved from localStorage:', storedKey ? '(encrypted key)' : '(no key)');
       
       if (storedKey) {
@@ -109,7 +116,7 @@ const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     if (key) {
       try {
         const encrypted = await encryptData(key);
-        localStorage.setItem('openai_api_key', encrypted);
+        localStorage.setItem(STORAGE_KEYS.OPENAI_API_KEY, encrypted);
         
         // Debug: Verify encryption/decryption is working
         const decrypted = await decryptData(encrypted);
@@ -120,18 +127,18 @@ const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         console.error('Failed to encrypt and store API key', e);
       }
     } else {
-      localStorage.removeItem('openai_api_key');
+      localStorage.removeItem(STORAGE_KEYS.OPENAI_API_KEY);
     }
   };
   
   // Persist language changes
   useEffect(() => {
-    localStorage.setItem('language', language);
+    localStorage.setItem(STORAGE_KEYS.LANGUAGE, language);
   }, [language]);
   
   // Persist measurement unit changes
   useEffect(() => {
-    localStorage.setItem('measurement_unit', measurementUnit);
+    localStorage.setItem(STORAGE_KEYS.MEASUREMENT_UNIT, measurementUnit);
   }, [measurementUnit]);
   
   // Global context value
