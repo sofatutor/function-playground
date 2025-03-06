@@ -1,21 +1,34 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useShapeOperations } from '@/hooks/useShapeOperations';
 import { useServiceFactory } from '@/providers/ServiceProvider';
+import { useComponentConfig } from '@/context/ConfigContext';
 import GeometryHeader from '@/components/GeometryHeader';
 import GeometryCanvas from '@/components/GeometryCanvas';
 import Toolbar from '@/components/Toolbar';
 import UnitSelector from '@/components/UnitSelector';
 import FormulaEditor from '@/components/FormulaEditor';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTranslate } from '@/utils/translate';
 import { Point } from '@/types/shapes';
 import { Formula } from '@/types/formula';
 import { getStoredPixelsPerUnit } from '@/utils/geometry/common';
 import { createDefaultFormula } from '@/utils/formulaUtils';
+import ConfigModal from '@/components/ConfigModal';
+import ComponentConfigModal from '@/components/ComponentConfigModal';
+import { Settings, Trash2, Wrench } from 'lucide-react';
+import { 
+  updateUrlWithData, 
+  getShapesFromUrl, 
+  getGridPositionFromUrl,
+  getFormulasFromUrl
+} from '@/utils/urlEncoding';
+import { toast } from 'sonner';
 
 const Index = () => {
   // Get the service factory
   const serviceFactory = useServiceFactory();
+  const { setComponentConfigModalOpen } = useComponentConfig();
   
   const {
     shapes,
@@ -45,6 +58,11 @@ const Index = () => {
   const [isFormulaEditorOpen, setIsFormulaEditorOpen] = useState(false);
   const [selectedFormulaId, setSelectedFormulaId] = useState<string | null>(null);
   const [pixelsPerUnit, setPixelsPerUnit] = useState<number>(getStoredPixelsPerUnit(measurementUnit));
+  
+  // Add a ref to track if we've loaded from URL
+  const hasLoadedFromUrl = useRef(false);
+  // Add a ref for the URL update timeout
+  const urlUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Effect to update pixelsPerUnit when measurement unit changes
   useEffect(() => {
@@ -62,6 +80,49 @@ const Index = () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
     };
   }, []);
+  
+  // Load formulas from URL when component mounts
+  useEffect(() => {
+    if (hasLoadedFromUrl.current) {
+      return;
+    }
+
+    // Load formulas from URL
+    const formulasFromUrl = getFormulasFromUrl();
+    if (formulasFromUrl && formulasFromUrl.length > 0) {
+      setFormulas(formulasFromUrl);
+      setSelectedFormulaId(formulasFromUrl[0].id);
+      setIsFormulaEditorOpen(true);
+      toast.success(`Loaded ${formulasFromUrl.length} formulas from URL`);
+    }
+
+    // Mark as loaded from URL
+    hasLoadedFromUrl.current = true;
+  }, []);
+  
+  // Update URL whenever shapes, formulas, or grid position change, but only after initial load
+  useEffect(() => {
+    if (!hasLoadedFromUrl.current) {
+      return;
+    }
+
+    if (shapes.length > 0 || formulas.length > 0 || gridPosition) {
+      if (urlUpdateTimeoutRef.current) {
+        clearTimeout(urlUpdateTimeoutRef.current);
+      }
+
+      urlUpdateTimeoutRef.current = setTimeout(() => {
+        updateUrlWithData(shapes, formulas, gridPosition);
+        urlUpdateTimeoutRef.current = null;
+      }, 300);
+    }
+
+    return () => {
+      if (urlUpdateTimeoutRef.current) {
+        clearTimeout(urlUpdateTimeoutRef.current);
+      }
+    };
+  }, [shapes, formulas, gridPosition]);
 
   // Handle formula operations
   const handleAddFormula = useCallback((formula: Formula) => {
@@ -158,6 +219,10 @@ const Index = () => {
       <div className={`${isFullscreen ? 'max-w-full p-2' : 'container py-8'} transition-all duration-200 h-[calc(100vh-2rem)]`}>
         <GeometryHeader isFullscreen={isFullscreen} />
         
+        {/* Include both modals */}
+        <ConfigModal />
+        <ComponentConfigModal />
+        
         <div className="h-[calc(100%-4rem)]">
           <div className="h-full">
             <div className="flex flex-col h-full">
@@ -175,25 +240,43 @@ const Index = () => {
                     onToggleFormulaEditor={toggleFormulaEditor}
                     isFormulaEditorOpen={isFormulaEditorOpen}
                   />
-                  
-                  <div className="h-8 w-px bg-gray-200 mx-1" />
-                  
-                  <div className="w-24">
-                    <UnitSelector
-                      value={measurementUnit}
-                      onChange={setMeasurementUnit}
-                    />
-                  </div>
                 </div>
                 
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  onClick={deleteAllShapes}
-                  className="text-sm"
-                >
-                  {t('clearCanvas')}
-                </Button>
+                <div className="flex space-x-2">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setComponentConfigModalOpen(true)}
+                        >
+                          <Wrench className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{t('componentConfigModal.openButton')}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="outline"
+                          size="icon"
+                          onClick={deleteAllShapes}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{t('clearCanvas')}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
               </div>
               
               {isFormulaEditorOpen && (
@@ -225,6 +308,7 @@ const Index = () => {
                 onShapeMove={moveShape}
                 onShapeResize={resizeShape}
                 onShapeRotate={rotateShape}
+                onShapeDelete={deleteShape}
                 onModeChange={setActiveMode}
                 onMoveAllShapes={handleMoveAllShapes}
                 onGridPositionChange={handleGridPositionChange}

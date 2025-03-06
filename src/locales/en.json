@@ -139,5 +139,69 @@
     "parametric": "Parametric Curves",
     "special": "Special Functions",
     "polynomial": "Polynomials"
-  }
+  },
+  "naturalLanguageTitle": "Describe Your Function",
+  "naturalLanguagePlaceholder": "Describe the function in natural language, e.g., 'a parabola that opens upward' or 'sine wave with period of 2π'",
+  "naturalLanguageDescription": "Use natural language or pseudocode to describe the function you want to create. OpenAI will convert it to a mathematical expression.",
+  "naturalLanguageGenerate": "Generate Expression",
+  "naturalLanguageProcessing": "Processing...",
+  "naturalLanguageTooltip": "Generate from description",
+  "naturalLanguageSuccess": "Expression generated successfully",
+  "naturalLanguageError": "Failed to generate expression",
+  "naturalLanguageEmpty": "Please enter a description",
+  "configModal": {
+    "title": "Configuration",
+    "description": "Manage application settings and preferences",
+    "openButton": "Global Settings",
+    "tabs": {
+      "general": "General",
+      "openai": "OpenAI API",
+      "calibration": "Screen Calibration"
+    },
+    "general": {
+      "title": "General Settings",
+      "description": "Configure basic application settings",
+      "languageLabel": "Language",
+      "languagePlaceholder": "Select language"
+    },
+    "openai": {
+      "title": "OpenAI API Settings",
+      "description": "Configure your OpenAI API key for natural language processing",
+      "apiKeyLabel": "API Key",
+      "apiKeyPlaceholder": "Enter your OpenAI API key",
+      "apiKeyHint": "Your API key is stored locally and encrypted. It is never sent to our servers.",
+      "saveApiKey": "Save API Key",
+      "clearApiKey": "Clear API Key"
+    },
+    "calibration": {
+      "title": "Screen Calibration",
+      "description": "Calibrate your screen for accurate physical measurements",
+      "instructions": "Your screen may not display measurements at their actual physical size. Use this tool to calibrate your display for accurate measurements.",
+      "lengthLabel": "Calibration Length",
+      "startButton": "Start Calibration",
+      "placeRuler": "Place a physical ruler or measuring tape against your screen and adjust the line below until it matches exactly",
+      "lineDescription": "This line should be exactly {length} {unit} long",
+      "coarseAdjustment": "Coarse Adjustment",
+      "fineAdjustment": "Fine Adjustment",
+      "currentValue": "Current Value",
+      "pixelsPerUnit": "pixels per {unit}",
+      "cancelButton": "Cancel",
+      "applyButton": "Apply Calibration"
+    }
+  },
+  "componentConfigModal": {
+    "title": "Canvas Settings",
+    "description": "Configure canvas-specific settings and calibration",
+    "openButton": "Canvas Settings",
+    "tabs": {
+      "units": "Measurement Units",
+      "calibration": "Screen Calibration"
+    },
+    "units": {
+      "title": "Measurement Units",
+      "description": "Configure the units used for measurements in this canvas"
+    }
+  },
+  "enterFullscreen": "Enter Fullscreen",
+  "exitFullscreen": "Exit Fullscreen"
 }

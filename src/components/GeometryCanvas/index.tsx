@@ -2,7 +2,6 @@ import React, { useRef, useState, useEffect, useCallback, KeyboardEvent as React
 import CanvasGrid from '../CanvasGrid/index';
 import ShapeRenderer from './ShapeRenderer';
 import PreviewShape from './PreviewShape';
-import CalibrationButton from './CalibrationButton';
 import FormulaGraph from '../FormulaGraph';
 import UnifiedInfoPanel from '../UnifiedInfoPanel';
 import { AnyShape, Point, OperationMode, ShapeType, MeasurementUnit } from '@/types/shapes';
@@ -46,6 +45,7 @@ interface GeometryCanvasProps {
   onShapeMove: (id: string, newPosition: Point) => void;
   onShapeResize: (id: string, factor: number) => void;
   onShapeRotate: (id: string, angle: number) => void;
+  onShapeDelete?: (id: string) => void;
   onModeChange?: (mode: OperationMode) => void;
   onMoveAllShapes?: (dx: number, dy: number) => void;
   onGridPositionChange?: (newPosition: Point) => void;
@@ -67,6 +67,7 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
   onShapeMove,
   onShapeResize,
   onShapeRotate,
+  onShapeDelete,
   onModeChange,
   onMoveAllShapes,
   onGridPositionChange,
@@ -343,6 +344,7 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     onShapeMove,
     onShapeResize,
     onShapeRotate,
+    onShapeDelete,
     onModeChange,
     serviceFactory
   });
@@ -386,11 +388,15 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
   
   // Update pixel values when measurement unit changes
   useEffect(() => {
+    console.log('GeometryCanvas: Measurement unit changed to', measurementUnit);
+    
     // Default to 'cm' if measurementUnit is undefined
     const unit = measurementUnit || 'cm';
+    console.log('Using unit:', unit);
     
     // Get the stored calibration value for this unit
     const storedValue = getStoredPixelsPerUnit(unit);
+    console.log('Retrieved stored pixels per unit:', storedValue);
     
     // Update the pixel values without affecting the grid position
     if (unit === 'in') {
@@ -400,10 +406,19 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
       setPixelsPerUnit(storedValue);
       setPixelsPerSmallUnit(storedValue / 10); // 1mm = 1/10th of a cm
     }
+    console.log('Updated pixelsPerUnit:', storedValue);
+    console.log('Updated pixelsPerSmallUnit:', storedValue / 10);
     
-    // We don't need to adjust any positions here since the CanvasGrid component
-    // will maintain its position when the unit changes
-  }, [measurementUnit]);
+    // Force a redraw of the canvas
+    if (canvasRef.current) {
+      const rect = canvasRef.current.getBoundingClientRect();
+      setCanvasSize({
+        width: rect.width,
+        height: rect.height
+      });
+      console.log('Canvas size set to:', rect.width, rect.height);
+    }
+  }, [measurementUnit, canvasRef]);
 
   // Clear existing calibration values and use the new defaults
   // This effect should only run once on mount
@@ -551,7 +566,8 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     onShapeCreate,
     onShapeMove,
     onShapeResize,
-    onShapeRotate
+    onShapeRotate,
+    onShapeDelete
   });
   
   // Simple key up handler
@@ -907,16 +923,19 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     setSelectedPoint(null);
   }, [formulas]);
 
-  // Render the formulas
+  // Inside the GeometryCanvas component, add logging to trace rendering
+  console.log('Rendering GeometryCanvas with pixelsPerUnit:', pixelsPerUnit, 'and measurementUnit:', measurementUnit);
+
+  // Add logging to the renderFormulas function
   const renderFormulas = () => {
+    console.log('Rendering formulas with gridPosition:', gridPosition, 'and pixelsPerUnit:', pixelsPerUnit);
     if (!formulas || formulas.length === 0 || !gridPosition) {
       return null;
     }
     
-    console.log(`Rendering ${formulas.length} formulas:`, formulas.map(f => f.id));
-    
     // Use the internal pixelsPerUnit value
     const ppu = externalPixelsPerUnit || pixelsPerUnit;
+    console.log('Using pixels per unit for rendering formulas:', ppu);
     
     // Create a grid position key to force re-renders when grid moves
     const gridKey = `${gridPosition.x.toFixed(1)}-${gridPosition.y.toFixed(1)}`;
@@ -1147,15 +1166,6 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
 
   return (
     <div className="relative w-full h-full">
-      {/* Calibration button and tool */}
-      <CalibrationButton
-        showCalibration={showCalibration}
-        toggleCalibration={toggleCalibration}
-        measurementUnit={measurementUnit}
-        pixelsPerUnit={pixelsPerUnit}
-        onCalibrationComplete={handleCalibrationComplete}
-      />
-      
       <div 
         ref={canvasRef}
         className="canvas-container relative w-full h-full overflow-hidden"
@@ -1307,13 +1317,9 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
         {/* Display unified info panel */}
         {(selectedPoint || selectedShapeId) && (
           <div 
-            className="absolute w-80 unified-info-panel-container"
-            style={{
-              bottom: '1rem',
-              right: showCalibration ? 'calc(20rem + 1rem)' : '1rem',
-              zIndex: 60,
-              transition: 'right 0.2s ease-in-out'
-            }}
+            className={`absolute w-80 unified-info-panel-container bottom-4 z-40 transition-all duration-200 ease-in-out ${
+              showCalibration ? 'right-[calc(20rem+1rem)]' : 'right-4'
+            }`}
           >
             <UnifiedInfoPanel 
               // Point info props

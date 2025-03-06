@@ -153,30 +153,23 @@ export class CircleServiceImpl implements CircleService {
     // Get the conversion factor for the current unit
     const pixelsPerUnit = getStoredPixelsPerUnit(unit);
     
-    // Convert the new value from units to pixels
-    let newValueInPixels: number;
-    let areaInPixels: number;
+    // Variable for area calculation
+    let radiusInUnits: number;
     
     switch (measurementKey) {
       case 'radius':
-        // Convert radius from units to pixels
-        newValueInPixels = newValue * pixelsPerUnit;
-        return this.updateRadius(shape, newValueInPixels);
+        // The newValue is already in the correct unit, just convert to pixels
+        return this.updateRadius(shape, newValue * pixelsPerUnit);
       case 'diameter':
-        // Convert diameter from units to pixels, then divide by 2 for radius
-        newValueInPixels = (newValue * pixelsPerUnit) / 2;
-        return this.updateRadius(shape, newValueInPixels);
+        // Convert diameter to radius, then to pixels
+        return this.updateRadius(shape, (newValue / 2) * pixelsPerUnit);
       case 'circumference':
-        // Convert circumference from units to pixels
         // C = 2πr, so r = C/(2π)
-        newValueInPixels = (newValue * pixelsPerUnit) / (2 * Math.PI);
-        return this.updateRadius(shape, newValueInPixels);
+        return this.updateRadius(shape, (newValue / (2 * Math.PI)) * pixelsPerUnit);
       case 'area':
-        // Convert area from square units to square pixels
         // A = πr², so r = √(A/π)
-        areaInPixels = newValue * pixelsPerUnit * pixelsPerUnit;
-        newValueInPixels = Math.sqrt(areaInPixels / Math.PI);
-        return this.updateRadius(shape, newValueInPixels);
+        radiusInUnits = Math.sqrt(newValue / Math.PI);
+        return this.updateRadius(shape, radiusInUnits * pixelsPerUnit);
       default:
         console.warn(`Unhandled measurement key: "${measurementKey}" for circle. Supported keys are: radius, diameter, circumference, area.`);
         return shape;

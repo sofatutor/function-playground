@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MeasurementUnit } from '@/types/shapes';
+import { useTranslate } from '@/utils/translate';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MinusIcon, PlusIcon } from "lucide-react";
 
 interface CalibrationToolProps {
   measurementUnit: MeasurementUnit;
@@ -16,8 +19,9 @@ const CalibrationTool: React.FC<CalibrationToolProps> = ({
   onCalibrationComplete,
   defaultPixelsPerUnit
 }) => {
+  const t = useTranslate();
   const [calibrationLength, setCalibrationLength] = useState<number>(10);
-  const [pixelsPerUnit, setPixelsPerUnit] = useState<number>(defaultPixelsPerUnit);
+  const [currentPixelsPerUnit, setCurrentPixelsPerUnit] = useState<number>(defaultPixelsPerUnit);
   const [calibrationLineWidth, setCalibrationLineWidth] = useState<number>(0);
   const [isCalibrating, setIsCalibrating] = useState<boolean>(false);
   const lineRef = useRef<HTMLDivElement>(null);
@@ -25,144 +29,146 @@ const CalibrationTool: React.FC<CalibrationToolProps> = ({
   // Update the calibration line width based on the current pixels per unit
   useEffect(() => {
     if (isCalibrating) {
-      setCalibrationLineWidth(calibrationLength * pixelsPerUnit);
+      setCalibrationLineWidth(calibrationLength * currentPixelsPerUnit);
     }
-  }, [calibrationLength, pixelsPerUnit, isCalibrating]);
+  }, [calibrationLength, currentPixelsPerUnit, isCalibrating]);
 
   const startCalibration = () => {
     setIsCalibrating(true);
     // Initialize with current value
-    setCalibrationLineWidth(calibrationLength * pixelsPerUnit);
+    setCalibrationLineWidth(calibrationLength * currentPixelsPerUnit);
   };
 
   const adjustCalibration = (increase: boolean) => {
     const step = increase ? 1 : -1;
-    const newPixelsPerUnit = Math.max(1, pixelsPerUnit + step);
-    setPixelsPerUnit(newPixelsPerUnit);
+    const newPixelsPerUnit = Math.max(1, currentPixelsPerUnit + step);
+    setCurrentPixelsPerUnit(newPixelsPerUnit);
   };
 
   const fineTuneCalibration = (increase: boolean) => {
     const step = increase ? 0.1 : -0.1;
-    const newPixelsPerUnit = Math.max(0.1, parseFloat((pixelsPerUnit + step).toFixed(1)));
-    setPixelsPerUnit(newPixelsPerUnit);
+    const newPixelsPerUnit = Math.max(0.1, parseFloat((currentPixelsPerUnit + step).toFixed(1)));
+    setCurrentPixelsPerUnit(newPixelsPerUnit);
   };
 
   const completeCalibration = () => {
-    onCalibrationComplete(pixelsPerUnit);
+    onCalibrationComplete(currentPixelsPerUnit);
+    
+    // Store the calibration value in localStorage
+    localStorage.setItem(`pixelsPerUnit_${measurementUnit}`, currentPixelsPerUnit.toString());
+    
+    // Force a refresh of the component to ensure the changes are applied
+    window.dispatchEvent(new Event('resize'));
+    
     setIsCalibrating(false);
   };
 
   const cancelCalibration = () => {
-    setPixelsPerUnit(defaultPixelsPerUnit);
+    setCurrentPixelsPerUnit(defaultPixelsPerUnit);
     setIsCalibrating(false);
   };
 
-  const unitLabel = measurementUnit === 'cm' ? 'centimeters' : 'inches';
+  const unitLabel = measurementUnit === 'cm' ? t('units.centimeters') : t('units.inches');
   const unitAbbr = measurementUnit;
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Screen Calibration</CardTitle>
-        <CardDescription>
-          Calibrate your screen to ensure accurate physical measurements
-        </CardDescription>
+    <Card className="relative p-4 w-full max-w-md mx-auto z-[100]">
+      <CardHeader className="pb-2">
+        <CardTitle>{t('configModal.calibration.title')}</CardTitle>
+        <CardDescription>{t('configModal.calibration.description')}</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         {!isCalibrating ? (
-          <div className="space-y-4">
-            <p className="text-sm">
-              Your screen may not display measurements at their actual physical size. 
-              Use this tool to calibrate your display for accurate measurements.
+          <>
+            <p className="text-sm text-muted-foreground">
+              {t('configModal.calibration.instructions')}
             </p>
-            <div className="flex items-center space-x-2">
-              <Label htmlFor="calibration-length">Calibration Length ({unitAbbr}):</Label>
-              <Input
-                id="calibration-length"
-                type="number"
-                min="1"
-                max="30"
-                value={calibrationLength}
-                onChange={(e) => setCalibrationLength(parseFloat(e.target.value) || 10)}
-                className="w-20"
-              />
+            <div className="flex flex-col space-y-2">
+              <Label htmlFor="calibration-length">{t('configModal.calibration.lengthLabel')}</Label>
+              <Select
+                value={String(calibrationLength)}
+                onValueChange={(value) => setCalibrationLength(Number(value))}
+              >
+                <SelectTrigger id="calibration-length">
+                  <SelectValue placeholder="Select length" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1 {unitLabel}</SelectItem>
+                  <SelectItem value="5">5 {unitLabel}</SelectItem>
+                  <SelectItem value="10">10 {unitLabel}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <Button onClick={startCalibration}>Start Calibration</Button>
-          </div>
+            <Button onClick={startCalibration} className="w-full">
+              {t('configModal.calibration.startButton')}
+            </Button>
+          </>
         ) : (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <p className="text-sm font-medium">
-                Place a physical ruler or measuring tape against your screen and adjust the line below 
-                until it matches exactly {calibrationLength} {unitLabel}.
-              </p>
-              <div className="flex flex-col items-center space-y-4">
+          <>
+            <p className="text-sm text-muted-foreground mb-2">
+              {t('configModal.calibration.placeRuler')}
+            </p>
+            
+            {/* Centered calibration line */}
+            <div className="flex justify-center items-center mb-6">
+              <div className="relative">
                 <div 
                   ref={lineRef}
-                  className="h-4 bg-geometry-primary rounded-sm"
-                  style={{ width: `${calibrationLineWidth}px` }}
-                />
-                <div className="text-xs text-muted-foreground">
-                  This line should be exactly {calibrationLength} {unitLabel} long
+                  className="relative h-6 bg-gradient-to-r from-green-400 to-green-500 rounded-md z-50 shadow-[0_0_8px_rgba(74,222,128,0.6)]" 
+                  style={{ width: `${calibrationLength * currentPixelsPerUnit}px` }}
+                ></div>
+                <div className="absolute -bottom-6 left-0 right-0 text-center text-sm">
+                  {t('configModal.calibration.lineDescription', { length: String(calibrationLength), unit: unitLabel })}
                 </div>
               </div>
             </div>
             
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Coarse Adjustment:</span>
-                <div className="flex space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => adjustCalibration(false)}
-                  >
-                    -
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>{t('configModal.calibration.coarseAdjustment')}</Label>
+                <div className="flex items-center space-x-2 mt-2">
+                  <Button variant="outline" size="icon" onClick={() => adjustCalibration(false)}>
+                    <MinusIcon className="h-4 w-4" />
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => adjustCalibration(true)}
-                  >
-                    +
+                  <Button variant="outline" size="icon" onClick={() => adjustCalibration(true)}>
+                    <PlusIcon className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
               
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Fine Adjustment:</span>
-                <div className="flex space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => fineTuneCalibration(false)}
-                  >
-                    -0.1
+              <div>
+                <Label>{t('configModal.calibration.fineAdjustment')}</Label>
+                <div className="flex items-center space-x-2 mt-2">
+                  <Button variant="outline" size="icon" onClick={() => fineTuneCalibration(false)}>
+                    <MinusIcon className="h-4 w-4" />
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => fineTuneCalibration(true)}
-                  >
-                    +0.1
+                  <Button variant="outline" size="icon" onClick={() => fineTuneCalibration(true)}>
+                    <PlusIcon className="h-4 w-4" />
                   </Button>
                 </div>
-              </div>
-              
-              <div className="flex justify-between items-center pt-2">
-                <span className="text-sm font-medium">Current Value:</span>
-                <span className="font-mono">{pixelsPerUnit.toFixed(1)} pixels per {unitAbbr}</span>
               </div>
             </div>
-          </div>
+            
+            <div className="mt-2 p-2 bg-muted rounded-md">
+              <div className="flex justify-between">
+                <span className="text-sm">{t('configModal.calibration.currentValue')}:</span>
+                <span className="text-sm font-medium">
+                  {currentPixelsPerUnit.toFixed(2)} {t('configModal.calibration.pixelsPerUnit', { unit: unitAbbr })}
+                </span>
+              </div>
+            </div>
+            
+            <div className="flex justify-between mt-4">
+              <Button variant="outline" onClick={cancelCalibration}>
+                {t('configModal.calibration.cancelButton')}
+              </Button>
+              <Button onClick={completeCalibration}>
+                {t('configModal.calibration.applyButton')}
+              </Button>
+            </div>
+          </>
         )}
       </CardContent>
-      {isCalibrating && (
-        <CardFooter className="flex justify-between">
-          <Button variant="outline" onClick={cancelCalibration}>Cancel</Button>
-          <Button onClick={completeCalibration}>Apply Calibration</Button>
-        </CardFooter>
-      )}
     </Card>
   );
 };

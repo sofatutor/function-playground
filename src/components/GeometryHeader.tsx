@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import LanguageSelector from './LanguageSelector';
 import { useTranslate } from '@/utils/translate';
 import { Button } from './ui/button';
-import { Maximize2, Minimize2, Share2 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Maximize2, Minimize2, Share2, Settings } from 'lucide-react';
 import { useShapeOperations } from '@/hooks/useShapeOperations';
+import { useGlobalConfig } from '@/context/ConfigContext';
 
 interface GeometryHeaderProps {
   isFullscreen: boolean;
@@ -13,6 +14,7 @@ const GeometryHeader: React.FC<GeometryHeaderProps> = ({ isFullscreen }) => {
   const t = useTranslate();
   const [isFullscreenState, setIsFullscreenState] = useState(isFullscreen);
   const { shareCanvasUrl, shapes } = useShapeOperations();
+  const { setGlobalConfigModalOpen } = useGlobalConfig();
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -43,40 +45,72 @@ const GeometryHeader: React.FC<GeometryHeaderProps> = ({ isFullscreen }) => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
     };
   }, []);
-  
+
   return (
-    <div className={`flex flex-col ${isFullscreenState ? 'space-y-0 mb-1' : 'space-y-1 mb-6'} animate-fade-in`}>
-      <div className="flex justify-between items-center">
-        <h1 className={`${isFullscreenState ? 'text-xl' : 'text-3xl'} font-bold tracking-tight transition-all`}>
-          {t('appTitle')}
-        </h1>
-        <div className="flex items-center space-x-2">
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={shareCanvasUrl}
-            title={t('shareCanvas')}
-            disabled={shapes.length === 0}
-          >
-            <Share2 size={18} />
-          </Button>
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={toggleFullscreen}
-            title={isFullscreenState ? t('exitFullscreen') : t('enterFullscreen')}
-          >
-            {isFullscreenState ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-          </Button>
-          <LanguageSelector />
-        </div>
+    <header className="flex items-center justify-between p-4 bg-background border-b">
+      <div className="flex items-center space-x-2">
+        <h1 className="text-xl font-bold">{t('appTitle')}</h1>
+        <p className="hidden md:block text-sm text-muted-foreground">{t('appDescription')}</p>
       </div>
-      {!isFullscreenState && (
-        <p className="text-sm text-muted-foreground">
-          {t('appDescription')}
-        </p>
-      )}
-    </div>
+      
+      <div className="flex items-center space-x-2">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={() => setGlobalConfigModalOpen(true)}
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{t('configModal.openButton')}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={shareCanvasUrl}
+                disabled={shapes.length === 0}
+              >
+                <Share2 className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{t('shareCanvas')}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={toggleFullscreen}
+              >
+                {isFullscreen ? (
+                  <Minimize2 className="h-4 w-4" />
+                ) : (
+                  <Maximize2 className="h-4 w-4" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{isFullscreen ? t('exitFullscreen') : t('enterFullscreen')}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+    </header>
   );
 };
 

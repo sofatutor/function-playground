@@ -110,5 +110,77 @@
   "parametricPointInfo": "Fonction paramétrique (valeur t non disponible)",
   "polarPointInfo": "Fonction polaire (valeur θ non disponible)",
   "pointInfoTitle": "Information du Point",
-  "clickOnCurveInstruction": "Cliquez sur la courbe pour sélectionner un point et afficher ses informations."
+  "clickOnCurveInstruction": "Cliquez sur la courbe pour sélectionner un point et afficher ses informations.",
+  "categories": {
+    "basic": "Fonctions de base",
+    "trigonometric": "Fonctions trigonométriques",
+    "exponential": "Exponentielles et logarithmiques",
+    "parametric": "Courbes paramétriques",
+    "special": "Fonctions spéciales",
+    "polynomial": "Polynômes"
+  },
+  "naturalLanguageTitle": "Décrire votre fonction",
+  "naturalLanguagePlaceholder": "Décrivez la fonction en langage naturel, par ex., 'une parabole qui s'ouvre vers le haut' ou 'onde sinusoïdale avec une période de 2π'",
+  "naturalLanguageDescription": "Utilisez un langage naturel ou du pseudocode pour décrire la fonction que vous souhaitez créer. OpenAI la convertira en expression mathématique.",
+  "naturalLanguageGenerate": "Générer l'expression",
+  "naturalLanguageProcessing": "Traitement en cours...",
+  "naturalLanguageTooltip": "Générer à partir de la description",
+  "naturalLanguageSuccess": "Expression générée avec succès",
+  "naturalLanguageError": "Échec de la génération de l'expression",
+  "naturalLanguageEmpty": "Veuillez entrer une description",
+  "configModal": {
+    "title": "Configuration",
+    "description": "Gérer les paramètres et préférences de l'application",
+    "openButton": "Paramètres Globaux",
+    "tabs": {
+      "general": "Général",
+      "openai": "API OpenAI",
+      "calibration": "Calibration d'Écran"
+    },
+    "general": {
+      "title": "Paramètres Généraux",
+      "description": "Configurer les paramètres de base de l'application",
+      "languageLabel": "Langue",
+      "languagePlaceholder": "Sélectionner la langue"
+    },
+    "openai": {
+      "title": "Paramètres de l'API OpenAI",
+      "description": "Configurer votre clé API OpenAI pour le traitement du langage naturel",
+      "apiKeyLabel": "Clé API",
+      "apiKeyPlaceholder": "Entrez votre clé API OpenAI",
+      "apiKeyHint": "Votre clé API est stockée localement et chiffrée. Elle n'est jamais envoyée à nos serveurs.",
+      "saveApiKey": "Enregistrer la Clé API",
+      "clearApiKey": "Effacer la Clé API"
+    },
+    "calibration": {
+      "title": "Calibration d'Écran",
+      "description": "Calibrer votre écran pour des mesures physiques précises",
+      "instructions": "Votre écran peut ne pas afficher les mesures à leur taille physique réelle. Utilisez cet outil pour calibrer votre écran pour des mesures précises.",
+      "lengthLabel": "Longueur de Calibration",
+      "startButton": "Démarrer la Calibration",
+      "placeRuler": "Placez une règle physique ou un mètre ruban contre votre écran et ajustez la ligne ci-dessous jusqu'à ce qu'elle corresponde exactement",
+      "lineDescription": "Cette ligne doit mesurer exactement {length} {unit}",
+      "coarseAdjustment": "Ajustement Grossier",
+      "fineAdjustment": "Ajustement Fin",
+      "currentValue": "Valeur Actuelle",
+      "pixelsPerUnit": "pixels par {unit}",
+      "cancelButton": "Annuler",
+      "applyButton": "Appliquer la Calibration"
+    }
+  },
+  "componentConfigModal": {
+    "title": "Paramètres du Canevas",
+    "description": "Configurer les paramètres spécifiques au canevas et la calibration",
+    "openButton": "Paramètres du Canevas",
+    "tabs": {
+      "units": "Unités de Mesure",
+      "calibration": "Calibration d'Écran"
+    },
+    "units": {
+      "title": "Unités de Mesure",
+      "description": "Configurer les unités utilisées pour les mesures dans ce canevas"
+    }
+  },
+  "enterFullscreen": "Passer en Plein Écran",
+  "exitFullscreen": "Quitter le Plein Écran"
 } 

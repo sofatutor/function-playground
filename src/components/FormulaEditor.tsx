@@ -5,11 +5,15 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { PlusCircle, Trash2, BookOpen, ZoomIn, ZoomOut, Palette } from 'lucide-react';
+import { PlusCircle, Trash2, BookOpen, ZoomIn, ZoomOut, Palette, Sparkles, Loader2 } from 'lucide-react';
 import { MeasurementUnit } from '@/types/shapes';
 import { getFormulaExamples, createDefaultFormula } from '@/utils/formulaUtils';
 import { useTranslate } from '@/utils/translate';
 import { Slider } from '@/components/ui/slider';
+import { Textarea } from '@/components/ui/textarea';
+import { convertNaturalLanguageToExpression } from '@/services/openaiService';
+import { toast } from 'sonner';
+import { useConfig } from '@/context/ConfigContext';
 
 interface FormulaEditorProps {
   formulas: Formula[];
@@ -33,7 +37,11 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
   onSelectFormula
 }) => {
   const t = useTranslate();
+  const { openaiApiKey } = useConfig();
   const examples = getFormulaExamples();
+  const [isNaturalLanguageOpen, setIsNaturalLanguageOpen] = useState(false);
+  const [naturalLanguageInput, setNaturalLanguageInput] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Function to find the selected formula
   const findSelectedFormula = (): Formula | undefined => {
@@ -113,6 +121,51 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
       const currentScaleFactor = findSelectedFormula()?.scaleFactor || 1.0;
       const newScaleFactor = Math.max(currentScaleFactor / 1.25, 0.001);
       onUpdateFormula(selectedFormulaId, { scaleFactor: newScaleFactor });
+    }
+  };
+
+  // Handle natural language conversion
+  const handleNaturalLanguageConversion = async () => {
+    if (!naturalLanguageInput.trim()) {
+      toast.error(t('naturalLanguageEmpty'));
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const result = await convertNaturalLanguageToExpression(naturalLanguageInput, openaiApiKey);
+      
+      if (selectedFormulaId) {
+        // Update the current formula
+        onUpdateFormula(selectedFormulaId, {
+          expression: result.expression
+        });
+        toast.success(t('naturalLanguageSuccess'), {
+          description: result.explanation
+        });
+      } else {
+        // Create a new formula with the generated expression
+        const newFormula = {
+          ...createDefaultFormula('function'),
+          expression: result.expression
+        };
+        onAddFormula(newFormula);
+        if (onSelectFormula) {
+          onSelectFormula(newFormula.id);
+        }
+        toast.success(t('naturalLanguageSuccess'), {
+          description: result.explanation
+        });
+      }
+      
+      // Close the popover and reset the input
+      setIsNaturalLanguageOpen(false);
+      setNaturalLanguageInput('');
+    } catch (error) {
+      console.error('Error converting natural language:', error);
+      toast.error(t('naturalLanguageError'));
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -206,42 +259,86 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
                     value={findSelectedFormula()?.expression ?? t('formulaPlaceholder')}
                     onChange={(e) => handleUpdateFormula('expression', e.target.value)}
                     placeholder={t('formulaPlaceholder')}
-                    className="pr-10"
+                    className="pr-20"
                   />
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <button 
-                        className="absolute right-2 top-1/2 -translate-y-1/2 opacity-70 hover:opacity-100"
-                        type="button"
-                        title={t('browseExamples')}
-                      >
-                        <BookOpen size={16} />
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-80 max-h-96 overflow-y-auto p-0" align="end">
-                      <div className="p-4 space-y-4">
-                        {Object.entries(examplesByCategory).map(([category, categoryExamples]) => (
-                          <div key={category}>
-                            <h3 className="font-medium mb-2 capitalize text-sm">{t(`categories.${category}`)}</h3>
-                            <div className="space-y-1">
-                              {categoryExamples.map((example) => (
-                                <div 
-                                  key={example.name} 
-                                  className="flex items-center p-2 hover:bg-muted rounded-md cursor-pointer"
-                                  onClick={() => handleLoadExample(example)}
-                                >
-                                  <div className="flex-1">
-                                    <div className="font-medium text-sm">{example.name}</div>
-                                    <div className="text-xs text-muted-foreground">{example.description}</div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+                    <Popover open={isNaturalLanguageOpen} onOpenChange={setIsNaturalLanguageOpen}>
+                      <PopoverTrigger asChild>
+                        <button 
+                          className="opacity-70 hover:opacity-100"
+                          type="button"
+                          title={t('naturalLanguageTooltip')}
+                        >
+                          <Sparkles size={16} />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80 p-4" align="end">
+                        <div className="space-y-4">
+                          <h3 className="font-medium text-sm">{t('naturalLanguageTitle')}</h3>
+                          <Textarea
+                            placeholder={t('naturalLanguagePlaceholder')}
+                            value={naturalLanguageInput}
+                            onChange={(e) => setNaturalLanguageInput(e.target.value)}
+                            className="min-h-[100px]"
+                          />
+                          <div className="text-xs text-muted-foreground">
+                            {t('naturalLanguageDescription')}
                           </div>
-                        ))}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                          <Button 
+                            onClick={handleNaturalLanguageConversion}
+                            disabled={isProcessing || !naturalLanguageInput.trim()}
+                            className="w-full"
+                          >
+                            {isProcessing ? (
+                              <>
+                                <Loader2 size={16} className="mr-2 animate-spin" />
+                                {t('naturalLanguageProcessing')}
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles size={16} className="mr-2" />
+                                {t('naturalLanguageGenerate')}
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button 
+                          className="opacity-70 hover:opacity-100"
+                          type="button"
+                          title={t('browseExamples')}
+                        >
+                          <BookOpen size={16} />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80 max-h-96 overflow-y-auto p-0" align="end">
+                        <div className="p-4 space-y-4">
+                          {Object.entries(examplesByCategory).map(([category, categoryExamples]) => (
+                            <div key={category}>
+                              <h3 className="font-medium mb-2 capitalize text-sm">{t(`categories.${category}`)}</h3>
+                              <div className="space-y-1">
+                                {categoryExamples.map((example) => (
+                                  <div 
+                                    key={example.name} 
+                                    className="flex items-center p-2 hover:bg-muted rounded-md cursor-pointer"
+                                    onClick={() => handleLoadExample(example)}
+                                  >
+                                    <div className="flex-1">
+                                      <div className="font-medium text-sm">{example.name}</div>
+                                      <div className="text-xs text-muted-foreground">{example.description}</div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                 </div>
               </div>
 

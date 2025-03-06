@@ -110,5 +110,77 @@
   "parametricPointInfo": "Función paramétrica (valor t no disponible)",
   "polarPointInfo": "Función polar (valor θ no disponible)",
   "pointInfoTitle": "Información del Punto",
-  "clickOnCurveInstruction": "Haz clic en la curva para seleccionar un punto y ver su información."
+  "clickOnCurveInstruction": "Haz clic en la curva para seleccionar un punto y ver su información.",
+  "categories": {
+    "basic": "Funciones básicas",
+    "trigonometric": "Funciones trigonométricas",
+    "exponential": "Exponenciales y logarítmicas",
+    "parametric": "Curvas paramétricas",
+    "special": "Funciones especiales",
+    "polynomial": "Polinomios"
+  },
+  "naturalLanguageTitle": "Describir tu función",
+  "naturalLanguagePlaceholder": "Describe la función en lenguaje natural, p.ej., 'una parábola que se abre hacia arriba' o 'onda sinusoidal con período de 2π'",
+  "naturalLanguageDescription": "Utiliza lenguaje natural o pseudocódigo para describir la función que deseas crear. OpenAI la convertirá en una expresión matemática.",
+  "naturalLanguageGenerate": "Generar expresión",
+  "naturalLanguageProcessing": "Procesando...",
+  "naturalLanguageTooltip": "Generar desde descripción",
+  "naturalLanguageSuccess": "Expresión generada con éxito",
+  "naturalLanguageError": "Error al generar la expresión",
+  "naturalLanguageEmpty": "Por favor, introduce una descripción",
+  "configModal": {
+    "title": "Configuración",
+    "description": "Gestionar ajustes y preferencias de la aplicación",
+    "openButton": "Ajustes Globales",
+    "tabs": {
+      "general": "General",
+      "openai": "API de OpenAI",
+      "calibration": "Calibración de Pantalla"
+    },
+    "general": {
+      "title": "Ajustes Generales",
+      "description": "Configurar ajustes básicos de la aplicación",
+      "languageLabel": "Idioma",
+      "languagePlaceholder": "Seleccionar idioma"
+    },
+    "openai": {
+      "title": "Ajustes de la API de OpenAI",
+      "description": "Configurar tu clave de API de OpenAI para el procesamiento de lenguaje natural",
+      "apiKeyLabel": "Clave de API",
+      "apiKeyPlaceholder": "Introduce tu clave de API de OpenAI",
+      "apiKeyHint": "Tu clave de API se almacena localmente y se encripta. Nunca se envía a nuestros servidores.",
+      "saveApiKey": "Guardar Clave de API",
+      "clearApiKey": "Borrar Clave de API"
+    },
+    "calibration": {
+      "title": "Calibración de Pantalla",
+      "description": "Calibra tu pantalla para mediciones físicas precisas",
+      "instructions": "Es posible que tu pantalla no muestre las medidas en su tamaño físico real. Utiliza esta herramienta para calibrar tu pantalla para mediciones precisas.",
+      "lengthLabel": "Longitud de Calibración",
+      "startButton": "Iniciar Calibración",
+      "placeRuler": "Coloca una regla física o cinta métrica contra tu pantalla y ajusta la línea de abajo hasta que coincida exactamente",
+      "lineDescription": "Esta línea debe medir exactamente {length} {unit}",
+      "coarseAdjustment": "Ajuste Grueso",
+      "fineAdjustment": "Ajuste Fino",
+      "currentValue": "Valor Actual",
+      "pixelsPerUnit": "píxeles por {unit}",
+      "cancelButton": "Cancelar",
+      "applyButton": "Aplicar Calibración"
+    }
+  },
+  "componentConfigModal": {
+    "title": "Ajustes del Lienzo",
+    "description": "Configurar ajustes específicos del lienzo y calibración",
+    "openButton": "Ajustes del Lienzo",
+    "tabs": {
+      "units": "Unidades de Medida",
+      "calibration": "Calibración de Pantalla"
+    },
+    "units": {
+      "title": "Unidades de Medida",
+      "description": "Configurar las unidades utilizadas para mediciones en este lienzo"
+    }
+  },
+  "enterFullscreen": "Entrar en Pantalla Completa",
+  "exitFullscreen": "Salir de Pantalla Completa"
 } 
