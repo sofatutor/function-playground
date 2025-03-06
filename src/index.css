@@ -254,7 +254,14 @@
   font-weight: bold;
 }
 
-/* Add a hint for users about grid dragging */
+/* Hide keyboard hint only on mobile devices */
+@media (max-width: 768px) {
+  .canvas-grid:hover::after {
+    display: none;
+  }
+}
+
+/* Show keyboard hint for desktop users */
 .canvas-grid:hover::after {
   content: "Alt+Click to move grid origin | Alt+Shift+Click to move grid and shapes";
   position: absolute;
@@ -272,4 +279,5 @@
 
 .canvas-grid:not(:hover)::after {
   opacity: 0;
+  transition: opacity 0.5s ease-out;
 }

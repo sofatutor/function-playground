@@ -8,6 +8,7 @@ import { useTranslate } from '@/utils/translate';
 import { getFormula } from '@/utils/geometryUtils';
 import { useConfig } from '@/context/ConfigContext';
 import { normalizeAngleDegrees } from '@/utils/geometry/rotation';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface MeasurementItemProps {
   measureKey: string;
@@ -38,6 +39,7 @@ const MeasurementItem: React.FC<MeasurementItemProps> = ({
 }) => {
   const t = useTranslate();
   const { language } = useConfig();
+  const isMobile = useIsMobile();
   
   // Format measurement values
   const formatValue = (key: string, value: string): string => {
@@ -116,10 +118,10 @@ const MeasurementItem: React.FC<MeasurementItemProps> = ({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <span className="text-xs text-muted-foreground cursor-help flex items-center">
+            <span className="text-[10px] sm:text-xs text-muted-foreground cursor-help flex items-center">
               {measurementLabel}
               {hasFormula && (
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1 h-3 w-3 text-muted-foreground">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1 h-2 w-2 sm:h-3 sm:w-3 text-muted-foreground">
                   <circle cx="12" cy="12" r="10"></circle>
                   <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                   <path d="M12 17h.01"></path>
@@ -128,13 +130,13 @@ const MeasurementItem: React.FC<MeasurementItemProps> = ({
             </span>
           </TooltipTrigger>
           {hasFormula && (
-            <TooltipContent side="top" className="max-w-xs p-4">
-              <div className="space-y-2">
-                <div className="font-medium">{t('formula')}:</div>
-                <div className="katex-formula">
+            <TooltipContent side={isMobile ? "bottom" : "top"} className="max-w-xs p-3 sm:p-4">
+              <div className="space-y-1 sm:space-y-2">
+                <div className="font-medium text-xs sm:text-sm">{t('formula')}:</div>
+                <div className="katex-formula text-xs sm:text-sm">
                   <InlineMath math={getFormula(shape.type, measureKey, language)} />
                 </div>
-                <div className="text-xs text-muted-foreground mt-2">
+                <div className="text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2">
                   {t(`formulaExplanations.${shape.type}.${measureKey}`)}
                 </div>
               </div>
@@ -149,7 +151,7 @@ const MeasurementItem: React.FC<MeasurementItemProps> = ({
           onClick={(e) => e.stopPropagation()}
         >
           <Input
-            className="h-6 text-sm"
+            className="h-5 sm:h-6 text-xs sm:text-sm"
             value={editValue}
             onChange={onInputChange}
             onKeyDown={(e) => {
@@ -165,26 +167,26 @@ const MeasurementItem: React.FC<MeasurementItemProps> = ({
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-6 w-6" 
+              className="h-5 w-5 sm:h-6 sm:w-6" 
               onClick={(e) => {
                 e.stopPropagation();
                 onSaveEdit();
               }}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3 sm:h-4 sm:w-4">
                 <polyline points="20 6 9 17 4 12"></polyline>
               </svg>
             </Button>
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-6 w-6" 
+              className="h-5 w-5 sm:h-6 sm:w-6" 
               onClick={(e) => {
                 e.stopPropagation();
                 onCancelEdit();
               }}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3 sm:h-4 sm:w-4">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
               </svg>
@@ -193,12 +195,12 @@ const MeasurementItem: React.FC<MeasurementItemProps> = ({
         </div>
       ) : (
         <div 
-          className={`measurement-value font-medium ${isEditable(measureKey) ? 'cursor-pointer hover:text-geometry-primary' : ''}`}
+          className={`measurement-value text-xs sm:text-sm font-medium ${isEditable(measureKey) ? 'cursor-pointer hover:text-geometry-primary' : ''}`}
           onClick={handleClick}
         >
           {formatValue(measureKey, value)} {t(`unitSuffixes.${measureKey}`, { unit: measurementUnit })}
           {isEditable(measureKey) && (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block ml-1 h-3 w-3 text-muted-foreground">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block ml-1 h-2 w-2 sm:h-3 sm:w-3 text-muted-foreground">
               <path d="M12 20h9"></path>
               <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
             </svg>
@@ -209,4 +211,4 @@ const MeasurementItem: React.FC<MeasurementItemProps> = ({
   );
 };
 
-export default MeasurementItem; 
+export default MeasurementItem;

@@ -130,6 +130,7 @@
   "newFormula": "New Function",
   "formulaDefault": "New Function",
   "formulaPlaceholder": "Enter a function expression",
+  "enterFormula": "Enter a function expression",
   "deleteFormulaTooltip": "Delete function",
   "browseExamples": "Browse examples",
   "categories": {
@@ -141,10 +142,12 @@
     "polynomial": "Polynomials"
   },
   "naturalLanguageTitle": "Describe Your Function",
+  "naturalLanguage": "AI Function Generator",
   "naturalLanguagePlaceholder": "Describe the function in natural language, e.g., 'a parabola that opens upward' or 'sine wave with period of 2π'",
   "naturalLanguageDescription": "Use natural language or pseudocode to describe the function you want to create. OpenAI will convert it to a mathematical expression.",
   "naturalLanguageGenerate": "Generate Expression",
   "naturalLanguageProcessing": "Processing...",
+  "processing": "Processing...",
   "naturalLanguageTooltip": "Generate from description",
   "naturalLanguageSuccess": "Expression generated successfully",
   "naturalLanguageError": "Failed to generate expression",

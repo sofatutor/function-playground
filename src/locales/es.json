@@ -101,7 +101,9 @@
     "lineExplanation": "Calcula la distancia en línea recta entre dos puntos",
     "select": "Seleccionar y Mover Formas",
     "rotate": "Rotar Forma",
-    "delete": "Eliminar Seleccionado"
+    "delete": "Eliminar Seleccionado",
+    "plot": "Graficar Funciones",
+    "plotDescription": "Crear y visualizar funciones matemáticas"
   },
   "pointX": "X",
   "pointY": "Y",
@@ -111,6 +113,9 @@
   "polarPointInfo": "Función polar (valor θ no disponible)",
   "pointInfoTitle": "Información del Punto",
   "clickOnCurveInstruction": "Haz clic en la curva para seleccionar un punto y ver su información.",
+  "infoPanel": "Panel de Información",
+  "shapeInfo": "Info de Forma",
+  "pointInfo": "Info de Punto",
   "categories": {
     "basic": "Funciones básicas",
     "trigonometric": "Funciones trigonométricas",
@@ -120,10 +125,12 @@
     "polynomial": "Polinomios"
   },
   "naturalLanguageTitle": "Describir tu función",
+  "naturalLanguage": "Generador de Funciones IA",
   "naturalLanguagePlaceholder": "Describe la función en lenguaje natural, p.ej., 'una parábola que se abre hacia arriba' o 'onda sinusoidal con período de 2π'",
   "naturalLanguageDescription": "Utiliza lenguaje natural o pseudocódigo para describir la función que deseas crear. OpenAI la convertirá en una expresión matemática.",
-  "naturalLanguageGenerate": "Generar expresión",
+  "naturalLanguageGenerate": "Generar Expresión",
   "naturalLanguageProcessing": "Procesando...",
+  "processing": "Procesando...",
   "naturalLanguageTooltip": "Generar desde descripción",
   "naturalLanguageSuccess": "Expresión generada con éxito",
   "naturalLanguageError": "Error al generar la expresión",
@@ -182,5 +189,21 @@
     }
   },
   "enterFullscreen": "Entrar en Pantalla Completa",
-  "exitFullscreen": "Salir de Pantalla Completa"
+  "exitFullscreen": "Salir de Pantalla Completa",
+  "formulaDefault": "Nueva Función",
+  "formulaPlaceholder": "Introduce una expresión de función",
+  "enterFormula": "Introduce una expresión de función",
+  "deleteFormulaTooltip": "Eliminar función",
+  "scaleMax": "10x",
+  "zoomIn": "Acercar",
+  "zoomOut": "Alejar",
+  "functionExpression": "Expresión de Función",
+  "functionExpressionHint": "Usa x como variable, ej. x*x, Math.sin(x), etc.",
+  "color": "Color",
+  "colorPicker": "Elegir un color",
+  "newFormula": "Nueva Función",
+  "scaleFactor": "Factor de Escala",
+  "scaleFactorHint": "Ajusta el factor de escala para estirar o comprimir el gráfico verticalmente",
+  "scaleMin": "0,001x",
+  "scaleDefault": "1,0x"
 } 

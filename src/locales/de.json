@@ -99,7 +99,9 @@
     "lineExplanation": "Berechnet den direkten Abstand zwischen zwei Punkten",
     "select": "Formen auswählen & bewegen",
     "rotate": "Form drehen",
-    "delete": "Ausgewählte löschen"
+    "delete": "Ausgewählte löschen",
+    "plot": "Funktionen plotten",
+    "plotDescription": "Erstellen und visualisieren Sie mathematische Funktionen"
   },
   "holdShiftToSnap15Degrees": "Halte Shift gedrückt, um beim Drehen in 15°-Schritten einzurasten",
   "shareCanvas": "Leinwand-URL teilen",
@@ -111,6 +113,9 @@
   "polarPointInfo": "Polarfunktion (θ-Wert nicht verfügbar)",
   "pointInfoTitle": "Punktinformation",
   "clickOnCurveInstruction": "Klicken Sie auf die Kurve, um einen Punkt auszuwählen und seine Informationen anzuzeigen.",
+  "infoPanel": "Informationsfeld",
+  "shapeInfo": "Forminfo",
+  "pointInfo": "Punktinfo",
   "categories": {
     "basic": "Grundfunktionen",
     "trigonometric": "Trigonometrische Funktionen",
@@ -120,10 +125,12 @@
     "polynomial": "Polynome"
   },
   "naturalLanguageTitle": "Funktion beschreiben",
+  "naturalLanguage": "KI-Funktionsgenerator",
   "naturalLanguagePlaceholder": "Beschreiben Sie die Funktion in natürlicher Sprache, z.B. 'eine Parabel, die nach oben geöffnet ist' oder 'Sinuswelle mit Periode 2π'",
   "naturalLanguageDescription": "Verwenden Sie natürliche Sprache oder Pseudocode, um die gewünschte Funktion zu beschreiben. OpenAI wird diese in einen mathematischen Ausdruck umwandeln.",
   "naturalLanguageGenerate": "Ausdruck generieren",
   "naturalLanguageProcessing": "Verarbeitung...",
+  "processing": "Verarbeitung...",
   "naturalLanguageTooltip": "Aus Beschreibung generieren",
   "naturalLanguageSuccess": "Ausdruck erfolgreich generiert",
   "naturalLanguageError": "Fehler beim Generieren des Ausdrucks",
@@ -182,5 +189,21 @@
     }
   },
   "enterFullscreen": "Vollbildmodus aktivieren",
-  "exitFullscreen": "Vollbildmodus beenden"
+  "exitFullscreen": "Vollbildmodus beenden",
+  "formulaDefault": "Neue Funktion",
+  "formulaPlaceholder": "Geben Sie einen Funktionsausdruck ein",
+  "enterFormula": "Geben Sie einen Funktionsausdruck ein",
+  "deleteFormulaTooltip": "Funktion löschen",
+  "scaleMax": "10x",
+  "zoomIn": "Vergrößern",
+  "zoomOut": "Verkleinern",
+  "functionExpression": "Funktionsausdruck",
+  "functionExpressionHint": "Verwenden Sie x als Variable, z.B. x*x, Math.sin(x), usw.",
+  "color": "Farbe",
+  "colorPicker": "Farbe auswählen",
+  "newFormula": "Neue Funktion",
+  "scaleFactor": "Skalierungsfaktor",
+  "scaleFactorHint": "Passen Sie den Skalierungsfaktor an, um den Graphen vertikal zu strecken oder zu komprimieren",
+  "scaleMin": "0,001x",
+  "scaleDefault": "1,0x"
 }
