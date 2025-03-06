@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
-import { Square, Circle, Triangle, MousePointer, Move, RotateCw, Trash, Ruler } from 'lucide-react';
+import { Square, Circle, Triangle, MousePointer, Move, RotateCw, Trash, Ruler, FunctionSquare } from 'lucide-react';
 import 'katex/dist/katex.min.css';
 import { InlineMath } from 'react-katex';
 import type { ShapeType, OperationMode } from '@/types/shapes';
@@ -20,6 +20,8 @@ interface ToolbarProps {
   onDelete: () => void;
   hasSelectedShape: boolean;
   canDelete: boolean;
+  onToggleFormulaEditor?: () => void;
+  isFormulaEditorOpen?: boolean;
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
@@ -30,7 +32,9 @@ const Toolbar: React.FC<ToolbarProps> = ({
   onClear,
   onDelete,
   hasSelectedShape,
-  canDelete
+  canDelete,
+  onToggleFormulaEditor,
+  isFormulaEditorOpen = false
 }) => {
   const t = useTranslate();
   const { language } = useConfig();
@@ -100,6 +104,21 @@ const Toolbar: React.FC<ToolbarProps> = ({
       </ToolButton>
       
       <Separator orientation="vertical" className="h-8 mx-1" />
+      
+      {onToggleFormulaEditor && (
+        <>
+          <ToolButton 
+            active={isFormulaEditorOpen}
+            onClick={onToggleFormulaEditor}
+            tooltip={t('tooltips.plot')}
+            formulaExplanation={t('tooltips.plotDescription')}
+          >
+            <FunctionSquare size={18} />
+          </ToolButton>
+          
+          <Separator orientation="vertical" className="h-8 mx-1" />
+        </>
+      )}
       
       <ToolButton 
         active={activeMode === 'rotate'}

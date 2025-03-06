@@ -37,7 +37,8 @@
     "angle2": "Winkel 2",
     "angle3": "Winkel 3",
     "length": "Länge",
-    "angle": "Winkel"
+    "angle": "Winkel",
+    "diagonal": "Diagonale"
   },
   "unitSuffixes": {
     "area": "{unit}²",
@@ -55,7 +56,8 @@
     "angle2": "°",
     "angle3": "°",
     "length": "{unit}",
-    "angle": "°"
+    "angle": "°",
+    "diagonal": "{unit}"
   },
   "formulaExplanations": {
     "circle": {
@@ -69,7 +71,8 @@
       "width": "Die horizontale Ausdehnung des Rechtecks.",
       "height": "Die vertikale Ausdehnung des Rechtecks.",
       "area": "Die Fläche innerhalb des Rechtecks.",
-      "perimeter": "Der Umfang des Rechtecks."
+      "perimeter": "Der Umfang des Rechtecks.",
+      "diagonal": "Der direkte Abstand zwischen gegenüberliegenden Ecken des Rechtecks."
     },
     "triangle": {
       "side1": "Die Länge einer Seite des Dreiecks.",
@@ -99,5 +102,13 @@
     "delete": "Ausgewählte löschen"
   },
   "holdShiftToSnap15Degrees": "Halte Shift gedrückt, um beim Drehen in 15°-Schritten einzurasten",
-  "shareCanvas": "Leinwand-URL teilen"
+  "shareCanvas": "Leinwand-URL teilen",
+  "pointX": "X",
+  "pointY": "Y",
+  "calculation": "Berechnung",
+  "calculationError": "Fehler bei der Berechnung des Wertes",
+  "parametricPointInfo": "Parametrische Funktion (t-Wert nicht verfügbar)",
+  "polarPointInfo": "Polarfunktion (θ-Wert nicht verfügbar)",
+  "pointInfoTitle": "Punktinformation",
+  "clickOnCurveInstruction": "Klicken Sie auf die Kurve, um einen Punkt auszuwählen und seine Informationen anzuzeigen."
 }

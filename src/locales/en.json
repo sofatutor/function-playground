@@ -39,7 +39,8 @@
     "angle2": "Angle 2",
     "angle3": "Angle 3",
     "length": "Length",
-    "angle": "Angle"
+    "angle": "Angle",
+    "diagonal": "Diagonal"
   },
   "unitSuffixes": {
     "area": "{unit}²",
@@ -57,7 +58,8 @@
     "angle2": "°",
     "angle3": "°",
     "length": "{unit}",
-    "angle": "°"
+    "angle": "°",
+    "diagonal": "{unit}"
   },
   "formulaExplanations": {
     "circle": {
@@ -71,7 +73,8 @@
       "width": "The horizontal dimension of the rectangle.",
       "height": "The vertical dimension of the rectangle.",
       "area": "The space inside the rectangle.",
-      "perimeter": "The distance around the rectangle."
+      "perimeter": "The distance around the rectangle.",
+      "diagonal": "The straight-line distance between opposite corners of the rectangle."
     },
     "triangle": {
       "side1": "The length of one of the sides of the triangle.",
@@ -98,6 +101,43 @@
     "lineExplanation": "Calculates the straight-line distance between two points",
     "select": "Select & Move Shapes",
     "rotate": "Rotate Shape",
-    "delete": "Delete Selected"
+    "delete": "Delete Selected",
+    "plot": "Plot Functions",
+    "plotDescription": "Create and visualize mathematical functions"
+  },
+  "pointX": "X",
+  "pointY": "Y",
+  "calculation": "Calculation",
+  "calculationError": "Error calculating value",
+  "parametricPointInfo": "Parametric function (t value not available)",
+  "polarPointInfo": "Polar function (θ value not available)",
+  "pointInfoTitle": "Point Information",
+  "clickOnCurveInstruction": "Click on the curve to select a point and view its information.",
+  "infoPanel": "Information Panel",
+  "shapeInfo": "Shape Info",
+  "pointInfo": "Point Info",
+  "scaleFactor": "Scale Factor",
+  "scaleFactorHint": "Adjust the scale factor to stretch or compress the graph vertically",
+  "scaleMin": "0.001x",
+  "scaleDefault": "1.0x",
+  "scaleMax": "10x",
+  "zoomIn": "Zoom In",
+  "zoomOut": "Zoom Out",
+  "functionExpression": "Function Expression",
+  "functionExpressionHint": "Use x as the variable, e.g. x*x, Math.sin(x), etc.",
+  "color": "Color",
+  "colorPicker": "Pick a color",
+  "newFormula": "New Function",
+  "formulaDefault": "New Function",
+  "formulaPlaceholder": "Enter a function expression",
+  "deleteFormulaTooltip": "Delete function",
+  "browseExamples": "Browse examples",
+  "categories": {
+    "basic": "Basic Functions",
+    "trigonometric": "Trigonometric Functions",
+    "exponential": "Exponential & Logarithmic",
+    "parametric": "Parametric Curves",
+    "special": "Special Functions",
+    "polynomial": "Polynomials"
   }
 }

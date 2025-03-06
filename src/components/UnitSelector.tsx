@@ -14,9 +14,15 @@ interface UnitSelectorProps {
   value: MeasurementUnit;
   onChange: (value: MeasurementUnit) => void;
   onUnitChange?: (unit: MeasurementUnit) => void; // Make this prop optional
+  compact?: boolean; // Add a prop to control the compact style
 }
 
-const UnitSelector: React.FC<UnitSelectorProps> = ({ value, onChange, onUnitChange }) => {
+const UnitSelector: React.FC<UnitSelectorProps> = ({ 
+  value, 
+  onChange, 
+  onUnitChange,
+  compact = true // Default to compact style
+}) => {
   const t = useTranslate();
   
   // Map of unit codes to translation keys
@@ -26,10 +32,12 @@ const UnitSelector: React.FC<UnitSelectorProps> = ({ value, onChange, onUnitChan
   };
 
   return (
-    <div className="flex flex-col space-y-1.5">
-      <Label htmlFor="unit-selector" className="text-xs font-medium">
-        {t('units.label')}
-      </Label>
+    <div className={`flex flex-col ${compact ? '' : 'space-y-1.5'}`}>
+      {!compact && (
+        <Label htmlFor="unit-selector" className="text-xs font-medium">
+          {t('units.label')}
+        </Label>
+      )}
       <Select
         value={value}
         onValueChange={(v) => {
@@ -39,7 +47,10 @@ const UnitSelector: React.FC<UnitSelectorProps> = ({ value, onChange, onUnitChan
           }
         }}
       >
-        <SelectTrigger id="unit-selector" className="w-full">
+        <SelectTrigger 
+          id="unit-selector" 
+          className={`w-full ${compact ? 'h-8 text-xs' : ''}`}
+        >
           <SelectValue placeholder={t('units.placeholder')} />
         </SelectTrigger>
         <SelectContent position="popper">

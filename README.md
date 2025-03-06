@@ -1,4 +1,105 @@
-# Welcome to your Lovable project
+# Geo-Playground
+
+[![Test](https://github.com/manuelfittko/geo-playground/actions/workflows/test.yml/badge.svg)](https://github.com/mfittko/geo-playground/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/manuelfittko/geo-playground/branch/main/graph/badge.svg)](https://codecov.io/gh/mfittko/geo-playground)
+
+Geo-Playground is an interactive web application for creating and manipulating geometric shapes. It provides a canvas where you can draw, move, resize, and rotate various shapes, as well as measure their properties.
+
+## Features
+
+- Create various shapes (circles, rectangles, triangles, lines)
+- Select and manipulate shapes
+- Move, resize, and rotate shapes
+- Measure shape properties (area, perimeter, etc.)
+- Keyboard shortcuts for common operations
+- Responsive design
+
+## Project Structure
+
+The application follows a service-based architecture with a clean separation of concerns:
+
+- **Components**: React components for the UI
+- **Services**: Shape services for business logic
+- **Utilities**: Utility functions for geometry operations
+- **Hooks**: Custom React hooks for state management
+- **Types**: TypeScript type definitions
+
+## Documentation
+
+Comprehensive documentation is available in the `docs` directory:
+
+- [API Documentation](docs/api-documentation.md): Detailed documentation of the shape services and utilities
+- [Architecture Documentation](docs/architecture.md): Overview of the application architecture
+- [User Guide](docs/user-guide.md): Guide for end users
+- [Code Examples](docs/code-examples.md): Examples and tutorials for developers
+- [Refactoring Plan](docs/refactoring-plan.md): The plan and progress of the refactoring effort
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v14 or higher)
+- npm or yarn
+
+### Installation
+
+```sh
+# Clone the repository
+git clone https://github.com/manuelfittko/geo-playground.git
+cd geo-playground
+
+# Install dependencies
+npm install
+
+# Start the development server
+npm run dev
+```
+
+## Available Scripts
+
+- `npm run dev` - Start the development server
+- `npm run build` - Build for production
+- `npm run lint` - Run ESLint
+- `npm run test` - Run tests
+- `npm run test:coverage` - Run tests with coverage report
+
+## Technologies
+
+- Vite
+- TypeScript
+- React
+- shadcn-ui
+- Tailwind CSS
+- Jest (for testing)
+
+## Recent Improvements
+
+The codebase has recently undergone a major refactoring to improve maintainability, testability, and extensibility:
+
+1. **Service-Based Architecture**: Implemented a service-based architecture for shape operations
+2. **Comprehensive Testing**: Added extensive unit tests with >80% code coverage
+3. **Improved Type Safety**: Enhanced TypeScript types and added runtime type checking
+4. **Better Organization**: Reorganized code into smaller, more focused modules
+5. **Comprehensive Documentation**: Added detailed documentation for developers and users
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- Thanks to all contributors who have helped improve this project
+- Special thanks to the open-source community for the tools and libraries used in this project
 
 ## Project info
 

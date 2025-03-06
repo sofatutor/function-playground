@@ -38,7 +38,7 @@ const renderCircle = (circle: Circle, isSelected: boolean, activeMode: string) =
         borderColor: circle.stroke,
         transform: `rotate(${circle.rotation}rad)`,
         cursor: activeMode === 'select' ? 'pointer' : 'default',
-        zIndex: 1
+        zIndex: isSelected ? 10 : 1
       }}
     />
   );
@@ -61,7 +61,7 @@ const renderRectangle = (rect: Rectangle, isSelected: boolean, activeMode: strin
         transform: `rotate(${rect.rotation}rad)`,
         transformOrigin: 'center',
         cursor: activeMode === 'select' ? 'pointer' : 'default',
-        zIndex: 1
+        zIndex: isSelected ? 10 : 1
       }}
     />
   );
@@ -95,7 +95,7 @@ const renderTriangle = (tri: Triangle, isSelected: boolean, activeMode: string) 
         width,
         height,
         cursor: activeMode === 'select' ? 'pointer' : 'default',
-        zIndex: 1
+        zIndex: isSelected ? 10 : 1
       }}
     >
       <svg 
@@ -147,7 +147,7 @@ const renderLine = (line: Line, isSelected: boolean, activeMode: string) => {
         width,
         height,
         cursor: activeMode === 'select' ? 'pointer' : 'default',
-        zIndex: 1
+        zIndex: isSelected ? 10 : 1
       }}
     >
       <svg 

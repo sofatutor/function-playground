@@ -113,7 +113,11 @@
   }
   
   .canvas-container {
-    @apply relative w-full h-full bg-white rounded-lg shadow-md overflow-hidden border border-gray-200;
+    @apply relative w-full h-full bg-white rounded-lg shadow-md overflow-hidden;
+  }
+  
+  .canvas-container:focus {
+    outline: none;
   }
   
   .control-panel {

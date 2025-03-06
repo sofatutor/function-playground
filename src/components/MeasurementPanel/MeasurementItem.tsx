@@ -7,6 +7,7 @@ import { AnyShape, MeasurementUnit } from '@/types/shapes';
 import { useTranslate } from '@/utils/translate';
 import { getFormula } from '@/utils/geometryUtils';
 import { useConfig } from '@/context/ConfigContext';
+import { normalizeAngleDegrees } from '@/utils/geometry/rotation';
 
 interface MeasurementItemProps {
   measureKey: string;
@@ -40,11 +41,13 @@ const MeasurementItem: React.FC<MeasurementItemProps> = ({
   
   // Format measurement values
   const formatValue = (key: string, value: string): string => {
-    // For angles, display as integers
+    // For angles, display as integers in the range [-180, 180]
     if (key.startsWith('angle')) {
-      return Math.round(parseFloat(value)).toString();
+      const angle = parseFloat(value);
+      return Math.round(angle).toString();
     }
-    return value;
+    // For all other measurements, ensure they have at most 2 decimal places
+    return parseFloat(value).toFixed(2);
   };
   
   // Determine which measurements are editable
@@ -69,14 +72,22 @@ const MeasurementItem: React.FC<MeasurementItemProps> = ({
     if (key.startsWith('angle')) {
       return {
         step: "1",
-        min: "0",
-        max: "179"
+        min: "-180",
+        max: "180"
       };
     }
     return {
       step: "0.01",
       min: "0.01"
     };
+  };
+  
+  // Prevent event propagation to the canvas
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isEditable(measureKey)) {
+      onStartEdit(measureKey, formatValue(measureKey, value));
+    }
   };
   
   // Check if this measurement has a formula tooltip
@@ -92,13 +103,21 @@ const MeasurementItem: React.FC<MeasurementItemProps> = ({
       measureKey === 'angle3'
     ));
 
+  // Get the translated label for this measurement
+  const measurementLabel = t(`measurementLabels.${measureKey}`);
+
   return (
-    <div className="flex flex-col">
+    <div 
+      className="flex flex-col"
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+      onMouseUp={(e) => e.stopPropagation()}
+    >
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
             <span className="text-xs text-muted-foreground cursor-help flex items-center">
-              {t(`measurementLabels.${measureKey}`)}
+              {measurementLabel}
               {hasFormula && (
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1 h-3 w-3 text-muted-foreground">
                   <circle cx="12" cy="12" r="10"></circle>
@@ -125,22 +144,32 @@ const MeasurementItem: React.FC<MeasurementItemProps> = ({
       </TooltipProvider>
       
       {editingKey === measureKey ? (
-        <div className="flex items-center space-x-1 mt-1">
+        <div 
+          className="flex items-center space-x-1 mt-1"
+          onClick={(e) => e.stopPropagation()}
+        >
           <Input
             className="h-6 text-sm"
             value={editValue}
             onChange={onInputChange}
-            onKeyDown={onKeyPress}
+            onKeyDown={(e) => {
+              e.stopPropagation();
+              onKeyPress(e);
+            }}
             autoFocus
             type="number"
             {...getInputProps(measureKey)}
+            onClick={(e) => e.stopPropagation()}
           />
           <div className="flex space-x-1">
             <Button 
               variant="ghost" 
               size="icon" 
               className="h-6 w-6" 
-              onClick={onSaveEdit}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSaveEdit();
+              }}
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
                 <polyline points="20 6 9 17 4 12"></polyline>
@@ -150,7 +179,10 @@ const MeasurementItem: React.FC<MeasurementItemProps> = ({
               variant="ghost" 
               size="icon" 
               className="h-6 w-6" 
-              onClick={onCancelEdit}
+              onClick={(e) => {
+                e.stopPropagation();
+                onCancelEdit();
+              }}
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -162,7 +194,7 @@ const MeasurementItem: React.FC<MeasurementItemProps> = ({
       ) : (
         <div 
           className={`measurement-value font-medium ${isEditable(measureKey) ? 'cursor-pointer hover:text-geometry-primary' : ''}`}
-          onClick={() => isEditable(measureKey) && onStartEdit(measureKey, formatValue(measureKey, value))}
+          onClick={handleClick}
         >
           {formatValue(measureKey, value)} {t(`unitSuffixes.${measureKey}`, { unit: measurementUnit })}
           {isEditable(measureKey) && (

@@ -103,32 +103,23 @@ const renderRectanglePreview = (start: Point, current: Point, borderStyle: strin
 };
 
 const renderTrianglePreview = (start: Point, current: Point, borderStyle: string, borderColor: string, fillColor: string) => {
-  // Calculate the width based on the horizontal distance
-  const width = Math.abs(current.x - start.x) * 1.2;
-  
-  // Determine the direction of the drag (left-to-right or right-to-left)
-  const isRightward = current.x >= start.x;
-  
-  // Calculate the midpoint between start and current points (horizontal only)
-  const midX = (start.x + current.x) / 2;
-  const topY = Math.min(start.y, current.y) - width/4;
-  
-  // Create the right angle at the top point (p1)
-  const p1 = { 
-    x: midX,
-    y: topY
-  }; // Top point with right angle
-  
-  // Point directly below p1
-  const p2 = {
-    x: midX,
-    y: topY + width
+  // Calculate the three points of the right triangle
+  // Point 1: Bottom left (where the right angle is)
+  const p1 = {
+    x: start.x,
+    y: current.y
   };
   
-  // Point to the right or left of p1 depending on drag direction
+  // Point 2: Top point
+  const p2 = {
+    x: start.x,
+    y: start.y
+  };
+  
+  // Point 3: Bottom right
   const p3 = {
-    x: isRightward ? midX + width : midX - width,
-    y: topY
+    x: current.x,
+    y: current.y
   };
   
   // Calculate the bounding box

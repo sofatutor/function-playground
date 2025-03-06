@@ -39,7 +39,8 @@
     "angle2": "Ángulo 2",
     "angle3": "Ángulo 3",
     "length": "Longitud",
-    "angle": "Ángulo"
+    "angle": "Ángulo",
+    "diagonal": "Diagonal"
   },
   "unitSuffixes": {
     "area": "{unit}²",
@@ -57,20 +58,23 @@
     "angle2": "°",
     "angle3": "°",
     "length": "{unit}",
-    "angle": "°"
+    "angle": "°",
+    "diagonal": "{unit}"
   },
   "formulaExplanations": {
     "circle": {
       "radius": "La distancia desde el centro hasta el borde del círculo.",
       "diameter": "La distancia a través del círculo pasando por el centro.",
       "area": "El espacio dentro del círculo.",
-      "perimeter": "La distancia alrededor del círculo, también llamada circunferencia."
+      "perimeter": "La distancia alrededor del círculo, también llamada circunferencia.",
+      "circumference": "La distancia alrededor del círculo, igual a 2πr o πd."
     },
     "rectangle": {
       "width": "La dimensión horizontal del rectángulo.",
       "height": "La dimensión vertical del rectángulo.",
       "area": "El espacio dentro del rectángulo.",
-      "perimeter": "La distancia alrededor del rectángulo."
+      "perimeter": "La distancia alrededor del rectángulo.",
+      "diagonal": "La distancia en línea recta entre esquinas opuestas del rectángulo."
     },
     "triangle": {
       "side1": "La longitud de uno de los lados del triángulo.",
@@ -98,5 +102,13 @@
     "select": "Seleccionar y Mover Formas",
     "rotate": "Rotar Forma",
     "delete": "Eliminar Seleccionado"
-  }
+  },
+  "pointX": "X",
+  "pointY": "Y",
+  "calculation": "Cálculo",
+  "calculationError": "Error al calcular el valor",
+  "parametricPointInfo": "Función paramétrica (valor t no disponible)",
+  "polarPointInfo": "Función polar (valor θ no disponible)",
+  "pointInfoTitle": "Información del Punto",
+  "clickOnCurveInstruction": "Haz clic en la curva para seleccionar un punto y ver su información."
 } 
