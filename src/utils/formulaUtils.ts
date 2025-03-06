@@ -35,6 +35,13 @@ export const evaluateFunction = (
                     expression === 'Math.tan(x)' || 
                     expression.includes('tan(x)');
   
+  // Check if this is a logarithmic function
+  const isLogarithmic = expression.includes('Math.log(') ||
+                        expression.includes('Math.log10(') ||
+                        expression.includes('Math.log2(') ||
+                        expression.includes('log(') ||
+                        expression.includes('ln(');
+  
   // For tangent functions, we need to restrict the domain to avoid multiple periods
   let visibleXRange: [number, number];
   
@@ -86,13 +93,30 @@ export const evaluateFunction = (
       let y: number;
       
       try {
-        y = fn(x);
+        // For logarithmic functions with expressions like Math.log(2/x),
+        // we need to handle the case where x approaches 0
+        if (isLogarithmic && expression.includes('/x') && Math.abs(x) < 0.001) {
+          // Skip points very close to the asymptote
+          y = NaN;
+        } else {
+          y = fn(x);
+        }
       } catch (e) {
         y = NaN;
       }
       
       // Check if the result is valid
       const isValid = !isNaN(y) && isFinite(y);
+      
+      // For logarithmic functions, we need to handle very large values
+      // that would cause the graph to be clipped
+      if (isLogarithmic && isValid) {
+        // Limit the maximum absolute value to prevent extreme scaling
+        const MAX_VALUE = 1000;
+        if (Math.abs(y) > MAX_VALUE) {
+          y = y > 0 ? MAX_VALUE : -MAX_VALUE;
+        }
+      }
       
       // Convert mathematical coordinates to canvas coordinates
       const canvasX = gridPosition.x + x * pixelsPerUnit;
@@ -264,13 +288,28 @@ export const evaluateFormula = (
                     formula.expression === 'Math.tan(x)' || 
                     formula.expression.includes('tan(x)');
   
+  // Check if this is a logarithmic function
+  const isLogarithmic = formula.expression.includes('Math.log(') ||
+                        formula.expression.includes('Math.log10(') ||
+                        formula.expression.includes('Math.log2(') ||
+                        formula.expression.includes('log(') ||
+                        formula.expression.includes('ln(');
+  
+  // For logarithmic functions, especially those with asymptotes like Math.log(2/x),
+  // we need more samples for better resolution
+  let samples = dragSamples;
+  if (isLogarithmic && !isDragging) {
+    // Use more samples for logarithmic functions when not dragging
+    samples = Math.min(formula.samples * 2, MAX_SAMPLES);
+  }
+  
   // Always use function evaluation for all formula types
   // This simplifies the code and ensures consistent behavior
   return evaluateFunction(
     formula, 
     gridPosition, 
     pixelsPerUnit, 
-    dragSamples
+    samples
   );
 };
 

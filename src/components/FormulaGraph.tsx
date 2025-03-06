@@ -70,6 +70,13 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
                     formula.expression === 'Math.tan(x)' || 
                     formula.expression.includes('tan(x)');
 
+  // Check if this is a logarithmic function
+  const isLogarithmic = formula.expression.includes('Math.log(') ||
+                        formula.expression.includes('Math.log10(') ||
+                        formula.expression.includes('Math.log2(') ||
+                        formula.expression.includes('log(') ||
+                        formula.expression.includes('ln(');
+
   // Calculate points for the formula
   const points = useMemo(() => {
     // Set updating state to true
@@ -195,7 +202,8 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
     
     // Function to check if a point is within the visible canvas area with some margin
     const isWithinCanvas = (x: number, y: number): boolean => {
-      const margin = 1000; // Allow points slightly outside the visible area
+      // Use a larger margin for logarithmic functions to allow for asymptotic behavior
+      const margin = isLogarithmic ? 5000 : 1000; // Increased margin for logarithmic functions
       return x >= -margin && x <= canvasWidth + margin && 
              y >= -margin && y <= canvasHeight + margin;
     };
@@ -205,7 +213,14 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
       if (!p1.isValid || !p2.isValid) return true;
       
       // Check for large vertical jumps that indicate discontinuities
-      const MAX_JUMP = isTangent ? 50 : 100; // Stricter for tangent functions
+      // Use different thresholds based on function type
+      let MAX_JUMP = 100; // Default
+      if (isTangent) {
+        MAX_JUMP = 50; // Stricter for tangent functions
+      } else if (isLogarithmic) {
+        MAX_JUMP = 500; // More lenient for logarithmic functions
+      }
+      
       return Math.abs(p2.y - p1.y) > MAX_JUMP;
     };
 
