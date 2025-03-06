@@ -54,9 +54,6 @@ const ComponentConfigModal: React.FC = () => {
     // Force a refresh of the component to ensure the changes are applied
     // This is important to trigger the useEffect in GeometryCanvas
     window.dispatchEvent(new Event('resize'));
-    
-    // Close the modal after selection to provide immediate feedback
-    setTimeout(() => setComponentConfigModalOpen(false), 300);
   };
   
   return (
