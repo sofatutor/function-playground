@@ -1,143 +1,122 @@
-import React, { useState } from 'react';
-import { useConfig } from '@/context/ConfigContext';
+import React, { useState, useEffect } from 'react';
+import { useGlobalConfig } from '@/context/ConfigContext';
 import { useTranslate } from '@/utils/translate';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MeasurementUnit } from '@/types/shapes';
-import { Eye, EyeOff } from 'lucide-react';
-import CalibrationTool from './CalibrationTool';
+import { Globe, Trash2 } from 'lucide-react';
 
 const ConfigModal: React.FC = () => {
-  const t = useTranslate();
   const { 
-    isConfigModalOpen, 
-    setConfigModalOpen, 
-    openaiApiKey, 
-    setOpenaiApiKey,
-    pixelsPerUnit,
-    setPixelsPerUnit,
-    measurementUnit,
-    setMeasurementUnit
-  } = useConfig();
-
-  const [showApiKey, setShowApiKey] = useState(false);
+    isGlobalConfigModalOpen, 
+    setGlobalConfigModalOpen,
+    language,
+    setLanguage,
+    openaiApiKey,
+    setOpenaiApiKey
+  } = useGlobalConfig();
+  
   const [apiKeyInput, setApiKeyInput] = useState(openaiApiKey || '');
-  const [activeTab, setActiveTab] = useState('general');
-
-  const handleSaveApiKey = () => {
-    setOpenaiApiKey(apiKeyInput.trim() || null);
-  };
-
+  const t = useTranslate();
+  
+  // Auto-save API key when it changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (apiKeyInput !== openaiApiKey) {
+        setOpenaiApiKey(apiKeyInput.trim() || null);
+      }
+    }, 500); // Debounce for 500ms
+    
+    return () => clearTimeout(timeoutId);
+  }, [apiKeyInput, openaiApiKey, setOpenaiApiKey]);
+  
   const handleClearApiKey = () => {
     setApiKeyInput('');
     setOpenaiApiKey(null);
   };
-
-  const handleCalibrationComplete = (newPixelsPerUnit: number) => {
-    setPixelsPerUnit(newPixelsPerUnit);
+  
+  const handleLanguageChange = (value: string) => {
+    setLanguage(value);
   };
-
-  const handleUnitChange = (value: string) => {
-    setMeasurementUnit(value as MeasurementUnit);
-  };
-
+  
   return (
-    <Dialog open={isConfigModalOpen} onOpenChange={setConfigModalOpen}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
+    <Dialog open={isGlobalConfigModalOpen} onOpenChange={setGlobalConfigModalOpen}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader className="pb-2">
           <DialogTitle>{t('configModal.title')}</DialogTitle>
           <DialogDescription>
             {t('configModal.description')}
           </DialogDescription>
         </DialogHeader>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-3 mb-4">
+        <Tabs defaultValue="general" className="mt-2">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="general">{t('configModal.tabs.general')}</TabsTrigger>
             <TabsTrigger value="openai">{t('configModal.tabs.openai')}</TabsTrigger>
-            <TabsTrigger value="calibration">{t('configModal.tabs.calibration')}</TabsTrigger>
           </TabsList>
           
-          {/* General Settings Tab */}
-          <TabsContent value="general">
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('configModal.general.title')}</CardTitle>
-                <CardDescription>{t('configModal.general.description')}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="measurement-unit">{t('units.label')}</Label>
-                  <Select value={measurementUnit} onValueChange={handleUnitChange}>
-                    <SelectTrigger id="measurement-unit">
-                      <SelectValue placeholder={t('units.placeholder')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="cm">{t('units.centimeters')}</SelectItem>
-                      <SelectItem value="in">{t('units.inches')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
+          {/* General Tab */}
+          <TabsContent value="general" className="space-y-3 py-2">
+            <p className="text-sm text-muted-foreground">
+              {t('configModal.general.description')}
+            </p>
+            
+            <div className="space-y-2">
+              <Label htmlFor="language" className="flex items-center gap-2">
+                <Globe className="h-4 w-4" />
+                <span>{t('configModal.general.languageLabel')}</span>
+              </Label>
+              <Select value={language} onValueChange={handleLanguageChange}>
+                <SelectTrigger id="language">
+                  <SelectValue placeholder={t('configModal.general.languagePlaceholder')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="de">Deutsch</SelectItem>
+                  <SelectItem value="es">Español</SelectItem>
+                  <SelectItem value="fr">Français</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </TabsContent>
           
-          {/* OpenAI API Settings Tab */}
-          <TabsContent value="openai">
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('configModal.openai.title')}</CardTitle>
-                <CardDescription>{t('configModal.openai.description')}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="api-key">{t('configModal.openai.apiKeyLabel')}</Label>
-                  <div className="flex">
-                    <Input
-                      id="api-key"
-                      type={showApiKey ? "text" : "password"}
-                      value={apiKeyInput}
-                      onChange={(e) => setApiKeyInput(e.target.value)}
-                      placeholder={t('configModal.openai.apiKeyPlaceholder')}
-                      className="flex-1"
-                    />
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setShowApiKey(!showApiKey)}
-                      className="ml-2"
-                    >
-                      {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {t('configModal.openai.apiKeyHint')}
-                  </p>
+          {/* OpenAI API Tab */}
+          <TabsContent value="openai" className="space-y-3 py-2">
+            <p className="text-sm text-muted-foreground">
+              {t('configModal.openai.description')}
+            </p>
+            
+            <div className="space-y-2">
+              <div className="flex items-end gap-2">
+                <div className="flex-1">
+                  <Label htmlFor="api-key" className="mb-1 block">
+                    {t('configModal.openai.apiKeyLabel')}
+                  </Label>
+                  <Input
+                    id="api-key"
+                    type="password"
+                    placeholder={t('configModal.openai.apiKeyPlaceholder')}
+                    value={apiKeyInput}
+                    onChange={(e) => setApiKeyInput(e.target.value)}
+                  />
                 </div>
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button variant="outline" onClick={handleClearApiKey}>
-                  {t('configModal.openai.clearApiKey')}
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  onClick={handleClearApiKey}
+                  title={t('configModal.openai.clearApiKey')}
+                  disabled={!apiKeyInput.trim()}
+                >
+                  <Trash2 className="h-4 w-4" />
                 </Button>
-                <Button onClick={handleSaveApiKey}>
-                  {t('configModal.openai.saveApiKey')}
-                </Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-          
-          {/* Calibration Tab */}
-          <TabsContent value="calibration" className="relative z-[100]">
-            <CalibrationTool
-              measurementUnit={measurementUnit}
-              onCalibrationComplete={handleCalibrationComplete}
-              defaultPixelsPerUnit={pixelsPerUnit}
-            />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t('configModal.openai.apiKeyHint')}
+              </p>
+            </div>
           </TabsContent>
         </Tabs>
       </DialogContent>
