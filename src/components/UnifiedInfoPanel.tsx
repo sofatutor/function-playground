@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AnyShape, MeasurementUnit, Point } from '@/types/shapes';
 import { Formula } from '@/types/formula';
@@ -7,6 +7,8 @@ import MeasurementItem from './MeasurementPanel/MeasurementItem';
 import ShapeIcon from './MeasurementPanel/ShapeIcon';
 import { normalizeAngleDegrees } from '@/utils/geometry/rotation';
 import { useIsMobile } from '@/hooks/use-mobile';
+import 'katex/dist/katex.min.css';
+import { InlineMath } from 'react-katex';
 
 interface UnifiedInfoPanelProps {
   // Shape info props
@@ -27,6 +29,9 @@ interface UnifiedInfoPanelProps {
   } | null;
   gridPosition?: Point;
   pixelsPerUnit?: number;
+  
+  // Point navigation prop
+  onNavigatePoint?: (direction: 'prev' | 'next', stepSize: number) => void;
 }
 
 const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
@@ -39,7 +44,10 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
   // Point info props
   point,
   gridPosition,
-  pixelsPerUnit
+  pixelsPerUnit,
+  
+  // Point navigation prop
+  onNavigatePoint
 }) => {
   const t = useTranslate();
   const isMobile = useIsMobile();
@@ -47,6 +55,26 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
   // State to track which measurement is being edited
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>('');
+  
+  // Add keyboard event listener for arrow keys
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!point) return;
+      
+      if (e.key === 'ArrowLeft') {
+        console.log('Navigate to previous point');
+        // In a real implementation, this would call a function to navigate
+      } else if (e.key === 'ArrowRight') {
+        console.log('Navigate to next point');
+        // In a real implementation, this would call a function to navigate
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [point]);
   
   // Function to handle starting edit mode
   const handleStartEdit = (key: string, value: string) => {
@@ -78,8 +106,7 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
   
   // Function to handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setEditValue(value);
+    setEditValue(e.target.value);
   };
   
   // Function to handle key press events
@@ -91,6 +118,19 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
     }
   };
 
+  // Add a function to handle point navigation
+  const handleNavigatePoint = (direction: 'prev' | 'next', e: React.MouseEvent) => {
+    // Prevent the event from propagating to the canvas
+    e.stopPropagation();
+    e.preventDefault();
+    
+    if (onNavigatePoint && point) {
+      onNavigatePoint(direction, point.navigationStepSize || 0.1);
+    } else {
+      console.log(`Navigate ${direction} point`);
+    }
+  };
+
   // Prevent click events from propagating to the canvas
   const handlePanelClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -99,10 +139,14 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
   // Format the coordinates with appropriate precision for point info
   const formatNumber = (num: number): string => {
     // Use fewer decimal places for larger numbers
-    if (Math.abs(num) >= 100) return num.toFixed(1);
-    if (Math.abs(num) >= 10) return num.toFixed(2);
-    if (Math.abs(num) >= 1) return num.toFixed(3);
-    return num.toFixed(4);
+    let formatted: string;
+    if (Math.abs(num) >= 100) formatted = num.toFixed(1);
+    else if (Math.abs(num) >= 10) formatted = num.toFixed(2);
+    else if (Math.abs(num) >= 1) formatted = num.toFixed(3);
+    else formatted = num.toFixed(4);
+    
+    // Strip trailing zeros after the decimal point
+    return formatted.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
   };
 
   // Create a human-readable expression for formula
@@ -118,6 +162,25 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
       .replace(/Math\.exp/g, 'exp')
       .replace(/\*\*/g, '^')
       .replace(/\*/g, '×');
+  };
+
+  // Convert JavaScript expression to LaTeX
+  const toLatex = (expr: string): string => {
+    return expr
+      .replace(/Math\.sin\(([^)]+)\)/g, '\\sin($1)')
+      .replace(/Math\.cos\(([^)]+)\)/g, '\\cos($1)')
+      .replace(/Math\.tan\(([^)]+)\)/g, '\\tan($1)')
+      .replace(/Math\.sqrt\(([^)]+)\)/g, '\\sqrt{$1}')
+      .replace(/Math\.abs\(([^)]+)\)/g, '|$1|')
+      .replace(/Math\.pow\(([^,]+),\s*([^)]+)\)/g, '{$1}^{$2}')
+      .replace(/Math\.log\(([^)]+)\)/g, '\\ln($1)')
+      .replace(/Math\.exp\(([^)]+)\)/g, 'e^{$1}')
+      .replace(/([0-9a-zA-Z.]+)\s*\*\*\s*([0-9a-zA-Z.]+)/g, '{$1}^{$2}')
+      .replace(/([0-9a-zA-Z.]+)\s*\*\s*([0-9a-zA-Z.]+)/g, '$1 \\cdot $2')
+      .replace(/\//g, '\\div ')
+      .replace(/\+/g, ' + ')
+      .replace(/-/g, ' - ')
+      .replace(/x/g, 'x');
   };
 
   // Calculate Y value for point info
@@ -139,9 +202,9 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
       return t('polarPointInfo');
     }
     
-    // For regular functions, show the calculation
-    const expr = formatExpression(formula.expression);
-    return `${expr.replace(/x/g, `(${formatNumber(mathX)})`)} = ${formatNumber(mathY)}`;
+    // For regular functions, show the calculation in LaTeX format
+    const latexExpr = toLatex(formula.expression);
+    return `${latexExpr.replace(/x/g, `(${formatNumber(mathX)})`)} = ${formatNumber(mathY)}`;
   };
 
   // If neither shape nor point is selected, show nothing
@@ -155,30 +218,35 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
     if (selectedShape) {
       return (
         <>
-          <div className="flex items-center space-x-2 mb-2 sm:mb-3">
-            <ShapeIcon shapeType={selectedShape.type} />
-            <span className="text-xs sm:text-sm font-medium">
+          <CardHeader className="p-2 sm:p-3 pb-0 sm:pb-1">
+            <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+              <ShapeIcon shapeType={selectedShape.type} />
               {t(`shapeNames.${selectedShape.type}`)}
-            </span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-2">
-            {Object.entries(measurements).map(([key, value]) => (
-              <MeasurementItem
-                key={key}
-                measureKey={key}
-                value={value}
-                shape={selectedShape}
-                measurementUnit={measurementUnit}
-                editingKey={editingKey}
-                editValue={editValue}
-                onStartEdit={handleStartEdit}
-                onSaveEdit={handleSaveEdit}
-                onCancelEdit={handleCancelEdit}
-                onInputChange={handleInputChange}
-                onKeyPress={handleKeyPress}
-              />
-            ))}
-          </div>
+            </CardTitle>
+            <CardDescription className="text-xs">
+              {t('shapeInfo')}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-2 sm:p-3 pt-1 sm:pt-2">
+            <div className="grid grid-cols-2 gap-2">
+              {Object.entries(measurements).map(([key, value]) => (
+                <MeasurementItem
+                  key={key}
+                  measureKey={key}
+                  value={value}
+                  shape={selectedShape}
+                  measurementUnit={measurementUnit}
+                  editingKey={editingKey}
+                  editValue={editValue}
+                  onStartEdit={handleStartEdit}
+                  onCancelEdit={handleCancelEdit}
+                  onSaveEdit={handleSaveEdit}
+                  onInputChange={handleInputChange}
+                  onKeyPress={handleKeyPress}
+                />
+              ))}
+            </div>
+          </CardContent>
         </>
       );
     }
@@ -187,72 +255,83 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
     if (point) {
       return (
         <>
-          <div className="flex items-center mb-2 sm:mb-3">
-            <div 
-              className="w-2 h-2 sm:w-3 sm:h-3 rounded-full mr-1 sm:mr-2" 
-              style={{ backgroundColor: point.formula.color }}
-            />
-            <span className="text-xs sm:text-sm font-medium truncate max-w-[200px] sm:max-w-full">
-              {formatExpression(point.formula.expression)}
-            </span>
-          </div>
-          
-          <div className="space-y-2 sm:space-y-3">
-            <div className="grid grid-cols-2 gap-1 sm:gap-2 text-xs sm:text-sm">
-              <div>
-                <span className="text-muted-foreground">{t('pointX')}:</span> {formatNumber(point.mathX)}
-              </div>
-              <div>
-                <span className="text-muted-foreground">{t('pointY')}:</span> {formatNumber(point.mathY)}
-              </div>
-            </div>
-            
-            <div className="text-xs sm:text-sm pt-1 sm:pt-2 border-t">
-              <span className="text-muted-foreground">{t('calculation')}:</span>
-              <div className="font-mono text-[10px] sm:text-xs bg-muted p-1 sm:p-2 rounded mt-1 overflow-x-auto">
-                {calculateY()}
-              </div>
-            </div>
-            
-            {/* Navigation step size and keyboard controls */}
-            <div className="text-xs sm:text-sm pt-1 sm:pt-2 border-t">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-[10px] sm:text-xs">Navigation:</span>
-                <span className="font-mono text-[10px] sm:text-xs bg-muted px-1 sm:px-2 py-0.5 sm:py-1 rounded">
-                  Step: {(point.navigationStepSize || 0.1).toFixed(2)}
-                  {point.navigationStepSize === 1.0 && (
-                    <span className="ml-1 text-amber-500">(Shift)</span>
-                  )}
-                </span>
-              </div>
-              <div className="text-[10px] sm:text-xs text-muted-foreground mt-1 flex flex-wrap items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
-                  <path d="M19 12H5M12 19l-7-7 7-7"/>
-                </svg>
-                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
-                  <path d="M5 12h14M12 5l7 7-7 7"/>
-                </svg>
-                <span className="mr-1">Navigate points</span>
-                {!isMobile && (
-                  <>
-                    <span className="mx-1">•</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
-                      <path d="M12 19V5M5 12l7-7 7 7"/>
-                    </svg>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
-                      <path d="M12 5v14M19 12l-7 7-7-7"/>
-                    </svg>
-                    <span>Adjust step size</span>
-                  </>
-                )}
-              </div>
-              {!isMobile && (
-                <div className="text-[10px] sm:text-xs text-muted-foreground mt-1">
-                  Hold <span className="font-mono bg-muted px-1 rounded">Shift</span> to temporarily use 1.0 step size
+          <CardHeader className="p-2 sm:p-3 pb-0 sm:pb-1">
+            <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+              {/* Display the formula expression or default title */}
+              {point.formula.expression ? (
+                <div className="flex items-center">
+                  <div 
+                    className="w-3 h-3 rounded-full mr-2" 
+                    style={{ backgroundColor: point.formula.color }}
+                  />
+                  <InlineMath math={toLatex(point.formula.expression)} />
                 </div>
+              ) : (
+                t('pointInfoTitle')
               )}
+            </CardTitle>
+            <CardDescription className="text-xs">
+              {t('pointInfo')}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-2 sm:p-3 pt-1 sm:pt-2">
+            <div className="space-y-2">
+              {/* Point coordinates */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <div className="text-xs font-medium mb-1">X Coordinate</div>
+                  <div className="text-sm bg-muted p-1 rounded">{formatNumber(point.mathX)}</div>
+                </div>
+                <div>
+                  <div className="text-xs font-medium mb-1">Y Coordinate</div>
+                  <div className="text-sm bg-muted p-1 rounded">{formatNumber(point.mathY)}</div>
+                </div>
+              </div>
+              
+              {/* Calculation */}
+              <div>
+                <div className="text-xs font-medium mb-1">Calculation</div>
+                <div className="text-sm bg-muted p-1 rounded break-all">
+                  <InlineMath math={calculateY()} />
+                </div>
+              </div>
+              
+              {/* Navigation */}
+              <div>
+                <div className="text-xs font-medium mb-1">Navigation</div>
+                <div className="flex items-center text-xs">
+                  <button 
+                    className="p-1 hover:bg-muted rounded point-nav-button"
+                    onClick={(e) => handleNavigatePoint('prev', e)}
+                    aria-label="Previous Point"
+                    data-nav-button="prev"
+                  >
+                    <div className="flex items-center">
+                      <span className="mr-1">←</span>
+                      <span className="hidden sm:inline text-muted-foreground">(Left Arrow)</span>
+                    </div>
+                  </button>
+                  <div className="flex-1 text-center whitespace-nowrap overflow-visible">
+                    <div className="flex justify-center items-center">
+                      <span className="mr-1">Step:</span>
+                      <InlineMath math={formatNumber(point.navigationStepSize || 1.00)} />
+                    </div>
+                  </div>
+                  <button 
+                    className="p-1 hover:bg-muted rounded point-nav-button"
+                    onClick={(e) => handleNavigatePoint('next', e)}
+                    aria-label="Next Point"
+                    data-nav-button="next"
+                  >
+                    <div className="flex items-center">
+                      <span className="mr-1">→</span>
+                      <span className="hidden sm:inline text-muted-foreground">(Right Arrow)</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
+          </CardContent>
         </>
       );
     }
@@ -262,18 +341,8 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
   };
 
   return (
-    <Card 
-      className="w-full shadow-lg border-2 bg-card/95 backdrop-blur-sm unified-info-panel"
-      onClick={handlePanelClick}
-      onMouseDown={(e) => e.stopPropagation()}
-      onMouseUp={(e) => e.stopPropagation()}
-      onMouseMove={(e) => e.stopPropagation()}
-      onPointerDown={(e) => e.stopPropagation()}
-      onPointerUp={(e) => e.stopPropagation()}
-    >
-      <CardContent className="p-0.5 sm:p-1 md:p-2 lg:p-4 max-h-[calc(100vh-8rem)] overflow-y-auto no-scrollbar">
-        {renderContent()}
-      </CardContent>
+    <Card className={`w-full border-0 shadow-none ${isMobile ? 'p-0' : 'p-2'}`}>
+      {renderContent()}
     </Card>
   );
 };
