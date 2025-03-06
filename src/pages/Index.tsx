@@ -16,7 +16,7 @@ import { getStoredPixelsPerUnit } from '@/utils/geometry/common';
 import { createDefaultFormula } from '@/utils/formulaUtils';
 import ConfigModal from '@/components/ConfigModal';
 import ComponentConfigModal from '@/components/ComponentConfigModal';
-import { Settings, Trash2, Wrench } from 'lucide-react';
+import { Settings, Trash2, Wrench, PlusCircle } from 'lucide-react';
 import { 
   updateUrlWithData, 
   getShapesFromUrl, 
@@ -331,48 +331,10 @@ const Index = () => {
                     isFormulaEditorOpen={isFormulaEditorOpen}
                   />
                 </div>
-                
-                <div className="flex space-x-1 sm:space-x-2 w-full sm:w-auto justify-end">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button 
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7 sm:h-8 sm:w-8"
-                          onClick={() => setComponentConfigModalOpen(true)}
-                        >
-                          <Wrench className="h-3 w-3 sm:h-4 sm:w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{t('componentConfigModal.openButton')}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button 
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7 sm:h-8 sm:w-8"
-                          onClick={deleteAllShapes}
-                        >
-                          <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{t('clearCanvas')}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
               </div>
               
               {isFormulaEditorOpen && (
-                <div className="mb-1 sm:mb-2 md:mb-4">
+                <div className="mb-1 sm:mb-2 md:mb-3">
                   <FormulaEditor
                     formulas={formulas}
                     onAddFormula={handleAddFormula}
@@ -382,6 +344,11 @@ const Index = () => {
                     isOpen={isFormulaEditorOpen}
                     selectedFormulaId={selectedFormulaId}
                     onSelectFormula={setSelectedFormulaId}
+                    onNewFormula={() => {
+                      const newFormula = createDefaultFormula('function');
+                      newFormula.expression = "x*x";
+                      handleAddFormula(newFormula);
+                    }}
                   />
                 </div>
               )}
@@ -407,6 +374,52 @@ const Index = () => {
                 serviceFactory={serviceFactory}
                 onMeasurementUpdate={updateMeasurement}
                 onFormulaSelect={setSelectedFormulaId}
+                canvasTools={
+                  <div className="absolute top-2 right-2 z-10 flex space-x-1">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7 sm:h-8 sm:w-8 bg-white/80 backdrop-blur-sm"
+                            onClick={deleteAllShapes}
+                          >
+                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{t('clearCanvas')}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7 sm:h-8 sm:w-8 bg-white/80 backdrop-blur-sm"
+                            onClick={() => setComponentConfigModalOpen(true)}
+                          >
+                            <Wrench className="h-3 w-3 sm:h-4 sm:w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{t('componentConfigModal.openButton')}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    
+                    {/* Add UnitSelector here */}
+                    <div className="bg-white/80 backdrop-blur-sm rounded-md">
+                      <UnitSelector
+                        value={measurementUnit}
+                        onChange={setMeasurementUnit}
+                        compact={true}
+                      />
+                    </div>
+                  </div>
+                }
               />
             </div>
           </div>

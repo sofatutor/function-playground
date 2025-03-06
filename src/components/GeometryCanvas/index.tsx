@@ -30,6 +30,7 @@ interface FormulaCanvasProps extends GeometryCanvasProps {
   formulas?: Formula[]; // Use the Formula type from your types folder
   pixelsPerUnit?: number;
   serviceFactory?: ShapeServiceFactory;
+  canvasTools?: React.ReactNode; // Add canvasTools prop
 }
 
 interface GeometryCanvasProps {
@@ -74,7 +75,8 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
   onGridPositionChange,
   serviceFactory,
   onMeasurementUpdate,
-  onFormulaSelect
+  onFormulaSelect,
+  canvasTools
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -909,8 +911,11 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
         onFormulaSelect(point.formula.id);
       }
       
-      // We no longer automatically change the mode or open the formula editor
-      // This allows the user to view formula points without opening the editor
+      // If we have a mode change handler, switch to formula mode
+      // This will open the formula editor if it's not already open
+      if (onModeChange) {
+        onModeChange('select');
+      }
     } else {
       setSelectedPoint(null);
       setCurrentPointInfo(null);
@@ -1024,6 +1029,15 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
       const infoBox = document.querySelector('.formula-point-info');
       if (infoBox && infoBox.contains(e.target as Node)) {
         return;
+      }
+      
+      // Check specifically for navigation buttons in the UnifiedInfoPanel
+      const navigationButtons = document.querySelectorAll('.point-nav-button, [data-nav-button]');
+      for (const button of navigationButtons) {
+        if (button === e.target || button.contains(e.target as Node)) {
+          console.log('Clicked on navigation button, not dismissing info box');
+          return;
+        }
       }
       
       // If the click is on the tool button or its container, don't dismiss
@@ -1246,6 +1260,9 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
           clickedOnPathRef.current = false;
         }}
       >
+        {/* Render canvas tools */}
+        {canvasTools}
+        
         {/* Grid - Pass the persistent grid position */}
         <CanvasGrid
           key={`grid-${canvasSize.width > 0 && canvasSize.height > 0 ? 'loaded' : 'loading'}-${isFullscreen ? 'fullscreen' : 'normal'}`}
@@ -1321,11 +1338,9 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
         {/* Display unified info panel */}
         {(selectedPoint || selectedShapeId) && (
           <div 
-            className={`absolute unified-info-panel-container z-40 transition-all duration-200 ease-in-out
-              ${showCalibration 
-                ? 'right-[calc(20rem+0.5rem)] bottom-2 sm:bottom-4 w-72 sm:w-80' 
-                : 'right-1 sm:right-2 md:right-4 bottom-1 sm:bottom-2 md:bottom-4 w-[calc(100%-0.5rem)] sm:w-72 md:w-80'
-              }`}
+            className={`absolute w-80 unified-info-panel-container bottom-4 z-40 transition-all duration-200 ease-in-out ${
+              showCalibration ? 'right-[calc(20rem+1rem)]' : 'right-4'
+            }`}
           >
             <UnifiedInfoPanel 
               // Point info props
@@ -1336,6 +1351,14 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
               } : null}
               gridPosition={gridPosition}
               pixelsPerUnit={pixelsPerUnit}
+              onNavigatePoint={(direction, stepSize) => {
+                // Convert the direction format from 'prev'/'next' to 'previous'/'next'
+                const directionMapping: Record<string, 'previous' | 'next'> = {
+                  'prev': 'previous',
+                  'next': 'next'
+                };
+                navigateFormulaPoint(directionMapping[direction], false);
+              }}
               
               // Shape info props
               selectedShape={selectedShapeId ? shapes.find(s => s.id === selectedShapeId) || null : null}
