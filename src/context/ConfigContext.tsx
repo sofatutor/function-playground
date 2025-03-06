@@ -1,5 +1,6 @@
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { MeasurementUnit } from '@/types/shapes';
+import { encryptData, decryptData } from '@/utils/encryption';
 
 // Separate types for global vs component settings
 type GlobalConfigContextType = {
@@ -9,7 +10,7 @@ type GlobalConfigContextType = {
   
   // OpenAI API settings
   openaiApiKey: string | null;
-  setOpenaiApiKey: (key: string | null) => void;
+  setOpenaiApiKey: (key: string | null) => Promise<void>;
   
   // Modal control for global settings
   isGlobalConfigModalOpen: boolean;
@@ -39,24 +40,6 @@ export type ConfigContextType = GlobalConfigContextType & ComponentConfigContext
 const GlobalConfigContext = createContext<GlobalConfigContextType | undefined>(undefined);
 const ComponentConfigContext = createContext<ComponentConfigContextType | undefined>(undefined);
 
-// Encryption utilities for sensitive data
-const encryptApiKey = (key: string): string => {
-  // Simple encryption for demo purposes
-  // In production, use a more secure method
-  return btoa(`${key}_${new Date().getTime()}`);
-};
-
-const decryptApiKey = (encryptedKey: string): string => {
-  // Simple decryption for demo purposes
-  try {
-    const decoded = atob(encryptedKey);
-    return decoded.split('_')[0];
-  } catch (e) {
-    console.error('Failed to decrypt API key', e);
-    return '';
-  }
-};
-
 // Provider component that combines both contexts
 const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // Global settings
@@ -65,19 +48,7 @@ const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     return storedLanguage || navigator.language.split('-')[0] || 'en';
   });
   
-  const [openaiApiKey, setOpenaiApiKeyState] = useState<string | null>(() => {
-    const storedKey = localStorage.getItem('openai_api_key');
-    if (storedKey) {
-      try {
-        return decryptApiKey(storedKey);
-      } catch (e) {
-        console.error('Failed to decrypt stored API key', e);
-        return null;
-      }
-    }
-    return null;
-  });
-  
+  const [openaiApiKey, setOpenaiApiKeyState] = useState<string | null>(null);
   const [isGlobalConfigModalOpen, setGlobalConfigModalOpen] = useState<boolean>(false);
   
   // Component-specific settings
@@ -89,11 +60,65 @@ const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   
   const [isComponentConfigModalOpen, setComponentConfigModalOpen] = useState<boolean>(false);
   
+  // Load the API key from localStorage on initial render
+  useEffect(() => {
+    const loadApiKey = async () => {
+      const storedKey = localStorage.getItem('openai_api_key');
+      console.log('Retrieved from localStorage:', storedKey ? '(encrypted key)' : '(no key)');
+      
+      if (storedKey) {
+        try {
+          // Try to decrypt with the new method
+          const decrypted = await decryptData(storedKey);
+          
+          if (decrypted) {
+            console.log('Decrypted key with new method:', '(valid key)');
+            setOpenaiApiKeyState(decrypted);
+          } else {
+            // If new method fails, try the old method (btoa)
+            try {
+              const decoded = atob(storedKey);
+              const oldKey = decoded.split('_')[0];
+              
+              if (oldKey) {
+                console.log('Migrating from old encryption method');
+                // Migrate to new encryption
+                setOpenaiApiKey(oldKey);
+              } else {
+                setOpenaiApiKeyState(null);
+              }
+            } catch (oldMethodError) {
+              console.error('Failed to decrypt with old method', oldMethodError);
+              setOpenaiApiKeyState(null);
+            }
+          }
+        } catch (e) {
+          console.error('Failed to decrypt stored API key', e);
+          setOpenaiApiKeyState(null);
+        }
+      }
+    };
+    
+    loadApiKey();
+  }, []);
+  
   // Handle setting the OpenAI API key with encryption
-  const setOpenaiApiKey = (key: string | null) => {
+  const setOpenaiApiKey = async (key: string | null) => {
     setOpenaiApiKeyState(key);
+    
     if (key) {
-      localStorage.setItem('openai_api_key', encryptApiKey(key));
+      try {
+        const encrypted = await encryptData(key);
+        localStorage.setItem('openai_api_key', encrypted);
+        
+        // Debug: Verify encryption/decryption is working
+        const decrypted = await decryptData(encrypted);
+        console.log('Encryption test:', {
+          matches: key === decrypted
+        });
+      } catch (e) {
+        console.error('Failed to encrypt and store API key', e);
+      }
     } else {
       localStorage.removeItem('openai_api_key');
     }
