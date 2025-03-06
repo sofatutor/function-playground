@@ -322,7 +322,7 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
                                 <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
                               </button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-[95vw] sm:w-[500px] md:w-[600px] lg:w-[700px] p-0" align="end" side="top">
+                            <PopoverContent className="w-[95vw] sm:w-[500px] md:w-[600px] lg:w-[700px] p-0" align="end" side="bottom">
                               <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
                                 <Textarea 
                                   placeholder={t('naturalLanguagePlaceholder')}
@@ -361,7 +361,7 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
                                 <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" />
                               </button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-[95vw] sm:w-[500px] md:w-[600px] lg:w-[700px] max-h-60 sm:max-h-80 overflow-y-auto p-0" align="end" side="top">
+                            <PopoverContent className="w-[95vw] sm:w-[500px] md:w-[600px] lg:w-[700px] max-h-60 sm:max-h-80 overflow-y-auto p-0" align="end" side="bottom">
                               <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
                                 {Object.entries(examplesByCategory).map(([category, categoryExamples]) => (
                                   <div key={category}>
