@@ -61,5 +61,17 @@ describe('OpenAI Service', () => {
       expect(result.expression).toBe('x');
       expect(result.explanation).toContain('linear');
     });
+    
+    it('should use mock implementation when no API key is provided', async () => {
+      const result = await convertNaturalLanguageToExpression('a parabola', null);
+      expect(result.expression).toBe('x*x');
+      expect(result.explanation).toContain('quadratic');
+    });
+    
+    it('should use mock implementation when API key is empty string', async () => {
+      const result = await convertNaturalLanguageToExpression('a parabola', '');
+      expect(result.expression).toBe('x*x');
+      expect(result.explanation).toContain('quadratic');
+    });
   });
 }); 

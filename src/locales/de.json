@@ -127,5 +127,45 @@
   "naturalLanguageTooltip": "Aus Beschreibung generieren",
   "naturalLanguageSuccess": "Ausdruck erfolgreich generiert",
   "naturalLanguageError": "Fehler beim Generieren des Ausdrucks",
-  "naturalLanguageEmpty": "Bitte geben Sie eine Beschreibung ein"
+  "naturalLanguageEmpty": "Bitte geben Sie eine Beschreibung ein",
+  "configModal": {
+    "title": "Konfiguration",
+    "description": "Anwendungseinstellungen und Präferenzen verwalten",
+    "openButton": "Einstellungen öffnen",
+    "tabs": {
+      "general": "Allgemein",
+      "openai": "OpenAI API",
+      "calibration": "Bildschirmkalibrierung"
+    },
+    "general": {
+      "title": "Allgemeine Einstellungen",
+      "description": "Grundlegende Anwendungseinstellungen konfigurieren"
+    },
+    "openai": {
+      "title": "OpenAI API Einstellungen",
+      "description": "Konfigurieren Sie Ihren OpenAI API-Schlüssel für die Verarbeitung natürlicher Sprache",
+      "apiKeyLabel": "API-Schlüssel",
+      "apiKeyPlaceholder": "Geben Sie Ihren OpenAI API-Schlüssel ein",
+      "apiKeyHint": "Ihr API-Schlüssel wird lokal gespeichert und verschlüsselt. Er wird niemals an unsere Server gesendet.",
+      "saveApiKey": "API-Schlüssel speichern",
+      "clearApiKey": "API-Schlüssel löschen"
+    },
+    "calibration": {
+      "title": "Bildschirmkalibrierung",
+      "description": "Kalibrieren Sie Ihren Bildschirm für genaue physische Messungen",
+      "instructions": "Ihr Bildschirm zeigt Messungen möglicherweise nicht in ihrer tatsächlichen physischen Größe an. Verwenden Sie dieses Tool, um Ihre Anzeige für genaue Messungen zu kalibrieren.",
+      "lengthLabel": "Kalibrierungslänge",
+      "startButton": "Kalibrierung starten",
+      "placeRuler": "Legen Sie ein physisches Lineal oder Maßband an Ihren Bildschirm und passen Sie die Linie unten an, bis sie genau übereinstimmt",
+      "lineDescription": "Diese Linie sollte genau {length} {unit} lang sein",
+      "coarseAdjustment": "Grobe Anpassung",
+      "fineAdjustment": "Feine Anpassung",
+      "currentValue": "Aktueller Wert",
+      "pixelsPerUnit": "Pixel pro {unit}",
+      "cancelButton": "Abbrechen",
+      "applyButton": "Kalibrierung anwenden"
+    }
+  },
+  "enterFullscreen": "Vollbildmodus aktivieren",
+  "exitFullscreen": "Vollbildmodus beenden"
 }

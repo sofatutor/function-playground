@@ -1307,13 +1307,9 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
         {/* Display unified info panel */}
         {(selectedPoint || selectedShapeId) && (
           <div 
-            className="absolute w-80 unified-info-panel-container"
-            style={{
-              bottom: '1rem',
-              right: showCalibration ? 'calc(20rem + 1rem)' : '1rem',
-              zIndex: 60,
-              transition: 'right 0.2s ease-in-out'
-            }}
+            className={`absolute w-80 unified-info-panel-container bottom-4 z-40 transition-all duration-200 ease-in-out ${
+              showCalibration ? 'right-[calc(20rem+1rem)]' : 'right-4'
+            }`}
           >
             <UnifiedInfoPanel 
               // Point info props

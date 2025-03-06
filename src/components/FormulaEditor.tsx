@@ -13,6 +13,7 @@ import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
 import { convertNaturalLanguageToExpression } from '@/services/openaiService';
 import { toast } from 'sonner';
+import { useConfig } from '@/context/ConfigContext';
 
 interface FormulaEditorProps {
   formulas: Formula[];
@@ -36,6 +37,7 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
   onSelectFormula
 }) => {
   const t = useTranslate();
+  const { openaiApiKey } = useConfig();
   const examples = getFormulaExamples();
   const [isNaturalLanguageOpen, setIsNaturalLanguageOpen] = useState(false);
   const [naturalLanguageInput, setNaturalLanguageInput] = useState('');
@@ -131,7 +133,7 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
 
     setIsProcessing(true);
     try {
-      const result = await convertNaturalLanguageToExpression(naturalLanguageInput);
+      const result = await convertNaturalLanguageToExpression(naturalLanguageInput, openaiApiKey);
       
       if (selectedFormulaId) {
         // Update the current formula

@@ -127,5 +127,45 @@
   "naturalLanguageTooltip": "Generar desde descripción",
   "naturalLanguageSuccess": "Expresión generada con éxito",
   "naturalLanguageError": "Error al generar la expresión",
-  "naturalLanguageEmpty": "Por favor, introduce una descripción"
+  "naturalLanguageEmpty": "Por favor, introduce una descripción",
+  "configModal": {
+    "title": "Configuración",
+    "description": "Gestionar ajustes y preferencias de la aplicación",
+    "openButton": "Abrir Ajustes",
+    "tabs": {
+      "general": "General",
+      "openai": "API de OpenAI",
+      "calibration": "Calibración de Pantalla"
+    },
+    "general": {
+      "title": "Ajustes Generales",
+      "description": "Configurar ajustes básicos de la aplicación"
+    },
+    "openai": {
+      "title": "Ajustes de la API de OpenAI",
+      "description": "Configurar tu clave de API de OpenAI para el procesamiento de lenguaje natural",
+      "apiKeyLabel": "Clave de API",
+      "apiKeyPlaceholder": "Introduce tu clave de API de OpenAI",
+      "apiKeyHint": "Tu clave de API se almacena localmente y se encripta. Nunca se envía a nuestros servidores.",
+      "saveApiKey": "Guardar Clave de API",
+      "clearApiKey": "Borrar Clave de API"
+    },
+    "calibration": {
+      "title": "Calibración de Pantalla",
+      "description": "Calibra tu pantalla para mediciones físicas precisas",
+      "instructions": "Es posible que tu pantalla no muestre las medidas en su tamaño físico real. Utiliza esta herramienta para calibrar tu pantalla para mediciones precisas.",
+      "lengthLabel": "Longitud de Calibración",
+      "startButton": "Iniciar Calibración",
+      "placeRuler": "Coloca una regla física o cinta métrica contra tu pantalla y ajusta la línea de abajo hasta que coincida exactamente",
+      "lineDescription": "Esta línea debe medir exactamente {length} {unit}",
+      "coarseAdjustment": "Ajuste Grueso",
+      "fineAdjustment": "Ajuste Fino",
+      "currentValue": "Valor Actual",
+      "pixelsPerUnit": "píxeles por {unit}",
+      "cancelButton": "Cancelar",
+      "applyButton": "Aplicar Calibración"
+    }
+  },
+  "enterFullscreen": "Entrar en Pantalla Completa",
+  "exitFullscreen": "Salir de Pantalla Completa"
 } 
