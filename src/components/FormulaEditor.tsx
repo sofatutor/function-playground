@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Formula, FormulaExample } from '@/types/formula';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -44,12 +44,12 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
 }) => {
   const t = useTranslate();
   const { openaiApiKey } = useConfig();
-  const examples = getFormulaExamples();
-  const [isNaturalLanguageOpen, setIsNaturalLanguageOpen] = useState(false);
   const [naturalLanguageInput, setNaturalLanguageInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const isMobile = useIsMobile();
+  const [isNaturalLanguageOpen, setIsNaturalLanguageOpen] = useState(false);
   const [examplesOpen, setExamplesOpen] = useState(false);
+  const examples = getFormulaExamples();
+  const isMobile = useIsMobile();
 
   // Function to find the selected formula
   const findSelectedFormula = (): Formula | undefined => {
@@ -227,12 +227,12 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
   const logScaleFactor = Math.log10(currentScaleFactor);
 
   return (
-    <Card className="w-full shadow-lg">
-      <CardContent className="p-0.5 sm:p-1 md:p-2 lg:p-4">
+    <Card className={`w-full shadow-lg ${isMobile ? 'p-0 m-0 border-0 shadow-none' : ''}`}>
+      <CardContent className={`${isMobile ? 'p-0.5' : 'p-0.5 sm:p-1 md:p-2 lg:p-4'}`}>
         <div className="grid gap-1 sm:gap-2 md:gap-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-2">
-            {/* Formula buttons - Use grid layout on mobile */}
-            <div className="grid grid-cols-2 sm:flex gap-1 overflow-x-auto pb-1 w-full max-w-full no-scrollbar">
+            {/* Formula buttons - Use responsive grid layout for all screen sizes */}
+            <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1 w-full max-w-full ${isMobile ? 'gap-0.5' : ''}`}>
               {formulas.map((formula) => (
                 <Button
                   key={formula.id}
@@ -272,21 +272,22 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
                 </Button>
               ))}
               
-              {/* Add New Formula button - Make it full width on mobile in its own row */}
+              {/* Add New Formula button - Make it fit the grid layout */}
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button 
                       variant="outline"
-                      size="icon"
-                      className="h-8 w-full sm:h-7 sm:w-7 bg-white/80 backdrop-blur-sm flex-shrink-0 col-span-2 sm:col-span-1"
+                      size="sm"
+                      className="h-8 w-full sm:h-7 bg-white/80 backdrop-blur-sm flex-shrink-0 col-span-2 md:col-span-1 flex items-center justify-center gap-1"
                       onClick={onNewFormula || handleCreateFormula}
                     >
-                      <PlusCircle className="h-4 w-4 sm:h-4 sm:w-4" />
+                      <PlusCircle className="h-4 w-4" />
+                      <span className="hidden md:inline">{t('newFormula')}</span>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>New Formula</p>
+                    <p>{t('newFormula')}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -297,9 +298,9 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
           </div>
 
           {selectedFormulaId && (
-            <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-1 sm:gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
               {/* Expression Input */}
-              <div className="flex-1 min-w-[150px] sm:min-w-[200px] w-full sm:w-auto">
+              <div className="w-full col-span-1 md:col-span-2">
                 <div className="relative">
                   <Input 
                     id="formula-expression"

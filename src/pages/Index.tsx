@@ -24,11 +24,13 @@ import {
   getFormulasFromUrl
 } from '@/utils/urlEncoding';
 import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Index = () => {
   // Get the service factory
   const serviceFactory = useServiceFactory();
   const { setComponentConfigModalOpen } = useComponentConfig();
+  const isMobile = useIsMobile();
   
   const {
     shapes,
@@ -305,18 +307,18 @@ const Index = () => {
   }, [updateGridPosition]);
 
   return (
-    <div className={`min-h-screen bg-gray-50 ${isFullscreen ? 'p-0' : ''}`}>
-      <div className={`${isFullscreen ? 'max-w-full p-0' : 'container py-0 sm:py-2 md:py-4 lg:py-8 px-0 sm:px-2 md:px-4'} transition-all duration-200 h-[calc(100vh-0rem)] sm:h-[calc(100vh-0.5rem)]`}>
+    <div className={`min-h-screen bg-gray-50 ${isFullscreen || isMobile ? 'p-0' : ''}`}>
+      <div className={`${isFullscreen || isMobile ? 'max-w-full p-0' : 'container py-0 sm:py-2 md:py-4 lg:py-8 px-0 sm:px-2 md:px-4'} transition-all duration-200 h-[calc(100vh-0rem)] sm:h-[calc(100vh-0.5rem)]`}>
         <GeometryHeader isFullscreen={isFullscreen} onToggleFullscreen={toggleFullscreen} />
         
         {/* Include both modals */}
         <ConfigModal />
         <ComponentConfigModal />
         
-        <div className="h-[calc(100%-3rem)] sm:h-[calc(100%-4rem)]">
+        <div className={`${isMobile ? 'h-full' : 'h-[calc(100%-3rem)] sm:h-[calc(100%-4rem)]'}`}>
           <div className="h-full">
             <div className="flex flex-col h-full">
-              <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between ${isFullscreen ? 'space-y-1 sm:space-y-0 sm:space-x-1 px-1' : 'space-y-1 sm:space-y-0 sm:space-x-2 px-1 sm:px-2'} mb-1 sm:mb-2`}>
+              <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between ${isFullscreen || isMobile ? 'space-y-1 sm:space-y-0 sm:space-x-1 px-1' : 'space-y-1 sm:space-y-0 sm:space-x-2 px-1 sm:px-2'} ${isMobile ? 'mb-0' : 'mb-1 sm:mb-2'}`}>
                 <div className="flex flex-row items-center space-x-1 sm:space-x-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 no-scrollbar">
                   <Toolbar
                     activeMode={activeMode}
