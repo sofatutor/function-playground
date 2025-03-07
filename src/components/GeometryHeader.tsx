@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslate } from '@/utils/translate';
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Maximize2, Minimize2, Share2, Settings } from 'lucide-react';
 import { useShapeOperations } from '@/hooks/useShapeOperations';
 import { useGlobalConfig } from '@/context/ConfigContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface GeometryHeaderProps {
   isFullscreen: boolean;
@@ -16,6 +17,24 @@ const GeometryHeader: React.FC<GeometryHeaderProps> = ({ isFullscreen, onToggleF
   const [isFullscreenState, setIsFullscreenState] = useState(isFullscreen);
   const { shareCanvasUrl, shapes } = useShapeOperations();
   const { setGlobalConfigModalOpen } = useGlobalConfig();
+  const isMobile = useIsMobile();
+
+  // Listen for fullscreen change events (e.g., when user presses Esc)
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreenState(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  // If on mobile, don't render the header
+  if (isMobile) {
+    return null;
+  }
 
   const toggleFullscreen = () => {
     if (onToggleFullscreen) {
@@ -39,18 +58,6 @@ const GeometryHeader: React.FC<GeometryHeaderProps> = ({ isFullscreen, onToggleF
       }
     }
   };
-
-  // Listen for fullscreen change events (e.g., when user presses Esc)
-  React.useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreenState(!!document.fullscreenElement);
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-    };
-  }, []);
 
   return (
     <header className="flex items-center justify-between p-0.5 sm:p-1 md:p-2 lg:p-4 bg-background border-b">
