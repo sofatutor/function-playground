@@ -113,6 +113,8 @@ const Toolbar: React.FC<ToolbarProps> = ({
         <RotateCw className="h-3 w-3 sm:h-4 sm:w-4" />
       </ToolButton>
 
+      <Separator orientation="vertical" className="h-6 sm:h-8 mx-0.5 sm:mx-1" />
+
       {onToggleFormulaEditor && (
         <>
           <ToolButton 
@@ -123,8 +125,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
           >
             <FunctionSquare className="h-3 w-3 sm:h-4 sm:w-4" />
           </ToolButton>
-          
-          <Separator orientation="vertical" className="h-6 sm:h-8 mx-0.5 sm:mx-1" />
         </>
       )}
     </div>
