@@ -192,6 +192,25 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     const formula = selectedPoint.formula;
     const expression = formula.expression;
     
+    // Check if this is a formula with a potential singularity at x=0
+    const hasSingularity = expression.includes('1/x') || 
+                          expression.includes('/x') ||
+                          expression.includes('x^-1') ||
+                          expression.includes('x**-1') ||
+                          expression.includes('Math.pow(x, -1)') ||
+                          expression.includes('÷ x');
+    
+    // If we're trying to navigate across a singularity at x=0, skip over it
+    if (hasSingularity && ((currentMathX < 0 && targetMathX >= 0) || (currentMathX > 0 && targetMathX <= 0))) {
+      console.log('Detected navigation across singularity at x=0, skipping over it');
+      
+      // Skip over zero with a small offset to avoid the singularity
+      const skipAmount = stepSize * 2; // Use double the step size to ensure we clear the singularity
+      targetMathX = (direction === 'next') ? Math.max(0.01, skipAmount) : Math.min(-0.01, -skipAmount);
+      
+      console.log('Adjusted target mathX to skip singularity:', targetMathX.toFixed(4));
+    }
+    
     try {
       // Create a function from the expression
       const fn = new Function('x', `
@@ -204,12 +223,43 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
       `);
       
       // Evaluate the function at the target X
-      const targetMathY = fn(targetMathX);
+      let targetMathY = fn(targetMathX);
       
       // Check if the result is valid
       if (isNaN(targetMathY) || !isFinite(targetMathY)) {
-        console.log('Evaluated Y is not valid, cannot navigate');
-        return;
+        console.log('Evaluated Y is not valid, trying to skip over singularity');
+        
+        // If we're at a singularity, try to skip over it
+        if (hasSingularity) {
+          // Try a few different offsets to find a valid point
+          const offsets = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5];
+          
+          for (const offset of offsets) {
+            // Apply offset in the direction we're moving
+            const adjustedX = (direction === 'next') ? 
+              targetMathX + offset : 
+              targetMathX - offset;
+            
+            // Try the adjusted X value
+            targetMathY = fn(adjustedX);
+            
+            // If we found a valid point, use it
+            if (!isNaN(targetMathY) && isFinite(targetMathY)) {
+              targetMathX = adjustedX;
+              console.log('Found valid point at adjusted x =', targetMathX.toFixed(4));
+              break;
+            }
+          }
+          
+          // If we still don't have a valid point, give up
+          if (isNaN(targetMathY) || !isFinite(targetMathY)) {
+            console.log('Could not find valid point even with adjustments');
+            return;
+          }
+        } else {
+          // For non-singularity functions, just return if the point is invalid
+          return;
+        }
       }
       
       // Apply the formula's scale factor
@@ -258,10 +308,10 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     }
     
     if (externalGridPosition) {
-      // Only update if there's a significant difference to avoid oscillation
+      // Increase threshold from 1 to 3 to avoid oscillation during fullscreen toggle
       if (!gridPosition || 
-         Math.abs(externalGridPosition.x - gridPosition.x) > 1 || 
-         Math.abs(externalGridPosition.y - gridPosition.y) > 1) {
+         Math.abs(externalGridPosition.x - gridPosition.x) > 3 || 
+         Math.abs(externalGridPosition.y - gridPosition.y) > 3) {
         console.log('GeometryCanvas: Updating internal grid position from external');
         setGridPosition(externalGridPosition);
       } else {
