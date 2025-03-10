@@ -288,16 +288,158 @@ export const evaluateFunction = (
     // Use a modified version of the expression that applies the scale factor
     // The scale factor affects the y-values: larger values stretch the graph vertically,
     // smaller values flatten it
-    const scaledExpression = expression.replace(/x/g, '(x)');
-    const fn = new Function('x', `
-      try {
-        const Math = window.Math;
-        const result = ${scaledExpression};
-        return result * ${scaleFactor};
-      } catch (e) {
-        return NaN;
+    
+    // First, handle special cases for common functions
+    if (expression === 'Math.exp(x)') {
+      console.log('Using direct Math.exp implementation');
+      const fn = (x: number) => Math.exp(x) * scaleFactor;
+      
+      // Sample the function at the calculated x values
+      for (const x of xValues) {
+        try {
+          const y = fn(x);
+          
+          // Check if the result is valid
+          const isValid = !isNaN(y) && isFinite(y);
+          
+          // Convert mathematical coordinates to canvas coordinates
+          const canvasX = gridPosition.x + x * pixelsPerUnit;
+          const canvasY = gridPosition.y - y * pixelsPerUnit; // Flip y-axis
+          
+          points.push({
+            x: canvasX,
+            y: canvasY,
+            isValid
+          });
+        } catch (e) {
+          console.error('Error evaluating point:', e);
+          points.push({
+            x: 0,
+            y: 0,
+            isValid: false
+          });
+        }
       }
-    `);
+      
+      return points;
+    } 
+    // Special case for sigmoid function
+    else if (expression === '1 / (1 + Math.exp(-x))') {
+      console.log('Using direct sigmoid implementation');
+      const fn = (x: number) => (1 / (1 + Math.exp(-x))) * scaleFactor;
+      
+      // Sample the function at the calculated x values
+      for (const x of xValues) {
+        try {
+          const y = fn(x);
+          
+          // Check if the result is valid
+          const isValid = !isNaN(y) && isFinite(y);
+          
+          // Convert mathematical coordinates to canvas coordinates
+          const canvasX = gridPosition.x + x * pixelsPerUnit;
+          const canvasY = gridPosition.y - y * pixelsPerUnit; // Flip y-axis
+          
+          points.push({
+            x: canvasX,
+            y: canvasY,
+            isValid
+          });
+        } catch (e) {
+          console.error('Error evaluating point:', e);
+          points.push({
+            x: 0,
+            y: 0,
+            isValid: false
+          });
+        }
+      }
+      
+      return points;
+    }
+    
+    // For other expressions, be careful with the replacement
+    // We need to avoid replacing 'x' in function names like 'exp'
+    console.log(`Evaluating expression: ${expression}`);
+    
+    // More careful replacement that doesn't affect function names
+    // Replace only standalone 'x' or 'x' with operators around it
+    const scaledExpression = expression.replace(/(\W|^)x(\W|$)/g, '$1(x)$2');
+    console.log(`Scaled expression: ${scaledExpression}`);
+    
+    // Create a safer function with more detailed error handling
+    // Use a different approach for function creation that ensures Math functions are available
+    let fn: (x: number) => number;
+    
+    // Special handling for expressions containing Math.exp
+    if (expression.includes('Math.exp')) {
+      console.log('Using special handling for Math.exp');
+      
+      // Create a direct implementation function that safely evaluates the expression
+      fn = (x: number) => {
+        try {
+          // For expressions with Math.exp, we'll evaluate them directly in this scope
+          // where Math.exp is guaranteed to be available
+          
+          // This is a safer approach than using new Function
+          // We'll handle common patterns with Math.exp
+          
+          if (expression.includes('Math.exp(-x)')) {
+            const expValue = Math.exp(-x);
+            
+            // Handle common patterns
+            if (expression.startsWith('1 / (1 + Math.exp(-x))')) {
+              return (1 / (1 + expValue)) * scaleFactor;
+            } else if (expression.startsWith('Math.exp(-x)')) {
+              return expValue * scaleFactor;
+            }
+          } else if (expression.includes('Math.exp(x)')) {
+            const expValue = Math.exp(x);
+            
+            // Handle common patterns
+            if (expression === 'Math.exp(x)') {
+              return expValue * scaleFactor;
+            } else if (expression.includes('* Math.exp(x)')) {
+              // Extract coefficient
+              const coefficient = parseFloat(expression.split('*')[0].trim());
+              return coefficient * expValue * scaleFactor;
+            }
+          }
+          
+          // If we can't handle it with the special cases above,
+          // fall back to a more general approach
+          // Use eval in this controlled context where we know the expression is from our app
+          // eslint-disable-next-line no-eval
+          return eval(expression.replace(/x/g, x.toString())) * scaleFactor;
+        } catch (e) {
+          console.error('Error in direct Math.exp evaluation:', e);
+          return NaN;
+        }
+      };
+    } else {
+      // For other expressions
+      fn = new Function('x', `
+        try {
+          // Make sure Math functions are available
+          const sin = Math.sin;
+          const cos = Math.cos;
+          const tan = Math.tan;
+          const exp = Math.exp;
+          const log = Math.log;
+          const sqrt = Math.sqrt;
+          const abs = Math.abs;
+          const pow = Math.pow;
+          const PI = Math.PI;
+          const E = Math.E;
+          
+          const result = ${scaledExpression};
+          return result * ${scaleFactor};
+        } catch (e) {
+          console.error('Error in function evaluation:', e);
+          return NaN;
+        }
+      `) as (x: number) => number;
+    }
     
     // Sample the function at the calculated x values
     for (const x of xValues) {
@@ -322,12 +464,14 @@ export const evaluateFunction = (
       // Check if the result is valid
       const isValid = !isNaN(y) && isFinite(y);
       
-      // For logarithmic functions, we need to handle very large values
-      // that would cause the graph to be clipped
-      if (isLogarithmic && isValid) {
-        // Limit the maximum absolute value to prevent extreme scaling
-        const MAX_VALUE = 1000;
+      // Limit extremely large values for all functions to prevent graph from being cut off
+      if (isValid) {
+        // Define a reasonable maximum value based on the canvas size
+        // This prevents the graph from extending too far off the visible area
+        const MAX_VALUE = 1000000; // Increased from 1000 to handle higher-degree polynomials
+        
         if (Math.abs(y) > MAX_VALUE) {
+          console.log(`Limiting extreme value at x=${x}: ${y} to ${y > 0 ? MAX_VALUE : -MAX_VALUE}`);
           y = y > 0 ? MAX_VALUE : -MAX_VALUE;
         }
       }
@@ -344,6 +488,21 @@ export const evaluateFunction = (
     }
   } catch (error) {
     console.error('Error evaluating function:', error);
+    console.error('Function expression:', expression);
+    console.error('Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+    
+    // Try to identify specific issues with the expression
+    if (expression.includes('Math.exp')) {
+      console.log('Expression contains Math.exp - checking if Math.exp is available:', typeof Math.exp);
+      try {
+        // Test Math.exp directly
+        const testExp = Math.exp(1);
+        console.log('Math.exp(1) =', testExp);
+      } catch (e) {
+        console.error('Direct Math.exp test failed:', e);
+      }
+    }
+    
     // Return an empty array if there's an error
     return [];
   }
