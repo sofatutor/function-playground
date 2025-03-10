@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Globe, Trash2 } from 'lucide-react';
+import { Globe, Trash2, Terminal } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 
 const ConfigModal: React.FC = () => {
   const { 
@@ -16,11 +17,16 @@ const ConfigModal: React.FC = () => {
     language,
     setLanguage,
     openaiApiKey,
-    setOpenaiApiKey
+    setOpenaiApiKey,
+    loggingEnabled,
+    setLoggingEnabled
   } = useGlobalConfig();
   
   const [apiKeyInput, setApiKeyInput] = useState(openaiApiKey || '');
   const t = useTranslate();
+  
+  // Check if we're in development mode
+  const isDevelopment = process.env.NODE_ENV === 'development';
   
   // Update input when openaiApiKey changes (e.g., on initial load)
   useEffect(() => {
@@ -59,9 +65,12 @@ const ConfigModal: React.FC = () => {
         </DialogHeader>
         
         <Tabs defaultValue="general" className="mt-2">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full" style={{ gridTemplateColumns: isDevelopment ? '1fr 1fr 1fr' : '1fr 1fr' }}>
             <TabsTrigger value="general">{t('configModal.tabs.general')}</TabsTrigger>
             <TabsTrigger value="openai">{t('configModal.tabs.openai')}</TabsTrigger>
+            {isDevelopment && (
+              <TabsTrigger value="developer">{t('configModal.tabs.developer')}</TabsTrigger>
+            )}
           </TabsList>
           
           {/* General Tab */}
@@ -124,6 +133,35 @@ const ConfigModal: React.FC = () => {
               </p>
             </div>
           </TabsContent>
+          
+          {/* Developer Tab - Only shown in development mode */}
+          {isDevelopment && (
+            <TabsContent value="developer" className="space-y-3 py-2">
+              <p className="text-sm text-muted-foreground">
+                {t('configModal.developer.description')}
+              </p>
+              
+              <div className="space-y-4">
+                {/* Logging Toggle */}
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="logging-toggle" className="flex items-center gap-2">
+                      <Terminal className="h-4 w-4" />
+                      <span>{t('configModal.developer.loggingLabel')}</span>
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      {t('configModal.developer.loggingDescription')}
+                    </p>
+                  </div>
+                  <Switch
+                    id="logging-toggle"
+                    checked={loggingEnabled}
+                    onCheckedChange={setLoggingEnabled}
+                  />
+                </div>
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
       </DialogContent>
     </Dialog>
