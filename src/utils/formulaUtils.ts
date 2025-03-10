@@ -72,6 +72,10 @@ export const evaluateFunction = (
   // Check for combined functions that need even more samples
   const isCombined = hasTrigFunction && isComplex;
   
+  // Check for sqrt(abs(x)) which needs special handling around x=0
+  const isSqrtAbs = expression.includes('Math.sqrt(Math.abs(x))') || 
+                    expression.includes('sqrt(abs(x))');
+  
   // If the expression contains log(x) directly, we need x > 0
   // If it contains log(-x) or log(Math.abs(x)), we can allow negative values
   const allowsNegativeX = isLogarithmic && (
@@ -84,17 +88,89 @@ export const evaluateFunction = (
   let visibleXRange: [number, number];
   
   if (isTangent) {
-    // For tangent, we'll always plot the period containing the origin (0,0)
-    // Tangent has period π, and asymptotes at odd multiples of π/2
+    // For tangent functions, we need to be careful about the domain
+    // Find the central period of the tangent function that contains the visible range
     const PI = Math.PI;
     
-    // The period containing the origin is from -π/2 to π/2
-    // Add small offsets to avoid the asymptotes
-    const periodStart = -PI/2 + 0.1;
-    const periodEnd = PI/2 - 0.1;
+    // Calculate the central period
+    const centralPeriod = [
+      Math.max(leftEdgeX, -PI/2 + 0.01), // Avoid exact asymptote
+      Math.min(rightEdgeX, PI/2 - 0.01)  // Avoid exact asymptote
+    ] as [number, number];
     
-    visibleXRange = [periodStart, periodEnd];
-    console.log(`Plotting tangent function with central period: [${periodStart}, ${periodEnd}]`);
+    console.log('Plotting tangent function with central period:', centralPeriod);
+    
+    // Use the central period as the visible range
+    visibleXRange = centralPeriod;
+    
+    // For tangent functions, use many more samples to capture the steep slopes
+    // near asymptotes
+    if (!overrideSamples) {
+      // Use significantly more samples for tangent functions
+      const tangentSamples = Math.min(actualSamples * 10, MAX_SAMPLES);
+      
+      // Generate more points near asymptotes
+      const xValues: number[] = [];
+      
+      // Find all asymptotes in the visible range
+      // Asymptotes occur at x = (n + 0.5) * π
+      const leftAsymptote = Math.ceil((leftEdgeX / PI - 0.5)) * PI + PI/2;
+      const rightAsymptote = Math.floor((rightEdgeX / PI - 0.5)) * PI + PI/2;
+      
+      // Generate points with higher density near asymptotes
+      for (let i = 0; i <= tangentSamples; i++) {
+        const t = i / tangentSamples; // Parameter from 0 to 1
+        
+        // Use a non-linear distribution to concentrate points near asymptotes
+        // This transformation puts more points near the edges (asymptotes)
+        // and fewer in the middle of the period
+        const x = leftEdgeX + (rightEdgeX - leftEdgeX) * t;
+        
+        // Find the nearest asymptote
+        const n = Math.round(x / PI - 0.5);
+        const nearestAsymptote = (n + 0.5) * PI;
+        
+        // Calculate distance to nearest asymptote
+        const distToAsymptote = Math.abs(x - nearestAsymptote);
+        
+        // Only add points that are not too close to asymptotes
+        // This prevents numerical issues
+        if (distToAsymptote > 0.01) {
+          xValues.push(x);
+        }
+      }
+      
+      // Add extra points very close to (but not at) each asymptote
+      for (let n = Math.floor(leftEdgeX / PI - 0.5); n <= Math.ceil(rightEdgeX / PI - 0.5); n++) {
+        const asymptote = (n + 0.5) * PI;
+        
+        // Only process asymptotes in the visible range
+        if (asymptote >= leftEdgeX && asymptote <= rightEdgeX) {
+          // Add points on both sides of the asymptote
+          // Use logarithmic spacing to get more points very close to the asymptote
+          for (let i = 1; i <= 20; i++) {
+            const offset = 0.01 * Math.pow(2, -i); // Gets closer and closer to asymptote
+            
+            // Add points on both sides of the asymptote
+            xValues.push(asymptote - offset);
+            xValues.push(asymptote + offset);
+          }
+        }
+      }
+      
+      // Sort the x values
+      xValues.sort((a, b) => a - b);
+      
+      // Remove duplicates
+      const uniqueXValues: number[] = [];
+      for (let i = 0; i < xValues.length; i++) {
+        if (i === 0 || xValues[i] !== xValues[i-1]) {
+          uniqueXValues.push(xValues[i]);
+        }
+      }
+      
+      return evaluateFunctionWithXValues(formula, gridPosition, pixelsPerUnit, uniqueXValues);
+    }
   } else if (isLogarithmic) {
     // For logarithmic functions, restrict the domain to positive values
     // Use a small positive value as the minimum to avoid the asymptote at x=0
@@ -209,6 +285,20 @@ export const evaluateFunction = (
     console.log(`Complex function detected. Using ${adjustedSamples} samples`);
   }
   
+  // Special handling for sqrt(abs(x)) to ensure the corner at x=0 is rendered properly
+  if (expression === 'Math.sqrt(Math.abs(x))') {
+    // Increase samples for better rendering
+    adjustedSamples = Math.min(Math.ceil(actualSamples * 2), MAX_SAMPLES);
+    console.log(`sqrt(abs(x)) function detected. Using ${adjustedSamples} samples with special handling for x=0`);
+  }
+  
+  // Special handling for sigmoid function to better show asymptotic behavior
+  if (expression === '1 / (1 + Math.exp(-x))') {
+    // Increase samples for better rendering of asymptotic behavior
+    adjustedSamples = Math.min(Math.ceil(actualSamples * 2), MAX_SAMPLES);
+    console.log(`Sigmoid function detected. Using ${adjustedSamples} samples with special handling for asymptotes`);
+  }
+  
   // Calculate the step size based on the visible range and number of samples
   const xStep = (visibleXRange[1] - visibleXRange[0]) / (hasHighFrequency || hasVeryHighFrequency || isComplex || isCombined ? adjustedSamples : actualSamples);
   
@@ -265,6 +355,77 @@ export const evaluateFunction = (
     }
     
     console.log(`Using ${xValues.length} adaptive sample points for logarithmic function`);
+  } else if (expression === 'Math.sqrt(Math.abs(x))') {
+    // For sqrt(abs(x)), use a higher density of points around x=0
+    // Use the adjusted samples value we calculated earlier
+    for (let i = 0; i <= adjustedSamples; i++) {
+      xValues.push(visibleXRange[0] + i * xStep);
+    }
+    
+    // Add extra points around x=0 to capture the corner properly
+    const extraPoints = 40;
+    const extraRange = 0.2; // Add extra points within 0.2 units of x=0
+    const extraStep = extraRange / extraPoints;
+    
+    // Add points on both sides of x=0
+    for (let i = 1; i <= extraPoints; i++) {
+      const x = -extraRange + i * extraStep;
+      if (x >= visibleXRange[0] && x <= visibleXRange[1] && !xValues.includes(x)) {
+        xValues.push(x);
+      }
+    }
+    
+    // Add the exact point at x=0
+    if (!xValues.includes(0) && visibleXRange[0] <= 0 && visibleXRange[1] >= 0) {
+      xValues.push(0);
+    }
+    
+    // Sort the x values
+    xValues.sort((a, b) => a - b);
+    
+    console.log(`Using ${xValues.length} sample points for sqrt(abs(x)) function with special handling for x=0`);
+  } else if (expression === '1 / (1 + Math.exp(-x))') {
+    // For sigmoid function, use a higher density of points at the extremes
+    // Use the adjusted samples value we calculated earlier
+    for (let i = 0; i <= adjustedSamples; i++) {
+      xValues.push(visibleXRange[0] + i * xStep);
+    }
+    
+    // Add extra points at the extremes where the function approaches 0 or 1
+    const extraPoints = 30;
+    const leftExtremeRange = [-10, -5]; // Where function approaches 0
+    const rightExtremeRange = [5, 10]; // Where function approaches 1
+    const extraStep = (leftExtremeRange[1] - leftExtremeRange[0]) / extraPoints;
+    
+    // Add points at the left extreme (approaching 0)
+    if (visibleXRange[0] <= leftExtremeRange[1]) {
+      const startX = Math.max(visibleXRange[0], leftExtremeRange[0]);
+      for (let i = 0; i <= extraPoints; i++) {
+        const x = startX + i * extraStep;
+        if (x <= leftExtremeRange[1] && !xValues.includes(x)) {
+          xValues.push(x);
+        }
+      }
+    }
+    
+    // Add points at the right extreme (approaching 1)
+    if (visibleXRange[1] >= rightExtremeRange[0]) {
+      const startX = Math.max(visibleXRange[0], rightExtremeRange[0]);
+      const endX = Math.min(visibleXRange[1], rightExtremeRange[1]);
+      const rightExtraStep = (endX - startX) / extraPoints;
+      
+      for (let i = 0; i <= extraPoints; i++) {
+        const x = startX + i * rightExtraStep;
+        if (x <= endX && !xValues.includes(x)) {
+          xValues.push(x);
+        }
+      }
+    }
+    
+    // Sort the x values
+    xValues.sort((a, b) => a - b);
+    
+    console.log(`Using ${xValues.length} sample points for sigmoid function with special handling for asymptotes`);
   } else if (hasHighFrequency) {
     // For high-frequency functions, use a higher density of points
     // Use the adjusted samples value we calculated earlier
@@ -321,12 +482,51 @@ export const evaluateFunction = (
         }
       }
       
+      console.log(`Generated ${points.length} points for Math.exp(x)`);
+      if (points.length > 0) {
+        console.log('First few points:', points.slice(0, 3));
+      }
+      
       return points;
     } 
     // Special case for sigmoid function
     else if (expression === '1 / (1 + Math.exp(-x))') {
       console.log('Using direct sigmoid implementation');
       const fn = (x: number) => (1 / (1 + Math.exp(-x))) * scaleFactor;
+      
+      // Sample the function at the calculated x values
+      for (const x of xValues) {
+        try {
+          const y = fn(x);
+          
+          // Check if the result is valid
+          const isValid = !isNaN(y) && isFinite(y);
+          
+          // Convert mathematical coordinates to canvas coordinates
+          const canvasX = gridPosition.x + x * pixelsPerUnit;
+          const canvasY = gridPosition.y - y * pixelsPerUnit; // Flip y-axis
+          
+          points.push({
+            x: canvasX,
+            y: canvasY,
+            isValid
+          });
+        } catch (e) {
+          console.error('Error evaluating point:', e);
+          points.push({
+            x: 0,
+            y: 0,
+            isValid: false
+          });
+        }
+      }
+      
+      return points;
+    }
+    // Special case for square root of absolute value
+    else if (expression === 'Math.sqrt(Math.abs(x))') {
+      console.log('Using direct sqrt(abs(x)) implementation');
+      const fn = (x: number) => Math.sqrt(Math.abs(x)) * scaleFactor;
       
       // Sample the function at the calculated x values
       for (const x of xValues) {
@@ -511,6 +711,177 @@ export const evaluateFunction = (
 };
 
 /**
+ * Helper function to evaluate a function with a specific set of x values
+ */
+const evaluateFunctionWithXValues = (
+  formula: Formula, 
+  gridPosition: Point,
+  pixelsPerUnit: number,
+  xValues: number[]
+): FormulaPoint[] => {
+  const { expression, scaleFactor } = formula;
+  const points: FormulaPoint[] = [];
+  
+  try {
+    // Create a function from the expression
+    // Use a modified version of the expression that applies the scale factor
+    
+    // First, handle special cases for common functions
+    if (expression === 'Math.tan(x)' || expression === 'tan(x)') {
+      console.log('Using direct Math.tan implementation');
+      const fn = (x: number) => Math.tan(x) * scaleFactor;
+      
+      // Sample the function at the calculated x values
+      for (const x of xValues) {
+        try {
+          const y = fn(x);
+          
+          // Check if the result is valid
+          const isValid = !isNaN(y) && isFinite(y);
+          
+          // Convert mathematical coordinates to canvas coordinates
+          const canvasX = gridPosition.x + x * pixelsPerUnit;
+          const canvasY = gridPosition.y - y * pixelsPerUnit; // Flip y-axis
+          
+          points.push({
+            x: canvasX,
+            y: canvasY,
+            isValid
+          });
+        } catch (e) {
+          console.error('Error evaluating point:', e);
+          points.push({
+            x: 0,
+            y: 0,
+            isValid: false
+          });
+        }
+      }
+      
+      return points;
+    } else {
+      // For other expressions, use the general approach
+      // More careful replacement that doesn't affect function names
+      // Replace only standalone 'x' or 'x' with operators around it
+      const scaledExpression = expression.replace(/(\W|^)x(\W|$)/g, '$1(x)$2');
+      console.log(`Scaled expression: ${scaledExpression}`);
+      
+      // Create a safer function with more detailed error handling
+      // Use a different approach for function creation that ensures Math functions are available
+      let fn: (x: number) => number;
+      
+      // Special handling for expressions containing Math.exp
+      if (expression.includes('Math.exp')) {
+        console.log('Using special handling for Math.exp');
+        
+        // Create a direct implementation function that safely evaluates the expression
+        fn = (x: number) => {
+          try {
+            // For expressions with Math.exp, we'll evaluate them directly in this scope
+            // where Math.exp is guaranteed to be available
+            
+            // This is a safer approach than using new Function
+            // We'll handle common patterns with Math.exp
+            
+            if (expression.includes('Math.exp(-x)')) {
+              const expValue = Math.exp(-x);
+              
+              // Handle common patterns
+              if (expression.startsWith('1 / (1 + Math.exp(-x))')) {
+                return (1 / (1 + expValue)) * scaleFactor;
+              } else if (expression.startsWith('Math.exp(-x)')) {
+                return expValue * scaleFactor;
+              }
+            } else if (expression.includes('Math.exp(x)')) {
+              const expValue = Math.exp(x);
+              
+              // Handle common patterns
+              if (expression === 'Math.exp(x)') {
+                return expValue * scaleFactor;
+              } else if (expression.includes('* Math.exp(x)')) {
+                // Extract coefficient
+                const coefficient = parseFloat(expression.split('*')[0].trim());
+                return coefficient * expValue * scaleFactor;
+              }
+            }
+            
+            // If we can't handle it with the special cases above,
+            // fall back to a more general approach
+            // Use eval in this controlled context where we know the expression is from our app
+            // eslint-disable-next-line no-eval
+            return eval(expression.replace(/x/g, x.toString())) * scaleFactor;
+          } catch (e) {
+            console.error('Error in direct Math.exp evaluation:', e);
+            return NaN;
+          }
+        };
+      } else {
+        // For other expressions
+        fn = new Function('x', `
+          try {
+            // Make sure Math functions are available
+            const sin = Math.sin;
+            const cos = Math.cos;
+            const tan = Math.tan;
+            const exp = Math.exp;
+            const log = Math.log;
+            const sqrt = Math.sqrt;
+            const abs = Math.abs;
+            const pow = Math.pow;
+            const PI = Math.PI;
+            const E = Math.E;
+            
+            const result = ${scaledExpression};
+            return result * ${scaleFactor};
+          } catch (e) {
+            console.error('Error in function evaluation:', e);
+            return NaN;
+          }
+        `) as (x: number) => number;
+      }
+      
+      // Sample the function at the calculated x values
+      for (const x of xValues) {
+        let y: number;
+        
+        try {
+          y = fn(x);
+        } catch (e) {
+          y = NaN;
+        }
+        
+        // Check if the result is valid
+        const isValid = !isNaN(y) && isFinite(y);
+        
+        // Limit extremely large values to prevent graph from being cut off
+        if (isValid) {
+          const MAX_VALUE = 1000000;
+          
+          if (Math.abs(y) > MAX_VALUE) {
+            y = y > 0 ? MAX_VALUE : -MAX_VALUE;
+          }
+        }
+        
+        // Convert mathematical coordinates to canvas coordinates
+        const canvasX = gridPosition.x + x * pixelsPerUnit;
+        const canvasY = gridPosition.y - y * pixelsPerUnit; // Flip y-axis
+        
+        points.push({
+          x: canvasX,
+          y: canvasY,
+          isValid
+        });
+      }
+      
+      return points;
+    }
+  } catch (error) {
+    console.error('Error evaluating function with custom x values:', error);
+    return [];
+  }
+};
+
+/**
  * Generate points for a parametric function of the form x = f(t), y = g(t)
  */
 export const evaluateParametric = (
@@ -653,6 +1024,11 @@ export const evaluateFormula = (
   pixelsPerUnit: number,
   isDragging: boolean = false
 ): FormulaPoint[] => {
+  // Add debug logging for special functions
+  if (formula.expression === 'Math.exp(x)') {
+    console.log('evaluateFormula: Processing exponential function');
+  }
+
   // During dragging, use a much smaller number of samples for better performance
   const dragSamples = isDragging ? Math.min(Math.max(Math.floor(formula.samples / 5), MIN_SAMPLES / 5), MAX_SAMPLES / 5) : undefined;
   
@@ -723,14 +1099,24 @@ export const evaluateFormula = (
     console.log(`Using ${samples} samples for high-frequency trigonometric function (multiplier: ${frequencyMultiplier})`);
   }
   
-  // Always use function evaluation for all formula types
-  // This simplifies the code and ensures consistent behavior
-  return evaluateFunction(
-    formula, 
-    gridPosition, 
-    pixelsPerUnit, 
-    samples
-  );
+  // Check formula type and route to the appropriate evaluation function
+  if (formula.type === 'parametric') {
+    if (formula.expression === 'Math.exp(x)') {
+      console.log('evaluateFormula: Routing exponential function to parametric evaluation (unexpected)');
+    }
+    return evaluateParametric(formula, gridPosition, pixelsPerUnit);
+  } else if (formula.type === 'polar') {
+    if (formula.expression === 'Math.exp(x)') {
+      console.log('evaluateFormula: Routing exponential function to polar evaluation (unexpected)');
+    }
+    return evaluatePolar(formula, gridPosition, pixelsPerUnit);
+  } else {
+    // Default to function evaluation
+    if (formula.expression === 'Math.exp(x)') {
+      console.log('evaluateFormula: Routing exponential function to function evaluation (expected)');
+    }
+    return evaluateFunction(formula, gridPosition, pixelsPerUnit, samples);
+  }
 };
 
 /**
@@ -868,8 +1254,8 @@ export const generateFormulaId = (): string => {
  * Create a default formula with the given type
  */
 export const createDefaultFormula = (type: FormulaType = 'function'): Formula => {
-  // Always create function type formulas
-  const formulaType: FormulaType = 'function';
+  // Use the provided type parameter instead of always creating function type
+  const formulaType: FormulaType = type;
   
   // Use a very wide xRange to ensure the graph doesn't stop when moving the canvas
   // This range is large enough to cover most practical use cases
@@ -879,13 +1265,26 @@ export const createDefaultFormula = (type: FormulaType = 'function'): Formula =>
   const randomColor = Math.floor(Math.random() * 16777215).toString(16);
   const paddedColor = randomColor.padStart(6, '0');
 
+  // Set default expression based on formula type
+  let defaultExpression = 'x*x'; // Default for function type
+  let tRange: [number, number] | undefined = undefined;
+  
+  if (type === 'parametric') {
+    defaultExpression = 'Math.cos(t); Math.sin(t)'; // Default for parametric type
+    tRange = [0, 2 * Math.PI]; // Default t-range for parametric
+  } else if (type === 'polar') {
+    defaultExpression = '1'; // Default for polar type (circle)
+    tRange = [0, 2 * Math.PI]; // Default t-range for polar
+  }
+
   return {
     id: generateFormulaId(),
     type: formulaType,
-    expression: 'x*x', // Default to a simple quadratic function
+    expression: defaultExpression,
     color: '#' + paddedColor, // Random color with 6 digits
     strokeWidth: 2,
     xRange: xRange,
+    tRange: tRange,
     samples: 500, // Increase samples for smoother curves
     scaleFactor: 1.0 // Default scale factor
   };
