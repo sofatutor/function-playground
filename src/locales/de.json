@@ -142,7 +142,8 @@
     "tabs": {
       "general": "Allgemein",
       "openai": "OpenAI API",
-      "calibration": "Bildschirmkalibrierung"
+      "calibration": "Bildschirmkalibrierung",
+      "developer": "Entwickler"
     },
     "general": {
       "title": "Allgemeine Einstellungen",
@@ -173,6 +174,12 @@
       "pixelsPerUnit": "Pixel pro {unit}",
       "cancelButton": "Abbrechen",
       "applyButton": "Kalibrierung anwenden"
+    },
+    "developer": {
+      "title": "Entwicklereinstellungen",
+      "description": "Erweiterte Einstellungen für Entwicklung und Debugging",
+      "loggingLabel": "Konsolenprotokollierung",
+      "loggingDescription": "Aktivieren oder deaktivieren Sie die Konsolenprotokollierung mit Zeitstempeln"
     }
   },
   "componentConfigModal": {
