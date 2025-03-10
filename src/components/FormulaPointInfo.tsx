@@ -43,6 +43,8 @@ const FormulaPointInfo: React.FC<FormulaPointInfoProps> = ({
   // Create a human-readable expression
   const formatExpression = (expr: string): string => {
     return expr
+      .replace(/Math\.PI/g, 'π')
+      .replace(/Math\.E/g, 'e')
       .replace(/Math\.sin/g, 'sin')
       .replace(/Math\.cos/g, 'cos')
       .replace(/Math\.tan/g, 'tan')

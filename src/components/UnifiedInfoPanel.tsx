@@ -152,6 +152,8 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
   // Create a human-readable expression for formula
   const formatExpression = (expr: string): string => {
     return expr
+      .replace(/Math\.PI/g, 'π')
+      .replace(/Math\.E/g, 'e')
       .replace(/Math\.sin/g, 'sin')
       .replace(/Math\.cos/g, 'cos')
       .replace(/Math\.tan/g, 'tan')
@@ -167,6 +169,8 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
   // Convert JavaScript expression to LaTeX
   const toLatex = (expr: string): string => {
     return expr
+      .replace(/Math\.PI/g, '\\pi')
+      .replace(/Math\.E/g, 'e')
       .replace(/Math\.sin\(([^)]+)\)/g, '\\sin($1)')
       .replace(/Math\.cos\(([^)]+)\)/g, '\\cos($1)')
       .replace(/Math\.tan\(([^)]+)\)/g, '\\tan($1)')

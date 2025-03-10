@@ -1,7 +1,7 @@
 import React, { useMemo, useEffect, useRef, useState } from 'react';
 import { Formula, FormulaPoint } from '@/types/formula';
 import { Point } from '@/types/shapes';
-import { evaluateFormula, validateFormula } from '@/utils/formulaUtils';
+import { evaluateFormula } from '@/utils/formulaUtils';
 import { isGridDragging } from '@/components/CanvasGrid/GridDragHandler';
 
 interface FormulaGraphProps {
@@ -39,7 +39,8 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
   const lastGridPositionRef = useRef<Point | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedPoint, setSelectedPoint] = useState<{ index: number, point: FormulaPoint } | null>(null);
-  const [formulaError, setFormulaError] = useState<string | null>(null);
+  // Add a ref to store the last valid points
+  const lastValidPointsRef = useRef<FormulaPoint[]>([]);
   
   // Force re-evaluation when grid position changes significantly
   const gridPositionKey = useMemo(() => {
@@ -66,17 +67,6 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
     lastGridPositionRef.current = gridPosition;
   }, [gridPosition]);
 
-  // Validate formula when it changes, but don't show UI errors
-  useEffect(() => {
-    const validation = validateFormula(formula);
-    if (!validation.isValid) {
-      console.error(`Formula validation error: ${validation.error}`);
-      setFormulaError(validation.error);
-    } else {
-      setFormulaError(null);
-    }
-  }, [formula]);
-
   // Check if this is a tangent function
   const isTangent = formula.expression.includes('Math.tan(') || 
                     formula.expression === 'Math.tan(x)' || 
@@ -97,12 +87,6 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
 
   // Calculate points for the formula
   const points = useMemo(() => {
-    // If formula is invalid, return empty array
-    if (formulaError) {
-      setIsUpdating(false);
-      return [];
-    }
-
     // Set updating state to true
     setIsUpdating(true);
     
@@ -111,42 +95,37 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
     // Check both our local dragging detection and the global grid dragging flag
     const draggingMode = isDraggingRef.current || isGridDragging.value;
     
-    // Use requestAnimationFrame to ensure smooth updates
-    let result: FormulaPoint[] = [];
-    
     // Use a timeout to ensure we don't block the UI thread
     const evaluateAsync = () => {
-      try {
-        result = evaluateFormula(formula, gridPosition, pixelsPerUnit, draggingMode);
-        console.log(`Generated ${result.length} points for formula (dragging: ${draggingMode})`);
-      } catch (error) {
-        console.error('Error evaluating formula:', error);
-        setFormulaError(error instanceof Error ? error.message : 'Error evaluating formula');
-        result = [];
-      } finally {
-        setIsUpdating(false);
+      const result = evaluateFormula(formula, gridPosition, pixelsPerUnit, draggingMode);
+      
+      // Store the result as the last valid points if it's not empty
+      if (result.length > 0) {
+        lastValidPointsRef.current = result;
       }
+
+      console.log(`Generated ${result.length} points for formula (dragging: ${draggingMode})`);
+      setIsUpdating(false);
     };
 
     // If we're dragging, use a shorter timeout to ensure responsiveness
     if (draggingMode) {
       setTimeout(evaluateAsync, 0);
-      // Return empty points initially, they'll be updated when the evaluation completes
-      return [];
+      // Return last valid points during dragging instead of empty array
+      return lastValidPointsRef.current;
     } else {
       // If not dragging, evaluate synchronously
-      try {
-        result = evaluateFormula(formula, gridPosition, pixelsPerUnit, draggingMode);
-      } catch (error) {
-        console.error('Error evaluating formula:', error);
-        setFormulaError(error instanceof Error ? error.message : 'Error evaluating formula');
-        result = [];
-      } finally {
-        setIsUpdating(false);
+      const result = evaluateFormula(formula, gridPosition, pixelsPerUnit, draggingMode);
+      
+      // Store the result as the last valid points
+      if (result.length > 0) {
+        lastValidPointsRef.current = result;
       }
+
+      setIsUpdating(false);
       return result;
     }
-  }, [formula, gridPositionKey, pixelsPerUnit, formulaError]);
+  }, [formula, gridPositionKey, pixelsPerUnit]); // Use gridPositionKey instead of gridPosition
 
   // Update local selected point when global selected point changes
   useEffect(() => {
@@ -561,15 +540,8 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
     }
   };
 
-  // If there's a formula error, display it in a more subtle way
-  if (formulaError) {
-    console.error(`Formula error: ${formulaError}`);
-    // Return an empty group instead of an error message
-    return <g></g>;
-  }
-
-  // If we're still updating and have no points, show a loading indicator
-  if (isUpdating && points.length === 0) {
+  // If we're updating and there's no path, show a placeholder
+  if (isUpdating && !pathString) {
     return (
       <g>
         <text
