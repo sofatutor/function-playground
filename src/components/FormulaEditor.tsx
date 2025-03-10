@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Formula, FormulaExample } from '@/types/formula';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { PlusCircle, Trash2, BookOpen, ZoomIn, ZoomOut, Palette, Sparkles, Loader2 } from 'lucide-react';
+import { PlusCircle, Trash2, BookOpen, ZoomIn, ZoomOut, Palette, Sparkles, Loader2, AlertCircle } from 'lucide-react';
 import { MeasurementUnit } from '@/types/shapes';
-import { getFormulaExamples, createDefaultFormula } from '@/utils/formulaUtils';
+import { getFormulaExamples, createDefaultFormula, validateFormula } from '@/utils/formulaUtils';
 import { useTranslate } from '@/utils/translate';
 import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,6 +18,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import 'katex/dist/katex.min.css';
 import { InlineMath } from 'react-katex';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface FormulaEditorProps {
   formulas: Formula[];
@@ -48,8 +49,11 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isNaturalLanguageOpen, setIsNaturalLanguageOpen] = useState(false);
   const [examplesOpen, setExamplesOpen] = useState(false);
-  const examples = getFormulaExamples();
+  const [validationErrors, setValidationErrors] = useState<Record<string, string | null>>({});
   const isMobile = useIsMobile();
+  const formulaInputRef = useRef<HTMLInputElement>(null);
+  const examples = getFormulaExamples();
+  const validationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Function to find the selected formula
   const findSelectedFormula = (): Formula | undefined => {
@@ -71,10 +75,39 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
     }
   };
 
+  // Debounced validation function
+  const debouncedValidate = useCallback((formula: Formula) => {
+    if (validationTimeoutRef.current) {
+      clearTimeout(validationTimeoutRef.current);
+    }
+
+    validationTimeoutRef.current = setTimeout(() => {
+      const validation = validateFormula(formula);
+      if (!validation.isValid) {
+        console.error(`Formula validation error: ${validation.error}`);
+      }
+      setValidationErrors(prev => ({
+        ...prev,
+        [formula.id]: validation.isValid ? null : validation.error
+      }));
+    }, 500); // 500ms debounce
+  }, []);
+
   // Update the formula being edited
   const handleUpdateFormula = (key: keyof Formula, value: string | number | boolean | [number, number]) => {
-    if (selectedFormulaId) {
-      onUpdateFormula(selectedFormulaId, { [key]: value });
+    if (!selectedFormulaId) return;
+    
+    // Update the formula
+    onUpdateFormula(selectedFormulaId, { [key]: value });
+    
+    // If updating the expression or type, validate with debounce
+    if (key === 'expression' || key === 'type') {
+      const updatedFormula = {
+        ...findSelectedFormula()!,
+        [key]: value
+      };
+      
+      debouncedValidate(updatedFormula);
     }
   };
 
@@ -186,8 +219,22 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
     }
   }, [formulas, selectedFormulaId, onSelectFormula]);
 
+  // Validate formulas when they change, but with debounce
+  useEffect(() => {
+    formulas.forEach(formula => {
+      debouncedValidate(formula);
+    });
+
+    // Cleanup timeouts on unmount
+    return () => {
+      if (validationTimeoutRef.current) {
+        clearTimeout(validationTimeoutRef.current);
+      }
+    };
+  }, [formulas, debouncedValidate]);
+
   // Organize examples by category
-  const examplesByCategory = examples.reduce((acc, example) => {
+  const examplesByCategory = getFormulaExamples().reduce((acc, example) => {
     if (!acc[example.category]) {
       acc[example.category] = [];
     }
@@ -200,6 +247,8 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
     if (!expr) return '';
     
     return expr
+      .replace(/Math\.PI/g, '\\pi')
+      .replace(/Math\.E/g, 'e')
       .replace(/Math\.sin\(([^)]+)\)/g, '\\sin($1)')
       .replace(/Math\.cos\(([^)]+)\)/g, '\\cos($1)')
       .replace(/Math\.tan\(([^)]+)\)/g, '\\tan($1)')
@@ -234,42 +283,43 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
             {/* Formula buttons - Use responsive grid layout for all screen sizes */}
             <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1 w-full max-w-full ${isMobile ? 'gap-0.5' : ''}`}>
               {formulas.map((formula) => (
-                <Button
-                  key={formula.id}
-                  variant={formula.id === selectedFormulaId ? "secondary" : "outline"}
-                  size="sm"
-                  className="flex items-center gap-1 text-[10px] sm:text-xs h-8 sm:h-7 px-2 min-w-0 flex-shrink-0 touch-manipulation"
-                  onClick={() => onSelectFormula && onSelectFormula(formula.id)}
-                >
-                  <div 
-                    className="w-3 h-3 sm:w-2 sm:h-2 rounded-full flex-shrink-0" 
-                    style={{ backgroundColor: formula.color }}
-                  />
-                  <span className="max-w-[100px] sm:max-w-[120px] md:max-w-[160px] whitespace-nowrap overflow-visible">
-                    {formula.expression ? (
-                      <InlineMath math={toLatex(formula.expression)} />
-                    ) : (
-                      t('formulaDefault')
-                    )}
-                  </span>
-                  {formula.id === selectedFormulaId && (
-                    <span 
-                      className="ml-1 opacity-70 hover:opacity-100 text-destructive cursor-pointer flex-shrink-0"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteFormula(formula.id);
-                        // Select the next formula if available
-                        const remainingFormulas = formulas.filter(f => f.id !== formula.id);
-                        if (remainingFormulas.length > 0 && onSelectFormula) {
-                          onSelectFormula(remainingFormulas[0].id);
-                        }
-                      }}
-                      title={t('deleteFormulaTooltip')}
-                    >
-                      <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                <div key={formula.id} className="flex flex-col">
+                  <Button
+                    variant={formula.id === selectedFormulaId ? "secondary" : "outline"}
+                    size="sm"
+                    className={`flex items-center gap-1 text-[10px] sm:text-xs h-8 sm:h-7 px-2 min-w-0 flex-shrink-0 touch-manipulation ${validationErrors[formula.id] ? 'border-red-500' : ''}`}
+                    onClick={() => onSelectFormula && onSelectFormula(formula.id)}
+                  >
+                    <div 
+                      className="w-3 h-3 sm:w-2 sm:h-2 rounded-full flex-shrink-0" 
+                      style={{ backgroundColor: formula.color }}
+                    />
+                    <span className="max-w-[100px] sm:max-w-[120px] md:max-w-[160px] whitespace-nowrap overflow-visible">
+                      {formula.expression ? (
+                        <InlineMath math={toLatex(formula.expression)} />
+                      ) : (
+                        t('formulaDefault')
+                      )}
                     </span>
-                  )}
-                </Button>
+                    {formula.id === selectedFormulaId && (
+                      <span 
+                        className="ml-1 opacity-70 hover:opacity-100 text-destructive cursor-pointer flex-shrink-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteFormula(formula.id);
+                          // Select the next formula if available
+                          const remainingFormulas = formulas.filter(f => f.id !== formula.id);
+                          if (remainingFormulas.length > 0 && onSelectFormula) {
+                            onSelectFormula(remainingFormulas[0].id);
+                          }
+                        }}
+                        title={t('deleteFormulaTooltip')}
+                      >
+                        <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                      </span>
+                    )}
+                  </Button>
+                </div>
               ))}
               
               {/* Add New Formula button - Make it fit the grid layout */}
@@ -277,7 +327,7 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button 
-                      variant="outline"
+                      variant="outline" 
                       size="sm"
                       className="h-8 w-full sm:h-7 bg-white/80 backdrop-blur-sm flex-shrink-0 col-span-2 md:col-span-1 flex items-center justify-center gap-1"
                       onClick={onNewFormula || handleCreateFormula}
@@ -302,12 +352,13 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
               {/* Expression Input */}
               <div className="w-full col-span-1 md:col-span-2">
                 <div className="relative">
-                  <Input 
+                  <Input
                     id="formula-expression"
+                    ref={formulaInputRef}
                     value={findSelectedFormula()?.expression || ''}
                     onChange={(e) => handleUpdateFormula('expression', e.target.value)}
                     placeholder={t('enterFormula')}
-                    className="pr-16 h-8 sm:h-10 text-xs sm:text-sm"
+                    className={`pr-16 h-8 sm:h-10 text-xs sm:text-sm ${validationErrors[selectedFormulaId] ? 'border-red-500' : ''}`}
                   />
                   <div className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 flex gap-1">
                     <div className="flex items-center justify-between w-full">

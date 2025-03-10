@@ -84,21 +84,31 @@ interface FunctionCharacteristics {
   isComplex: boolean;
   isCombined: boolean;
   isSqrtAbs: boolean;
+  hasSingularity: boolean;
 }
 
 const detectFunctionCharacteristics = (expression: string): FunctionCharacteristics => {
   const hasTrig = /Math\.(sin|cos)|\b(sin|cos)\(/.test(expression);
   const hasHighFreq = hasTrig && /[*]\s*x|x\s*[*]/.test(expression);
   
+  // Check for quadratic or higher terms in trig functions (like x*x, x^2, x**2)
+  const hasQuadraticTrig = hasTrig && 
+    (/x\s*\*\s*x|x\s*\^\s*2|x\s*\*\*\s*2|Math\.pow\(x,\s*2\)/.test(expression) ||
+     /x\s*\*\s*x\s*\*\s*x|x\s*\^\s*3|x\s*\*\*\s*3|Math\.pow\(x,\s*3\)/.test(expression));
+  
+  // Check for potential singularities like 1/x, division by x, or x in denominator
+  const hasSingularity = /1\s*\/\s*x|\/\s*x|\(.*x.*\)\s*\^\s*-1|x\s*\^\s*-1|Math\.pow\(.*x.*,\s*-1\)/.test(expression);
+  
   return {
     isTangent: /Math\.tan\(|\btan\(/.test(expression),
     isLogarithmic: /Math\.log(10|2)?\(|\b(log|ln)\(/.test(expression),
     allowsNegativeX: /Math\.abs\(x\)|-x|\(-x\)/.test(expression),
-    isHighFrequency: hasHighFreq,
-    isVeryHighFrequency: hasTrig && /(\d{2,})\s*\*\s*x|\d{2,}\s*\*\s*Math\.PI/.test(expression),
+    isHighFrequency: hasHighFreq || hasQuadraticTrig,  // Consider quadratic trig as high frequency
+    isVeryHighFrequency: hasQuadraticTrig || (hasTrig && /(\d{2,})\s*\*\s*x|\d{2,}\s*\*\s*Math\.PI/.test(expression)),
     isComplex: /Math\.(pow|sqrt)|\*\*|[+\-*/]{2,}/.test(expression),
     isCombined: hasTrig && /Math\.(pow|sqrt)|\*\*|[+\-*/]{2,}/.test(expression),
-    isSqrtAbs: /Math\.sqrt\(Math\.abs\(x\)\)|sqrt\(abs\(x\)\)/.test(expression)
+    isSqrtAbs: /Math\.sqrt\(Math\.abs\(x\)\)|sqrt\(abs\(x\)\)/.test(expression),
+    hasSingularity: hasSingularity
   };
 };
 
@@ -106,10 +116,11 @@ const adjustSamples = (
   baseSamples: number,
   characteristics: FunctionCharacteristics
 ): number => {
-  if (characteristics.isVeryHighFrequency) return clampSamples(baseSamples * 5);
-  if (characteristics.isHighFrequency) return clampSamples(baseSamples * 3);
-  if (characteristics.isCombined) return clampSamples(baseSamples * 2);
-  if (characteristics.isComplex) return clampSamples(Math.ceil(baseSamples * 1.75));
+  if (characteristics.hasSingularity) return clampSamples(baseSamples * 8);
+  if (characteristics.isVeryHighFrequency) return clampSamples(baseSamples * 10);  // Increased from 5 to 10
+  if (characteristics.isHighFrequency) return clampSamples(baseSamples * 5);  // Increased from 3 to 5
+  if (characteristics.isCombined) return clampSamples(baseSamples * 3);  // Increased from 2 to 3
+  if (characteristics.isComplex) return clampSamples(Math.ceil(baseSamples * 2));  // Increased from 1.75 to 2
   return clampSamples(baseSamples);
 };
 
@@ -130,6 +141,74 @@ const generateLogarithmicXValues = (
   const logEnd = Math.log(range[1]);
   const logStep = (logEnd - logStart) / samples;
   return Array.from({ length: samples + 1 }, (_, i) => Math.exp(logStart + i * logStep));
+};
+
+// Generate x values with higher density around potential singularities
+const generateSingularityXValues = (
+  range: [number, number],
+  samples: number
+): number[] => {
+  // If range doesn't include zero, use linear sampling
+  if (range[0] > 0 || range[1] < 0) {
+    return generateLinearXValues(range, samples);
+  }
+  
+  // Find where 0 is in the range
+  const totalRange = range[1] - range[0];
+  const zeroPosition = -range[0] / totalRange;
+  
+  // Allocate more samples near zero
+  const result: number[] = [];
+  
+  // Add a small offset to avoid exact zero
+  const epsilon = 1e-10;
+  
+  // Add points to the left of zero with increasing density toward zero
+  if (range[0] < 0) {
+    const negativeRange = -range[0];
+    const negSamples = Math.floor(samples * zeroPosition * 0.8); // 80% of proportional samples
+    
+    // Add more points very close to zero (negative side)
+    for (let i = 20; i >= 1; i--) {
+      result.push(-epsilon * i);
+    }
+    
+    // Add remaining negative points with exponential distribution
+    for (let i = 0; i < negSamples; i++) {
+      // Use exponential distribution to concentrate points near zero
+      const t = i / negSamples;
+      const x = range[0] * Math.pow(Math.abs(range[0] / epsilon), -t);
+      if (x < -epsilon * 20) { // Avoid duplicating the very close points
+        result.push(x);
+      }
+    }
+  }
+  
+  // Add points to the right of zero with increasing density toward zero
+  if (range[1] > 0) {
+    const positiveRange = range[1];
+    const posSamples = Math.floor(samples * (1 - zeroPosition) * 0.8); // 80% of proportional samples
+    
+    // Add more points very close to zero (positive side)
+    for (let i = 1; i <= 20; i++) {
+      result.push(epsilon * i);
+    }
+    
+    // Add remaining positive points with exponential distribution
+    for (let i = 0; i < posSamples; i++) {
+      // Use exponential distribution to concentrate points near zero
+      const t = i / posSamples;
+      const x = range[1] * Math.pow(Math.abs(epsilon / range[1]), 1 - t);
+      if (x > epsilon * 20) { // Avoid duplicating the very close points
+        result.push(x);
+      }
+    }
+  }
+  
+  // Sort the results
+  result.sort((a, b) => a - b);
+  
+  return result;
 };
 
 const generateTangentXValues = (
@@ -289,6 +368,9 @@ export const evaluateFunction = (
         Math.min(fullRange[1], Math.PI/2 - 0.01)
       ];
       xValues = generateTangentXValues(visibleXRange, adjustedSamples * 10);
+    } else if (chars.hasSingularity) {
+      // Use special sampling for functions with singularities
+      xValues = generateSingularityXValues(visibleXRange, adjustedSamples * 3);
     } else if (chars.isLogarithmic && !chars.allowsNegativeX) {
       visibleXRange[0] = Math.max(visibleXRange[0], 0.00001);
       xValues = generateLogarithmicXValues(visibleXRange, adjustedSamples);
