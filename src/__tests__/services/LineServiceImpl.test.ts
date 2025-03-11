@@ -33,8 +33,8 @@ describe('LineServiceImpl', () => {
       expect(shape.type).toBe('line');
       expect(shape.startPoint).toEqual({ x: 0, y: 0 });
       expect(shape.endPoint).toEqual({ x: 100, y: 100 });
-      expect(shape.fill).toBe('transparent');
-      expect(shape.stroke).toMatch(/^rgba\(\d+, \d+, \d+, \d+(\.\d+)?\)$/);
+      expect(shape.fillColor).toBe('transparent');
+      expect(shape.strokeColor).toMatch(/^rgba\(\d+, \d+, \d+, \d+(\.\d+)?\)$/);
     });
 
     it('should create a line with provided values', () => {
@@ -47,7 +47,7 @@ describe('LineServiceImpl', () => {
       expect(shape.type).toBe('line');
       expect(shape.startPoint).toEqual({ x: 50, y: 50 });
       expect(shape.endPoint).toEqual({ x: 150, y: 150 });
-      expect(shape.stroke).toBe('#0000ff');
+      expect(shape.strokeColor).toBe('#0000ff');
     });
   });
 
@@ -62,8 +62,8 @@ describe('LineServiceImpl', () => {
       expect(l.type).toBe('line');
       expect(l.startPoint).toEqual(startPoint);
       expect(l.endPoint).toEqual(endPoint);
-      expect(l.stroke).toBe(color);
-      expect(l.fill).toBe('transparent');
+      expect(l.strokeColor).toBe(color);
+      expect(l.fillColor).toBe('transparent');
     });
 
     it('should calculate length correctly', () => {

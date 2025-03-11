@@ -21,10 +21,9 @@ describe('RectangleServiceImpl', () => {
       width: 200,
       height: 150,
       rotation: 0,
-      selected: false,
-      fill: '#4CAF50',
-      stroke: '#000000',
-      strokeWidth: 1
+      fillColor: '#4CAF50',
+      strokeColor: '#000000',
+      opacity: 1
     };
     
     // Reset the mock before each test
@@ -52,7 +51,21 @@ describe('RectangleServiceImpl', () => {
       expect(result.height).toBe(height);
       expect(result.rotation).toBe(rotation);
       expect(result.id).toBeDefined();
-      expect(result.fill).toBeDefined();
+      expect(result.fillColor).toBeDefined();
+    });
+
+    it('should create a rectangle with default values when no params are provided', () => {
+      const result = service.createShape({});
+      
+      expect(result.id).toBeDefined();
+      expect(result.type).toBe('rectangle');
+      expect(result.position).toEqual({ x: 0, y: 0 });
+      expect(result.width).toBe(100);
+      expect(result.height).toBe(80);
+      expect(result.rotation).toBe(0);
+      expect(result.fillColor).toBeDefined();
+      expect(result.strokeColor).toBeDefined();
+      expect(result.opacity).toBe(1);
     });
   });
 
@@ -227,6 +240,36 @@ describe('RectangleServiceImpl', () => {
       // Expect height to be set to minimum value of 1
       expect(result.height).toBe(1);
       expect(result.width).toBe(rectangle.width);
+    });
+  });
+
+  describe('scaleRectangle', () => {
+    it('should scale the rectangle by the specified factor', () => {
+      const scaleX = 1.5;
+      const scaleY = 2.0;
+      const scaled = service.scaleRectangle(rectangle, scaleX, scaleY);
+      
+      expect(scaled.width).toBe(rectangle.width * scaleX);
+      expect(scaled.height).toBe(rectangle.height * scaleY);
+    });
+
+    it('should preserve original dimensions when scaling multiple times', () => {
+      // First scaling
+      const firstScaleFactor = 1.5;
+      let scaled = service.scaleRectangle(rectangle, firstScaleFactor, firstScaleFactor);
+      
+      // Second scaling
+      const secondScaleFactor = 0.8;
+      scaled = service.scaleRectangle(scaled, secondScaleFactor, secondScaleFactor);
+      
+      // The dimensions should be based on the original dimensions, not compounding
+      expect(scaled.width).toBeCloseTo(rectangle.width * secondScaleFactor);
+      expect(scaled.height).toBeCloseTo(rectangle.height * secondScaleFactor);
+      
+      // Original dimensions should be preserved
+      expect(scaled.originalDimensions).toBeDefined();
+      expect(scaled.originalDimensions?.width).toBe(rectangle.width);
+      expect(scaled.originalDimensions?.height).toBe(rectangle.height);
     });
   });
 });
