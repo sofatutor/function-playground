@@ -28,7 +28,8 @@ export const translations = {
       trigonometric: "Trigonometric",
       exponential: "Exponential",
       parametric: "Parametric Curves",
-      special: "Special Curves"
+      special: "Special Curves",
+      polynomial: "Polynomial Functions"
     },
     formulaPlotter: "Formula Plotter",
     openFormulaTool: "Open Formula Plotter",
@@ -88,7 +89,8 @@ export const translations = {
       trigonometric: "Trigonométricas",
       exponential: "Exponenciales",
       parametric: "Curvas Paramétricas",
-      special: "Curvas Especiales"
+      special: "Curvas Especiales",
+      polynomial: "Funciones Polinómicas"
     },
     formulaPlotter: "Trazador de Fórmulas",
     openFormulaTool: "Abrir Trazador de Fórmulas",
@@ -148,7 +150,8 @@ export const translations = {
       trigonometric: "Trigonométriques",
       exponential: "Exponentielles",
       parametric: "Courbes Paramétriques",
-      special: "Courbes Spéciales"
+      special: "Courbes Spéciales",
+      polynomial: "Fonctions Polynomiales"
     },
     formulaPlotter: "Traceur de Formules",
     openFormulaTool: "Ouvrir le Traceur de Formules",
@@ -208,7 +211,8 @@ export const translations = {
       trigonometric: "Trigonometrische",
       exponential: "Exponentielle",
       parametric: "Parametrische Kurven",
-      special: "Spezielle Kurven"
+      special: "Spezielle Kurven",
+      polynomial: "Polynomfunktionen"
     },
     formulaPlotter: "Formelplotter",
     openFormulaTool: "Formelplotter öffnen",
