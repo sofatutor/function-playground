@@ -194,12 +194,6 @@ export function useShapeOperations() {
   
   // Select a shape
   const handleSelectShape = useCallback((id: string | null) => {
-    setShapes(prevShapes => 
-      prevShapes.map(shape => ({
-        ...shape,
-        selected: shape.id === id
-      }))
-    );
     setSelectedShapeId(id);
   }, []);
   
@@ -405,27 +399,56 @@ export function useShapeOperations() {
     const currentMeasurements = shapeService.getMeasurements(selectedShape, measurementUnit);
     const originalValue = currentMeasurements[key] || 0;
     
+    // Store the original position to ensure it's preserved
+    const originalPosition = selectedShape.position;
+    
+    // Use the service to update the shape from measurement
+    const updatedShape = shapeService.updateFromMeasurement(
+      selectedShape,
+      key,
+      numValue,
+      originalValue,
+      measurementUnit
+    );
+    
+    // Ensure position is preserved for all shape types
+    if (updatedShape.position.x !== originalPosition.x || 
+        updatedShape.position.y !== originalPosition.y) {
+      updatedShape.position = { ...originalPosition };
+    }
+    
+    // Update the shapes state with the new shape
     setShapes(prevShapes => {
-      const updatedShapes = prevShapes.map(shape => {
-        if (shape.id !== selectedShapeId) return shape;
-        
-        // Use the service to update the shape from measurement
-        return shapeService.updateFromMeasurement(
-          shape,
-          key,
-          numValue,
-          originalValue,
-          measurementUnit
-        );
-      });
+      const updatedShapes = prevShapes.map(shape => 
+        shape.id === selectedShapeId ? updatedShape : shape
+      );
       
       // Update URL with the updated shapes
       updateUrlWithData(updatedShapes, [], gridPosition);
       return updatedShapes;
     });
     
-    toast.success("Shape updated");
-  }, [selectedShapeId, getSelectedShape, measurementUnit, gridPosition, serviceFactory]);
+    // Log the update for debugging
+    console.log(`Updated ${selectedShape.type} measurement: ${key} from ${originalValue} to ${numValue}`);
+    
+    // Force a re-render to ensure the UI updates with the new measurements
+    // This is crucial for all shape types, especially triangles
+    setTimeout(() => {
+      // Create a new array reference to trigger a re-render
+      setShapes(prevShapes => {
+        // Get the updated shape again to ensure we have the latest version
+        const updatedShapeIndex = prevShapes.findIndex(s => s.id === selectedShapeId);
+        if (updatedShapeIndex >= 0) {
+          // Create a new array with the updated shape
+          const newShapes = [...prevShapes];
+          // Create a new reference for the shape to ensure React detects the change
+          newShapes[updatedShapeIndex] = { ...newShapes[updatedShapeIndex] };
+          return newShapes;
+        }
+        return [...prevShapes];
+      });
+    }, 10);
+  }, [selectedShapeId, getSelectedShape, serviceFactory, measurementUnit, gridPosition, updateUrlWithData]);
   
   // Function to share the current canvas state via URL
   const shareCanvasUrl = useCallback(() => {

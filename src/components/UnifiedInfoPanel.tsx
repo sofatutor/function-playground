@@ -57,6 +57,24 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>('');
   
+  // Add state to track measurements for re-rendering
+  const [currentMeasurements, setCurrentMeasurements] = useState<Record<string, string>>({});
+  
+  // Update local measurements state when props change
+  useEffect(() => {
+    if (measurements && Object.keys(measurements).length > 0) {
+      // Create a new object to ensure React detects the change
+      setCurrentMeasurements({...measurements});
+      
+      // If we're currently editing a measurement, update the edit value
+      if (editingKey && measurements[editingKey]) {
+        setEditValue(measurements[editingKey]);
+      }
+    } else {
+      setCurrentMeasurements({});
+    }
+  }, [measurements, editingKey]);
+  
   // Add keyboard event listener for arrow keys
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -194,7 +212,7 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
           </CardHeader>
           <CardContent className="p-2 sm:p-3 pt-1 sm:pt-2">
             <div className="grid grid-cols-2 gap-2">
-              {Object.entries(measurements).map(([key, value]) => (
+              {Object.entries(currentMeasurements).map(([key, value]) => (
                 <MeasurementItem
                   key={key}
                   measureKey={key}

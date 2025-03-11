@@ -195,6 +195,7 @@ const MeasurementItem: React.FC<MeasurementItemProps> = ({
         </div>
       ) : (
         <div 
+          id={`measurement-${measureKey}`}
           className={`measurement-value text-xs sm:text-sm font-medium ${isEditable(measureKey) ? 'cursor-pointer hover:text-geometry-primary' : ''}`}
           onClick={handleClick}
         >
