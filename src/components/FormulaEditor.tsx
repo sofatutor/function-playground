@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { PlusCircle, Trash2, BookOpen, ZoomIn, ZoomOut, Palette, Sparkles, Loader2, AlertCircle } from 'lucide-react';
 import { MeasurementUnit } from '@/types/shapes';
-import { getFormulaExamples, createDefaultFormula, validateFormula } from '@/utils/formulaUtils';
+import { getFormulaExamples, createDefaultFormula, validateFormula, convertToLatex } from '@/utils/formulaUtils';
 import { useTranslate } from '@/utils/translate';
 import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
@@ -242,29 +242,6 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
     return acc;
   }, {} as Record<string, FormulaExample[]>);
 
-  // Convert JavaScript expression to LaTeX
-  const toLatex = (expr: string): string => {
-    if (!expr) return '';
-    
-    return expr
-      .replace(/Math\.PI/g, '\\pi')
-      .replace(/Math\.E/g, 'e')
-      .replace(/Math\.sin\(([^)]+)\)/g, '\\sin($1)')
-      .replace(/Math\.cos\(([^)]+)\)/g, '\\cos($1)')
-      .replace(/Math\.tan\(([^)]+)\)/g, '\\tan($1)')
-      .replace(/Math\.sqrt\(([^)]+)\)/g, '\\sqrt{$1}')
-      .replace(/Math\.abs\(([^)]+)\)/g, '|$1|')
-      .replace(/Math\.pow\(([^,]+),\s*([^)]+)\)/g, '{$1}^{$2}')
-      .replace(/Math\.log\(([^)]+)\)/g, '\\ln($1)')
-      .replace(/Math\.exp\(([^)]+)\)/g, 'e^{$1}')
-      .replace(/([0-9a-zA-Z.]+)\s*\*\*\s*([0-9a-zA-Z.]+)/g, '{$1}^{$2}')
-      .replace(/([0-9a-zA-Z.]+)\s*\*\s*([0-9a-zA-Z.]+)/g, '$1 \\cdot $2')
-      .replace(/\//g, '\\div ')
-      .replace(/\+/g, ' + ')
-      .replace(/-/g, ' - ')
-      .replace(/x/g, 'x');
-  };
-
   if (!isOpen) {
     return null;
   }
@@ -296,7 +273,7 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
                     />
                     <span className="max-w-[100px] sm:max-w-[120px] md:max-w-[160px] whitespace-nowrap overflow-visible">
                       {formula.expression ? (
-                        <InlineMath math={toLatex(formula.expression)} />
+                        <InlineMath math={convertToLatex(formula.expression)} />
                       ) : (
                         t('formulaDefault')
                       )}

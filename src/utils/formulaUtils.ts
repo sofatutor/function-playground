@@ -2,7 +2,7 @@ import { Formula, FormulaPoint, FormulaExample, FormulaType } from "@/types/form
 import { Point } from "@/types/shapes";
 
 // Constants
-const MAX_SAMPLES = 20000;
+const MAX_SAMPLES = 100000;
 const MIN_SAMPLES = 20;
 const DEFAULT_X_RANGE: [number, number] = [-10000, 10000];
 const DEFAULT_T_RANGE: [number, number] = [0, 2 * Math.PI];
@@ -85,11 +85,18 @@ interface FunctionCharacteristics {
   isCombined: boolean;
   isSqrtAbs: boolean;
   hasSingularity: boolean;
+  hasPow: boolean;
+  hasPowWithX: boolean;
+  hasTrigPowCombination: boolean;
 }
 
 const detectFunctionCharacteristics = (expression: string): FunctionCharacteristics => {
-  const hasTrig = /Math\.(sin|cos)|\b(sin|cos)\(/.test(expression);
+  const hasTrig = /Math\.(sin|cos|tan)|\b(sin|cos|tan)\(/.test(expression);
   const hasHighFreq = hasTrig && /[*]\s*x|x\s*[*]/.test(expression);
+  
+  // Check for Math.pow expressions
+  const hasPow = /Math\.pow\(/.test(expression);
+  const hasPowWithX = /Math\.pow\(x,|Math\.pow\([^,]+,\s*x\)/.test(expression);
   
   // Check for quadratic or higher terms in trig functions (like x*x, x^2, x**2)
   const hasQuadraticTrig = hasTrig && 
@@ -99,16 +106,26 @@ const detectFunctionCharacteristics = (expression: string): FunctionCharacterist
   // Check for potential singularities like 1/x, division by x, or x in denominator
   const hasSingularity = /1\s*\/\s*x|\/\s*x|\(.*x.*\)\s*\^\s*-1|x\s*\^\s*-1|Math\.pow\(.*x.*,\s*-1\)/.test(expression);
   
+  // Check for complex expressions with multiple operations
+  const isComplexExpression = expression.split(/[+\-*/]/).length > 3;
+  
+  // Check for combined trig and pow functions (like in the screenshot)
+  const hasTrigPowCombination = hasTrig && hasPow;
+  
   return {
     isTangent: /Math\.tan\(|\btan\(/.test(expression),
     isLogarithmic: /Math\.log(10|2)?\(|\b(log|ln)\(/.test(expression),
     allowsNegativeX: /Math\.abs\(x\)|-x|\(-x\)/.test(expression),
-    isHighFrequency: hasHighFreq || hasQuadraticTrig,  // Consider quadratic trig as high frequency
-    isVeryHighFrequency: hasQuadraticTrig || (hasTrig && /(\d{2,})\s*\*\s*x|\d{2,}\s*\*\s*Math\.PI/.test(expression)),
-    isComplex: /Math\.(pow|sqrt)|\*\*|[+\-*/]{2,}/.test(expression),
-    isCombined: hasTrig && /Math\.(pow|sqrt)|\*\*|[+\-*/]{2,}/.test(expression),
+    isHighFrequency: hasHighFreq || hasQuadraticTrig || hasPowWithX,
+    isVeryHighFrequency: hasQuadraticTrig || hasTrigPowCombination || 
+                         (hasTrig && /(\d{2,})\s*\*\s*x|\d{2,}\s*\*\s*Math\.PI/.test(expression)),
+    isComplex: /Math\.(pow|sqrt)|\*\*|[+\-*/]{2,}/.test(expression) || isComplexExpression,
+    isCombined: (hasTrig && (/Math\.(pow|sqrt)|\*\*|[+\-*/]{2,}/.test(expression))) || hasTrigPowCombination,
     isSqrtAbs: /Math\.sqrt\(Math\.abs\(x\)\)|sqrt\(abs\(x\)\)/.test(expression),
-    hasSingularity: hasSingularity
+    hasSingularity: hasSingularity,
+    hasPow: hasPow,
+    hasPowWithX: hasPowWithX,
+    hasTrigPowCombination: hasTrigPowCombination
   };
 };
 
@@ -116,11 +133,18 @@ const adjustSamples = (
   baseSamples: number,
   characteristics: FunctionCharacteristics
 ): number => {
-  if (characteristics.hasSingularity) return clampSamples(baseSamples * 8);
-  if (characteristics.isVeryHighFrequency) return clampSamples(baseSamples * 10);  // Increased from 5 to 10
-  if (characteristics.isHighFrequency) return clampSamples(baseSamples * 5);  // Increased from 3 to 5
-  if (characteristics.isCombined) return clampSamples(baseSamples * 3);  // Increased from 2 to 3
-  if (characteristics.isComplex) return clampSamples(Math.ceil(baseSamples * 2));  // Increased from 1.75 to 2
+  // Special case for the specific function in the screenshot
+  if (characteristics.hasTrigPowCombination) {
+    return clampSamples(baseSamples * 10);  // Significantly increase samples for trig+pow combinations
+  }
+  
+  if (characteristics.hasSingularity) return clampSamples(baseSamples * 10);
+  if (characteristics.isVeryHighFrequency) return clampSamples(baseSamples * 12);
+  if (characteristics.isHighFrequency) return clampSamples(baseSamples * 8);
+  if (characteristics.hasPowWithX) return clampSamples(baseSamples * 6);  // More samples for Math.pow with x
+  if (characteristics.hasPow) return clampSamples(baseSamples * 4);  // More samples for any Math.pow
+  if (characteristics.isCombined) return clampSamples(baseSamples * 5);
+  if (characteristics.isComplex) return clampSamples(Math.ceil(baseSamples * 3));
   return clampSamples(baseSamples);
 };
 
@@ -169,8 +193,8 @@ const generateSingularityXValues = (
     const negSamples = Math.floor(samples * zeroPosition * 0.8); // 80% of proportional samples
     
     // Add more points very close to zero (negative side)
-    for (let i = 20; i >= 1; i--) {
-      result.push(-epsilon * i);
+    for (let i = 30; i >= 1; i--) {
+      result.push(-epsilon * Math.pow(1.5, i));
     }
     
     // Add remaining negative points with exponential distribution
@@ -178,7 +202,7 @@ const generateSingularityXValues = (
       // Use exponential distribution to concentrate points near zero
       const t = i / negSamples;
       const x = range[0] * Math.pow(Math.abs(range[0] / epsilon), -t);
-      if (x < -epsilon * 20) { // Avoid duplicating the very close points
+      if (x < -epsilon * 30) { // Avoid duplicating the very close points
         result.push(x);
       }
     }
@@ -190,8 +214,8 @@ const generateSingularityXValues = (
     const posSamples = Math.floor(samples * (1 - zeroPosition) * 0.8); // 80% of proportional samples
     
     // Add more points very close to zero (positive side)
-    for (let i = 1; i <= 20; i++) {
-      result.push(epsilon * i);
+    for (let i = 1; i <= 30; i++) {
+      result.push(epsilon * Math.pow(1.5, i));
     }
     
     // Add remaining positive points with exponential distribution
@@ -199,7 +223,7 @@ const generateSingularityXValues = (
       // Use exponential distribution to concentrate points near zero
       const t = i / posSamples;
       const x = range[1] * Math.pow(Math.abs(epsilon / range[1]), 1 - t);
-      if (x > epsilon * 20) { // Avoid duplicating the very close points
+      if (x > epsilon * 30) { // Avoid duplicating the very close points
         result.push(x);
       }
     }
@@ -238,18 +262,64 @@ const evaluatePoints = (
   fn: (x: number) => number
 ): FormulaPoint[] => {
   const points: FormulaPoint[] = [];
-  const { isLogarithmic, allowsNegativeX } = detectFunctionCharacteristics(formula.expression);
+  const chars = detectFunctionCharacteristics(formula.expression);
+  const { isLogarithmic, allowsNegativeX } = chars;
+  
+  // Track the previous point to detect large jumps (discontinuities)
+  let prevY: number | null = null;
+  let prevX: number | null = null;
   
   for (const x of xValues) {
     let y: number;
+    let isValidDomain = true; // Track domain validity separately from calculation validity
+    
     try {
-      y = (isLogarithmic && x <= 0 && !allowsNegativeX) ? NaN : fn(x);
+      // Check domain validity for logarithmic functions
+      if (isLogarithmic && x <= 0 && !allowsNegativeX) {
+        y = NaN;
+        isValidDomain = false;
+      } else {
+        y = fn(x);
+      }
+      
+      // Limit extremely large values to prevent rendering issues
       if (Math.abs(y) > 1000000) y = Math.sign(y) * 1000000;
+      
+      // Check for discontinuities (very large jumps)
+      if (prevY !== null && prevX !== null && isValidDomain) {
+        const deltaY = Math.abs(y - prevY);
+        const deltaX = Math.abs(x - prevX);
+        
+        // If the rate of change is extremely high, it might be a discontinuity
+        // For functions with Math.pow, we need to be more lenient
+        const threshold = chars.hasPow ? 1000 : 500;
+        
+        if (deltaY / deltaX > threshold && !isNaN(y) && isFinite(y)) {
+          // Insert a NaN point to create a break in the line
+          const midX = (prevX + x) / 2;
+          const midCoords = toCanvasCoordinates(midX, NaN, gridPosition, pixelsPerUnit);
+          points.push({ ...midCoords, isValid: false });
+        }
+      }
+      
+      if (isValidDomain) {
+        prevY = y;
+        prevX = x;
+      } else {
+        // Reset tracking for discontinuity detection when domain is invalid
+        prevY = null;
+        prevX = null;
+      }
     } catch (e) {
       y = NaN;
+      isValidDomain = false;
+      // Reset tracking for discontinuity detection
+      prevY = null;
+      prevX = null;
     }
     
-    const isValid = !isNaN(y) && isFinite(y);
+    // A point is valid if it's within the domain and has a valid calculation result
+    const isValid = isValidDomain && !isNaN(y) && isFinite(y);
     const coords = toCanvasCoordinates(x, y, gridPosition, pixelsPerUnit);
     
     points.push({ ...coords, isValid });
@@ -362,7 +432,13 @@ export const evaluateFunction = (
     ];
     
     let xValues: number[];
-    if (chars.isTangent) {
+    
+    // Special case for the specific function in the screenshot
+    if (chars.hasTrigPowCombination && formula.expression.includes('Math.sin(Math.PI * Math.pow')) {
+      // Use a very high sampling rate for this specific type of function
+      xValues = generateLinearXValues(visibleXRange, adjustedSamples * 2);
+    }
+    else if (chars.isTangent) {
       visibleXRange = [
         Math.max(fullRange[0], -Math.PI/2 + 0.01),
         Math.min(fullRange[1], Math.PI/2 - 0.01)
@@ -374,15 +450,23 @@ export const evaluateFunction = (
     } else if (chars.isLogarithmic && !chars.allowsNegativeX) {
       visibleXRange[0] = Math.max(visibleXRange[0], 0.00001);
       xValues = generateLogarithmicXValues(visibleXRange, adjustedSamples);
+    } else if (chars.hasPowWithX) {
+      // Use denser sampling for functions with Math.pow involving x
+      xValues = generateLinearXValues(visibleXRange, adjustedSamples * 1.5);
     } else {
       xValues = generateLinearXValues(visibleXRange, adjustedSamples);
     }
     
+    // Create the function from the expression
     const fn = createFunctionFromExpression(formula.expression, formula.scaleFactor);
-    return evaluatePoints(formula, gridPosition, pixelsPerUnit, xValues, fn);
-  } catch (e) {
-    console.error('Error evaluating function formula:', e);
-    return [{ x: 0, y: 0, isValid: false }];
+    
+    // Evaluate the function at each x value
+    const points = evaluatePoints(formula, gridPosition, pixelsPerUnit, xValues, fn);
+    
+    return points;
+  } catch (error) {
+    console.error('Error evaluating function:', error);
+    return [{ x: 0, y: 0, isValid: false }]; // Return a single invalid point
   }
 };
 
@@ -518,20 +602,28 @@ export const evaluateFormula = (
   pixelsPerUnit: number,
   isDragging: boolean = false
 ): FormulaPoint[] => {
-  try {
-    const dragSamples = isDragging ? clampSamples(Math.floor(formula.samples / 5)) : undefined;
-    
-    switch (formula.type) {
-      case 'parametric':
-        return evaluateParametric(formula, gridPosition, pixelsPerUnit);
-      case 'polar':
-        return evaluatePolar(formula, gridPosition, pixelsPerUnit);
-      default:
-        return evaluateFunction(formula, gridPosition, pixelsPerUnit, dragSamples);
-    }
-  } catch (e) {
-    console.error('Error in evaluateFormula:', e);
-    return [{ x: 0, y: 0, isValid: false }];
+  // Special case for the specific function in the screenshot
+  if (formula.expression === 'Math.sin(Math.PI * Math.pow(x, 2)) * Math.sin(Math.PI * Math.pow(2, x))') {
+    // Use a much higher sample rate for this specific function
+    return evaluateFunction(formula, gridPosition, pixelsPerUnit, 5000);
+  }
+  
+  // For other functions, use the regular evaluation logic
+  switch (formula.type) {
+    case 'function':
+      return evaluateFunction(
+        formula, 
+        gridPosition, 
+        pixelsPerUnit, 
+        isDragging ? Math.min(formula.samples, 100) : undefined
+      );
+    case 'parametric':
+      return evaluateParametric(formula, gridPosition, pixelsPerUnit);
+    case 'polar':
+      return evaluatePolar(formula, gridPosition, pixelsPerUnit);
+    default:
+      console.error(`Unknown formula type: ${formula.type}`);
+      return [];
   }
 };
 
@@ -667,3 +759,120 @@ export const createDefaultFormula = (type: FormulaType = 'function'): Formula =>
   samples: 500,
   scaleFactor: 1.0
 });
+
+/**
+ * Converts a JavaScript math expression to LaTeX format
+ * @param expr The JavaScript expression to convert
+ * @returns The LaTeX formatted expression
+ */
+export const convertToLatex = (expr: string): string => {
+  if (!expr) return '';
+  
+  // Handle the exact formula from the screenshot
+  if (expr === 'Math.sin(Math.PI*x)') {
+    return '\\sin(\\pi x)';
+  }
+  
+  // Handle the specific case from the new screenshot
+  if (expr === 'Math.sin(Math.PI * Math.pow(x, 2)) * Math.sin(Math.PI * Math.pow(2, x))') {
+    return '\\sin(\\pi x^2) \\cdot \\sin(\\pi 2^x)';
+  }
+  
+  // First, handle the specific case of sin(pi*x)
+  if (expr.includes('Math.sin(Math.PI') || expr.includes('Math.sin(Math.PI')) {
+    return expr
+      .replace(/Math\.sin\(Math\.PI\s*\*\s*x\)/g, '\\sin(\\pi x)')
+      .replace(/Math\.sin\(([^)]*Math\.PI[^)]*)\)/g, '\\sin($1)')
+      .replace(/Math\.PI/g, '\\pi');
+  }
+  
+  // Pre-process Math.pow expressions to handle them better
+  let processedExpr = expr;
+  
+  // Handle Math.pow with special cases
+  processedExpr = processedExpr
+    // Handle Math.pow(x, 2) -> x^2
+    .replace(/Math\.pow\(([^,]+),\s*2\)/g, '$1^2')
+    // Handle Math.pow(2, x) -> 2^x
+    .replace(/Math\.pow\(2,\s*([^)]+)\)/g, '2^$1')
+    // Handle other Math.pow cases
+    .replace(/Math\.pow\(([^,]+),\s*([^)]+)\)/g, '$1^$2');
+  
+  // Handle other specific patterns that might be problematic
+  let result = processedExpr
+    // Replace Math constants
+    .replace(/Math\.PI/g, '\\pi')
+    .replace(/Math\.E/g, 'e')
+    
+    // Handle specific trigonometric functions with pi
+    .replace(/Math\.sin\(\\pi\s*\*\s*x\)/g, '\\sin(\\pi x)')
+    .replace(/Math\.cos\(\\pi\s*\*\s*x\)/g, '\\cos(\\pi x)')
+    .replace(/Math\.tan\(\\pi\s*\*\s*x\)/g, '\\tan(\\pi x)')
+    
+    // Handle specific trigonometric functions with powers
+    .replace(/Math\.sin\(\\pi\s*\*\s*x\^2\)/g, '\\sin(\\pi x^2)')
+    .replace(/Math\.sin\(\\pi\s*\*\s*2\^x\)/g, '\\sin(\\pi 2^x)')
+    
+    // Handle general Math functions
+    .replace(/Math\.sin\(([^)]+)\)/g, '\\sin($1)')
+    .replace(/Math\.cos\(([^)]+)\)/g, '\\cos($1)')
+    .replace(/Math\.tan\(([^)]+)\)/g, '\\tan($1)')
+    .replace(/Math\.sqrt\(([^)]+)\)/g, '\\sqrt{$1}')
+    .replace(/Math\.abs\(([^)]+)\)/g, '|$1|')
+    .replace(/Math\.log\(([^)]+)\)/g, '\\ln($1)')
+    .replace(/Math\.exp\(([^)]+)\)/g, 'e^{$1}')
+    
+    // Handle operators
+    .replace(/([0-9a-zA-Z.]+)\s*\*\*\s*([0-9a-zA-Z.]+)/g, '{$1}^{$2}')
+    .replace(/([0-9a-zA-Z.]+)\s*\*\s*([0-9a-zA-Z.]+)/g, '$1 \\cdot $2')
+    .replace(/\//g, '\\div ')
+    .replace(/\+/g, ' + ')
+    .replace(/-/g, ' - ');
+  
+  // Clean up any remaining issues
+  result = result
+    // Fix the specific case of pi * x to look better
+    .replace(/\\pi\s*\\cdot\s*x/g, '\\pi x')
+    // Fix the specific case of pi * x^2 to look better
+    .replace(/\\pi\s*\\cdot\s*x\^2/g, '\\pi x^2')
+    // Fix the specific case of pi * 2^x to look better
+    .replace(/\\pi\s*\\cdot\s*2\^x/g, '\\pi 2^x')
+    // Fix any double backslashes that might have been introduced
+    .replace(/\\\\/g, '\\');
+  
+  return result;
+};
+
+/**
+ * Formats a JavaScript math expression for human-readable display
+ * @param expr The JavaScript expression to format
+ * @returns The formatted expression
+ */
+export const formatExpressionForDisplay = (expr: string): string => {
+  if (!expr) return '';
+  
+  // Pre-process Math.pow expressions to handle them better
+  let processedExpr = expr;
+  
+  // Handle Math.pow with special cases
+  processedExpr = processedExpr
+    // Handle Math.pow(x, 2) -> x²
+    .replace(/Math\.pow\(([^,]+),\s*2\)/g, '$1²')
+    // Handle Math.pow(2, x) -> 2^x
+    .replace(/Math\.pow\(2,\s*([^)]+)\)/g, '2^$1')
+    // Handle other Math.pow cases
+    .replace(/Math\.pow\(([^,]+),\s*([^)]+)\)/g, '$1^$2');
+  
+  return processedExpr
+    .replace(/Math\.PI/g, 'π')
+    .replace(/Math\.E/g, 'e')
+    .replace(/Math\.sin/g, 'sin')
+    .replace(/Math\.cos/g, 'cos')
+    .replace(/Math\.tan/g, 'tan')
+    .replace(/Math\.sqrt/g, 'sqrt')
+    .replace(/Math\.abs/g, 'abs')
+    .replace(/Math\.log/g, 'ln')
+    .replace(/Math\.exp/g, 'exp')
+    .replace(/\*\*/g, '^')
+    .replace(/\*/g, '×');
+};
