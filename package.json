@@ -12,7 +12,8 @@
     "test": "jest",
     "test:e2e": "playwright test",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
+    "test:coverage": "COLLECT_COVERAGE=true jest",
+    "test:ci": "COLLECT_COVERAGE=true jest",
     "prepare": "husky"
   },
   "dependencies": {

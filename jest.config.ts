@@ -15,7 +15,7 @@ const config: Config = {
   },
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   testMatch: ['**/__tests__/**/*.test.ts?(x)'],
-  collectCoverage: true,
+  collectCoverage: process.env.COLLECT_COVERAGE === 'true',
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
