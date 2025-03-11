@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { MeasurementUnit } from '@/types/shapes';
 
 interface GridLinesProps {
@@ -25,9 +25,34 @@ const GridLines: React.FC<GridLinesProps> = ({
     pointerEvents: 'none'
   };
 
-  // Use the appropriate pixel ratio based on the measurement unit
+  // Get the device pixel ratio for logging purposes only
+  const [devicePixelRatio, setDevicePixelRatio] = useState<number>(window.devicePixelRatio || 1);
+  
+  useEffect(() => {
+    const updatePixelRatio = () => {
+      setDevicePixelRatio(window.devicePixelRatio || 1);
+    };
+    
+    window.addEventListener('resize', updatePixelRatio);
+    return () => {
+      window.removeEventListener('resize', updatePixelRatio);
+    };
+  }, []);
+  
+  // Use the provided pixel values directly without any correction
   const pixelsPerUnit = pixelsPerCm;
   const pixelsPerSmallUnit = pixelsPerMm;
+  
+  // Log the values to help diagnose the issue
+  useEffect(() => {
+    console.log('GridLines rendering with:', {
+      measurementUnit: unit,
+      pixelsPerUnit,
+      pixelsPerSmallUnit,
+      devicePixelRatio,
+      origin
+    });
+  }, [unit, pixelsPerUnit, pixelsPerSmallUnit, devicePixelRatio, origin]);
 
   // Add more buffer to ensure all grid lines are rendered in fullscreen
   // Calculate the range of grid lines needed based on the origin
