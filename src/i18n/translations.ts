@@ -58,7 +58,13 @@ export const translations = {
     parametricPointInfo: "Parametric function (t value not available)",
     polarPointInfo: "Polar function (θ value not available)",
     pointInfoTitle: "Point Information",
-    clickOnCurveInstruction: "Click on the curve to select a point and view its information."
+    clickOnCurveInstruction: "Click on the curve to select a point and view its information.",
+    gridZoom: 'Grid Zoom',
+    gridZoomHint: 'Adjust the zoom level of the grid',
+    zoomIn: 'Zoom In',
+    zoomOut: 'Zoom Out',
+    zoomLevel: 'Zoom Level',
+    zoomReset: 'Reset Zoom',
   },
   es: {
     formulaEditor: "Trazador de Fórmulas",
@@ -119,7 +125,13 @@ export const translations = {
     parametricPointInfo: "Función paramétrica (valor t no disponible)",
     polarPointInfo: "Función polar (valor θ no disponible)",
     pointInfoTitle: "Información del Punto",
-    clickOnCurveInstruction: "Haz clic en la curva para seleccionar un punto y ver su información."
+    clickOnCurveInstruction: "Haz clic en la curva para seleccionar un punto y ver su información.",
+    gridZoom: 'Zoom del Gird',
+    gridZoomHint: 'Ajustar el nivel de zoom del grid',
+    zoomIn: 'Acercar',
+    zoomOut: 'Alejar',
+    zoomLevel: 'Nivel de Zoom',
+    zoomReset: 'Resetear Zoom',
   },
   fr: {
     formulaEditor: "Traceur de Formules",
@@ -223,7 +235,13 @@ export const translations = {
         cancelButton: "Annuler",
         applyButton: "Appliquer"
       }
-    }
+    },
+    gridZoom: 'Zoom du Gird',
+    gridZoomHint: 'Ajuster le niveau de zoom du grid',
+    zoomIn: 'Acercar',
+    zoomOut: 'Alejar',
+    zoomLevel: 'Niveau de Zoom',
+    zoomReset: 'Resetear Zoom',
   },
   de: {
     formulaEditor: "Formelplotter",
@@ -284,6 +302,12 @@ export const translations = {
     parametricPointInfo: "Parametrische Funktion (t-Wert nicht verfügbar)",
     polarPointInfo: "Polarfunktion (θ-Wert nicht verfügbar)",
     pointInfoTitle: "Punktinformation",
-    clickOnCurveInstruction: "Klicken Sie auf die Kurve, um einen Punkt auszuwählen und seine Informationen anzuzeigen."
+    clickOnCurveInstruction: "Klicken Sie auf die Kurve, um einen Punkt auszuwählen und seine Informationen anzuzeigen.",
+    gridZoom: 'Gitter-Zoom',
+    gridZoomHint: 'Passen Sie die Zoomstufe des Gitters an',
+    zoomIn: 'Vergrößern',
+    zoomOut: 'Verkleinern',
+    zoomLevel: 'Zoomstufe',
+    zoomReset: 'Zoom zurücksetzen',
   }
 };
