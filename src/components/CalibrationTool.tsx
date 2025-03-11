@@ -7,6 +7,7 @@ import { MeasurementUnit } from '@/types/shapes';
 import { useTranslate } from '@/utils/translate';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MinusIcon, PlusIcon } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface CalibrationToolProps {
   measurementUnit: MeasurementUnit;
@@ -170,24 +171,56 @@ const CalibrationTool: React.FC<CalibrationToolProps> = ({
               <div>
                 <Label>{t('configModal.calibration.coarseAdjustment')}</Label>
                 <div className="flex items-center space-x-2 mt-2">
-                  <Button variant="outline" size="icon" onClick={() => adjustCalibration(false)}>
-                    <MinusIcon className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="icon" onClick={() => adjustCalibration(true)}>
-                    <PlusIcon className="h-4 w-4" />
-                  </Button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="outline" size="icon" onClick={() => adjustCalibration(false)}>
+                          <MinusIcon className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{t('tooltips.coarseAdjustment')}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="outline" size="icon" onClick={() => adjustCalibration(true)}>
+                          <PlusIcon className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{t('tooltips.coarseAdjustment')}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
               </div>
               
               <div>
                 <Label>{t('configModal.calibration.fineAdjustment')}</Label>
                 <div className="flex items-center space-x-2 mt-2">
-                  <Button variant="outline" size="icon" onClick={() => fineTuneCalibration(false)}>
-                    <MinusIcon className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="icon" onClick={() => fineTuneCalibration(true)}>
-                    <PlusIcon className="h-4 w-4" />
-                  </Button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="outline" size="icon" onClick={() => fineTuneCalibration(false)}>
+                          <MinusIcon className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{t('tooltips.fineAdjustment')}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="outline" size="icon" onClick={() => fineTuneCalibration(true)}>
+                          <PlusIcon className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{t('tooltips.fineAdjustment')}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
               </div>
             </div>
