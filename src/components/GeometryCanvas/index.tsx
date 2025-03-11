@@ -300,6 +300,13 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
   useEffect(() => {
     console.log('GeometryCanvas: External grid position changed:', externalGridPosition);
     
+    // Skip if the positions are the same (using more precise comparison)
+    if (gridPosition && externalGridPosition &&
+        Math.abs(gridPosition.x - externalGridPosition.x) < 0.1 &&
+        Math.abs(gridPosition.y - externalGridPosition.y) < 0.1) {
+      return;
+    }
+    
     // If externalGridPosition is null, reset internal grid position to null
     if (externalGridPosition === null) {
       console.log('GeometryCanvas: Resetting internal grid position to null');
@@ -308,17 +315,10 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     }
     
     if (externalGridPosition) {
-      // Increase threshold from 1 to 3 to avoid oscillation during fullscreen toggle
-      if (!gridPosition || 
-         Math.abs(externalGridPosition.x - gridPosition.x) > 3 || 
-         Math.abs(externalGridPosition.y - gridPosition.y) > 3) {
-        console.log('GeometryCanvas: Updating internal grid position from external');
-        setGridPosition(externalGridPosition);
-      } else {
-        console.log('GeometryCanvas: Ignoring small external grid position change to prevent oscillation');
-      }
+      console.log('GeometryCanvas: Updating internal grid position from external');
+      setGridPosition(externalGridPosition);
     }
-  }, [externalGridPosition, gridPosition]);
+  }, [externalGridPosition]);  // Remove gridPosition from dependencies
   
   // Add a ref to track if this is the first load
   const isFirstLoad = useRef(true);
@@ -421,47 +421,21 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
   
   // Handle calibration completion
   const handleCalibrationComplete = (newPixelsPerUnit: number) => {
+    console.log('Calibration completed with new value:', newPixelsPerUnit);
+    
     // Store the calibrated value in localStorage
     localStorage.setItem(`pixelsPerUnit_${measurementUnit}`, newPixelsPerUnit.toString());
+    console.log('Stored new calibration value in localStorage');
     
     // Update the state
     setPixelsPerUnit(newPixelsPerUnit);
     
-    // Update small unit value
-    if (measurementUnit === 'in') {
-      setPixelsPerSmallUnit(newPixelsPerUnit / 10); // 1/10th of an inch
-    } else {
-      // For cm, we need to update mm (1/10th of a cm)
-      setPixelsPerSmallUnit(newPixelsPerUnit / 10);
-      localStorage.setItem('pixelsPerUnit_mm', (newPixelsPerUnit / 10).toString());
-    }
+    // Update small unit value (1/10th of the main unit)
+    const smallUnitValue = newPixelsPerUnit / 10;
+    setPixelsPerSmallUnit(smallUnitValue);
     
-    // Hide the calibration tool
-    setShowCalibration(false);
-  };
-  
-  // Update pixel values when measurement unit changes
-  useEffect(() => {
-    console.log('GeometryCanvas: Measurement unit changed to', measurementUnit);
-    
-    // Default to 'cm' if measurementUnit is undefined
-    const unit = measurementUnit || 'cm';
-    console.log('Using unit:', unit);
-    
-    // Get the stored calibration value for this unit
-    const storedValue = getStoredPixelsPerUnit(unit);
-    console.log('Retrieved stored pixels per unit:', storedValue);
-    
-    // Update the pixel values without affecting the grid position
-    if (unit === 'in') {
-      setPixelsPerUnit(storedValue);
-      setPixelsPerSmallUnit(storedValue / 10); // 1/10th of an inch
-    } else {
-      setPixelsPerUnit(storedValue);
-      setPixelsPerSmallUnit(storedValue / 10); // 1mm = 1/10th of a cm
-    }
-    console.log('Updated pixelsPerUnit:', storedValue);
-    console.log('Updated pixelsPerSmallUnit:', storedValue / 10);
+    console.log('Updated pixelsPerUnit:', newPixelsPerUnit);
+    console.log('Updated pixelsPerSmallUnit:', smallUnitValue);
     
     // Force a redraw of the canvas
     if (canvasRef.current) {
@@ -472,18 +446,114 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
       });
       console.log('Canvas size set to:', rect.width, rect.height);
     }
-  }, [measurementUnit, canvasRef]);
-
-  // Clear existing calibration values and use the new defaults
-  // This effect should only run once on mount
+    
+    // Hide the calibration tool
+    setShowCalibration(false);
+  };
+  
+  // Update pixel values when measurement unit changes
+  const prevMeasurementUnitRef = useRef(measurementUnit);
+  const prevPixelsPerUnitRef = useRef(pixelsPerUnit);
+  const canvasSizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
   useEffect(() => {
-    // Only clear if no values exist yet
-    if (!localStorage.getItem('pixelsPerUnit_cm') && !localStorage.getItem('pixelsPerUnit_in')) {
-      // Set the new default values
-      setPixelsPerUnit(measurementUnit === 'in' ? DEFAULT_PIXELS_PER_INCH : DEFAULT_PIXELS_PER_CM);
-      setPixelsPerSmallUnit(measurementUnit === 'in' ? DEFAULT_PIXELS_PER_INCH / 10 : DEFAULT_PIXELS_PER_MM);
+    // Skip if nothing has changed
+    if (measurementUnit === prevMeasurementUnitRef.current && 
+        pixelsPerUnit === prevPixelsPerUnitRef.current) {
+      return;
     }
-  }, []); // Run only once on component mount
+    
+    // Update refs
+    prevMeasurementUnitRef.current = measurementUnit;
+    prevPixelsPerUnitRef.current = pixelsPerUnit;
+    
+    console.log('GeometryCanvas: Measurement unit changed to', measurementUnit);
+    
+    // Default to 'cm' if measurementUnit is undefined
+    const unit = measurementUnit || 'cm';
+    console.log('Using unit:', unit);
+    
+    // Get the stored calibration value for this unit
+    const storedValue = getStoredPixelsPerUnit(unit);
+    console.log('Retrieved stored pixels per unit:', storedValue);
+    
+    // Store the old pixels per unit value for conversion
+    const oldPixelsPerUnit = pixelsPerUnit;
+    
+    // Check if the stored value is reasonable for the unit
+    if (unit === 'in' && Math.abs(storedValue - DEFAULT_PIXELS_PER_CM) < 5) {
+      // If inches value is suspiciously close to cm value, reset to default inches value
+      console.log('Detected incorrect inches calibration value, resetting to default:', DEFAULT_PIXELS_PER_INCH);
+      localStorage.setItem(`pixelsPerUnit_${unit}`, DEFAULT_PIXELS_PER_INCH.toString());
+      setPixelsPerUnit(DEFAULT_PIXELS_PER_INCH);
+      setPixelsPerSmallUnit(DEFAULT_PIXELS_PER_INCH / 10);
+      console.log('Updated pixelsPerUnit to default inches value:', DEFAULT_PIXELS_PER_INCH);
+      console.log('Updated pixelsPerSmallUnit to:', DEFAULT_PIXELS_PER_INCH / 10);
+    } else if (unit === 'cm' && Math.abs(storedValue - DEFAULT_PIXELS_PER_INCH) < 5) {
+      // If cm value is suspiciously close to inches value, reset to default cm value
+      console.log('Detected incorrect cm calibration value, resetting to default:', DEFAULT_PIXELS_PER_CM);
+      localStorage.setItem(`pixelsPerUnit_${unit}`, DEFAULT_PIXELS_PER_CM.toString());
+      setPixelsPerUnit(DEFAULT_PIXELS_PER_CM);
+      setPixelsPerSmallUnit(DEFAULT_PIXELS_PER_MM);
+      console.log('Updated pixelsPerUnit to default cm value:', DEFAULT_PIXELS_PER_CM);
+      console.log('Updated pixelsPerSmallUnit to:', DEFAULT_PIXELS_PER_MM);
+    } else {
+      // Update the pixel values without affecting the grid position
+      setPixelsPerUnit(storedValue);
+      
+      const smallUnitValue = storedValue / 10;
+      setPixelsPerSmallUnit(smallUnitValue);
+    }
+    
+    // Convert shape dimensions to maintain physical size
+    if (shapes && shapes.length > 0 && oldPixelsPerUnit > 0) {
+      // Calculate the conversion factor based on the unit change
+      // When switching from cm to inches: 1 inch = 2.54 cm
+      // When switching from inches to cm: 1 cm = 0.3937 inches
+      const cmToInchFactor = 2.54;
+      const inchToCmFactor = 1 / cmToInchFactor;
+      
+      let conversionFactor;
+      if (unit === 'in' && measurementUnit !== unit) {
+        // Converting from cm to inches
+        conversionFactor = (storedValue / oldPixelsPerUnit) * inchToCmFactor;
+      } else if (unit === 'cm' && measurementUnit !== unit) {
+        // Converting from inches to cm
+        conversionFactor = (storedValue / oldPixelsPerUnit) * cmToInchFactor;
+      } else {
+        // Same unit, just different calibration
+        conversionFactor = storedValue / oldPixelsPerUnit;
+      }
+      
+      console.log('Converting shapes with factor:', conversionFactor);
+      
+      // Update shapes through the parent component
+      if (onShapeResize) {
+        shapes.forEach(shape => {
+          if (shape.id) {
+            // Apply the conversion factor to maintain physical dimensions
+            onShapeResize(shape.id, conversionFactor);
+          }
+        });
+      }
+    }
+    
+    // Debounce the canvas size update
+    if (canvasSizeTimeoutRef.current) {
+      clearTimeout(canvasSizeTimeoutRef.current);
+    }
+    
+    canvasSizeTimeoutRef.current = setTimeout(() => {
+      if (canvasRef.current) {
+        const rect = canvasRef.current.getBoundingClientRect();
+        setCanvasSize({
+          width: rect.width,
+          height: rect.height
+        });
+      }
+      canvasSizeTimeoutRef.current = null;
+    }, 100);
+  }, [measurementUnit, pixelsPerUnit]);
 
   // Clean up any ongoing operations when the active mode changes
   useEffect(() => {
@@ -982,19 +1052,21 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     setSelectedPoint(null);
   }, [formulas]);
 
-  // Inside the GeometryCanvas component, add logging to trace rendering
-  console.log('Rendering GeometryCanvas with pixelsPerUnit:', pixelsPerUnit, 'and measurementUnit:', measurementUnit);
-
-  // Add logging to the renderFormulas function
-  const renderFormulas = () => {
+  // Add this function to log the values before rendering
+  const logRenderValues = () => {
+    console.log('Rendering GeometryCanvas with pixelsPerUnit:', pixelsPerUnit, 'and measurementUnit:', measurementUnit);
     console.log('Rendering formulas with gridPosition:', gridPosition, 'and pixelsPerUnit:', pixelsPerUnit);
+    return null; // Return null to avoid rendering anything
+  };
+
+  // Render formulas function
+  const renderFormulas = () => {
     if (!formulas || formulas.length === 0 || !gridPosition) {
       return null;
     }
     
     // Use the internal pixelsPerUnit value
     const ppu = externalPixelsPerUnit || pixelsPerUnit;
-    console.log('Using pixels per unit for rendering formulas:', ppu);
     
     // Create a grid position key to force re-renders when grid moves
     const gridKey = `${gridPosition.x.toFixed(1)}-${gridPosition.y.toFixed(1)}`;
@@ -1232,8 +1304,18 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     }
   };
 
+  // Add cleanup in a useEffect
+  useEffect(() => {
+    return () => {
+      if (canvasSizeTimeoutRef.current) {
+        clearTimeout(canvasSizeTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div className="relative w-full h-full">
+      {logRenderValues()}
       <div 
         ref={canvasRef}
         className="canvas-container relative w-full h-full overflow-hidden"
