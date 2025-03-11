@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { PlusCircle, Trash2, BookOpen, ZoomIn, ZoomOut, Palette, Sparkles, Loader2, AlertCircle } from 'lucide-react';
+import { PlusCircle, Trash2, BookOpen, ZoomIn, ZoomOut, Palette, Sparkles, Loader2, AlertCircle, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { MeasurementUnit } from '@/types/shapes';
 import { getFormulaExamples, createDefaultFormula, validateFormula, convertToLatex } from '@/utils/formulaUtils';
 import { useTranslate } from '@/utils/translate';
@@ -19,6 +19,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import 'katex/dist/katex.min.css';
 import { InlineMath } from 'react-katex';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { JSX } from 'react';
 
 interface FormulaEditorProps {
   formulas: Formula[];
@@ -253,264 +254,294 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
   const logScaleFactor = Math.log10(currentScaleFactor);
 
   return (
-    <Card className={`w-full shadow-lg ${isMobile ? 'p-0 m-0 border-0 shadow-none' : ''}`}>
-      <CardContent className={`${isMobile ? 'p-0.5' : 'p-0.5 sm:p-1 md:p-2 lg:p-4'}`}>
-        <div className="grid gap-1 sm:gap-2 md:gap-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-2">
-            {/* Formula buttons - Use responsive grid layout for all screen sizes */}
-            <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1 w-full max-w-full ${isMobile ? 'gap-0.5' : ''}`}>
-              {formulas.map((formula) => (
-                <div key={formula.id} className="flex flex-col">
-                  <Button
-                    variant={formula.id === selectedFormulaId ? "secondary" : "outline"}
-                    size="sm"
-                    className={`flex items-center gap-1 text-[10px] sm:text-xs h-8 sm:h-7 px-2 min-w-0 flex-shrink-0 touch-manipulation ${validationErrors[formula.id] ? 'border-red-500' : ''}`}
-                    onClick={() => onSelectFormula && onSelectFormula(formula.id)}
-                  >
-                    <div 
-                      className="w-3 h-3 sm:w-2 sm:h-2 rounded-full flex-shrink-0" 
-                      style={{ backgroundColor: formula.color }}
-                    />
-                    <span className="max-w-[100px] sm:max-w-[120px] md:max-w-[160px] whitespace-nowrap overflow-visible">
-                      {formula.expression ? (
-                        <InlineMath math={convertToLatex(formula.expression)} />
-                      ) : (
-                        t('formulaDefault')
-                      )}
-                    </span>
-                    {formula.id === selectedFormulaId && (
-                      <span 
-                        className="ml-1 opacity-70 hover:opacity-100 text-destructive cursor-pointer flex-shrink-0"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDeleteFormula(formula.id);
-                          // Select the next formula if available
-                          const remainingFormulas = formulas.filter(f => f.id !== formula.id);
-                          if (remainingFormulas.length > 0 && onSelectFormula) {
-                            onSelectFormula(remainingFormulas[0].id);
-                          }
-                        }}
-                        title={t('deleteFormulaTooltip')}
-                      >
-                        <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                      </span>
-                    )}
-                  </Button>
-                </div>
-              ))}
-              
-              {/* Add New Formula button - Make it fit the grid layout */}
+    <div className="w-full px-1 sm:px-2">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full">
+        {/* Formula Input Section - Full Width */}
+        <div className="flex-grow w-full sm:w-auto">
+          <div className="flex items-center gap-2">
+            <Input
+              ref={formulaInputRef}
+              type="text"
+              placeholder={t('enterFormula')}
+              value={findSelectedFormula()?.expression || ''}
+              onChange={(e) => handleUpdateFormula('expression', e.target.value)}
+              className="flex-grow font-mono"
+            />
+            
+            {/* Show validation error if any */}
+            {selectedFormulaId && validationErrors[selectedFormulaId] && (
+              <Alert variant="destructive" className="p-2">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {validationErrors[selectedFormulaId]}
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+        </div>
+
+        {/* Controls Section - Row on Mobile, Buttons on Desktop */}
+        <div className="flex flex-row items-center gap-2 w-full sm:w-auto">
+          {/* Function Navigation Buttons - Only show if multiple formulas exist */}
+          {formulas.length > 1 && (
+            <>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="h-8 w-full sm:h-7 bg-white/80 backdrop-blur-sm flex-shrink-0 col-span-2 md:col-span-1 flex items-center justify-center gap-1"
-                      onClick={onNewFormula || handleCreateFormula}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9"
+                      onClick={() => {
+                        const currentIndex = formulas.findIndex((f) => f.id === selectedFormulaId);
+                        const prevIndex = currentIndex === 0 ? formulas.length - 1 : currentIndex - 1;
+                        onSelectFormula?.(formulas[prevIndex].id);
+                      }}
                     >
-                      <PlusCircle className="h-4 w-4" />
-                      <span className="hidden md:inline">{t('newFormula')}</span>
+                      <ChevronLeftIcon className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>{t('newFormula')}</p>
+                    <p>{t('previousFormula')}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-            </div>
-            <div className="flex gap-1 sm:gap-2 flex-shrink-0 w-full sm:w-auto">
-              {/* Delete Formula Button - Removed */}
-            </div>
-          </div>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9"
+                      onClick={() => {
+                        const currentIndex = formulas.findIndex((f) => f.id === selectedFormulaId);
+                        const nextIndex = currentIndex === formulas.length - 1 ? 0 : currentIndex + 1;
+                        onSelectFormula?.(formulas[nextIndex].id);
+                      }}
+                    >
+                      <ChevronRightIcon className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{t('nextFormula')}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </>
+          )}
 
-          {selectedFormulaId && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
-              {/* Expression Input */}
-              <div className="w-full col-span-1 md:col-span-2">
-                <div className="relative">
-                  <Input
-                    id="formula-expression"
-                    ref={formulaInputRef}
-                    value={findSelectedFormula()?.expression || ''}
-                    onChange={(e) => handleUpdateFormula('expression', e.target.value)}
-                    placeholder={t('enterFormula')}
-                    className={`pr-16 h-8 sm:h-10 text-xs sm:text-sm ${validationErrors[selectedFormulaId] ? 'border-red-500' : ''}`}
-                  />
-                  <div className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 flex gap-1">
-                    <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center gap-1 sm:gap-2">
-                        <div className="flex items-center gap-1">
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <button 
-                                className="opacity-70 hover:opacity-100"
-                                type="button"
-                                title={t('naturalLanguage')}
-                              >
-                                <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
-                              </button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[95vw] sm:w-[500px] md:w-[600px] lg:w-[700px] p-0" align="end" side="bottom">
-                              <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
-                                <Textarea 
-                                  placeholder={t('naturalLanguagePlaceholder')}
-                                  className="text-xs sm:text-sm h-24 sm:h-32"
-                                  value={naturalLanguageInput}
-                                  onChange={(e) => setNaturalLanguageInput(e.target.value)}
-                                />
-                                <Button 
-                                  size="sm" 
-                                  className="w-full h-7 sm:h-8 text-xs sm:text-sm"
-                                  onClick={handleNaturalLanguageConversion}
-                                  disabled={isProcessing || !openaiApiKey}
-                                >
-                                  {isProcessing ? (
-                                    <>
-                                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                      {t('processing')}
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Sparkles className="h-4 w-4 mr-2" />
-                                      {t('naturalLanguageGenerate')}
-                                    </>
-                                  )}
-                                </Button>
-                              </div>
-                            </PopoverContent>
-                          </Popover>
-                          <Popover open={examplesOpen} onOpenChange={setExamplesOpen}>
-                            <PopoverTrigger asChild>
-                              <button 
-                                className="opacity-70 hover:opacity-100"
-                                type="button"
-                                title={t('browseExamples')}
-                              >
-                                <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" />
-                              </button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[95vw] sm:w-[500px] md:w-[600px] lg:w-[700px] max-h-60 sm:max-h-80 overflow-y-auto p-0" align="end" side="bottom">
-                              <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
-                                {Object.entries(examplesByCategory).map(([category, categoryExamples]) => (
-                                  <div key={category}>
-                                    <h3 className="font-medium mb-1 capitalize text-xs sm:text-sm">{t(`categories.${category}`)}</h3>
-                                    <div className="space-y-1">
-                                      {categoryExamples.map((example) => (
-                                        <div 
-                                          key={example.name} 
-                                          className="flex items-center p-1.5 hover:bg-muted rounded-md cursor-pointer"
-                                          onClick={() => handleLoadExample(example)}
-                                        >
-                                          <div className="flex-1">
-                                            <div className="font-medium text-xs sm:text-sm">{example.name}</div>
-                                            <div className="text-[10px] sm:text-xs text-muted-foreground">{example.description}</div>
-                                          </div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </PopoverContent>
-                          </Popover>
-                          
-                          {/* Color Picker - Moved here */}
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <button 
-                                className="opacity-70 hover:opacity-100 relative"
-                                type="button"
-                                title={t('colorPicker')}
-                              >
-                                <div 
-                                  className="absolute inset-0 m-0.5 rounded-sm" 
-                                  style={{ backgroundColor: findSelectedFormula()?.color || '#ff0000' }}
-                                />
-                                <Palette className="h-3 w-3 sm:h-4 sm:w-4 text-transparent" />
-                              </button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-1 sm:p-2">
-                              <div className="space-y-1 sm:space-y-2">
-                                <div className="flex items-center gap-1">
-                                  <Input 
-                                    id="formula-color" 
-                                    type="color" 
-                                    value={findSelectedFormula()?.color || '#ff0000'}
-                                    onChange={(e) => handleUpdateFormula('color', e.target.value)}
-                                    className="w-5 h-5 sm:w-6 sm:h-6 p-0 border-0"
-                                  />
-                                  <Input 
-                                    id="formula-color-text" 
-                                    type="text" 
-                                    value={findSelectedFormula()?.color || '#ff0000'}
-                                    onChange={(e) => handleUpdateFormula('color', e.target.value)}
-                                    className="w-16 sm:w-20 h-6 sm:h-7 text-[10px] sm:text-xs"
-                                  />
-                                </div>
-                              </div>
-                            </PopoverContent>
-                          </Popover>
-                          
-                          {/* Scale Factor Control - Moved here */}
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <button 
-                                className="opacity-70 hover:opacity-100 flex items-center"
-                                type="button"
-                                title={t('scaleFactor')}
-                              >
-                                <ZoomIn className="h-3 w-3 sm:h-4 sm:w-4" />
-                              </button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-1 sm:p-2">
-                              <div className="space-y-1 sm:space-y-2">
-                                <div className="flex items-center gap-1 sm:gap-2">
-                                  <Button 
-                                    variant="outline" 
-                                    size="icon" 
-                                    className="h-5 w-5 sm:h-6 sm:w-6"
-                                    onClick={handleZoomOut}
-                                  >
-                                    <ZoomOut className="h-2 w-2 sm:h-3 sm:w-3" />
-                                  </Button>
-                                  <div className="flex-1 min-w-[100px] sm:min-w-[120px]">
-                                    <Slider 
-                                      value={[logScaleFactor]} 
-                                      min={-3} 
-                                      max={1} 
-                                      step={0.01} 
-                                      onValueChange={handleScaleFactorChange}
-                                    />
-                                  </div>
-                                  <Button 
-                                    variant="outline" 
-                                    size="icon" 
-                                    className="h-5 w-5 sm:h-6 sm:w-6"
-                                    onClick={handleZoomIn}
-                                  >
-                                    <ZoomIn className="h-2 w-2 sm:h-3 sm:w-3" />
-                                  </Button>
-                                </div>
-                                <div className="text-center text-[10px] sm:text-xs">
-                                  {currentScaleFactor < 0.01 
-                                    ? currentScaleFactor.toFixed(3) 
-                                    : currentScaleFactor.toFixed(2)}x
-                                </div>
-                              </div>
-                            </PopoverContent>
-                          </Popover>
-                        </div>
-                      </div>
+          {/* Natural Language Input */}
+          <Popover open={isNaturalLanguageOpen} onOpenChange={setIsNaturalLanguageOpen}>
+            <TooltipProvider>
+              <Tooltip>
+                <PopoverTrigger asChild>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="icon"
+                      className="h-9 w-9"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                </PopoverTrigger>
+                <TooltipContent>
+                  <p>{t('naturalLanguageTooltip')}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <PopoverContent className="w-96">
+              <div className="space-y-2">
+                <Label>{t('naturalLanguageTitle')}</Label>
+                <Textarea
+                  placeholder={t('naturalLanguagePlaceholder')}
+                  value={naturalLanguageInput}
+                  onChange={(e) => setNaturalLanguageInput(e.target.value)}
+                />
+                <Button 
+                  onClick={handleNaturalLanguageConversion}
+                  disabled={isProcessing || !openaiApiKey}
+                  className="w-full"
+                >
+                  {isProcessing ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    t('naturalLanguageGenerate')
+                  )}
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Examples */}
+          <Popover open={examplesOpen} onOpenChange={setExamplesOpen}>
+            <TooltipProvider>
+              <Tooltip>
+                <PopoverTrigger asChild>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="icon"
+                      className="h-9 w-9"
+                    >
+                      <BookOpen className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                </PopoverTrigger>
+                <TooltipContent>
+                  <p>{t('browseExamples')}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <PopoverContent className="w-96 p-2">
+              <div className="grid gap-2">
+                {Object.entries(examplesByCategory).map(([category, examples]) => (
+                  <div key={category} className="space-y-1">
+                    <Label className="text-xs font-medium text-muted-foreground">
+                      {t(`categories.${category}`)}
+                    </Label>
+                    <div className="grid gap-0.5 mt-1">
+                      {examples.map((example) => (
+                        <Button
+                          key={example.expression}
+                          variant="ghost"
+                          className="w-full justify-start text-left h-auto py-1"
+                          onClick={() => handleLoadExample(example)}
+                        >
+                          <InlineMath math={convertToLatex(example.expression)} />
+                        </Button>
+                      ))}
                     </div>
                   </div>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Scale Factor Control */}
+          <Popover>
+            <TooltipProvider>
+              <Tooltip>
+                <PopoverTrigger asChild>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="icon"
+                      className="h-9 w-9"
+                    >
+                      <ZoomIn className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                </PopoverTrigger>
+                <TooltipContent>
+                  <p>{t('scaleFactorHint')}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <PopoverContent className="w-96 p-4">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">{t('scaleFactor')}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {currentScaleFactor < 0.01 
+                      ? currentScaleFactor.toFixed(3) 
+                      : currentScaleFactor.toFixed(2)}x
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <ZoomOut size={16} className="text-muted-foreground" />
+                  <Slider
+                    defaultValue={[Math.log10(currentScaleFactor)]}
+                    min={-3} // 10^-3 = 0.001
+                    max={1}  // 10^1 = 10
+                    step={0.01}
+                    onValueChange={handleScaleFactorChange}
+                    className="flex-1"
+                  />
+                  <ZoomIn size={16} className="text-muted-foreground" />
+                </div>
+                <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                  <span>0.001x</span>
+                  <span>1.0x</span>
+                  <span>10x</span>
                 </div>
               </div>
-            </div>
-          )}
+            </PopoverContent>
+          </Popover>
+
+          {/* Color Picker */}
+          <div className="relative">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="relative">
+                    <input
+                      type="color"
+                      className="opacity-0 absolute inset-0 w-9 h-9 cursor-pointer"
+                      value={findSelectedFormula()?.color || '#000000'}
+                      onChange={(e) => handleUpdateFormula('color', e.target.value)}
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-9 w-9 pointer-events-none"
+                    >
+                      <div 
+                        className="w-4 h-4 rounded-sm"
+                        style={{ 
+                          backgroundColor: findSelectedFormula()?.color || '#000000',
+                        }}
+                      />
+                    </Button>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{t('colorPicker')}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+
+          {/* Delete Formula Button */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9"
+                  onClick={() => selectedFormulaId && onDeleteFormula(selectedFormulaId)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{t('deleteFormula')}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          {/* Add Formula Button */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9"
+                  onClick={onNewFormula || handleCreateFormula}
+                >
+                  <PlusCircle className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{t('newFormula')}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

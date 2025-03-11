@@ -38,10 +38,10 @@ const FormulaZoomControl: React.FC<FormulaZoomControlProps> = ({
   const logScaleFactor = Math.log10(currentScaleFactor);
   
   // Handle scale factor change
-  const handleScaleFactorChange = (value: number[]) => {
+  const handleScaleChange = (value: number) => {
     // Convert from logarithmic slider value to actual scale factor
     // This gives finer control at lower values
-    const actualScaleFactor = Math.pow(10, value[0]);
+    const actualScaleFactor = Math.pow(10, value);
     onUpdateFormula(selectedFormulaId, { scaleFactor: actualScaleFactor });
   };
   
@@ -71,7 +71,7 @@ const FormulaZoomControl: React.FC<FormulaZoomControlProps> = ({
             </Button>
           </TooltipTrigger>
           <TooltipContent side="bottom">
-            <p className="text-xs">{t('zoomOut')}</p>
+            <p className="text-xs">{t('tooltips.zoomOut')}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -88,32 +88,21 @@ const FormulaZoomControl: React.FC<FormulaZoomControlProps> = ({
               : currentScaleFactor.toFixed(2)}x
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-64 p-4">
+        <PopoverContent className="w-48">
           <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">{t('scaleFactor')}</span>
-              <span className="text-xs text-muted-foreground">
-                {currentScaleFactor < 0.01 
-                  ? currentScaleFactor.toFixed(3) 
-                  : currentScaleFactor.toFixed(2)}x
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <ZoomOut size={16} className="text-muted-foreground" />
-              <Slider
-                defaultValue={[logScaleFactor]}
-                min={-3} // 10^-3 = 0.001
-                max={1}  // 10^1 = 10
-                step={0.01}
-                onValueChange={handleScaleFactorChange}
-                className="flex-1"
-              />
-              <ZoomIn size={16} className="text-muted-foreground" />
-            </div>
-            <div className="flex justify-between text-xs text-muted-foreground mt-1">
-              <span>0.001x</span>
-              <span>1.0x</span>
-              <span>10x</span>
+            <h4 className="font-medium text-sm">{t('scaleFactor')}</h4>
+            <p className="text-xs text-muted-foreground">{t('scaleFactorHint')}</p>
+            <Slider
+              value={[currentScaleFactor]}
+              min={0.001}
+              max={10}
+              step={0.001}
+              onValueChange={([value]) => handleScaleChange(value[0])}
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>{t('scaleMin')}</span>
+              <span>{t('scaleDefault')}</span>
+              <span>{t('scaleMax')}</span>
             </div>
           </div>
         </PopoverContent>
@@ -132,7 +121,7 @@ const FormulaZoomControl: React.FC<FormulaZoomControlProps> = ({
             </Button>
           </TooltipTrigger>
           <TooltipContent side="bottom">
-            <p className="text-xs">{t('zoomIn')}</p>
+            <p className="text-xs">{t('tooltips.zoomIn')}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
