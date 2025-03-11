@@ -71,7 +71,7 @@ const MeasurementPanel: React.FC<MeasurementPanelProps> = ({
   // If no shape is selected, show a message
   if (!selectedShape) {
     return (
-      <Card className="w-full bg-white animate-fade-in">
+      <Card id="measurement-panel" className="w-full bg-white animate-fade-in">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
             {t('measurements')}
@@ -89,7 +89,7 @@ const MeasurementPanel: React.FC<MeasurementPanelProps> = ({
   const shapeName = t(`shapeNames.${selectedShape.type}`);
 
   return (
-    <Card className="w-full bg-white animate-fade-in">
+    <Card id="measurement-panel" className="w-full bg-white animate-fade-in">
       <CardHeader className="pb-2 flex flex-row items-center space-x-2">
         <ShapeIcon shapeType={selectedShape.type} />
         <CardTitle className="text-sm font-medium">

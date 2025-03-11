@@ -4,7 +4,7 @@ import { AnyShape } from '@/types/shapes';
 
 describe('Shape Operations - Selection', () => {
   describe('selectShape', () => {
-    it('should select a shape by ID', () => {
+    it('should return the shapes array unchanged', () => {
       // Arrange
       const shapes = createTestShapes();
       const targetId = 'rectangle-1';
@@ -15,35 +15,23 @@ describe('Shape Operations - Selection', () => {
       // Assert
       expect(result.length).toBe(shapes.length);
       
-      // The target shape should be selected
-      const selectedShape = result.find(shape => shape.id === targetId);
-      expect(selectedShape).toBeDefined();
-      expect(selectedShape?.selected).toBe(true);
+      // The shapes array should be a new array (not the same reference)
+      expect(result).not.toBe(shapes);
       
-      // All other shapes should not be selected
-      const otherShapes = result.filter(shape => shape.id !== targetId);
-      otherShapes.forEach(shape => {
-        expect(shape.selected).toBe(false);
-      });
+      // But the contents should be the same
+      expect(result).toEqual(shapes);
     });
     
-    it('should deselect all shapes when null ID is provided', () => {
+    it('should handle null ID', () => {
       // Arrange
-      const shapes = createTestShapes().map(shape => ({
-        ...shape,
-        selected: true
-      }));
+      const shapes = createTestShapes();
       
       // Act
       const result = selectShape(shapes, null);
       
       // Assert
       expect(result.length).toBe(shapes.length);
-      
-      // All shapes should be deselected
-      result.forEach(shape => {
-        expect(shape.selected).toBe(false);
-      });
+      expect(result).toEqual(shapes);
     });
     
     it('should handle non-existent shape ID', () => {
@@ -56,11 +44,7 @@ describe('Shape Operations - Selection', () => {
       
       // Assert
       expect(result.length).toBe(shapes.length);
-      
-      // All shapes should be deselected
-      result.forEach(shape => {
-        expect(shape.selected).toBe(false);
-      });
+      expect(result).toEqual(shapes);
     });
     
     it('should handle empty shapes array', () => {

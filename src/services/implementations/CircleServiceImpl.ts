@@ -16,12 +16,12 @@ export class CircleServiceImpl implements CircleService {
    * @returns A new Circle instance
    */
   createShape(params: Record<string, unknown>): Circle {
-    const center = params.center as Point || { x: 0, y: 0 };
+    const position = params.position as Point || { x: 0, y: 0 };
     const radius = (params.radius as number) || 50;
     const color = (params.color as string) || getNextShapeColor();
     const id = (params.id as string) || uuidv4();
     
-    return this.createCircle(center, radius, color, id);
+    return this.createCircle(position, radius, color, id);
   }
   
   /**
@@ -39,10 +39,9 @@ export class CircleServiceImpl implements CircleService {
       position: { ...center },
       radius: Math.max(1, radius), // Ensure minimum radius of 1
       rotation: 0,
-      selected: false,
-      fill: color || getNextShapeColor(),
-      stroke: getNextShapeColor(0.9, 0.3, 1.0),
-      strokeWidth: 1
+      fillColor: color || getNextShapeColor(),
+      strokeColor: getNextShapeColor(0.9, 0.3, 1.0),
+      opacity: 1
     };
   }
   
@@ -196,15 +195,24 @@ export class CircleServiceImpl implements CircleService {
   }
   
   /**
-   * Scales the circle by the specified factor
+   * Scales a circle by the specified factor
    * @param circle The circle to scale
    * @param scaleFactor The factor to scale by
    * @returns The scaled circle
    */
   scaleCircle(circle: Circle, scaleFactor: number): Circle {
+    // Store original dimensions if they don't exist yet
+    const originalDimensions = circle.originalDimensions || {
+      radius: circle.radius
+    };
+    
+    // Scale from original dimensions if they exist, otherwise use current dimensions
+    const baseRadius = originalDimensions.radius || circle.radius;
+    
     return {
       ...circle,
-      radius: circle.radius * scaleFactor
+      radius: baseRadius * scaleFactor,
+      originalDimensions: originalDimensions // Preserve original dimensions
     };
   }
   
@@ -222,7 +230,11 @@ export class CircleServiceImpl implements CircleService {
     
     return {
       ...circle,
-      radius
+      radius,
+      originalDimensions: {
+        ...circle.originalDimensions,
+        radius
+      }
     };
   }
   

@@ -12,50 +12,55 @@ export interface Point {
 /**
  * Base shape interface with common properties for all shapes
  */
-export interface Shape {
+export interface BaseShape {
   id: string;
   type: ShapeType;
   position: Point;
   rotation: number;
-  selected: boolean;
-  fill: string;
-  stroke: string;
-  strokeWidth: number;
+  fillColor: string;
+  strokeColor: string;
+  opacity: number;
+  scaleFactor?: number;
+  originalDimensions?: CircleOriginalDimensions | RectangleOriginalDimensions | TriangleOriginalDimensions | LineOriginalDimensions;
 }
 
 /**
  * Circle shape with radius property
  */
-export interface Circle extends Shape {
+export interface Circle extends BaseShape {
   type: 'circle';
   radius: number;
+  originalDimensions?: CircleOriginalDimensions;
 }
 
 /**
  * Rectangle shape with width and height properties
  */
-export interface Rectangle extends Shape {
+export interface Rectangle extends BaseShape {
   type: 'rectangle';
   width: number;
   height: number;
+  originalDimensions?: RectangleOriginalDimensions;
 }
 
 /**
  * Triangle shape with three points
  */
-export interface Triangle extends Shape {
+export interface Triangle extends BaseShape {
   type: 'triangle';
   points: [Point, Point, Point]; // Three points defining the triangle
+  originalDimensions?: TriangleOriginalDimensions;
 }
 
 /**
  * Line shape with start and end points
  */
-export interface Line extends Shape {
+export interface Line extends BaseShape {
   type: 'line';
   startPoint: Point;
   endPoint: Point;
   length: number; // Store the length for easy access in measurements
+  originalDimensions?: LineOriginalDimensions;
 }
 
 /**
@@ -188,4 +193,23 @@ export function castShape<T extends ShapeType>(
   if (!shape) return null;
   if (shape.type !== type) return null;
   return shape as ShapeProperties<T>;
+}
+
+// Add original dimension types for each shape
+export interface CircleOriginalDimensions {
+  radius: number;
+}
+
+export interface RectangleOriginalDimensions {
+  width: number;
+  height: number;
+}
+
+export interface TriangleOriginalDimensions {
+  points: [Point, Point, Point];
+}
+
+export interface LineOriginalDimensions {
+  dx: number;
+  dy: number;
 }

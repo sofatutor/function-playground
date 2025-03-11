@@ -104,7 +104,7 @@ export const getShapeAtPosition = (point: Point, shapes: AnyShape[]): AnyShape |
         );
         
         // Use a threshold for hit detection (make it easier to select thin lines)
-        const hitThreshold = Math.max(line.strokeWidth * 2, 10);
+        const hitThreshold = 10; // Fixed hit threshold for all lines
         
         if (distance <= hitThreshold) {
           return shape;

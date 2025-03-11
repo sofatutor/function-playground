@@ -24,10 +24,9 @@ describe('Shape Type Guards', () => {
     position: { x: 100, y: 100 },
     radius: 50,
     rotation: 0,
-    selected: false,
-    fill: 'red',
-    stroke: 'black',
-    strokeWidth: 1
+    fillColor: 'red',
+    strokeColor: 'black',
+    opacity: 1
   };
 
   const rectangle: Rectangle = {
@@ -37,10 +36,9 @@ describe('Shape Type Guards', () => {
     width: 100,
     height: 80,
     rotation: 0,
-    selected: false,
-    fill: 'blue',
-    stroke: 'black',
-    strokeWidth: 1
+    fillColor: 'blue',
+    strokeColor: 'black',
+    opacity: 1
   };
 
   const triangle: Triangle = {
@@ -53,10 +51,9 @@ describe('Shape Type Guards', () => {
       { x: 250, y: 350 }
     ],
     rotation: 0,
-    selected: false,
-    fill: 'green',
-    stroke: 'black',
-    strokeWidth: 1
+    fillColor: 'green',
+    strokeColor: 'black',
+    opacity: 1
   };
 
   const line: Line = {
@@ -67,10 +64,9 @@ describe('Shape Type Guards', () => {
     endPoint: { x: 450, y: 450 },
     length: 141.42, // √((450-350)² + (450-350)²) = √(100² + 100²) = √20000 ≈ 141.42
     rotation: 45,
-    selected: false,
-    fill: 'none',
-    stroke: 'black',
-    strokeWidth: 1
+    fillColor: 'none',
+    strokeColor: 'black',
+    opacity: 1
   };
 
   // Tests for isCircle

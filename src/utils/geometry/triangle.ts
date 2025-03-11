@@ -95,13 +95,6 @@ export const updateTriangleFromAngle = (
   newAngleDegrees: number,
   currentAngles: [number, number, number]
 ): [Point, Point, Point] => {
-  // Calculate side lengths
-  const sides = [
-    distanceBetweenPoints(points[1], points[2]), // side a (opposite to vertex 0)
-    distanceBetweenPoints(points[0], points[2]), // side b (opposite to vertex 1)
-    distanceBetweenPoints(points[0], points[1]), // side c (opposite to vertex 2)
-  ];
-  
   // Store the original triangle properties
   const originalPoints = [...points] as [Point, Point, Point];
   const originalCenter = {
@@ -109,124 +102,193 @@ export const updateTriangleFromAngle = (
     y: (originalPoints[0].y + originalPoints[1].y + originalPoints[2].y) / 3
   };
   
-  // Calculate the average side length to maintain approximate size
-  const avgSideLength = (sides[0] + sides[1] + sides[2]) / 3;
-  const originalPerimeter = sides[0] + sides[1] + sides[2];
+  // Map UI angle index to internal vertex index
+  // angle1 (UI index 0) -> vertex 2
+  // angle2 (UI index 1) -> vertex 0
+  // angle3 (UI index 2) -> vertex 1
+  const vertexIndexMap = [2, 0, 1];
+  const vertexIndex = vertexIndexMap[angleIndex];
   
-  // Create a new array of angles
-  const newAngles: [number, number, number] = [...currentAngles];
+  // Get the vertex and adjacent points based on the vertex index
+  const vertex = originalPoints[vertexIndex];
+  const adjacent1 = originalPoints[(vertexIndex + 1) % 3];
+  const adjacent2 = originalPoints[(vertexIndex + 2) % 3];
   
-  // Set the new value for the angle we're changing
-  newAngles[angleIndex] = newAngleDegrees;
+  // Calculate vectors from vertex to adjacent points
+  const vector1 = { 
+    x: adjacent1.x - vertex.x, 
+    y: adjacent1.y - vertex.y 
+  };
+  const vector2 = { 
+    x: adjacent2.x - vertex.x, 
+    y: adjacent2.y - vertex.y 
+  };
   
-  // Get the indices of the other two angles
-  const otherIndices = [0, 1, 2].filter(i => i !== angleIndex);
+  // Calculate lengths of vectors
+  const length1 = Math.sqrt(vector1.x * vector1.x + vector1.y * vector1.y);
+  const length2 = Math.sqrt(vector2.x * vector2.x + vector2.y * vector2.y);
   
-  // Calculate how much the sum of the other two angles needs to be
-  const remainingAngleSum = 180 - newAngleDegrees;
+  // Calculate the current angle between the vectors
+  // Using the dot product formula: cos(θ) = (v1·v2) / (|v1|·|v2|)
+  const dotProduct = vector1.x * vector2.x + vector1.y * vector2.y;
+  const currentAngle = Math.acos(Math.max(-1, Math.min(1, dotProduct / (length1 * length2))));
   
-  // Calculate the original sum and proportion of the other two angles
-  const originalOtherSum = currentAngles[otherIndices[0]] + currentAngles[otherIndices[1]];
+  // Convert the target angle to radians
+  const targetAngle = newAngleDegrees * (Math.PI / 180);
   
-  if (originalOtherSum > 0) {
+  // We'll keep vector1 fixed and rotate vector2 to achieve the desired angle
+  // First, normalize vector1 to make calculations easier
+  const normalizedVector1 = {
+    x: vector1.x / length1,
+    y: vector1.y / length1
+  };
+  
+  // Calculate the angle between vector1 and the positive x-axis
+  const vector1Angle = Math.atan2(normalizedVector1.y, normalizedVector1.x);
+  
+  // Check if we're currently moving counterclockwise from vector1 to vector2
+  const crossProduct = vector1.x * vector2.y - vector1.y * vector2.x;
+  const isCounterclockwise = crossProduct > 0;
+  
+  // Calculate the new angle for vector2
+  let newVector2Angle;
+  if (isCounterclockwise) {
+    newVector2Angle = vector1Angle + targetAngle;
+  } else {
+    newVector2Angle = vector1Angle - targetAngle;
+  }
+  
+  // Create the new normalized vector2
+  const newNormalizedVector2 = {
+    x: Math.cos(newVector2Angle),
+    y: Math.sin(newVector2Angle)
+  };
+  
+  // Scale it back to the original length
+  const newVector2 = {
+    x: newNormalizedVector2.x * length2,
+    y: newNormalizedVector2.y * length2
+  };
+  
+  // Calculate the new position for adjacent2
+  const newAdjacent2 = {
+    x: vertex.x + newVector2.x,
+    y: vertex.y + newVector2.y
+  };
+  
+  // Create the new triangle points
+  const newPoints: [Point, Point, Point] = [...originalPoints] as [Point, Point, Point];
+  newPoints[(vertexIndex + 2) % 3] = newAdjacent2;
+  
+  // Calculate the new center of the triangle
+  const newCenter = {
+    x: (newPoints[0].x + newPoints[1].x + newPoints[2].x) / 3,
+    y: (newPoints[0].y + newPoints[1].y + newPoints[2].y) / 3
+  };
+  
+  // Translate the triangle to maintain the original center
+  const dx = originalCenter.x - newCenter.x;
+  const dy = originalCenter.y - newCenter.y;
+  
+  const finalPoints: [Point, Point, Point] = newPoints.map(p => ({
+    x: p.x + dx,
+    y: p.y + dy
+  })) as [Point, Point, Point];
+  
+  // Calculate the final angles to verify
+  const finalSides = [
+    distanceBetweenPoints(finalPoints[1], finalPoints[2]),
+    distanceBetweenPoints(finalPoints[0], finalPoints[2]),
+    distanceBetweenPoints(finalPoints[0], finalPoints[1])
+  ];
+  
+  const finalAngles = calculateTriangleAngles(
+    finalSides[0],
+    finalSides[1],
+    finalSides[2]
+  ).map(a => Math.round(a));
+  
+  // If the angle is still not close to the target, try a more direct approach
+  if (Math.abs(finalAngles[angleIndex] - newAngleDegrees) > 5) {
+    // Create a completely new triangle with the desired angle
+    // We'll use the Law of Sines to calculate the new side lengths
+    
+    // Create a new array of angles
+    const newAnglesArray: [number, number, number] = [...currentAngles];
+    newAnglesArray[angleIndex] = newAngleDegrees;
+    
+    // Adjust the other angles to maintain 180 degrees
+    const otherIndices = [0, 1, 2].filter(i => i !== angleIndex);
+    const remainingAngleSum = 180 - newAngleDegrees;
+    
     // Maintain the proportion between the other two angles
+    const originalOtherSum = currentAngles[otherIndices[0]] + currentAngles[otherIndices[1]];
     const ratio0 = currentAngles[otherIndices[0]] / originalOtherSum;
     const ratio1 = currentAngles[otherIndices[1]] / originalOtherSum;
     
-    // Distribute the remaining angle sum according to the original proportions
-    newAngles[otherIndices[0]] = Math.max(1, Math.min(178, remainingAngleSum * ratio0));
-    newAngles[otherIndices[1]] = Math.max(1, Math.min(178, remainingAngleSum * ratio1));
+    newAnglesArray[otherIndices[0]] = Math.max(1, Math.min(178, remainingAngleSum * ratio0));
+    newAnglesArray[otherIndices[1]] = 180 - newAngleDegrees - newAnglesArray[otherIndices[0]];
     
-    // Ensure the sum is exactly 180 by adjusting the last angle
-    const adjustedSum = newAngles[angleIndex] + newAngles[otherIndices[0]];
-    newAngles[otherIndices[1]] = 180 - adjustedSum;
-  } else {
-    // If the original sum is 0 (shouldn't happen in a valid triangle), 
-    // just split the remaining angle equally
-    newAngles[otherIndices[0]] = remainingAngleSum / 2;
-    newAngles[otherIndices[1]] = remainingAngleSum / 2;
-  }
-  
-  // Convert angles to radians
-  const angleRads = newAngles.map(a => a * (Math.PI / 180));
-  
-  // Initialize points
-  let p0: Point = { x: 0, y: 0 };
-  let p1: Point = { x: 0, y: 0 };
-  let p2: Point = { x: 0, y: 0 };
-  
-  if (angleIndex === 0) {
-    // If we're changing angle 0, put it at the origin
-    // Place p1 at a fixed distance along the x-axis
-    p0 = { x: 0, y: 0 };
-    p1 = { x: avgSideLength, y: 0 };
+    // Convert to radians
+    const anglesInRadians = newAnglesArray.map(a => a * (Math.PI / 180));
     
-    // Place p2 to create the desired angle at p0
-    const angle0 = angleRads[0];
-    p2 = { 
-      x: avgSideLength * Math.cos(angle0), 
-      y: avgSideLength * Math.sin(angle0) 
+    // Calculate new side lengths using the Law of Sines
+    // a/sin(A) = b/sin(B) = c/sin(C)
+    const sinA = Math.sin(anglesInRadians[0]);
+    const sinB = Math.sin(anglesInRadians[1]);
+    const sinC = Math.sin(anglesInRadians[2]);
+    
+    // Keep one side fixed (e.g., side1) and calculate the others
+    const side1 = finalSides[0];
+    const side2 = (side1 * sinB) / sinA;
+    const side3 = (side1 * sinC) / sinA;
+    
+    // Reconstruct the triangle with these side lengths
+    // Place the first point at the origin
+    const p0 = { x: 0, y: 0 };
+    
+    // Place the second point along the x-axis
+    const p1 = { x: side3, y: 0 };
+    
+    // Calculate the position of the third point using the Law of Cosines
+    const angleC = anglesInRadians[2];
+    const x2 = side2 * Math.cos(angleC);
+    const y2 = side2 * Math.sin(angleC);
+    const p2 = { x: x2, y: y2 };
+    
+    // Create the new triangle
+    const reconstructedPoints: [Point, Point, Point] = [p0, p1, p2];
+    
+    // Calculate the center of the reconstructed triangle
+    const reconstructedCenter = {
+      x: (p0.x + p1.x + p2.x) / 3,
+      y: (p0.y + p1.y + p2.y) / 3
     };
-  } 
-  else if (angleIndex === 1) {
-    // If we're changing angle 1, put it at the origin
-    // Place p0 at a fixed distance along the x-axis
-    p1 = { x: 0, y: 0 };
-    p0 = { x: avgSideLength, y: 0 };
     
-    // Place p2 to create the desired angle at p1
-    const angle1 = angleRads[1];
-    p2 = { 
-      x: avgSideLength * Math.cos(angle1), 
-      y: avgSideLength * Math.sin(angle1) 
-    };
-  }
-  else { // angleIndex === 2
-    // If we're changing angle 2, put it at the origin
-    // Place p0 at a fixed distance along the x-axis
-    p2 = { x: 0, y: 0 };
-    p0 = { x: avgSideLength, y: 0 };
+    // Translate and scale to match the original center and size
+    const reconstructedFinalPoints: [Point, Point, Point] = reconstructedPoints.map(p => ({
+      x: originalCenter.x + (p.x - reconstructedCenter.x),
+      y: originalCenter.y + (p.y - reconstructedCenter.y)
+    })) as [Point, Point, Point];
     
-    // Place p1 to create the desired angle at p2
-    const angle2 = angleRads[2];
-    p1 = { 
-      x: avgSideLength * Math.cos(angle2), 
-      y: avgSideLength * Math.sin(angle2) 
-    };
-  }
-  
-  // Calculate the center of our new triangle
-  const newCenter = {
-    x: (p0.x + p1.x + p2.x) / 3,
-    y: (p0.y + p1.y + p2.y) / 3
-  };
-  
-  // Calculate the new perimeter
-  const newSides = [
-    distanceBetweenPoints(p1, p2),
-    distanceBetweenPoints(p0, p2),
-    distanceBetweenPoints(p0, p1)
-  ];
-  const newPerimeter = newSides[0] + newSides[1] + newSides[2];
-  
-  // Calculate the scale factor to maintain the original perimeter
-  const scaleFactor = originalPerimeter / newPerimeter;
-  
-  // Scale and translate the points to match the original center and size
-  const finalPoints: [Point, Point, Point] = [
-    { 
-      x: originalCenter.x + (p0.x - newCenter.x) * scaleFactor, 
-      y: originalCenter.y + (p0.y - newCenter.y) * scaleFactor 
-    },
-    { 
-      x: originalCenter.x + (p1.x - newCenter.x) * scaleFactor, 
-      y: originalCenter.y + (p1.y - newCenter.y) * scaleFactor 
-    },
-    { 
-      x: originalCenter.x + (p2.x - newCenter.x) * scaleFactor, 
-      y: originalCenter.y + (p2.y - newCenter.y) * scaleFactor 
+    // Verify the reconstructed angles
+    const reconstructedSides = [
+      distanceBetweenPoints(reconstructedFinalPoints[1], reconstructedFinalPoints[2]),
+      distanceBetweenPoints(reconstructedFinalPoints[0], reconstructedFinalPoints[2]),
+      distanceBetweenPoints(reconstructedFinalPoints[0], reconstructedFinalPoints[1])
+    ];
+    
+    const reconstructedAngles = calculateTriangleAngles(
+      reconstructedSides[0],
+      reconstructedSides[1],
+      reconstructedSides[2]
+    ).map(a => Math.round(a));
+    
+    // Use the reconstructed triangle if it's closer to the target angle
+    if (Math.abs(reconstructedAngles[angleIndex] - newAngleDegrees) < Math.abs(finalAngles[angleIndex] - newAngleDegrees)) {
+      return reconstructedFinalPoints;
     }
-  ];
+  }
   
   return finalPoints;
 }; 

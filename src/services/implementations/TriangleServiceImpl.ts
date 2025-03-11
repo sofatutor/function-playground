@@ -5,6 +5,7 @@ import { distanceBetweenPoints } from '@/utils/geometry/common';
 import { convertFromPixels } from '@/utils/geometry/measurements';
 import { getStoredPixelsPerUnit, getNextShapeColor } from '@/utils/geometry/common';
 import { updateTriangleFromAngle } from '@/utils/geometry/triangle';
+import { calculateTriangleAngles } from '@/utils/geometry/triangle';
 
 /**
  * Implementation of the TriangleService interface
@@ -41,16 +42,19 @@ export class TriangleServiceImpl implements TriangleService {
    * @returns A new Triangle instance
    */
   createTriangle(points: [Point, Point, Point], color?: string, id?: string): Triangle {
+    // Calculate the centroid of the points
+    const centroid = this.calculateCentroid(points);
+    
+    // Use the provided position or calculate it from the points
     return {
       id: id || uuidv4(),
       type: 'triangle',
       points: [...points] as [Point, Point, Point],
-      position: this.calculateCentroid(points),
+      position: centroid,
       rotation: 0,
-      selected: false,
-      fill: color || getNextShapeColor(),
-      stroke: getNextShapeColor(0.9, 0.3, 1.0),
-      strokeWidth: 1
+      fillColor: color || getNextShapeColor(),
+      strokeColor: getNextShapeColor(0.9, 0.3, 1.0),
+      opacity: 1
     };
   }
   
@@ -60,10 +64,19 @@ export class TriangleServiceImpl implements TriangleService {
    * @returns An array of three points forming a triangle
    */
   private generateDefaultPoints(position: Point): [Point, Point, Point] {
+    // Create an equilateral triangle with the centroid exactly at the given position
+    const sideLength = 100;
+    const height = (Math.sqrt(3) / 2) * sideLength;
+    
+    // For an equilateral triangle, the centroid is at 1/3 of the height from the base
+    // So we need to adjust the y-coordinates to ensure the centroid is at position.y
+    
+    // First, create points for an equilateral triangle with the bottom side centered at position.x
+    // and the centroid at position.y
     return [
-      { x: position.x, y: position.y - 50 },
-      { x: position.x - 50, y: position.y + 50 },
-      { x: position.x + 50, y: position.y + 50 }
+      { x: position.x, y: position.y - (2/3) * height },
+      { x: position.x - sideLength/2, y: position.y + (1/3) * height },
+      { x: position.x + sideLength/2, y: position.y + (1/3) * height }
     ] as [Point, Point, Point];
   }
   
@@ -149,13 +162,26 @@ export class TriangleServiceImpl implements TriangleService {
       y: point.y + dy
     })) as [Point, Point, Point];
     
+    // If originalDimensions exists, we need to update it as well
+    let updatedOriginalDimensions = shape.originalDimensions;
+    if (shape.originalDimensions?.points) {
+      updatedOriginalDimensions = {
+        ...shape.originalDimensions,
+        points: shape.originalDimensions.points.map(point => ({
+          x: point.x + dx,
+          y: point.y + dy
+        })) as [Point, Point, Point]
+      };
+    }
+    
     return {
       ...shape,
       points: newPoints,
       position: {
         x: shape.position.x + dx,
         y: shape.position.y + dy
-      }
+      },
+      originalDimensions: updatedOriginalDimensions
     };
   }
   
@@ -256,11 +282,26 @@ export class TriangleServiceImpl implements TriangleService {
         
         // Convert the new side length from units to pixels
         const newSideLengthInPixels = newValue * pixelsPerUnit;
-        const scaleFactor = newSideLengthInPixels / sides[sideIndex];
+        const currentSideLengthInPixels = sides[sideIndex];
+        const scaleFactor = newSideLengthInPixels / currentSideLengthInPixels;
         
-        // For simplicity, we'll scale the entire triangle
-        // In a more sophisticated implementation, you might want to keep the other sides fixed
-        return this.scaleTriangle(shape, scaleFactor);
+        // Scale the entire triangle uniformly
+        const center = this.calculateCentroid(shape.points);
+        const newPoints = shape.points.map(point => ({
+          x: center.x + (point.x - center.x) * scaleFactor,
+          y: center.y + (point.y - center.y) * scaleFactor
+        })) as [Point, Point, Point];
+        
+        // Return the updated triangle with new points
+        return {
+          ...shape,
+          points: newPoints,
+          position: center, // Keep the original center
+          originalDimensions: {
+            ...shape.originalDimensions,
+            points: newPoints
+          }
+        };
       }
       case 'height': {
         // Scale the triangle to achieve the new height
@@ -275,10 +316,6 @@ export class TriangleServiceImpl implements TriangleService {
       case 'angle2':
       case 'angle3': {
         // Get the angle index (0, 1, or 2)
-        // In the triangle.ts utility, angles are mapped to vertices:
-        // angle0 is at vertex 0 (points[0])
-        // angle1 is at vertex 1 (points[1])
-        // angle2 is at vertex 2 (points[2])
         const angleIndex = parseInt(measurementKey.slice(-1)) - 1;
         
         // Ensure the angle value is valid
@@ -292,13 +329,126 @@ export class TriangleServiceImpl implements TriangleService {
           shape.points,
           angleIndex,
           angleValue,
-          currentAngles
+          currentAngles as [number, number, number]
         );
+        
+        // Calculate the new angles to verify the update
+        const newSides = [
+          distanceBetweenPoints(newPoints[1], newPoints[2]),
+          distanceBetweenPoints(newPoints[0], newPoints[2]),
+          distanceBetweenPoints(newPoints[0], newPoints[1])
+        ];
+        
+        const newAngles = calculateTriangleAngles(
+          newSides[0],
+          newSides[1],
+          newSides[2]
+        ).map(a => Math.round(a));
+        
+        // Verify if the angle was updated correctly
+        if (Math.abs(newAngles[angleIndex] - angleValue) > 5) {
+          // Try a more direct approach if the angle wasn't updated correctly
+          // Create a completely new triangle with the desired angle
+          const remainingAngleSum = 180 - angleValue;
+          
+          // Get the indices of the other two angles
+          const otherIndices = [0, 1, 2].filter(i => i !== angleIndex);
+          
+          // Maintain the proportion between the other two angles
+          const originalOtherSum = currentAngles[otherIndices[0]] + currentAngles[otherIndices[1]];
+          const ratio0 = currentAngles[otherIndices[0]] / originalOtherSum;
+          const ratio1 = currentAngles[otherIndices[1]] / originalOtherSum;
+          
+          // Create a new array of angles
+          const targetAngles: [number, number, number] = [...currentAngles] as [number, number, number];
+          targetAngles[angleIndex] = angleValue;
+          targetAngles[otherIndices[0]] = Math.max(1, Math.min(178, remainingAngleSum * ratio0));
+          targetAngles[otherIndices[1]] = 180 - angleValue - targetAngles[otherIndices[0]];
+          
+          // Create a new triangle with these angles
+          // We'll keep one side fixed (e.g., side1) and recalculate the others
+          const sides = this.calculateSideLengths(shape);
+          const side1 = sides[0];
+          
+          // Convert angles to radians
+          const anglesInRadians = targetAngles.map(a => a * (Math.PI / 180));
+          
+          // Calculate new side lengths using the Law of Sines
+          // a/sin(A) = b/sin(B) = c/sin(C)
+          const sinA = Math.sin(anglesInRadians[0]);
+          const sinB = Math.sin(anglesInRadians[1]);
+          const sinC = Math.sin(anglesInRadians[2]);
+          
+          const side2 = (side1 * sinB) / sinA;
+          const side3 = (side1 * sinC) / sinA;
+          
+          // Reconstruct the triangle with these side lengths
+          // Place the first point at the origin
+          const p0 = { x: 0, y: 0 };
+          
+          // Place the second point along the x-axis
+          const p1 = { x: side3, y: 0 };
+          
+          // Calculate the position of the third point using the Law of Cosines
+          const angleC = anglesInRadians[2];
+          const x2 = side2 * Math.cos(angleC);
+          const y2 = side2 * Math.sin(angleC);
+          const p2 = { x: x2, y: y2 };
+          
+          // Create the new triangle
+          const reconstructedPoints: [Point, Point, Point] = [p0, p1, p2];
+          
+          // Calculate the center of the reconstructed triangle
+          const reconstructedCenter = {
+            x: (p0.x + p1.x + p2.x) / 3,
+            y: (p0.y + p1.y + p2.y) / 3
+          };
+          
+          // Get the original center
+          const originalCenter = this.calculateCentroid(shape.points);
+          
+          // Translate and scale to match the original center and size
+          const finalPoints: [Point, Point, Point] = reconstructedPoints.map(p => ({
+            x: originalCenter.x + (p.x - reconstructedCenter.x),
+            y: originalCenter.y + (p.y - reconstructedCenter.y)
+          })) as [Point, Point, Point];
+          
+          // Verify the reconstructed angles
+          const finalSides = [
+            distanceBetweenPoints(finalPoints[1], finalPoints[2]),
+            distanceBetweenPoints(finalPoints[0], finalPoints[2]),
+            distanceBetweenPoints(finalPoints[0], finalPoints[1])
+          ];
+          
+          const finalAngles = calculateTriangleAngles(
+            finalSides[0],
+            finalSides[1],
+            finalSides[2]
+          ).map(a => Math.round(a));
+          
+          // Use the reconstructed triangle if it's closer to the target angle
+          if (Math.abs(finalAngles[angleIndex] - angleValue) < Math.abs(newAngles[angleIndex] - angleValue)) {
+            return {
+              ...shape,
+              points: finalPoints,
+              position: this.calculateCentroid(finalPoints),
+              originalDimensions: {
+                ...shape.originalDimensions,
+                points: finalPoints
+              }
+            };
+          }
+        }
         
         // Return the updated triangle with new points
         return {
           ...shape,
-          points: newPoints
+          points: newPoints,
+          position: this.calculateCentroid(newPoints),
+          originalDimensions: {
+            ...shape.originalDimensions,
+            points: newPoints
+          }
         };
       }
       default:
@@ -369,9 +519,16 @@ export class TriangleServiceImpl implements TriangleService {
     scaleY: number, 
     center?: Point
   ): Triangle {
+    // Store original dimensions if they don't exist yet
+    const originalDimensions = triangle.originalDimensions || {
+      points: [...triangle.points]
+    };
+    
+    // Scale from original points if they exist, otherwise use current points
+    const basePoints = originalDimensions.points || triangle.points;
     const scalingCenter = center || triangle.position;
     
-    const newPoints = triangle.points.map(point => ({
+    const newPoints = basePoints.map(point => ({
       x: scalingCenter.x + (point.x - scalingCenter.x) * scaleX,
       y: scalingCenter.y + (point.y - scalingCenter.y) * scaleY
     })) as [Point, Point, Point];
@@ -379,7 +536,8 @@ export class TriangleServiceImpl implements TriangleService {
     return {
       ...triangle,
       points: newPoints,
-      position: this.calculateCentroid(newPoints)
+      position: this.calculateCentroid(newPoints),
+      originalDimensions: originalDimensions // Preserve original dimensions
     };
   }
   

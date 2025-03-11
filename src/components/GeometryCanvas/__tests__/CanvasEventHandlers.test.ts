@@ -11,10 +11,9 @@ describe('CanvasEventHandlers', () => {
       width: 50,
       height: 50,
       rotation: 0,
-      selected: true,
-      fill: '#ffffff',
-      stroke: '#000000',
-      strokeWidth: 1
+      fillColor: '#ffffff',
+      strokeColor: '#000000',
+      opacity: 1
     };
 
     // Create base mock params

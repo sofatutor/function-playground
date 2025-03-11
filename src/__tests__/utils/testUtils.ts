@@ -12,10 +12,9 @@ export const createTestCircle = (
     position: { x: 100, y: 100 },
     radius: 50,
     rotation: 0,
-    selected: false,
-    fill: '#e0e0e0',
-    stroke: '#000000',
-    strokeWidth: 1,
+    fillColor: '#e0e0e0',
+    strokeColor: '#000000',
+    opacity: 1,
     ...overrides
   };
 };
@@ -33,10 +32,9 @@ export const createTestRectangle = (
     width: 100,
     height: 80,
     rotation: 0,
-    selected: false,
-    fill: '#e0e0e0',
-    stroke: '#000000',
-    strokeWidth: 1,
+    fillColor: '#e0e0e0',
+    strokeColor: '#000000',
+    opacity: 1,
     ...overrides
   };
 };
@@ -59,10 +57,9 @@ export const createTestTriangle = (
     position: { x: 100, y: 100 },
     points: defaultPoints,
     rotation: 0,
-    selected: false,
-    fill: '#e0e0e0',
-    stroke: '#000000',
-    strokeWidth: 1,
+    fillColor: '#e0e0e0',
+    strokeColor: '#000000',
+    opacity: 1,
     ...overrides
   };
 };
@@ -81,10 +78,9 @@ export const createTestLine = (
     endPoint: { x: 150, y: 150 },
     length: 141.42, // √((150-50)² + (150-50)²)
     rotation: 0,
-    selected: false,
-    fill: 'transparent',
-    stroke: '#9b87f5',
-    strokeWidth: 2,
+    fillColor: 'transparent',
+    strokeColor: '#9b87f5',
+    opacity: 1,
     ...overrides
   };
 };
