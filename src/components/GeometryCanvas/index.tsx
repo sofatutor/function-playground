@@ -4,7 +4,7 @@ import ShapeRenderer from './ShapeRenderer';
 import PreviewShape from './PreviewShape';
 import FormulaGraph from '../FormulaGraph';
 import UnifiedInfoPanel from '../UnifiedInfoPanel';
-import { AnyShape, Point, OperationMode, ShapeType, MeasurementUnit } from '@/types/shapes';
+import { AnyShape, Point, OperationMode, ShapeType, MeasurementUnit, Triangle } from '@/types/shapes';
 import { Formula, FormulaPoint } from '@/types/formula';
 import { isGridDragging } from '@/components/CanvasGrid/GridDragHandler';
 import { 
@@ -24,6 +24,7 @@ import {
 import { RotateCw } from 'lucide-react';
 import { ShapeServiceFactory } from '@/services/ShapeService';
 import { getShapeMeasurements } from '@/utils/geometry/measurements';
+import { GridZoomProvider, useGridZoom } from '@/contexts/GridZoomContext';
 
 // Add formula support to GeometryCanvas
 interface FormulaCanvasProps extends GeometryCanvasProps {
@@ -54,7 +55,15 @@ interface GeometryCanvasProps {
   onFormulaSelect?: (formulaId: string) => void;
 }
 
-const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
+const GeometryCanvas: React.FC<FormulaCanvasProps> = (props) => {
+  return (
+    <GridZoomProvider>
+      <GeometryCanvasInner {...props} />
+    </GridZoomProvider>
+  );
+};
+
+const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
   formulas = [],
   pixelsPerUnit: externalPixelsPerUnit = 0,
   shapes,
@@ -78,6 +87,7 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
   onFormulaSelect,
   canvasTools
 }) => {
+  const { zoomFactor, setZoomFactor } = useGridZoom();
   const canvasRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawStart, setDrawStart] = useState<Point | null>(null);
@@ -594,9 +604,6 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     // Update after a short delay to ensure the DOM has fully rendered
     const initialTimeout = setTimeout(updateCanvasSize, 100);
     
-    // Add another update after a longer delay to catch any late layout changes
-    const secondTimeout = setTimeout(updateCanvasSize, 500);
-    
     // Update on window resize with debouncing
     window.addEventListener('resize', debouncedResize);
     
@@ -608,7 +615,6 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
       window.removeEventListener('resize', debouncedResize);
       window.removeEventListener('scroll', debouncedResize);
       clearTimeout(initialTimeout);
-      clearTimeout(secondTimeout);
       clearTimeout(resizeTimer);
     };
   }, []); // Only run on mount, not on every prop change
@@ -658,42 +664,54 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
   });
   
   // Create keyboard event handler
-  const handleKeyDown = createHandleKeyDown({
-    canvasRef,
-    shapes,
-    activeMode,
-    activeShapeType,
-    selectedShapeId,
-    isDrawing,
-    drawStart,
-    drawCurrent,
-    dragStart,
-    originalPosition,
-    resizeStart,
-    originalSize,
-    rotateStart,
-    originalRotation,
-    pixelsPerUnit,
-    pixelsPerSmallUnit,
-    measurementUnit,
-    gridPosition,
-    setIsDrawing,
-    setDrawStart,
-    setDrawCurrent,
-    setDragStart,
-    setOriginalPosition,
-    setResizeStart,
-    setOriginalSize,
-    setRotateStart,
-    setOriginalRotation,
-    onShapeSelect,
-    onShapeCreate,
-    onShapeMove,
-    onShapeResize,
-    onShapeRotate,
-    onShapeDelete
-  });
-  
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    // Handle existing keyboard events
+    if (selectedPoint) {
+      if (e.key === 'ArrowLeft') {
+        console.log('Canvas ArrowLeft pressed, shift:', e.shiftKey);
+        e.preventDefault();
+        navigateFormulaPoint('previous', e.shiftKey);
+      } else if (e.key === 'ArrowRight') {
+        console.log('Canvas ArrowRight pressed, shift:', e.shiftKey);
+        e.preventDefault();
+        navigateFormulaPoint('next', e.shiftKey);
+      } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        // Handle up/down arrow keys to adjust the navigation step size
+        e.preventDefault();
+        
+        // Get the current step size
+        const currentStepSize = selectedPoint.navigationStepSize || 0.1;
+        
+        // Calculate the new step size
+        let newStepSize = currentStepSize;
+        if (e.key === 'ArrowUp') {
+          // Increase step size
+          newStepSize = Math.min(1.0, currentStepSize + 0.01);
+        } else {
+          // Decrease step size
+          newStepSize = Math.max(0.01, currentStepSize - 0.01);
+        }
+        
+        console.log(`Adjusting step size from ${currentStepSize} to ${newStepSize}`);
+        
+        // Update the selected point with the new step size
+        setSelectedPoint({
+          ...selectedPoint,
+          navigationStepSize: newStepSize
+        });
+      }
+    } else if (selectedShapeId) {
+      // If a shape is selected and no formula point is selected, use the shape movement handler
+      handleShapeKeyDown(e as unknown as KeyboardEvent);
+    }
+
+    // Handle zoom reset (Ctrl/Cmd + 0)
+    if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+      e.preventDefault();
+      setZoomFactor(1);
+    }
+  };
+
   // Simple key up handler
   const handleKeyUp = useCallback((e: ReactKeyboardEvent<HTMLDivElement>) => {
     // Add keyboard handling logic if needed
@@ -1065,9 +1083,6 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
       return null;
     }
     
-    // Use the internal pixelsPerUnit value
-    const ppu = externalPixelsPerUnit || pixelsPerUnit;
-    
     // Create a grid position key to force re-renders when grid moves
     const gridKey = `${gridPosition.x.toFixed(1)}-${gridPosition.y.toFixed(1)}`;
     
@@ -1076,7 +1091,7 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
         key={`${formula.id}-${gridKey}`}
         formula={formula}
         gridPosition={gridPosition}
-        pixelsPerUnit={ppu}
+        pixelsPerUnit={zoomedPixelsPerUnit}
         onPointSelect={handleFormulaPointSelect}
         globalSelectedPoint={selectedPoint}
       />
@@ -1222,6 +1237,24 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     return measurementsAsStrings;
   };
   
+  // Use a ref to store the current measurements
+  const measurementsRef = useRef<Record<string, string>>({});
+  
+  // Add a state to track measurements for the UnifiedInfoPanel
+  const [currentPanelMeasurements, setCurrentPanelMeasurements] = useState<Record<string, string>>({});
+  
+  // Update measurements when shapes or selectedShapeId changes
+  useEffect(() => {
+    if (selectedShapeId) {
+      const newMeasurements = getMeasurementsForSelectedShape();
+      measurementsRef.current = newMeasurements;
+      setCurrentPanelMeasurements(newMeasurements);
+    } else {
+      measurementsRef.current = {};
+      setCurrentPanelMeasurements({});
+    }
+  }, [shapes, selectedShapeId]);
+
   // Handle measurement updates
   const handleMeasurementUpdate = (key: string, value: string): void => {
     if (!selectedShapeId) return;
@@ -1302,6 +1335,15 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
       // Trigger a small movement to force a redraw with the updated shape
       onShapeMove(selectedShapeId, { x: 0, y: 0 });
     }
+
+    // After updating the shape, immediately update the measurements panel
+    if (selectedShapeId) {
+      setTimeout(() => {
+        const updatedMeasurements = getMeasurementsForSelectedShape();
+        measurementsRef.current = updatedMeasurements;
+        setCurrentPanelMeasurements(updatedMeasurements);
+      }, 10);
+    }
   };
 
   // Add cleanup in a useEffect
@@ -1313,59 +1355,190 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
     };
   }, []);
 
+  // Apply zoom factor to pixel values
+  const zoomedPixelsPerUnit = (externalPixelsPerUnit || pixelsPerUnit) * zoomFactor;
+  const zoomedPixelsPerSmallUnit = zoomedPixelsPerUnit / 10;
+
+  // Scale shapes according to zoom factor
+  const scaledShapes = shapes.map(shape => {
+    console.log(`\nScaling shape: ${shape.type} (${shape.id})`);
+    console.log('Original position:', shape.position);
+    
+    // Base shape with unmodified position
+    const baseShape = {
+      ...shape,
+      position: shape.position // Keep original position
+    };
+
+    let scaledShape;
+    // Declare variables used in case blocks
+    let originalRadius: number;
+    let originalWidth: number;
+    let originalHeight: number;
+    let originalPoints: Point[];
+    let center: Point;
+    let scaledPoints: Point[];
+    let originalDx: number;
+    let originalDy: number;
+    let triangleShape: Triangle;
+
+    // If this is the first time scaling this shape, store original dimensions
+    if (!shape.originalDimensions) {
+      switch (shape.type) {
+        case 'circle':
+          shape.originalDimensions = { radius: shape.radius };
+          break;
+        case 'rectangle':
+          shape.originalDimensions = { width: shape.width, height: shape.height };
+          break;
+        case 'triangle':
+          shape.originalDimensions = { points: [...shape.points] };
+          break;
+        case 'line':
+          shape.originalDimensions = { 
+            dx: shape.endPoint.x - shape.position.x,
+            dy: shape.endPoint.y - shape.position.y
+          };
+          break;
+      }
+    }
+
+    // Handle specific shape types
+    switch (shape.type) {
+      case 'circle':
+        console.log('Circle - Before scaling:', {
+          position: shape.position,
+          radius: shape.radius,
+          originalRadius: shape.originalDimensions?.radius
+        });
+        // Scale radius from original size
+        originalRadius = shape.originalDimensions?.radius || shape.radius;
+        scaledShape = {
+          ...baseShape,
+          radius: originalRadius * zoomFactor,
+          scaleFactor: zoomFactor,
+          originalDimensions: shape.originalDimensions || { radius: shape.radius }
+        };
+        console.log('Circle - After scaling:', {
+          position: scaledShape.position,
+          radius: scaledShape.radius
+        });
+        break;
+
+      case 'rectangle':
+        console.log('Rectangle - Before scaling:', {
+          position: shape.position,
+          width: shape.width,
+          height: shape.height,
+          originalWidth: shape.originalDimensions?.width,
+          originalHeight: shape.originalDimensions?.height
+        });
+        // Scale dimensions from original size
+        originalWidth = shape.originalDimensions?.width || shape.width;
+        originalHeight = shape.originalDimensions?.height || shape.height;
+        scaledShape = {
+          ...baseShape,
+          width: originalWidth * zoomFactor,
+          height: originalHeight * zoomFactor,
+          scaleFactor: zoomFactor,
+          originalDimensions: shape.originalDimensions || { width: shape.width, height: shape.height }
+        };
+        console.log('Rectangle - After scaling:', {
+          position: scaledShape.position,
+          width: scaledShape.width,
+          height: scaledShape.height
+        });
+        break;
+
+      case 'triangle':
+        triangleShape = shape as Triangle;
+        console.log('Triangle - Before scaling:', {
+          position: triangleShape.position,
+          points: triangleShape.points,
+          originalPoints: triangleShape.originalDimensions?.points
+        });
+        
+        // Get original points
+        originalPoints = triangleShape.originalDimensions?.points || triangleShape.points;
+        
+        // Calculate center from original points
+        center = {
+          x: (originalPoints[0].x + originalPoints[1].x + originalPoints[2].x) / 3,
+          y: (originalPoints[0].y + originalPoints[1].y + originalPoints[2].y) / 3
+        };
+        console.log('Triangle center:', center);
+        
+        // Scale points from original positions
+        scaledPoints = originalPoints.map(point => ({
+          x: center.x + (point.x - center.x) * zoomFactor,
+          y: center.y + (point.y - center.y) * zoomFactor
+        }));
+        
+        scaledShape = {
+          ...baseShape,
+          points: scaledPoints as [Point, Point, Point],
+          scaleFactor: zoomFactor,
+          originalDimensions: shape.originalDimensions || { points: [...triangleShape.points] }
+        };
+        console.log('Triangle - After scaling:', {
+          position: scaledShape.position,
+          points: scaledShape.points
+        });
+        break;
+
+      case 'line':
+        console.log('Line - Before scaling:', {
+          startPoint: shape.position,
+          endPoint: shape.endPoint,
+          originalDx: shape.originalDimensions?.dx,
+          originalDy: shape.originalDimensions?.dy
+        });
+        // Get original dimensions
+        originalDx = shape.originalDimensions?.dx || (shape.endPoint.x - shape.position.x);
+        originalDy = shape.originalDimensions?.dy || (shape.endPoint.y - shape.position.y);
+        scaledShape = {
+          ...baseShape,
+          endPoint: {
+            x: shape.position.x + originalDx * zoomFactor,
+            y: shape.position.y + originalDy * zoomFactor
+          },
+          scaleFactor: zoomFactor,
+          originalDimensions: shape.originalDimensions || { 
+            dx: shape.endPoint.x - shape.position.x,
+            dy: shape.endPoint.y - shape.position.y
+          }
+        };
+        console.log('Line - After scaling:', {
+          startPoint: scaledShape.position,
+          endPoint: scaledShape.endPoint
+        });
+        break;
+
+      default:
+        scaledShape = baseShape;
+    }
+
+    return scaledShape;
+  });
+
+  // Scale formulas according to zoom factor
+  const scaledFormulas = formulas.map(formula => ({
+    ...formula,
+    scaleFactor: (formula.scaleFactor || 1) * zoomFactor
+  }));
+
   return (
     <div className="relative w-full h-full">
       {logRenderValues()}
       <div 
+        id="geometry-canvas"
         ref={canvasRef}
         className="canvas-container relative w-full h-full overflow-hidden"
         style={{ 
           cursor: activeMode === 'move' ? 'move' : 'default'
         }}
         tabIndex={0}
-        onKeyDown={(e) => {
-          console.log('Canvas keydown:', e.key);
-          
-          // Handle arrow keys for formula point navigation
-          if (selectedPoint) {
-            if (e.key === 'ArrowLeft') {
-              console.log('Canvas ArrowLeft pressed, shift:', e.shiftKey);
-              e.preventDefault();
-              navigateFormulaPoint('previous', e.shiftKey);
-            } else if (e.key === 'ArrowRight') {
-              console.log('Canvas ArrowRight pressed, shift:', e.shiftKey);
-              e.preventDefault();
-              navigateFormulaPoint('next', e.shiftKey);
-            } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-              // Handle up/down arrow keys to adjust the navigation step size
-              e.preventDefault();
-              
-              // Get the current step size
-              const currentStepSize = selectedPoint.navigationStepSize || 0.1;
-              
-              // Calculate the new step size
-              let newStepSize = currentStepSize;
-              if (e.key === 'ArrowUp') {
-                // Increase step size
-                newStepSize = Math.min(1.0, currentStepSize + 0.01);
-              } else {
-                // Decrease step size
-                newStepSize = Math.max(0.01, currentStepSize - 0.01);
-              }
-              
-              console.log(`Adjusting step size from ${currentStepSize} to ${newStepSize}`);
-              
-              // Update the selected point with the new step size
-              setSelectedPoint({
-                ...selectedPoint,
-                navigationStepSize: newStepSize
-              });
-            }
-          } else if (selectedShapeId) {
-            // If a shape is selected and no formula point is selected, use the shape movement handler
-            handleShapeKeyDown(e as unknown as KeyboardEvent);
-          }
-        }}
+        onKeyDown={handleKeyDown}
         onKeyUp={handleKeyUp}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -1395,20 +1568,20 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
         {/* Render canvas tools */}
         {canvasTools}
         
-        {/* Grid - Pass the persistent grid position */}
+        {/* Grid - Pass the zoomed pixel values */}
         <CanvasGrid
           key={`grid-${canvasSize.width > 0 && canvasSize.height > 0 ? 'loaded' : 'loading'}-${isFullscreen ? 'fullscreen' : 'normal'}`}
           canvasSize={canvasSize} 
-          pixelsPerCm={pixelsPerUnit} 
-          pixelsPerMm={pixelsPerSmallUnit}
+          pixelsPerCm={zoomedPixelsPerUnit} 
+          pixelsPerMm={zoomedPixelsPerSmallUnit}
           measurementUnit={measurementUnit || 'cm'}
           onMoveAllShapes={handleMoveAllShapes}
           initialPosition={gridPosition}
           onPositionChange={handleGridPositionChange}
         />
         
-        {/* Render all shapes */}
-        {shapes.map(shape => (
+        {/* Render shapes with scaled values */}
+        {scaledShapes.map(shape => (
           <div 
             key={shape.id}
             onClick={() => handleShapeSelect(shape.id)}
@@ -1453,7 +1626,7 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
           drawCurrent={drawCurrent}
           activeShapeType={activeShapeType}
           snapToGrid={isShiftPressed && !isAltPressed}
-          pixelsPerSmallUnit={pixelsPerSmallUnit}
+          pixelsPerSmallUnit={zoomedPixelsPerSmallUnit}
         />
         
         {/* Dedicated formula layer with its own SVG */}
@@ -1482,7 +1655,7 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
                 isValid: true
               } : null}
               gridPosition={gridPosition}
-              pixelsPerUnit={pixelsPerUnit}
+              pixelsPerUnit={zoomedPixelsPerUnit}
               onNavigatePoint={(direction, stepSize) => {
                 // Convert the direction format from 'prev'/'next' to 'previous'/'next'
                 const directionMapping: Record<string, 'previous' | 'next'> = {
@@ -1494,7 +1667,7 @@ const GeometryCanvas: React.FC<FormulaCanvasProps> = ({
               
               // Shape info props
               selectedShape={selectedShapeId ? shapes.find(s => s.id === selectedShapeId) || null : null}
-              measurements={selectedShapeId ? getMeasurementsForSelectedShape() : {}}
+              measurements={currentPanelMeasurements}
               measurementUnit={measurementUnit || 'cm'}
               onMeasurementUpdate={handleMeasurementUpdate}
             />

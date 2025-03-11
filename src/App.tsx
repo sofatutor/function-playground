@@ -42,10 +42,9 @@ const App: React.FC = () => {
       width: end.x - start.x,
       height: end.y - start.y,
       rotation: 0,
-      selected: false,
-      fill: '#e0e0e0',
-      stroke: '#000000',
-      strokeWidth: 1
+      fillColor: '#e0e0e0',
+      strokeColor: '#000000',
+      opacity: 1
     };
     
     setShapes([...shapes, newShape]);
