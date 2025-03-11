@@ -61,7 +61,7 @@ export const snapToGrid = (
 export const isSignificantGridChange = (
   newPosition: Point,
   currentPosition: Point | null,
-  threshold: number = 1
+  threshold: number = 3
 ): boolean => {
   if (!currentPosition) return true;
   

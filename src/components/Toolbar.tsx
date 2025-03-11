@@ -46,6 +46,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
         active={activeMode === 'select'}
         onClick={() => onModeChange('select')}
         tooltip={t('tooltips.select')}
+        formulaExplanation={t('tooltips.moveDescription')}
       >
         <MousePointer className="h-3 w-3 sm:h-4 sm:w-4" />
       </ToolButton>
@@ -58,7 +59,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           onModeChange('create');
           onShapeTypeChange('rectangle');
         }}
-        tooltip={t('tooltips.rectangle')}
+        tooltip={t('shapeNames.rectangle')}
         formula={getFormula('rectangle', 'area', language)}
         formulaExplanation={t('formulaExplanations.rectangle.area')}
       >
@@ -71,7 +72,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           onModeChange('create');
           onShapeTypeChange('circle');
         }}
-        tooltip={t('tooltips.circle')}
+        tooltip={t('shapeNames.circle')}
         formula={getFormula('circle', 'area', language)}
         formulaExplanation={t('formulaExplanations.circle.area')}
       >
@@ -84,7 +85,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           onModeChange('create');
           onShapeTypeChange('triangle');
         }}
-        tooltip={t('tooltips.triangle')}
+        tooltip={t('shapeNames.triangle')}
         formula={getFormula('triangle', 'area', language)}
         formulaExplanation={t('formulaExplanations.triangle.area')}
       >
@@ -97,9 +98,9 @@ const Toolbar: React.FC<ToolbarProps> = ({
           onModeChange('create');
           onShapeTypeChange('line');
         }}
-        tooltip={t('tooltips.line')}
+        tooltip={t('shapeNames.line')}
         formula="d = \\sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}"
-        formulaExplanation={t('tooltips.lineExplanation') || "Calculates the straight-line distance between two points"}
+        formulaExplanation={t('formulaExplanations.line.length')}
       >
         <Ruler className="h-3 w-3 sm:h-4 sm:w-4" />
       </ToolButton>
@@ -109,6 +110,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
         onClick={() => onModeChange('rotate')}
         disabled={!hasSelectedShape}
         tooltip={t('tooltips.rotate')}
+        formulaExplanation={t('tooltips.rotateDescription')}
       >
         <RotateCw className="h-3 w-3 sm:h-4 sm:w-4" />
       </ToolButton>

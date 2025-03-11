@@ -87,7 +87,7 @@ describe('GeometryCanvas', () => {
   });
 
   test('pixelsPerSmallUnit should be 1/10th of pixelsPerUnit for inches', () => {
-    const pixelsPerUnit = 60; // Default pixels per cm
+    const pixelsPerUnit = 152.4; // Default pixels per inch
     
     render(
       <ServiceProvider>
@@ -100,8 +100,8 @@ describe('GeometryCanvas', () => {
     );
     
     expect(lastCanvasGridProps).not.toBeNull();
-    expect(lastCanvasGridProps?.pixelsPerCm).toBe(DEFAULT_PIXELS_PER_INCH);
-    expect(lastCanvasGridProps?.pixelsPerMm).toBe(DEFAULT_PIXELS_PER_INCH / 10);
+    expect(lastCanvasGridProps?.pixelsPerCm).toBe(pixelsPerUnit);
+    expect(lastCanvasGridProps?.pixelsPerMm).toBe(pixelsPerUnit / 10);
   });
 
   test('handleCalibrationUpdate should set pixelsPerSmallUnit to 1/10th of the new value', () => {

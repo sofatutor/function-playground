@@ -103,7 +103,22 @@
     "rotate": "Rotar Forma",
     "delete": "Eliminar Seleccionado",
     "plot": "Graficar Funciones",
-    "plotDescription": "Crear y visualizar funciones matemáticas"
+    "plotDescription": "Crear y visualizar funciones matemáticas",
+    "calibrate": "Calibrar Pantalla",
+    "calibrateDescription": "Ajustar la calibración de la pantalla para mediciones físicas precisas",
+    "coarseAdjustment": "Ajuste grueso: realizar cambios mayores en la calibración",
+    "fineAdjustment": "Ajuste fino: realizar cambios menores en la calibración",
+    "zoomIn": "Acercar para ver más detalles",
+    "zoomOut": "Alejar para ver más del gráfico",
+    "move": "Mover Forma",
+    "draw": "Dibujar Forma",
+    "clear": "Borrar Todas las Formas",
+    "moveDescription": "Mover la forma seleccionada",
+    "rotateDescription": "Rotar la forma seleccionada",
+    "clearDescription": "Eliminar todas las formas del lienzo",
+    "examplesButtonTooltip": "Explorar funciones de ejemplo",
+    "scaleFactorTooltip": "Ajustar factor de escala",
+    "colorPickerTooltip": "Cambiar color de la función"
   },
   "pointX": "X",
   "pointY": "Y",
@@ -142,7 +157,8 @@
     "tabs": {
       "general": "General",
       "openai": "API de OpenAI",
-      "calibration": "Calibración de Pantalla"
+      "calibration": "Calibración de Pantalla",
+      "developer": "Desarrollador"
     },
     "general": {
       "title": "Ajustes Generales",
@@ -173,6 +189,12 @@
       "pixelsPerUnit": "píxeles por {unit}",
       "cancelButton": "Cancelar",
       "applyButton": "Aplicar Calibración"
+    },
+    "developer": {
+      "title": "Ajustes de Desarrollador",
+      "description": "Ajustes avanzados para desarrollo y depuración",
+      "loggingLabel": "Registro en Consola",
+      "loggingDescription": "Activar o desactivar el registro en consola con marcas de tiempo"
     }
   },
   "componentConfigModal": {

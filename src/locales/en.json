@@ -103,7 +103,22 @@
     "rotate": "Rotate Shape",
     "delete": "Delete Selected",
     "plot": "Plot Functions",
-    "plotDescription": "Create and visualize mathematical functions"
+    "plotDescription": "Create and visualize mathematical functions",
+    "calibrate": "Calibrate Screen",
+    "calibrateDescription": "Adjust screen calibration for accurate physical measurements",
+    "coarseAdjustment": "Coarse adjustment: make larger changes to calibration",
+    "fineAdjustment": "Fine adjustment: make smaller changes to calibration",
+    "zoomIn": "Zoom in to view more detail",
+    "zoomOut": "Zoom out to view more of the graph",
+    "move": "Move Shape",
+    "draw": "Draw Shape",
+    "clear": "Clear All Shapes",
+    "moveDescription": "Move the selected shape",
+    "rotateDescription": "Rotate the selected shape",
+    "clearDescription": "Remove all shapes from the canvas",
+    "examplesButtonTooltip": "Browse example functions",
+    "scaleFactorTooltip": "Adjust scale factor",
+    "colorPickerTooltip": "Change function color"
   },
   "pointX": "X",
   "pointY": "Y",
@@ -139,7 +154,7 @@
     "exponential": "Exponential & Logarithmic",
     "parametric": "Parametric Curves",
     "special": "Special Functions",
-    "polynomial": "Polynomials"
+    "polynomial": "Polynomial Functions"
   },
   "naturalLanguageTitle": "Describe Your Function",
   "naturalLanguage": "AI Function Generator",
@@ -213,5 +228,7 @@
     }
   },
   "enterFullscreen": "Enter Fullscreen",
-  "exitFullscreen": "Exit Fullscreen"
+  "exitFullscreen": "Exit Fullscreen",
+  "previousFormula": "Previous Formula",
+  "nextFormula": "Next Formula"
 }

@@ -25,6 +25,7 @@ import {
 } from '@/utils/urlEncoding';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
+import GlobalControls from '@/components/GlobalControls';
 
 const Index = () => {
   // Get the service factory
@@ -52,7 +53,8 @@ const Index = () => {
     setActiveShapeType,
     getShapeMeasurements,
     getSelectedShape,
-    updateMeasurement
+    updateMeasurement,
+    shareCanvasUrl
   } = useShapeOperations();
 
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -309,7 +311,7 @@ const Index = () => {
   return (
     <div className={`min-h-screen bg-gray-50 ${isFullscreen || isMobile ? 'p-0' : ''}`}>
       <div className={`${isFullscreen || isMobile ? 'max-w-full p-0' : 'container py-0 sm:py-2 md:py-4 lg:py-8 px-0 sm:px-2 md:px-4'} transition-all duration-200 h-[calc(100vh-0rem)] sm:h-[calc(100vh-0.5rem)]`}>
-        <GeometryHeader isFullscreen={isFullscreen} onToggleFullscreen={toggleFullscreen} />
+        <GeometryHeader isFullscreen={isFullscreen} />
         
         {/* Include both modals */}
         <ConfigModal />
@@ -333,10 +335,16 @@ const Index = () => {
                     isFormulaEditorOpen={isFormulaEditorOpen}
                   />
                 </div>
+                
+                <GlobalControls 
+                  isFullscreen={isFullscreen} 
+                  onToggleFullscreen={toggleFullscreen}
+                  onShare={shareCanvasUrl}
+                />
               </div>
               
               {isFormulaEditorOpen && (
-                <div className="mb-1 sm:mb-2 md:mb-3">
+                <div className="w-full mb-1 sm:mb-2 md:mb-3">
                   <FormulaEditor
                     formulas={formulas}
                     onAddFormula={handleAddFormula}

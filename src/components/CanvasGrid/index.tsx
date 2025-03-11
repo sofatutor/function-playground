@@ -138,9 +138,10 @@ const CanvasGrid: React.FC<CanvasGridProps> = ({
     console.log('CanvasGrid: handleOriginChange called with', newOrigin);
     
     // Check if the change is significant enough to update
+    // Increase threshold from 1 to 3 to avoid oscillation during fullscreen toggle
     const isSignificantChange = !origin || 
-      Math.abs(newOrigin.x - origin.x) > 1 || 
-      Math.abs(newOrigin.y - origin.y) > 1;
+      Math.abs(newOrigin.x - origin.x) > 3 || 
+      Math.abs(newOrigin.y - origin.y) > 3;
     
     if (isSignificantChange) {
       hasOriginMoved.current = true;

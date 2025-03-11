@@ -12,18 +12,23 @@ export const DEFAULT_FILL = 'rgba(190, 227, 219, 0.5)';
 export const DEFAULT_STROKE = '#555B6E';
 export const DEFAULT_STROKE_WIDTH = 1;
 
-// Default pixel to physical unit conversion (standard 96 DPI: 1cm = 37.8px)
+// Default pixel to physical unit conversion based on actual screen measurements
 export const DEFAULT_PIXELS_PER_CM = 60;
-// 1 inch = 96px on standard DPI screens
+// 1 inch = 2.54cm, so 60 * 2.54 = 152.4px per inch
 export const DEFAULT_PIXELS_PER_INCH = 152.4;
 
 // Helper to get calibrated values from localStorage
 export const getStoredPixelsPerUnit = (unit: 'cm' | 'in'): number => {
   const storedValue = localStorage.getItem(`pixelsPerUnit_${unit}`);
   if (storedValue) {
-    return parseFloat(storedValue);
+    const value = parseFloat(storedValue);
+    console.log(`[common.ts] Retrieved stored value for ${unit}:`, value);
+    return value;
   }
-  return unit === 'cm' ? DEFAULT_PIXELS_PER_CM : DEFAULT_PIXELS_PER_INCH;
+  // Use default values if no stored value is found
+  const defaultValue = unit === 'cm' ? DEFAULT_PIXELS_PER_CM : DEFAULT_PIXELS_PER_INCH;
+  console.log(`[common.ts] No stored value for ${unit}, using default:`, defaultValue);
+  return defaultValue;
 };
 
 // Conversion between units

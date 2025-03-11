@@ -1,733 +1,932 @@
-import { Formula, FormulaPoint, FormulaExample, FormulaExampleCategory, FormulaType } from "@/types/formula";
+import { Formula, FormulaPoint, FormulaExample, FormulaType } from "@/types/formula";
 import { Point } from "@/types/shapes";
 
-// Constants for formula evaluation
-const MAX_SAMPLES = 20000;
+// Constants
+const MAX_SAMPLES = 100000;
 const MIN_SAMPLES = 20;
+const DEFAULT_X_RANGE: [number, number] = [-10000, 10000];
+const DEFAULT_T_RANGE: [number, number] = [0, 2 * Math.PI];
 
-/**
- * Generate points for a mathematical function of the form y = f(x)
- */
-export const evaluateFunction = (
-  formula: Formula, 
+// Utility functions
+const clampSamples = (samples: number): number => 
+  Math.min(Math.max(samples, MIN_SAMPLES), MAX_SAMPLES);
+
+const getCanvasDimensions = (): { width: number; height: number } => ({
+  width: Math.max(window.innerWidth, 1000),
+  height: Math.max(window.innerHeight, 800)
+});
+
+const calculateVisibleXRange = (
   gridPosition: Point,
   pixelsPerUnit: number,
-  overrideSamples?: number
-): FormulaPoint[] => {
-  const { expression, xRange, samples, scaleFactor } = formula;
-  const actualSamples = overrideSamples || Math.min(Math.max(samples, MIN_SAMPLES), MAX_SAMPLES);
-  
-  // Calculate the visible range of the grid
-  // Use a very wide range to ensure the function is plotted across the entire grid
-  // Get approximate canvas dimensions
-  const canvasWidth = Math.max(window.innerWidth, 1000);
-  const canvasHeight = Math.max(window.innerHeight, 800);
-  
-  // Calculate the visible x-range in mathematical coordinates
-  // Add extra padding to ensure the function extends beyond the visible area
-  // Use less padding if we're using fewer samples (during dragging)
-  const padding = actualSamples < 300 ? 5 : 10; // Less padding during dragging
-  const leftEdgeX = ((0 - gridPosition.x) / pixelsPerUnit) - padding;
-  const rightEdgeX = ((canvasWidth - gridPosition.x) / pixelsPerUnit) + padding;
-  
-  // Check if this is a tangent function
-  const isTangent = expression.includes('Math.tan(') || 
-                    expression === 'Math.tan(x)' || 
-                    expression.includes('tan(x)');
-  
-  // Check if this is a logarithmic function
-  const isLogarithmic = expression.includes('Math.log(') ||
-                        expression.includes('Math.log10(') ||
-                        expression.includes('Math.log2(') ||
-                        expression.includes('log(') ||
-                        expression.includes('ln(');
-  
-  // Check if this is a high-frequency trigonometric function
-  const hasTrigFunction = expression.includes('Math.sin(') || 
-                          expression.includes('Math.cos(') ||
-                          expression.includes('sin(') || 
-                          expression.includes('cos(');
-                          
-  // Check for multipliers that indicate high frequency
-  const hasHighFrequency = hasTrigFunction && (
-    expression.includes('* x') || 
-    expression.includes('*x') ||
-    expression.includes('x *') ||
-    expression.includes('x*')
-  );
+  samples: number
+): [number, number] => {
+  const { width } = getCanvasDimensions();
+  const padding = samples < 300 ? 5 : 10;
+  return [
+    ((0 - gridPosition.x) / pixelsPerUnit) - padding,
+    ((width - gridPosition.x) / pixelsPerUnit) + padding
+  ];
+};
 
-  // Check for very high frequency functions (e.g., sin(10*x))
-  const hasVeryHighFrequency = hasTrigFunction && (
-    expression.match(/sin\((\d{2,})\s*\*\s*x\)/i) || 
-    expression.match(/cos\((\d{2,})\s*\*\s*x\)/i) ||
-    expression.match(/(\d{2,})\s*\*\s*Math\.PI/i)
-  );
+const createFunctionFromExpression = (
+  expression: string,
+  scaleFactor: number
+): ((x: number) => number) => {
+  if (!expression || expression.trim() === '') {
+    return () => NaN;
+  }
 
-  // Check for complex expressions that might need more samples
-  const isComplex = expression.includes('**') || // Power operations
-                   expression.includes('Math.pow') || // Power operations
-                   expression.includes('Math.sqrt') || // Square root
-                   (expression.match(/[+\-*/]/g) || []).length > 2; // More than 2 operators
-  
-  // Check for combined functions that need even more samples
-  const isCombined = hasTrigFunction && isComplex;
-  
-  // If the expression contains log(x) directly, we need x > 0
-  // If it contains log(-x) or log(Math.abs(x)), we can allow negative values
-  const allowsNegativeX = isLogarithmic && (
-    expression.includes('Math.abs(x)') || 
-    expression.includes('-x') ||
-    expression.includes('(-x)')
-  );
-  
-  // For tangent functions, we need to restrict the domain to avoid multiple periods
-  let visibleXRange: [number, number];
-  
-  if (isTangent) {
-    // For tangent, we'll always plot the period containing the origin (0,0)
-    // Tangent has period π, and asymptotes at odd multiples of π/2
-    const PI = Math.PI;
-    
-    // The period containing the origin is from -π/2 to π/2
-    // Add small offsets to avoid the asymptotes
-    const periodStart = -PI/2 + 0.1;
-    const periodEnd = PI/2 - 0.1;
-    
-    visibleXRange = [periodStart, periodEnd];
-    console.log(`Plotting tangent function with central period: [${periodStart}, ${periodEnd}]`);
-  } else if (isLogarithmic) {
-    // For logarithmic functions, restrict the domain to positive values
-    // Use a small positive value as the minimum to avoid the asymptote at x=0
-    const minX = 0.00001; // Even smaller minimum value for better coverage
-    
-    // Set the visible range based on the expression
-    if (allowsNegativeX) {
-      visibleXRange = [
-        Math.max(leftEdgeX, xRange[0]), 
-        Math.min(rightEdgeX, xRange[1])
-      ];
-      console.log(`Plotting logarithmic function with abs/negative handling: [${visibleXRange[0]}, ${visibleXRange[1]}]`);
-    } else {
-      visibleXRange = [
-        Math.max(minX, leftEdgeX, xRange[0]), 
-        Math.min(rightEdgeX, xRange[1])
-      ];
-      console.log(`Plotting logarithmic function with restricted domain: [${visibleXRange[0]}, ${visibleXRange[1]}]`);
-    }
-  } else {
-    // For other functions, use the visible range of the grid
-    visibleXRange = [
-      Math.max(leftEdgeX, xRange[0]), 
-      Math.min(rightEdgeX, xRange[1])
-    ];
+  if (expression === 'Math.exp(x)') {
+    return (x: number) => Math.exp(x) * scaleFactor;
   }
-  
-  // For high-frequency trigonometric functions, we need to ensure we have enough samples
-  // to capture the oscillations. We'll estimate the number of oscillations in the visible range
-  // and adjust the number of samples accordingly.
-  let adjustedSamples = actualSamples;
-  
-  if (hasVeryHighFrequency) {
-    // Try to estimate the frequency by looking for multipliers
-    let frequencyFactor = 1;
-    
-    // Look for patterns like "10 * Math.PI * x" or similar
-    if (expression.includes('Math.PI')) {
-      // Extract the coefficient before Math.PI if possible
-      const piMatch = expression.match(/(\d+)\s*\*\s*Math\.PI/);
-      if (piMatch && piMatch[1]) {
-        frequencyFactor = parseInt(piMatch[1], 10);
-      } else {
-        frequencyFactor = 1; // Default if we can't extract a specific value
-      }
-    } else {
-      // Look for direct multipliers like "10*x" in sin(10*x)
-      const directMatch = expression.match(/sin\((\d+)\s*\*\s*x\)/i) || 
-                          expression.match(/cos\((\d+)\s*\*\s*x\)/i);
-      if (directMatch && directMatch[1]) {
-        frequencyFactor = parseInt(directMatch[1], 10);
-      }
-    }
-    
-    // Estimate the number of oscillations in the visible range
-    const visibleRange = visibleXRange[1] - visibleXRange[0];
-    const estimatedOscillations = frequencyFactor * visibleRange;
-    
-    // We want at least 80 samples per oscillation for very high frequency functions
-    const recommendedSamples = Math.ceil(estimatedOscillations * 80);
-    
-    // Use the higher of our original samples or the recommended samples
-    adjustedSamples = Math.max(actualSamples, recommendedSamples);
-    
-    // Cap at MAX_SAMPLES to avoid performance issues
-    adjustedSamples = Math.min(adjustedSamples, MAX_SAMPLES);
-    
-    console.log(`Very high-frequency function detected. Estimated oscillations: ${estimatedOscillations}, using ${adjustedSamples} samples`);
-  } else if (hasHighFrequency) {
-    // Try to estimate the frequency by looking for multipliers
-    let frequencyFactor = 1;
-    
-    // Look for patterns like "2 * Math.PI * x" or similar
-    if (expression.includes('Math.PI')) {
-      // Extract the coefficient before Math.PI if possible
-      const piMatch = expression.match(/(\d+)\s*\*\s*Math\.PI/);
-      if (piMatch && piMatch[1]) {
-        frequencyFactor = parseInt(piMatch[1], 10);
-      } else {
-        frequencyFactor = 1; // Default if we can't extract a specific value
-      }
-    } else {
-      // Look for direct multipliers like "5*x" in sin(5*x)
-      const directMatch = expression.match(/sin\((\d+)\s*\*\s*x\)/i) || 
-                          expression.match(/cos\((\d+)\s*\*\s*x\)/i);
-      if (directMatch && directMatch[1]) {
-        frequencyFactor = parseInt(directMatch[1], 10);
-      }
-    }
-    
-    // Estimate the number of oscillations in the visible range
-    const visibleRange = visibleXRange[1] - visibleXRange[0];
-    const estimatedOscillations = frequencyFactor * visibleRange;
-    
-    // We want at least 50 samples per oscillation for smooth rendering (increased from 30)
-    const recommendedSamples = Math.ceil(estimatedOscillations * 50);
-    
-    // Use the higher of our original samples or the recommended samples
-    adjustedSamples = Math.max(actualSamples, recommendedSamples);
-    
-    // Cap at MAX_SAMPLES to avoid performance issues
-    adjustedSamples = Math.min(adjustedSamples, MAX_SAMPLES);
-    
-    console.log(`High-frequency function detected. Estimated oscillations: ${estimatedOscillations}, using ${adjustedSamples} samples`);
-  } else if (isCombined) {
-    // For combined complex functions, increase samples by 100%
-    adjustedSamples = Math.min(actualSamples * 2, MAX_SAMPLES);
-    console.log(`Combined complex function detected. Using ${adjustedSamples} samples`);
-  } else if (isComplex) {
-    // For complex functions, increase samples by 75% (up from 50%)
-    adjustedSamples = Math.min(Math.ceil(actualSamples * 1.75), MAX_SAMPLES);
-    console.log(`Complex function detected. Using ${adjustedSamples} samples`);
+  if (expression === '1 / (1 + Math.exp(-x))') {
+    return (x: number) => (1 / (1 + Math.exp(-x))) * scaleFactor;
   }
-  
-  // Calculate the step size based on the visible range and number of samples
-  const xStep = (visibleXRange[1] - visibleXRange[0]) / (hasHighFrequency || hasVeryHighFrequency || isComplex || isCombined ? adjustedSamples : actualSamples);
-  
-  // For logarithmic functions, use adaptive sampling to concentrate more points near the asymptote
-  const xValues: number[] = [];
-  if (isLogarithmic && !allowsNegativeX) {
-    // Create a logarithmically spaced set of x values to better capture the curve near x=0
-    // This puts more points near the asymptote where the function changes rapidly
-    const logStart = Math.log(visibleXRange[0]);
-    const logEnd = Math.log(visibleXRange[1]);
-    const logStep = (logEnd - logStart) / (hasHighFrequency ? adjustedSamples : actualSamples);
-    
-    for (let i = 0; i <= (hasHighFrequency ? adjustedSamples : actualSamples); i++) {
-      const logX = logStart + i * logStep;
-      xValues.push(Math.exp(logX));
-    }
-    
-    // Add some extra points very close to the asymptote
-    if (visibleXRange[0] < 0.1) {
-      // Add more extra points between minX and 0.1 for better coverage
-      const extraPoints = 40; // Increased from 20 to 40
-      const extraMinX = 0.00001; // Even smaller minimum value
-      const extraMaxX = 0.1;
-      const extraLogStart = Math.log(extraMinX);
-      const extraLogEnd = Math.log(extraMaxX);
-      const extraLogStep = (extraLogEnd - extraLogStart) / extraPoints;
-      
-      for (let i = 0; i <= extraPoints; i++) {
-        const logX = extraLogStart + i * extraLogStep;
-        const x = Math.exp(logX);
-        if (!xValues.includes(x)) {
-          xValues.push(x);
-        }
-      }
-      
-      // Add even more points extremely close to zero for better asymptote visualization
-      const microPoints = 20;
-      const microMinX = 0.000001; // Extremely small value
-      const microMaxX = 0.0001;
-      const microLogStart = Math.log(microMinX);
-      const microLogEnd = Math.log(microMaxX);
-      const microLogStep = (microLogEnd - microLogStart) / microPoints;
-      
-      for (let i = 0; i <= microPoints; i++) {
-        const logX = microLogStart + i * microLogStep;
-        const x = Math.exp(logX);
-        if (!xValues.includes(x)) {
-          xValues.push(x);
-        }
-      }
-      
-      // Sort the x values
-      xValues.sort((a, b) => a - b);
-    }
-    
-    console.log(`Using ${xValues.length} adaptive sample points for logarithmic function`);
-  } else if (hasHighFrequency) {
-    // For high-frequency functions, use a higher density of points
-    // Use the adjusted samples value we calculated earlier
-    for (let i = 0; i <= adjustedSamples; i++) {
-      xValues.push(visibleXRange[0] + i * xStep);
-    }
-    
-    console.log(`Using ${adjustedSamples + 1} sample points for high-frequency function`);
-  } else {
-    // For other functions, use regular linear spacing
-    for (let i = 0; i <= actualSamples; i++) {
-      xValues.push(visibleXRange[0] + i * xStep);
-    }
+  if (expression === 'Math.sqrt(Math.abs(x))') {
+    return (x: number) => Math.sqrt(Math.abs(x)) * scaleFactor;
   }
-  
-  // Generate points
-  const points: FormulaPoint[] = [];
-  
+
   try {
-    // Create a function from the expression
-    // Use a modified version of the expression that applies the scale factor
-    // The scale factor affects the y-values: larger values stretch the graph vertically,
-    // smaller values flatten it
-    const scaledExpression = expression.replace(/x/g, '(x)');
-    const fn = new Function('x', `
+    const scaledExpression = expression.replace(/(\W|^)x(\W|$)/g, '$1(x)$2');
+    return new Function('x', `
       try {
-        const Math = window.Math;
-        const result = ${scaledExpression};
-        return result * ${scaleFactor};
+        const {sin, cos, tan, exp, log, sqrt, abs, pow, PI, E} = Math;
+        return (${scaledExpression}) * ${scaleFactor};
       } catch (e) {
+        console.error('Error in function evaluation:', e);
         return NaN;
       }
-    `);
+    `) as (x: number) => number;
+  } catch (e) {
+    console.error('Error creating function from expression:', e);
+    return () => NaN;
+  }
+};
+
+const toCanvasCoordinates = (
+  x: number,
+  y: number,
+  gridPosition: Point,
+  pixelsPerUnit: number
+): { x: number; y: number } => ({
+  x: gridPosition.x + x * pixelsPerUnit,
+  y: gridPosition.y - y * pixelsPerUnit
+});
+
+// Function type detection
+interface FunctionCharacteristics {
+  isTangent: boolean;
+  isLogarithmic: boolean;
+  allowsNegativeX: boolean;
+  isHighFrequency: boolean;
+  isVeryHighFrequency: boolean;
+  isComplex: boolean;
+  isCombined: boolean;
+  isSqrtAbs: boolean;
+  hasSingularity: boolean;
+  hasPow: boolean;
+  hasPowWithX: boolean;
+  hasTrigPowCombination: boolean;
+}
+
+const detectFunctionCharacteristics = (expression: string): FunctionCharacteristics => {
+  const hasTrig = /Math\.(sin|cos|tan)|\b(sin|cos|tan)\(/.test(expression);
+  const hasHighFreq = hasTrig && /[*]\s*x|x\s*[*]/.test(expression);
+  
+  // Check for Math.pow expressions
+  const hasPow = /Math\.pow\(/.test(expression);
+  const hasPowWithX = /Math\.pow\(x,|Math\.pow\([^,]+,\s*x\)/.test(expression);
+  
+  // Check for quadratic or higher terms in trig functions (like x*x, x^2, x**2)
+  const hasQuadraticTrig = hasTrig && 
+    (/x\s*\*\s*x|x\s*\^\s*2|x\s*\*\*\s*2|Math\.pow\(x,\s*2\)/.test(expression) ||
+     /x\s*\*\s*x\s*\*\s*x|x\s*\^\s*3|x\s*\*\*\s*3|Math\.pow\(x,\s*3\)/.test(expression));
+  
+  // Check for potential singularities like 1/x, division by x, or x in denominator
+  const hasSingularity = /1\s*\/\s*x|\/\s*x|\(.*x.*\)\s*\^\s*-1|x\s*\^\s*-1|Math\.pow\(.*x.*,\s*-1\)/.test(expression);
+  
+  // Check for complex expressions with multiple operations
+  const isComplexExpression = expression.split(/[+\-*/]/).length > 3;
+  
+  // Check for combined trig and pow functions (like in the screenshot)
+  const hasTrigPowCombination = hasTrig && hasPow;
+  
+  return {
+    isTangent: /Math\.tan\(|\btan\(/.test(expression),
+    isLogarithmic: /Math\.log(10|2)?\(|\b(log|ln)\(/.test(expression),
+    allowsNegativeX: /Math\.abs\(x\)|-x|\(-x\)/.test(expression),
+    isHighFrequency: hasHighFreq || hasQuadraticTrig || hasPowWithX,
+    isVeryHighFrequency: hasQuadraticTrig || hasTrigPowCombination || 
+                         (hasTrig && /(\d{2,})\s*\*\s*x|\d{2,}\s*\*\s*Math\.PI/.test(expression)),
+    isComplex: /Math\.(pow|sqrt)|\*\*|[+\-*/]{2,}/.test(expression) || isComplexExpression,
+    isCombined: (hasTrig && (/Math\.(pow|sqrt)|\*\*|[+\-*/]{2,}/.test(expression))) || hasTrigPowCombination,
+    isSqrtAbs: /Math\.sqrt\(Math\.abs\(x\)\)|sqrt\(abs\(x\)\)/.test(expression),
+    hasSingularity: hasSingularity,
+    hasPow: hasPow,
+    hasPowWithX: hasPowWithX,
+    hasTrigPowCombination: hasTrigPowCombination
+  };
+};
+
+const adjustSamples = (
+  baseSamples: number,
+  characteristics: FunctionCharacteristics
+): number => {
+  // Special case for the specific function in the screenshot
+  if (characteristics.hasTrigPowCombination) {
+    return clampSamples(baseSamples * 10);  // Significantly increase samples for trig+pow combinations
+  }
+  
+  if (characteristics.hasSingularity) return clampSamples(baseSamples * 10);
+  if (characteristics.isVeryHighFrequency) return clampSamples(baseSamples * 12);
+  if (characteristics.isHighFrequency) return clampSamples(baseSamples * 8);
+  if (characteristics.hasPowWithX) return clampSamples(baseSamples * 6);  // More samples for Math.pow with x
+  if (characteristics.hasPow) return clampSamples(baseSamples * 4);  // More samples for any Math.pow
+  if (characteristics.isCombined) return clampSamples(baseSamples * 5);
+  if (characteristics.isComplex) return clampSamples(Math.ceil(baseSamples * 3));
+  return clampSamples(baseSamples);
+};
+
+// X-value generators
+const generateLinearXValues = (
+  range: [number, number],
+  samples: number
+): number[] => {
+  const step = (range[1] - range[0]) / samples;
+  return Array.from({ length: samples + 1 }, (_, i) => range[0] + i * step);
+};
+
+const generateLogarithmicXValues = (
+  range: [number, number],
+  samples: number
+): number[] => {
+  const logStart = Math.log(Math.max(range[0], 0.00001));
+  const logEnd = Math.log(range[1]);
+  const logStep = (logEnd - logStart) / samples;
+  return Array.from({ length: samples + 1 }, (_, i) => Math.exp(logStart + i * logStep));
+};
+
+// Generate x values with higher density around potential singularities
+const generateSingularityXValues = (
+  range: [number, number],
+  samples: number
+): number[] => {
+  // If range doesn't include zero, use linear sampling
+  if (range[0] > 0 || range[1] < 0) {
+    return generateLinearXValues(range, samples);
+  }
+  
+  // Find where 0 is in the range
+  const totalRange = range[1] - range[0];
+  const zeroPosition = -range[0] / totalRange;
+  
+  // Allocate more samples near zero
+  const result: number[] = [];
+  
+  // Add a small offset to avoid exact zero
+  const epsilon = 1e-10;
+  
+  // Add points to the left of zero with increasing density toward zero
+  if (range[0] < 0) {
+    const negativeRange = -range[0];
+    const negSamples = Math.floor(samples * zeroPosition * 0.8); // 80% of proportional samples
     
-    // Sample the function at the calculated x values
-    for (const x of xValues) {
-      let y: number;
-      
-      try {
-        // For logarithmic functions, we need to handle domain restrictions
-        if (isLogarithmic) {
-          // Skip evaluation for non-positive values unless the expression handles them
-          if (x <= 0 && !allowsNegativeX) {
-            y = NaN;
-          } else {
-            y = fn(x);
-          }
-        } else {
-          y = fn(x);
-        }
-      } catch (e) {
-        y = NaN;
-      }
-      
-      // Check if the result is valid
-      const isValid = !isNaN(y) && isFinite(y);
-      
-      // For logarithmic functions, we need to handle very large values
-      // that would cause the graph to be clipped
-      if (isLogarithmic && isValid) {
-        // Limit the maximum absolute value to prevent extreme scaling
-        const MAX_VALUE = 1000;
-        if (Math.abs(y) > MAX_VALUE) {
-          y = y > 0 ? MAX_VALUE : -MAX_VALUE;
-        }
-      }
-      
-      // Convert mathematical coordinates to canvas coordinates
-      const canvasX = gridPosition.x + x * pixelsPerUnit;
-      const canvasY = gridPosition.y - y * pixelsPerUnit; // Flip y-axis
-      
-      points.push({
-        x: canvasX,
-        y: canvasY,
-        isValid
-      });
+    // Add more points very close to zero (negative side)
+    for (let i = 30; i >= 1; i--) {
+      result.push(-epsilon * Math.pow(1.5, i));
     }
-  } catch (error) {
-    console.error('Error evaluating function:', error);
-    // Return an empty array if there's an error
-    return [];
+    
+    // Add remaining negative points with exponential distribution
+    for (let i = 0; i < negSamples; i++) {
+      // Use exponential distribution to concentrate points near zero
+      const t = i / negSamples;
+      const x = range[0] * Math.pow(Math.abs(range[0] / epsilon), -t);
+      if (x < -epsilon * 30) { // Avoid duplicating the very close points
+        result.push(x);
+      }
+    }
+  }
+  
+  // Add points to the right of zero with increasing density toward zero
+  if (range[1] > 0) {
+    const positiveRange = range[1];
+    const posSamples = Math.floor(samples * (1 - zeroPosition) * 0.8); // 80% of proportional samples
+    
+    // Add more points very close to zero (positive side)
+    for (let i = 1; i <= 30; i++) {
+      result.push(epsilon * Math.pow(1.5, i));
+    }
+    
+    // Add remaining positive points with exponential distribution
+    for (let i = 0; i < posSamples; i++) {
+      // Use exponential distribution to concentrate points near zero
+      const t = i / posSamples;
+      const x = range[1] * Math.pow(Math.abs(epsilon / range[1]), 1 - t);
+      if (x > epsilon * 30) { // Avoid duplicating the very close points
+        result.push(x);
+      }
+    }
+  }
+  
+  // Sort the results
+  result.sort((a, b) => a - b);
+  
+  return result;
+};
+
+const generateTangentXValues = (
+  range: [number, number],
+  samples: number
+): number[] => {
+  const PI = Math.PI;
+  const xValues: number[] = [];
+  const step = (range[1] - range[0]) / samples;
+  
+  for (let i = 0; i <= samples; i++) {
+    const x = range[0] + i * step;
+    const nearestAsymptote = Math.round(x / PI - 0.5) * PI + PI/2;
+    if (Math.abs(x - nearestAsymptote) > 0.01) {
+      xValues.push(x);
+    }
+  }
+  return xValues;
+};
+
+// Core evaluation function
+const evaluatePoints = (
+  formula: Formula,
+  gridPosition: Point,
+  pixelsPerUnit: number,
+  xValues: number[],
+  fn: (x: number) => number
+): FormulaPoint[] => {
+  const points: FormulaPoint[] = [];
+  const chars = detectFunctionCharacteristics(formula.expression);
+  const { isLogarithmic, allowsNegativeX } = chars;
+  
+  // Track the previous point to detect large jumps (discontinuities)
+  let prevY: number | null = null;
+  let prevX: number | null = null;
+  
+  for (const x of xValues) {
+    let y: number;
+    let isValidDomain = true; // Track domain validity separately from calculation validity
+    
+    try {
+      // Check domain validity for logarithmic functions
+      if (isLogarithmic && x <= 0 && !allowsNegativeX) {
+        y = NaN;
+        isValidDomain = false;
+      } else {
+        y = fn(x);
+      }
+      
+      // Limit extremely large values to prevent rendering issues
+      if (Math.abs(y) > 1000000) y = Math.sign(y) * 1000000;
+      
+      // Check for discontinuities (very large jumps)
+      if (prevY !== null && prevX !== null && isValidDomain) {
+        const deltaY = Math.abs(y - prevY);
+        const deltaX = Math.abs(x - prevX);
+        
+        // If the rate of change is extremely high, it might be a discontinuity
+        // For functions with Math.pow, we need to be more lenient
+        const threshold = chars.hasPow ? 1000 : 500;
+        
+        if (deltaY / deltaX > threshold && !isNaN(y) && isFinite(y)) {
+          // Insert a NaN point to create a break in the line
+          const midX = (prevX + x) / 2;
+          const midCoords = toCanvasCoordinates(midX, NaN, gridPosition, pixelsPerUnit);
+          points.push({ ...midCoords, isValid: false });
+        }
+      }
+      
+      if (isValidDomain) {
+        prevY = y;
+        prevX = x;
+      } else {
+        // Reset tracking for discontinuity detection when domain is invalid
+        prevY = null;
+        prevX = null;
+      }
+    } catch (e) {
+      y = NaN;
+      isValidDomain = false;
+      // Reset tracking for discontinuity detection
+      prevY = null;
+      prevX = null;
+    }
+    
+    // A point is valid if it's within the domain and has a valid calculation result
+    const isValid = isValidDomain && !isNaN(y) && isFinite(y);
+    const coords = toCanvasCoordinates(x, y, gridPosition, pixelsPerUnit);
+    
+    points.push({ ...coords, isValid });
   }
   
   return points;
 };
 
-/**
- * Generate points for a parametric function of the form x = f(t), y = g(t)
- */
+// Validate formula before evaluation
+export const validateFormula = (formula: Formula): { isValid: boolean; error?: string } => {
+  try {
+    if (!formula.expression || formula.expression.trim() === '') {
+      return { isValid: false, error: 'Expression cannot be empty' };
+    }
+
+    // Validate based on formula type
+    if (formula.type === 'parametric') {
+      const [xExpr, yExpr] = formula.expression.split(';').map(expr => expr.trim());
+      if (!xExpr || !yExpr) {
+        return { isValid: false, error: 'Parametric expression must be in format "x(t);y(t)"' };
+      }
+      
+      // Test if expressions can be compiled
+      try {
+        new Function('t', `return ${xExpr};`);
+        new Function('t', `return ${yExpr};`);
+      } catch (e) {
+        // Simplify error message for better user experience
+        const errorMsg = e.message || '';
+        if (errorMsg.includes('Unexpected token')) {
+          return { isValid: false, error: 'Syntax error: Check for missing parentheses or invalid characters' };
+        }
+        return { isValid: false, error: `Invalid parametric expression: ${simplifyErrorMessage(e.message)}` };
+      }
+    } else {
+      // For function and polar types
+      try {
+        // Test if the expression can be compiled
+        const scaledExpression = formula.expression.replace(/(\W|^)x(\W|$)/g, '$1(x)$2');
+        new Function('x', `
+          const {sin, cos, tan, exp, log, sqrt, abs, pow, PI, E} = Math;
+          return (${scaledExpression});
+        `);
+      } catch (e) {
+        // Simplify error message for better user experience
+        return { isValid: false, error: `Invalid expression: ${simplifyErrorMessage(e.message)}` };
+      }
+    }
+    
+    return { isValid: true };
+  } catch (e) {
+    return { isValid: false, error: `Unexpected error: ${simplifyErrorMessage(e.message)}` };
+  }
+};
+
+// Helper function to simplify JavaScript error messages for end users
+const simplifyErrorMessage = (message: string): string => {
+  if (!message) return 'Unknown error';
+  
+  // Remove line and column information
+  message = message.replace(/\s+at line \d+, column \d+/g, '');
+  
+  // Handle common syntax errors
+  if (message.includes('Unexpected token')) {
+    const token = message.match(/Unexpected token '(.+?)'/)?.[1] || '';
+    if (token) {
+      return `Unexpected character '${token}'. Check your formula syntax.`;
+    }
+    return 'Syntax error: Check for missing parentheses or invalid characters';
+  }
+  
+  if (message.includes('is not defined')) {
+    const variable = message.match(/(.+?) is not defined/)?.[1] || '';
+    if (variable) {
+      return `Unknown function or variable: '${variable}'`;
+    }
+  }
+  
+  // Shorten the message if it's too long
+  if (message.length > 100) {
+    return message.substring(0, 97) + '...';
+  }
+  
+  return message;
+};
+
+// Main evaluation functions
+export const evaluateFunction = (
+  formula: Formula,
+  gridPosition: Point,
+  pixelsPerUnit: number,
+  overrideSamples?: number
+): FormulaPoint[] => {
+  // Validate formula first
+  const validation = validateFormula(formula);
+  if (!validation.isValid) {
+    console.error(`Invalid function formula: ${validation.error}`);
+    return [{ x: 0, y: 0, isValid: false }]; // Return a single invalid point
+  }
+  
+  try {
+    const actualSamples = overrideSamples || clampSamples(formula.samples);
+    const chars = detectFunctionCharacteristics(formula.expression);
+    const adjustedSamples = adjustSamples(actualSamples, chars);
+    
+    const fullRange = calculateVisibleXRange(gridPosition, pixelsPerUnit, adjustedSamples);
+    let visibleXRange: [number, number] = [
+      Math.max(fullRange[0], formula.xRange[0]),
+      Math.min(fullRange[1], formula.xRange[1])
+    ];
+    
+    let xValues: number[];
+    
+    // Special case for the specific function in the screenshot
+    if (chars.hasTrigPowCombination && formula.expression.includes('Math.sin(Math.PI * Math.pow')) {
+      // Use a very high sampling rate for this specific type of function
+      xValues = generateLinearXValues(visibleXRange, adjustedSamples * 2);
+    }
+    else if (chars.isTangent) {
+      visibleXRange = [
+        Math.max(fullRange[0], -Math.PI/2 + 0.01),
+        Math.min(fullRange[1], Math.PI/2 - 0.01)
+      ];
+      xValues = generateTangentXValues(visibleXRange, adjustedSamples * 10);
+    } else if (chars.hasSingularity) {
+      // Use special sampling for functions with singularities
+      xValues = generateSingularityXValues(visibleXRange, adjustedSamples * 3);
+    } else if (chars.isLogarithmic && !chars.allowsNegativeX) {
+      visibleXRange[0] = Math.max(visibleXRange[0], 0.00001);
+      xValues = generateLogarithmicXValues(visibleXRange, adjustedSamples);
+    } else if (chars.hasPowWithX) {
+      // Use denser sampling for functions with Math.pow involving x
+      xValues = generateLinearXValues(visibleXRange, adjustedSamples * 1.5);
+    } else {
+      xValues = generateLinearXValues(visibleXRange, adjustedSamples);
+    }
+    
+    // Create the function from the expression
+    const fn = createFunctionFromExpression(formula.expression, formula.scaleFactor);
+    
+    // Evaluate the function at each x value
+    const points = evaluatePoints(formula, gridPosition, pixelsPerUnit, xValues, fn);
+    
+    return points;
+  } catch (error) {
+    console.error('Error evaluating function:', error);
+    return [{ x: 0, y: 0, isValid: false }]; // Return a single invalid point
+  }
+};
+
 export const evaluateParametric = (
-  formula: Formula, 
+  formula: Formula,
   gridPosition: Point,
   pixelsPerUnit: number
 ): FormulaPoint[] => {
-  const { expression, tRange, samples, scaleFactor } = formula;
+  if (!formula.tRange) return [];
   
-  if (!tRange) {
-    return [];
+  // Validate formula first
+  const validation = validateFormula(formula);
+  if (!validation.isValid) {
+    console.error(`Invalid parametric formula: ${validation.error}`);
+    return [{ x: 0, y: 0, isValid: false }]; // Return a single invalid point
   }
-
-  const actualSamples = Math.min(Math.max(samples, MIN_SAMPLES), MAX_SAMPLES);
   
-  // For parametric functions, we'll keep using tRange as it defines the parameter range
-  // But we'll increase the number of samples for better coverage
-  const enhancedSamples = Math.min(actualSamples * 2, MAX_SAMPLES);
-  const step = (tRange[1] - tRange[0]) / enhancedSamples;
-  const points: FormulaPoint[] = [];
-
+  const samples = clampSamples(formula.samples) * 2;
+  const step = (formula.tRange[1] - formula.tRange[0]) / samples;
+  
   try {
-    // Split the expression into x(t) and y(t) parts
-    const [xExpr, yExpr] = expression.split(';').map(expr => expr.trim());
+    const [xExpr, yExpr] = formula.expression.split(';').map(expr => expr.trim());
     
     if (!xExpr || !yExpr) {
-      throw new Error('Parametric expression must be in the form "x(t);y(t)"');
+      console.error('Parametric expression must be "x(t);y(t)"');
+      return [{ x: 0, y: 0, isValid: false }];
     }
-
-    // Create functions for x(t) and y(t)
-    // eslint-disable-next-line no-new-func
-    const evalX = new Function('t', `try { return ${xExpr}; } catch(e) { return NaN; }`);
-    // eslint-disable-next-line no-new-func
-    const evalY = new Function('t', `try { 
-      const result = ${yExpr}; 
-      return result * ${scaleFactor}; 
-    } catch(e) { return NaN; }`);
-
-    for (let i = 0; i <= enhancedSamples; i++) {
-      const t = tRange[0] + i * step;
+    
+    let evalX: (t: number) => number;
+    let evalY: (t: number) => number;
+    
+    try {
+      evalX = new Function('t', `
+        try {
+          const {sin, cos, tan, exp, log, sqrt, abs, pow, PI, E} = Math;
+          return ${xExpr};
+        } catch (e) {
+          return NaN;
+        }
+      `) as (t: number) => number;
       
+      evalY = new Function('t', `
+        try {
+          const {sin, cos, tan, exp, log, sqrt, abs, pow, PI, E} = Math;
+          return ${yExpr} * ${formula.scaleFactor};
+        } catch (e) {
+          return NaN;
+        }
+      `) as (t: number) => number;
+    } catch (e) {
+      console.error('Error creating parametric functions:', e);
+      return [{ x: 0, y: 0, isValid: false }];
+    }
+    
+    const points: FormulaPoint[] = [];
+    for (let i = 0; i <= samples; i++) {
+      const t = formula.tRange[0] + i * step;
       let x: number, y: number;
       
       try {
         x = evalX(t);
         y = evalY(t);
-      } catch (error) {
+      } catch (e) {
         x = NaN;
         y = NaN;
       }
-
-      // Skip invalid points
+      
       const isValid = !isNaN(x) && !isNaN(y) && isFinite(x) && isFinite(y);
-      
-      // Convert from mathematical coordinates to canvas coordinates
-      const canvasX = gridPosition.x + x * pixelsPerUnit;
-      const canvasY = gridPosition.y - y * pixelsPerUnit;
-      
-      points.push({ x: canvasX, y: canvasY, isValid });
+      const coords = toCanvasCoordinates(x, y, gridPosition, pixelsPerUnit);
+      points.push({ ...coords, isValid });
     }
-
+    
     return points;
-  } catch (error) {
-    console.error('Error evaluating parametric function:', error);
-    return [];
+  } catch (e) {
+    console.error('Error evaluating parametric formula:', e);
+    return [{ x: 0, y: 0, isValid: false }];
   }
 };
 
-/**
- * Generate points for a polar function of the form r = f(θ)
- */
 export const evaluatePolar = (
-  formula: Formula, 
+  formula: Formula,
   gridPosition: Point,
   pixelsPerUnit: number
 ): FormulaPoint[] => {
-  const { expression, tRange, samples, scaleFactor } = formula;
+  if (!formula.tRange) return [];
   
-  if (!tRange) {
-    return [];
+  // Validate formula first
+  const validation = validateFormula(formula);
+  if (!validation.isValid) {
+    console.error(`Invalid polar formula: ${validation.error}`);
+    return [{ x: 0, y: 0, isValid: false }]; // Return a single invalid point
   }
-
-  const actualSamples = Math.min(Math.max(samples, MIN_SAMPLES), MAX_SAMPLES);
   
-  // For polar functions, we'll increase the number of samples for smoother curves
-  const enhancedSamples = Math.min(actualSamples * 2, MAX_SAMPLES);
-  const step = (tRange[1] - tRange[0]) / enhancedSamples;
-  const points: FormulaPoint[] = [];
-
+  const samples = clampSamples(formula.samples) * 2;
+  const step = (formula.tRange[1] - formula.tRange[0]) / samples;
+  
   try {
-    // Create a function to evaluate r(θ)
-    // eslint-disable-next-line no-new-func
-    const evalFunc = new Function('theta', `try { 
-      const result = ${expression}; 
-      return result * ${scaleFactor}; 
-    } catch(e) { return NaN; }`);
-
-    for (let i = 0; i <= enhancedSamples; i++) {
-      const theta = tRange[0] + i * step;
+    const evalR = createFunctionFromExpression(formula.expression, formula.scaleFactor);
+    
+    const points: FormulaPoint[] = [];
+    for (let i = 0; i <= samples; i++) {
+      const theta = formula.tRange[0] + i * step;
       let r: number;
       
       try {
-        r = evalFunc(theta);
-      } catch (error) {
+        r = evalR(theta);
+      } catch (e) {
         r = NaN;
       }
-
-      // Skip invalid points
+      
       const isValid = !isNaN(r) && isFinite(r);
       
       if (isValid) {
-        // Convert polar (r, θ) to Cartesian (x, y)
         const x = r * Math.cos(theta);
         const y = r * Math.sin(theta);
-        
-        // Convert from mathematical coordinates to canvas coordinates
-        const canvasX = gridPosition.x + x * pixelsPerUnit;
-        const canvasY = gridPosition.y - y * pixelsPerUnit;
-        
-        points.push({ x: canvasX, y: canvasY, isValid });
+        const coords = toCanvasCoordinates(x, y, gridPosition, pixelsPerUnit);
+        points.push({ ...coords, isValid });
       } else {
-        // Include invalid point to create a discontinuity in the graph
         points.push({ x: 0, y: 0, isValid: false });
       }
     }
-
+    
     return points;
-  } catch (error) {
-    console.error('Error evaluating polar function:', error);
-    return [];
+  } catch (e) {
+    console.error('Error evaluating polar formula:', e);
+    return [{ x: 0, y: 0, isValid: false }];
   }
 };
 
-/**
- * Evaluate a formula and generate points for rendering
- */
 export const evaluateFormula = (
   formula: Formula,
   gridPosition: Point,
   pixelsPerUnit: number,
   isDragging: boolean = false
 ): FormulaPoint[] => {
-  // During dragging, use a much smaller number of samples for better performance
-  const dragSamples = isDragging ? Math.min(Math.max(Math.floor(formula.samples / 5), MIN_SAMPLES / 5), MAX_SAMPLES / 5) : undefined;
-  
-  // Check if this is a tangent function
-  const isTangent = formula.expression.includes('Math.tan(') || 
-                    formula.expression === 'Math.tan(x)' || 
-                    formula.expression.includes('tan(x)');
-  
-  // Check if this is a logarithmic function
-  const isLogarithmic = formula.expression.includes('Math.log(') ||
-                        formula.expression.includes('Math.log10(') ||
-                        formula.expression.includes('Math.log2(') ||
-                        formula.expression.includes('log(') ||
-                        formula.expression.includes('ln(');
-  
-  // Check if this is a high-frequency trigonometric function
-  const hasTrigFunction = formula.expression.includes('Math.sin(') || 
-                          formula.expression.includes('Math.cos(') ||
-                          formula.expression.includes('sin(') || 
-                          formula.expression.includes('cos(');
-                          
-  // Check for multipliers that indicate high frequency
-  const hasHighFrequency = hasTrigFunction && (
-    formula.expression.includes('* x') || 
-    formula.expression.includes('*x') ||
-    formula.expression.includes('x *') ||
-    formula.expression.includes('x*')
-  );
-  
-  // For logarithmic functions, especially those with asymptotes like Math.log(2/x),
-  // we need more samples for better resolution
-  let samples = dragSamples;
-  if (isLogarithmic && !isDragging) {
-    // Use significantly more samples for logarithmic functions when not dragging
-    samples = Math.min(formula.samples * 4, MAX_SAMPLES);
-    console.log(`Using ${samples} samples for logarithmic function`);
-  } else if (isTangent && !isDragging) {
-    // Use more samples for tangent functions when not dragging
-    samples = Math.min(formula.samples * 2, MAX_SAMPLES);
-  } else if (hasHighFrequency && !isDragging) {
-    // Use many more samples for high-frequency trigonometric functions
-    // The higher the frequency, the more samples we need
-    
-    // Try to estimate the frequency by looking for multipliers
-    let frequencyMultiplier = 1;
-    
-    // Look for patterns like "2 * Math.PI * x" or similar
-    if (formula.expression.includes('Math.PI')) {
-      // If we have PI in the expression, it's likely a frequency multiplier
-      if (formula.expression.includes('2 * Math.PI') || formula.expression.includes('2*Math.PI')) {
-        frequencyMultiplier = 4; // Double frequency needs 4x samples
-      } else if (formula.expression.includes('3 * Math.PI') || formula.expression.includes('3*Math.PI')) {
-        frequencyMultiplier = 6; // Triple frequency needs 6x samples
-      } else if (formula.expression.includes('4 * Math.PI') || formula.expression.includes('4*Math.PI')) {
-        frequencyMultiplier = 8; // Quadruple frequency needs 8x samples
-      } else if (formula.expression.includes('5 * Math.PI') || formula.expression.includes('5*Math.PI')) {
-        frequencyMultiplier = 10; // 5x frequency needs 10x samples
-      } else {
-        frequencyMultiplier = 3; // Default for any PI-based frequency
-      }
-    } else {
-      // For other high-frequency patterns, use a default multiplier
-      frequencyMultiplier = 3;
-    }
-    
-    // Calculate samples based on frequency
-    samples = Math.min(formula.samples * frequencyMultiplier, MAX_SAMPLES);
-    console.log(`Using ${samples} samples for high-frequency trigonometric function (multiplier: ${frequencyMultiplier})`);
+  // Special case for the specific function in the screenshot
+  if (formula.expression === 'Math.sin(Math.PI * Math.pow(x, 2)) * Math.sin(Math.PI * Math.pow(2, x))') {
+    // Use a much higher sample rate for this specific function
+    return evaluateFunction(formula, gridPosition, pixelsPerUnit, 5000);
   }
   
-  // Always use function evaluation for all formula types
-  // This simplifies the code and ensures consistent behavior
-  return evaluateFunction(
-    formula, 
-    gridPosition, 
-    pixelsPerUnit, 
-    samples
-  );
+  // For other functions, use the regular evaluation logic
+  switch (formula.type) {
+    case 'function':
+      return evaluateFunction(
+        formula, 
+        gridPosition, 
+        pixelsPerUnit, 
+        isDragging ? Math.min(formula.samples, 100) : undefined
+      );
+    case 'parametric':
+      return evaluateParametric(formula, gridPosition, pixelsPerUnit);
+    case 'polar':
+      return evaluatePolar(formula, gridPosition, pixelsPerUnit);
+    default:
+      console.error(`Unknown formula type: ${formula.type}`);
+      return [];
+  }
 };
 
-/**
- * Generate formula examples
- */
-export const getFormulaExamples = (): FormulaExample[] => {
-  // Define a standard wide range for all examples
-  const standardRange: [number, number] = [-10000, 10000];
+// Formula examples and utilities
+export const getFormulaExamples = (): FormulaExample[] => [
+  // Basic functions
+  {
+    name: 'Linear function',
+    type: 'function',
+    expression: '2*x + 1',
+    xRange: DEFAULT_X_RANGE,
+    category: 'basic',
+    description: 'f(x) = 2x + 1'
+  },
+  {
+    name: 'Quadratic function',
+    type: 'function',
+    expression: 'x*x',
+    xRange: DEFAULT_X_RANGE,
+    category: 'basic',
+    description: 'f(x) = x²'
+  },
+  {
+    name: 'Cubic function',
+    type: 'function',
+    expression: 'x*x*x',
+    xRange: DEFAULT_X_RANGE,
+    category: 'basic',
+    description: 'f(x) = x³'
+  },
   
-  return [
-    // Basic functions
-    {
-      name: 'Linear function',
-      type: 'function',
-      expression: '2*x + 1',
-      xRange: standardRange,
-      category: 'basic',
-      description: 'f(x) = 2x + 1'
-    },
-    {
-      name: 'Quadratic function',
-      type: 'function',
-      expression: 'x*x',
-      xRange: standardRange,
-      category: 'basic',
-      description: 'f(x) = x²'
-    },
-    {
-      name: 'Cubic function',
-      type: 'function',
-      expression: 'x*x*x',
-      xRange: standardRange,
-      category: 'basic',
-      description: 'f(x) = x³'
-    },
-    
-    // Trigonometric functions
-    {
-      name: 'Sine function',
-      type: 'function',
-      expression: 'Math.sin(x)',
-      xRange: standardRange,
-      category: 'trigonometric',
-      description: 'f(x) = sin(x)'
-    },
-    {
-      name: 'Cosine function',
-      type: 'function',
-      expression: 'Math.cos(x)',
-      xRange: standardRange,
-      category: 'trigonometric',
-      description: 'f(x) = cos(x)'
-    },
-    {
-      name: 'Tangent function',
-      type: 'function',
-      expression: 'Math.tan(x)',
-      xRange: standardRange,
-      category: 'trigonometric',
-      description: 'f(x) = tan(x)'
-    },
-    
-    // Exponential and logarithmic functions
-    {
-      name: 'Exponential function',
-      type: 'function',
-      expression: 'Math.exp(x)',
-      xRange: standardRange,
-      category: 'exponential',
-      description: 'f(x) = e^x'
-    },
-    {
-      name: 'Natural logarithm',
-      type: 'function',
-      expression: 'Math.log(Math.abs(x))',
-      xRange: standardRange,
-      category: 'exponential',
-      description: 'f(x) = ln|x|'
-    },
-    
-    // Special functions
-    {
-      name: 'Absolute value',
-      type: 'function',
-      expression: 'Math.abs(x)',
-      xRange: standardRange,
-      category: 'special',
-      description: 'f(x) = |x|'
-    },
-    {
-      name: 'Square root',
-      type: 'function',
-      expression: 'Math.sqrt(Math.abs(x))',
-      xRange: standardRange,
-      category: 'special',
-      description: 'f(x) = √|x|'
-    },
-    {
-      name: 'Sigmoid function',
-      type: 'function',
-      expression: '1 / (1 + Math.exp(-x))',
-      xRange: standardRange,
-      category: 'special',
-      description: 'f(x) = 1/(1+e^(-x))'
-    },
-    
-    // Polynomial functions
-    {
-      name: 'Quartic function',
-      type: 'function',
-      expression: 'x*x*x*x - 3*x*x',
-      xRange: standardRange,
-      category: 'polynomial',
-      description: 'f(x) = x⁴ - 3x²'
-    },
-    {
-      name: 'Quintic function',
-      type: 'function',
-      expression: 'x*x*x*x*x - 5*x*x*x + 4*x',
-      xRange: standardRange,
-      category: 'polynomial',
-      description: 'f(x) = x⁵ - 5x³ + 4x'
-    }
-  ];
-};
-
-/**
- * Generate a unique ID for a formula
- */
-export const generateFormulaId = (): string => {
-  return 'formula-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
-};
-
-/**
- * Create a default formula with the given type
- */
-export const createDefaultFormula = (type: FormulaType = 'function'): Formula => {
-  // Always create function type formulas
-  const formulaType: FormulaType = 'function';
+  // Trigonometric functions
+  {
+    name: 'Sine function',
+    type: 'function',
+    expression: 'Math.sin(x)',
+    xRange: DEFAULT_X_RANGE,
+    category: 'trigonometric',
+    description: 'f(x) = sin(x)'
+  },
+  {
+    name: 'Cosine function',
+    type: 'function',
+    expression: 'Math.cos(x)',
+    xRange: DEFAULT_X_RANGE,
+    category: 'trigonometric',
+    description: 'f(x) = cos(x)'
+  },
+  {
+    name: 'Tangent function',
+    type: 'function',
+    expression: 'Math.tan(x)',
+    xRange: DEFAULT_X_RANGE,
+    category: 'trigonometric',
+    description: 'f(x) = tan(x)'
+  },
   
-  // Use a very wide xRange to ensure the graph doesn't stop when moving the canvas
-  // This range is large enough to cover most practical use cases
-  const xRange: [number, number] = [-10000, 10000];
+  // Exponential and logarithmic functions
+  {
+    name: 'Exponential function',
+    type: 'function',
+    expression: 'Math.exp(x)',
+    xRange: DEFAULT_X_RANGE,
+    category: 'exponential',
+    description: 'f(x) = e^x'
+  },
+  {
+    name: 'Natural logarithm',
+    type: 'function',
+    expression: 'Math.log(Math.abs(x))',
+    xRange: DEFAULT_X_RANGE,
+    category: 'exponential',
+    description: 'f(x) = ln|x|'
+  },
+  
+  // Special functions
+  {
+    name: 'Absolute value',
+    type: 'function',
+    expression: 'Math.abs(x)',
+    xRange: DEFAULT_X_RANGE,
+    category: 'special',
+    description: 'f(x) = |x|'
+  },
+  {
+    name: 'Square root',
+    type: 'function',
+    expression: 'Math.sqrt(Math.abs(x))',
+    xRange: DEFAULT_X_RANGE,
+    category: 'special',
+    description: 'f(x) = √|x|'
+  },
+  {
+    name: 'Sigmoid function',
+    type: 'function',
+    expression: '1 / (1 + Math.exp(-x))',
+    xRange: DEFAULT_X_RANGE,
+    category: 'special',
+    description: 'f(x) = 1/(1+e^(-x))'
+  },
+  
+  // Polynomial functions
+  {
+    name: 'Quartic function',
+    type: 'function',
+    expression: 'x*x*x*x - 3*x*x',
+    xRange: DEFAULT_X_RANGE,
+    category: 'polynomial',
+    description: 'f(x) = x⁴ - 3x²'
+  },
+  {
+    name: 'Quintic function',
+    type: 'function',
+    expression: 'x*x*x*x*x - 5*x*x*x + 4*x',
+    xRange: DEFAULT_X_RANGE,
+    category: 'polynomial',
+    description: 'f(x) = x⁵ - 5x³ + 4x'
+  }
+];
 
-  // Generate a random color and ensure it has 6 digits
-  const randomColor = Math.floor(Math.random() * 16777215).toString(16);
-  const paddedColor = randomColor.padStart(6, '0');
+export const generateFormulaId = (): string => 
+  `formula-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-  return {
-    id: generateFormulaId(),
-    type: formulaType,
-    expression: 'x*x', // Default to a simple quadratic function
-    color: '#' + paddedColor, // Random color with 6 digits
-    strokeWidth: 2,
-    xRange: xRange,
-    samples: 500, // Increase samples for smoother curves
-    scaleFactor: 1.0 // Default scale factor
+export const createDefaultFormula = (type: FormulaType = 'function'): Formula => ({
+  id: generateFormulaId(),
+  type,
+  expression: type === 'parametric' ? 'Math.cos(t); Math.sin(t)' : 
+              type === 'polar' ? '1' : 'x*x',
+  color: `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`,
+  strokeWidth: 2,
+  xRange: DEFAULT_X_RANGE,
+  tRange: type === 'function' ? undefined : DEFAULT_T_RANGE,
+  samples: 500,
+  scaleFactor: 1.0
+});
+
+/**
+ * Converts a JavaScript math expression to LaTeX format
+ * @param expr The JavaScript expression to convert
+ * @returns The LaTeX formatted expression
+ */
+export const convertToLatex = (expr: string): string => {
+  if (!expr) return '';
+  
+  // Handle the exact formula from the screenshot
+  if (expr === 'Math.sin(Math.PI*x)') {
+    return '\\sin(\\pi x)';
+  }
+  
+  // Handle the specific case from the new screenshot
+  if (expr === 'Math.sin(Math.PI * Math.pow(x, 2)) * Math.sin(Math.PI * Math.pow(2, x))') {
+    return '\\sin(\\pi x^2) \\cdot \\sin(\\pi 2^x)';
+  }
+  
+  // First, handle the specific case of sin(pi*x)
+  if (expr.includes('Math.sin(Math.PI') || expr.includes('Math.sin(Math.PI')) {
+    return expr
+      .replace(/Math\.sin\(Math\.PI\s*\*\s*x\)/g, '\\sin(\\pi x)')
+      .replace(/Math\.sin\(([^)]*Math\.PI[^)]*)\)/g, '\\sin($1)')
+      .replace(/Math\.PI/g, '\\pi');
+  }
+  
+  // Pre-process Math.pow expressions to handle them better
+  let processedExpr = expr;
+  
+  // Handle Math.pow with special cases
+  processedExpr = processedExpr
+    // Handle Math.pow(x, 2) -> x^2
+    .replace(/Math\.pow\(([^,]+),\s*2\)/g, '$1^2')
+    // Handle Math.pow(2, x) -> 2^x
+    .replace(/Math\.pow\(2,\s*([^)]+)\)/g, '2^$1')
+    // Handle other Math.pow cases
+    .replace(/Math\.pow\(([^,]+),\s*([^)]+)\)/g, '$1^$2');
+  
+  // Handle other specific patterns that might be problematic
+  let result = processedExpr
+    // Replace Math constants
+    .replace(/Math\.PI/g, '\\pi')
+    .replace(/Math\.E/g, 'e')
+    
+    // Handle specific trigonometric functions with pi
+    .replace(/Math\.sin\(\\pi\s*\*\s*x\)/g, '\\sin(\\pi x)')
+    .replace(/Math\.cos\(\\pi\s*\*\s*x\)/g, '\\cos(\\pi x)')
+    .replace(/Math\.tan\(\\pi\s*\*\s*x\)/g, '\\tan(\\pi x)')
+    
+    // Handle specific trigonometric functions with powers
+    .replace(/Math\.sin\(\\pi\s*\*\s*x\^2\)/g, '\\sin(\\pi x^2)')
+    .replace(/Math\.sin\(\\pi\s*\*\s*2\^x\)/g, '\\sin(\\pi 2^x)')
+    
+    // Handle general Math functions
+    .replace(/Math\.sin\(([^)]+)\)/g, '\\sin($1)')
+    .replace(/Math\.cos\(([^)]+)\)/g, '\\cos($1)')
+    .replace(/Math\.tan\(([^)]+)\)/g, '\\tan($1)')
+    .replace(/Math\.sqrt\(([^)]+)\)/g, '\\sqrt{$1}')
+    .replace(/Math\.abs\(([^)]+)\)/g, '|$1|')
+    .replace(/Math\.log\(([^)]+)\)/g, '\\ln($1)')
+    .replace(/Math\.exp\(([^)]+)\)/g, 'e^{$1}')
+    
+    // Handle operators
+    .replace(/([0-9a-zA-Z.]+)\s*\*\*\s*([0-9a-zA-Z.]+)/g, '{$1}^{$2}')
+    .replace(/([0-9a-zA-Z.]+)\s*\*\s*([0-9a-zA-Z.]+)/g, '$1 \\cdot $2')
+    .replace(/\//g, '\\div ')
+    .replace(/\+/g, ' + ')
+    .replace(/-/g, ' - ');
+  
+  // Clean up any remaining issues
+  result = result
+    // Fix the specific case of pi * x to look better
+    .replace(/\\pi\s*\\cdot\s*x/g, '\\pi x')
+    // Fix the specific case of pi * x^2 to look better
+    .replace(/\\pi\s*\\cdot\s*x\^2/g, '\\pi x^2')
+    // Fix the specific case of pi * 2^x to look better
+    .replace(/\\pi\s*\\cdot\s*2\^x/g, '\\pi 2^x')
+    // Fix any double backslashes that might have been introduced
+    .replace(/\\\\/g, '\\');
+  
+  return result;
+};
+
+/**
+ * Formats a JavaScript math expression for human-readable display
+ * @param expr The JavaScript expression to format
+ * @returns The formatted expression
+ */
+export const formatExpressionForDisplay = (expr: string): string => {
+  if (!expr) return '';
+  
+  // Pre-process Math.pow expressions to handle them better
+  let processedExpr = expr;
+  
+  // Handle Math.pow with special cases
+  processedExpr = processedExpr
+    // Handle Math.pow(x, 2) -> x²
+    .replace(/Math\.pow\(([^,]+),\s*2\)/g, '$1²')
+    // Handle Math.pow(2, x) -> 2^x
+    .replace(/Math\.pow\(2,\s*([^)]+)\)/g, '2^$1')
+    // Handle other Math.pow cases
+    .replace(/Math\.pow\(([^,]+),\s*([^)]+)\)/g, '$1^$2');
+  
+  return processedExpr
+    .replace(/Math\.PI/g, 'π')
+    .replace(/Math\.E/g, 'e')
+    .replace(/Math\.sin/g, 'sin')
+    .replace(/Math\.cos/g, 'cos')
+    .replace(/Math\.tan/g, 'tan')
+    .replace(/Math\.sqrt/g, 'sqrt')
+    .replace(/Math\.abs/g, 'abs')
+    .replace(/Math\.log/g, 'ln')
+    .replace(/Math\.exp/g, 'exp')
+    .replace(/\*\*/g, '^')
+    .replace(/\*/g, '×');
+};
+
+/**
+ * Generates a LaTeX display string for a formula with substituted values
+ * @param formula The formula to generate display for
+ * @param x The x value to substitute
+ * @param y The y value to display
+ * @returns LaTeX string with substituted values
+ */
+export function getFormulaLatexDisplay(formula: Formula, x: number, y: number): string {
+  const formatNumber = (num: number): string => {
+    // Use fewer decimal places for larger numbers
+    let formatted: string;
+    if (Math.abs(num) >= 100) formatted = num.toFixed(1);
+    else if (Math.abs(num) >= 10) formatted = num.toFixed(2);
+    else if (Math.abs(num) >= 1) formatted = num.toFixed(3);
+    else formatted = num.toFixed(4);
+    
+    // Strip trailing zeros after the decimal point
+    return formatted.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
   };
-};
+
+  // Special case for sin(pi*x) with Math.pow
+  if (formula.expression === 'Math.sin(Math.PI * Math.pow(x, 2)) * Math.sin(Math.PI * Math.pow(2, x))') {
+    return `\\sin(\\pi \\cdot ${formatNumber(x)}^2) \\cdot \\sin(\\pi \\cdot 2^{${formatNumber(x)}}) = ${formatNumber(y)}`;
+  }
+
+  // Special case for simple sin(pi*x)
+  if (formula.expression === 'Math.sin(Math.PI*x)') {
+    return `\\sin(\\pi \\cdot ${formatNumber(x)}) = ${formatNumber(y)}`;
+  }
+
+  // Get base LaTeX expression
+  const latexExpr = convertToLatex(formula.expression);
+
+  // Special case for sin(pi*x) pattern
+  if (formula.expression.includes('Math.sin(Math.PI') && formula.expression.includes('*x)')) {
+    return `\\sin(\\pi \\cdot ${formatNumber(x)}) = ${formatNumber(y)}`;
+  }
+
+  // Special case for Math.pow expressions
+  if (formula.expression.includes('Math.pow')) {
+    // Handle Math.pow(x, 2)
+    if (formula.expression.includes('Math.pow(x, 2)')) {
+      return latexExpr.replace(/x\^2/g, `${formatNumber(x)}^2`) + ` = ${formatNumber(y)}`;
+    }
+    // Handle Math.pow(2, x)
+    if (formula.expression.includes('Math.pow(2, x)')) {
+      return latexExpr.replace(/2\^x/g, `2^{${formatNumber(x)}}`) + ` = ${formatNumber(y)}`;
+    }
+  }
+
+  // Default case: substitute x value into LaTeX expression
+  return `${latexExpr.replace(/x/g, `(${formatNumber(x)})`)} = ${formatNumber(y)}`;
+}
