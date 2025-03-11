@@ -171,8 +171,8 @@ describe('GeometryCanvas', () => {
       // This is a more direct test of the fix we made
       
       // Check that the console logs show the key events were captured
-      expect(consoleSpy).toHaveBeenCalledWith('Canvas keydown:', 'ArrowUp');
-      expect(consoleSpy).toHaveBeenCalledWith('Canvas keydown:', 'ArrowDown');
+      expect(consoleSpy).toHaveBeenCalledWith('Key down:', 'ArrowUp');
+      expect(consoleSpy).toHaveBeenCalledWith('Key down:', 'ArrowDown');
       
       // Clean up
       consoleSpy.mockRestore();
