@@ -26,9 +26,9 @@ export function encodeShapesToString(shapes: AnyShape[]): string {
       shape.position.x.toFixed(1), // Reduce precision to save space
       shape.position.y.toFixed(1),
       shape.rotation.toFixed(1),
-      encodeURIComponent(shape.fill),
-      encodeURIComponent(shape.stroke),
-      shape.strokeWidth.toFixed(1)
+      encodeURIComponent(shape.fillColor),
+      encodeURIComponent(shape.strokeColor),
+      shape.opacity.toFixed(1)
     ];
     
     // Add type-specific properties
@@ -100,9 +100,9 @@ export function decodeStringToShapes(encodedString: string): AnyShape[] {
       const x = parseFloat(parts[2]);
       const y = parseFloat(parts[3]);
       const rotation = parseFloat(parts[4]);
-      const fill = decodeURIComponent(parts[5]);
-      const stroke = decodeURIComponent(parts[6]);
-      const strokeWidth = parseFloat(parts[7]);
+      const fillColor = decodeURIComponent(parts[5]);
+      const strokeColor = decodeURIComponent(parts[6]);
+      const opacity = parseFloat(parts[7]);
       
       // Common shape properties
       const commonProps = {
@@ -110,10 +110,9 @@ export function decodeStringToShapes(encodedString: string): AnyShape[] {
         type,
         position: { x, y },
         rotation,
-        selected: false, // Always start unselected
-        fill,
-        stroke,
-        strokeWidth
+        fillColor,
+        strokeColor,
+        opacity
       };
       
       // Create the specific shape type
