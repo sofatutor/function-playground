@@ -159,7 +159,8 @@
     "tabs": {
       "general": "General",
       "openai": "OpenAI API",
-      "calibration": "Screen Calibration"
+      "calibration": "Screen Calibration",
+      "developer": "Developer"
     },
     "general": {
       "title": "General Settings",
@@ -190,6 +191,12 @@
       "pixelsPerUnit": "pixels per {unit}",
       "cancelButton": "Cancel",
       "applyButton": "Apply Calibration"
+    },
+    "developer": {
+      "title": "Developer Settings",
+      "description": "Advanced settings for development and debugging",
+      "loggingLabel": "Console Logging",
+      "loggingDescription": "Enable or disable console logging with timestamps"
     }
   },
   "componentConfigModal": {

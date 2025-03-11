@@ -1,12 +1,14 @@
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { MeasurementUnit } from '@/types/shapes';
 import { encryptData, decryptData } from '@/utils/encryption';
+import { setLoggingEnabled, isLoggingEnabled, LOGGER_STORAGE_KEY } from '@/utils/logger';
 
 // Constants for localStorage keys (non-human readable)
 const STORAGE_KEYS = {
   LANGUAGE: 'lang',
   OPENAI_API_KEY: '_gp_oai_k',
-  MEASUREMENT_UNIT: 'mu'
+  MEASUREMENT_UNIT: 'mu',
+  LOGGING_ENABLED: LOGGER_STORAGE_KEY
 };
 
 // Separate types for global vs component settings
@@ -18,6 +20,10 @@ type GlobalConfigContextType = {
   // OpenAI API settings
   openaiApiKey: string | null;
   setOpenaiApiKey: (key: string | null) => Promise<void>;
+  
+  // Logging settings
+  loggingEnabled: boolean;
+  setLoggingEnabled: (enabled: boolean) => void;
   
   // Modal control for global settings
   isGlobalConfigModalOpen: boolean;
@@ -57,6 +63,9 @@ const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   
   const [openaiApiKey, setOpenaiApiKeyState] = useState<string | null>(null);
   const [isGlobalConfigModalOpen, setGlobalConfigModalOpen] = useState<boolean>(false);
+  
+  // Logging settings
+  const [loggingEnabled, setLoggingEnabledState] = useState<boolean>(isLoggingEnabled);
   
   // Component-specific settings
   const [pixelsPerUnit, setPixelsPerUnit] = useState<number>(60); // Default: 60 pixels per unit
@@ -141,12 +150,20 @@ const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     localStorage.setItem(STORAGE_KEYS.MEASUREMENT_UNIT, measurementUnit);
   }, [measurementUnit]);
   
+  // Handle setting the logging enabled state
+  const handleSetLoggingEnabled = (enabled: boolean) => {
+    setLoggingEnabledState(enabled);
+    setLoggingEnabled(enabled);
+  };
+  
   // Global context value
   const globalContextValue: GlobalConfigContextType = {
     language,
     setLanguage,
     openaiApiKey,
     setOpenaiApiKey,
+    loggingEnabled,
+    setLoggingEnabled: handleSetLoggingEnabled,
     isGlobalConfigModalOpen,
     setGlobalConfigModalOpen,
   };
