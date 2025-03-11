@@ -180,7 +180,50 @@ export const translations = {
     parametricPointInfo: "Fonction paramétrique (valeur t non disponible)",
     polarPointInfo: "Fonction polaire (valeur θ non disponible)",
     pointInfoTitle: "Information du Point",
-    clickOnCurveInstruction: "Cliquez sur la courbe pour sélectionner un point et afficher ses informations."
+    clickOnCurveInstruction: "Cliquez sur la courbe pour sélectionner un point et afficher ses informations.",
+    naturalLanguageProcessing: "Traitement en cours...",
+    naturalLanguageDescription: "Utilisez un langage naturel ou du pseudocode pour décrire la fonction que vous souhaitez créer. OpenAI la convertira en une expression mathématique.",
+    configModal: {
+      title: "Configuration",
+      description: "Paramètres globaux de l'application",
+      tabs: {
+        general: "Général",
+        openai: "OpenAI",
+        developer: "Développeur"
+      },
+      general: {
+        description: "Paramètres généraux de l'application",
+        languageLabel: "Langue",
+        languagePlaceholder: "Sélectionnez une langue"
+      },
+      openai: {
+        description: "Paramètres de l'API OpenAI",
+        apiKeyLabel: "Clé API",
+        apiKeyPlaceholder: "Entrez votre clé API OpenAI",
+        apiKeyHint: "Votre clé API est stockée localement et chiffrée",
+        clearApiKey: "Effacer la clé API"
+      },
+      developer: {
+        description: "Options de développement",
+        loggingLabel: "Niveau de journalisation",
+        loggingDescription: "Définir le niveau de détail des journaux"
+      },
+      calibration: {
+        title: "Calibration",
+        description: "Calibrez l'écran pour des mesures précises",
+        instructions: "Pour calibrer, mesurez une distance connue sur votre écran",
+        lengthLabel: "Longueur de référence",
+        startButton: "Commencer la calibration",
+        placeRuler: "Placez une règle sur votre écran",
+        lineDescription: "Ajustez la ligne pour qu'elle mesure exactement {length} {unit}",
+        coarseAdjustment: "Ajustement grossier",
+        fineAdjustment: "Ajustement fin",
+        currentValue: "Valeur actuelle",
+        pixelsPerUnit: "pixels/{unit}",
+        cancelButton: "Annuler",
+        applyButton: "Appliquer"
+      }
+    }
   },
   de: {
     formulaEditor: "Formelplotter",

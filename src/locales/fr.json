@@ -103,7 +103,20 @@
     "rotate": "Faire Pivoter la Forme",
     "delete": "Supprimer la Sélection",
     "plot": "Tracer des Fonctions",
-    "plotDescription": "Créer et visualiser des fonctions mathématiques"
+    "plotDescription": "Créer et visualiser des fonctions mathématiques",
+    "calibrate": "Calibrer l'Écran",
+    "calibrateDescription": "Ajuster la calibration de l'écran pour des mesures physiques précises",
+    "coarseAdjustment": "Ajustement grossier : effectuer des changements plus importants à la calibration",
+    "fineAdjustment": "Ajustement fin : effectuer des changements plus précis à la calibration",
+    "move": "Déplacer la Forme",
+    "draw": "Dessiner une Forme",
+    "clear": "Effacer Toutes les Formes",
+    "moveDescription": "Déplacer la forme sélectionnée",
+    "rotateDescription": "Faire pivoter la forme sélectionnée",
+    "clearDescription": "Supprimer toutes les formes du canevas",
+    "examplesButtonTooltip": "Parcourir les fonctions d'exemple",
+    "scaleFactorTooltip": "Ajuster le facteur d'échelle",
+    "colorPickerTooltip": "Changer la couleur de la fonction"
   },
   "pointX": "X",
   "pointY": "Y",
@@ -142,7 +155,8 @@
     "tabs": {
       "general": "Général",
       "openai": "API OpenAI",
-      "calibration": "Calibration d'Écran"
+      "calibration": "Calibration d'Écran",
+      "developer": "Développeur"
     },
     "general": {
       "title": "Paramètres Généraux",
@@ -173,6 +187,12 @@
       "pixelsPerUnit": "pixels par {unit}",
       "cancelButton": "Annuler",
       "applyButton": "Appliquer la Calibration"
+    },
+    "developer": {
+      "title": "Paramètres Développeur",
+      "description": "Paramètres avancés pour le développement et le débogage",
+      "loggingLabel": "Journalisation Console",
+      "loggingDescription": "Activer ou désactiver la journalisation console avec horodatage"
     }
   },
   "componentConfigModal": {
@@ -205,5 +225,7 @@
   "scaleFactor": "Facteur d'Échelle",
   "scaleFactorHint": "Ajustez le facteur d'échelle pour étirer ou comprimer le graphique verticalement",
   "scaleMin": "0,001x",
-  "scaleDefault": "1,0x"
+  "scaleDefault": "1,0x",
+  "previousFormula": "Formule Précédente",
+  "nextFormula": "Formule Suivante"
 } 
