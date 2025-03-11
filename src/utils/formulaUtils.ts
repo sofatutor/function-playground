@@ -876,3 +876,57 @@ export const formatExpressionForDisplay = (expr: string): string => {
     .replace(/\*\*/g, '^')
     .replace(/\*/g, '×');
 };
+
+/**
+ * Generates a LaTeX display string for a formula with substituted values
+ * @param formula The formula to generate display for
+ * @param x The x value to substitute
+ * @param y The y value to display
+ * @returns LaTeX string with substituted values
+ */
+export function getFormulaLatexDisplay(formula: Formula, x: number, y: number): string {
+  const formatNumber = (num: number): string => {
+    // Use fewer decimal places for larger numbers
+    let formatted: string;
+    if (Math.abs(num) >= 100) formatted = num.toFixed(1);
+    else if (Math.abs(num) >= 10) formatted = num.toFixed(2);
+    else if (Math.abs(num) >= 1) formatted = num.toFixed(3);
+    else formatted = num.toFixed(4);
+    
+    // Strip trailing zeros after the decimal point
+    return formatted.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
+  };
+
+  // Special case for sin(pi*x) with Math.pow
+  if (formula.expression === 'Math.sin(Math.PI * Math.pow(x, 2)) * Math.sin(Math.PI * Math.pow(2, x))') {
+    return `\\sin(\\pi \\cdot ${formatNumber(x)}^2) \\cdot \\sin(\\pi \\cdot 2^{${formatNumber(x)}}) = ${formatNumber(y)}`;
+  }
+
+  // Special case for simple sin(pi*x)
+  if (formula.expression === 'Math.sin(Math.PI*x)') {
+    return `\\sin(\\pi \\cdot ${formatNumber(x)}) = ${formatNumber(y)}`;
+  }
+
+  // Get base LaTeX expression
+  const latexExpr = convertToLatex(formula.expression);
+
+  // Special case for sin(pi*x) pattern
+  if (formula.expression.includes('Math.sin(Math.PI') && formula.expression.includes('*x)')) {
+    return `\\sin(\\pi \\cdot ${formatNumber(x)}) = ${formatNumber(y)}`;
+  }
+
+  // Special case for Math.pow expressions
+  if (formula.expression.includes('Math.pow')) {
+    // Handle Math.pow(x, 2)
+    if (formula.expression.includes('Math.pow(x, 2)')) {
+      return latexExpr.replace(/x\^2/g, `${formatNumber(x)}^2`) + ` = ${formatNumber(y)}`;
+    }
+    // Handle Math.pow(2, x)
+    if (formula.expression.includes('Math.pow(2, x)')) {
+      return latexExpr.replace(/2\^x/g, `2^{${formatNumber(x)}}`) + ` = ${formatNumber(y)}`;
+    }
+  }
+
+  // Default case: substitute x value into LaTeX expression
+  return `${latexExpr.replace(/x/g, `(${formatNumber(x)})`)} = ${formatNumber(y)}`;
+}

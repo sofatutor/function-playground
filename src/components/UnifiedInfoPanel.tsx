@@ -9,7 +9,7 @@ import { normalizeAngleDegrees } from '@/utils/geometry/rotation';
 import { useIsMobile } from '@/hooks/use-mobile';
 import 'katex/dist/katex.min.css';
 import { InlineMath } from 'react-katex';
-import { convertToLatex, formatExpressionForDisplay } from '@/utils/formulaUtils';
+import { convertToLatex, formatExpressionForDisplay, getFormulaLatexDisplay } from '@/utils/formulaUtils';
 
 interface UnifiedInfoPanelProps {
   // Shape info props
@@ -169,38 +169,7 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
       return t('polarPointInfo');
     }
     
-    // Special case for the exact formula from the screenshot with Math.pow
-    if (formula.expression === 'Math.sin(Math.PI * Math.pow(x, 2)) * Math.sin(Math.PI * Math.pow(2, x))') {
-      return `\\sin(\\pi \\cdot ${formatNumber(mathX)}^2) \\cdot \\sin(\\pi \\cdot 2^{${formatNumber(mathX)}}) = ${formatNumber(mathY)}`;
-    }
-    
-    // Special case for the exact formula from the first screenshot
-    if (formula.expression === 'Math.sin(Math.PI*x)') {
-      return `\\sin(\\pi \\cdot ${formatNumber(mathX)}) = ${formatNumber(mathY)}`;
-    }
-    
-    // For regular functions, show the calculation in LaTeX format
-    const latexExpr = convertToLatex(formula.expression);
-    
-    // Special case for sin(pi*x) to make it look better
-    if (formula.expression.includes('Math.sin(Math.PI') && formula.expression.includes('*x)')) {
-      return `\\sin(\\pi \\cdot ${formatNumber(mathX)}) = ${formatNumber(mathY)}`;
-    }
-    
-    // Special case for Math.pow expressions
-    if (formula.expression.includes('Math.pow')) {
-      // Handle Math.pow(x, 2)
-      if (formula.expression.includes('Math.pow(x, 2)')) {
-        return latexExpr.replace(/x\^2/g, `${formatNumber(mathX)}^2`) + ` = ${formatNumber(mathY)}`;
-      }
-      // Handle Math.pow(2, x)
-      if (formula.expression.includes('Math.pow(2, x)')) {
-        return latexExpr.replace(/2\^x/g, `2^{${formatNumber(mathX)}}`) + ` = ${formatNumber(mathY)}`;
-      }
-    }
-    
-    // Use proper LaTeX formatting for substitution
-    return `${latexExpr.replace(/x/g, `(${formatNumber(mathX)})`)} = ${formatNumber(mathY)}`;
+    return getFormulaLatexDisplay(formula, mathX, mathY);
   };
 
   // If neither shape nor point is selected, show nothing
