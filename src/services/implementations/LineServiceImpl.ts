@@ -56,10 +56,9 @@ export class LineServiceImpl implements LineService {
       endPoint: { ...end },
       position: this.calculateMidpoint(start, end),
       rotation: this.calculateAngleFromPoints(start, end),
-      selected: false,
-      stroke: lineColor,
-      strokeWidth: 3,
-      fill: 'transparent',
+      strokeColor: lineColor,
+      fillColor: 'transparent',
+      opacity: 1,
       length
     };
   }

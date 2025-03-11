@@ -50,10 +50,9 @@ export class RectangleServiceImpl implements RectangleService {
       width: Math.max(1, width), // Ensure minimum width of 1
       height: Math.max(1, height), // Ensure minimum height of 1
       rotation: rotation || 0,
-      selected: false,
-      fill: color || getNextShapeColor(),
-      stroke: '#000000',
-      strokeWidth: 1
+      fillColor: color || getNextShapeColor(),
+      strokeColor: '#000000',
+      opacity: 1
     };
   }
   
@@ -291,12 +290,21 @@ export class RectangleServiceImpl implements RectangleService {
     scaleY: number, 
     center?: Point
   ): Rectangle {
-    // For simplicity, we're just scaling the dimensions
-    // In a real implementation, you might need to adjust the position based on the center of scaling
+    // Store original dimensions if they don't exist yet
+    const originalDimensions = rectangle.originalDimensions || {
+      width: rectangle.width,
+      height: rectangle.height
+    };
+    
+    // Scale from original dimensions if they exist, otherwise use current dimensions
+    const baseWidth = originalDimensions.width || rectangle.width;
+    const baseHeight = originalDimensions.height || rectangle.height;
+    
     return {
       ...rectangle,
-      width: rectangle.width * scaleX,
-      height: rectangle.height * scaleY
+      width: baseWidth * scaleX,
+      height: baseHeight * scaleY,
+      originalDimensions: originalDimensions // Preserve original dimensions
     };
   }
   
@@ -323,13 +331,22 @@ export class RectangleServiceImpl implements RectangleService {
       return {
         ...rectangle,
         width,
-        height: newHeight
+        height: newHeight,
+        originalDimensions: {
+          ...rectangle.originalDimensions,
+          width,
+          height: newHeight
+        }
       };
     }
     
     return {
       ...rectangle,
-      width
+      width,
+      originalDimensions: {
+        ...rectangle.originalDimensions,
+        width
+      }
     };
   }
   
@@ -356,13 +373,22 @@ export class RectangleServiceImpl implements RectangleService {
       return {
         ...rectangle,
         width: newWidth,
-        height
+        height,
+        originalDimensions: {
+          ...rectangle.originalDimensions,
+          width: newWidth,
+          height
+        }
       };
     }
     
     return {
       ...rectangle,
-      height
+      height,
+      originalDimensions: {
+        ...rectangle.originalDimensions,
+        height
+      }
     };
   }
   
