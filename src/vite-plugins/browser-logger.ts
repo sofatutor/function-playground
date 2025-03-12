@@ -9,12 +9,29 @@ export function browserLogger(): Plugin {
   // Track active connections
   let activeConnectionId: string | null = null;
   let connectionCount = 0;
+  // Track last heartbeat time for active connection
+  let lastHeartbeatTime: number = 0;
+  // Timeout duration in milliseconds (10 seconds)
+  const CONNECTION_TIMEOUT = 10000;
+  // Interval for checking connection timeouts
+  let timeoutCheckInterval: NodeJS.Timeout | null = null;
+
+  // Function to check for timed-out connections
+  const checkConnectionTimeout = () => {
+    if (activeConnectionId && Date.now() - lastHeartbeatTime > CONNECTION_TIMEOUT) {
+      console.log(chalk.yellow(`⚠ Browser logger connection timed out (ID: ${activeConnectionId.substring(0, 12)}...)`));
+      activeConnectionId = null;
+    }
+  };
 
   return {
     name: 'vite-plugin-browser-logger',
     apply: 'serve', // Only apply this plugin during development
     
     configureServer(server) {
+      // Start the timeout check interval
+      timeoutCheckInterval = setInterval(checkConnectionTimeout, CONNECTION_TIMEOUT / 2);
+
       // Add middleware to handle browser logs
       server.middlewares.use('/vite-browser-log', (req, res) => {
         // Set CORS headers
@@ -38,10 +55,20 @@ export function browserLogger(): Plugin {
             // Generate a new connection ID
             const connectionId = `browser-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
             
-            // If this is the first connection, make it active
-            if (activeConnectionId === null) {
+            // Check if the current active connection has timed out
+            const hasActiveConnectionTimedOut = activeConnectionId && (Date.now() - lastHeartbeatTime > CONNECTION_TIMEOUT);
+            
+            // If this is the first connection or the active connection has timed out, make it active
+            if (activeConnectionId === null || hasActiveConnectionTimedOut) {
+              // If there was a timed out connection, log it
+              if (hasActiveConnectionTimedOut) {
+                console.log(chalk.yellow(`⚠ Browser logger connection timed out (ID: ${activeConnectionId.substring(0, 12)}...)`));
+              }
+              
               activeConnectionId = connectionId;
               connectionCount++;
+              // Set initial heartbeat time
+              lastHeartbeatTime = Date.now();
               console.log(chalk.green(`✓ Browser Logger connected (ID: ${connectionId.substring(0, 12)}...)`));
               
               // Send success response with connection ID
@@ -75,15 +102,39 @@ export function browserLogger(): Plugin {
             
             // Check if this is the active connection
             if (connectionId === activeConnectionId) {
+              // Update last heartbeat time
+              lastHeartbeatTime = Date.now();
               // Send success response
               res.statusCode = 200;
               res.setHeader('Content-Type', 'application/json');
               res.end(JSON.stringify({ status: 'active' }));
-            } else {
-              // Send inactive response
+            } else if (activeConnectionId === null) {
+              // If there's no active connection, this one can become active
+              activeConnectionId = connectionId;
+              lastHeartbeatTime = Date.now();
+              console.log(chalk.green(`✓ Browser Logger reconnected (ID: ${connectionId?.substring(0, 12)}...)`));
               res.statusCode = 200;
               res.setHeader('Content-Type', 'application/json');
-              res.end(JSON.stringify({ status: 'inactive' }));
+              res.end(JSON.stringify({ status: 'active' }));
+            } else {
+              // Check if the current active connection has timed out
+              const hasActiveConnectionTimedOut = Date.now() - lastHeartbeatTime > CONNECTION_TIMEOUT;
+              
+              if (hasActiveConnectionTimedOut) {
+                // If the active connection has timed out, make this one active
+                console.log(chalk.yellow(`⚠ Browser logger connection timed out (ID: ${activeConnectionId.substring(0, 12)}...)`));
+                activeConnectionId = connectionId;
+                lastHeartbeatTime = Date.now();
+                console.log(chalk.green(`✓ Browser Logger promoted (ID: ${connectionId?.substring(0, 12)}...)`));
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ status: 'active' }));
+              } else {
+                // Send inactive response
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ status: 'inactive' }));
+              }
             }
             return;
           }
@@ -140,6 +191,9 @@ export function browserLogger(): Plugin {
               return;
             }
             
+            // Update last heartbeat time on any successful log
+            lastHeartbeatTime = Date.now();
+            
             // Format the log message with colors based on the log level
             let color;
             switch (level.toLowerCase()) {
@@ -188,6 +242,14 @@ export function browserLogger(): Plugin {
       
       // Log a message to confirm the plugin is loaded
       console.log(chalk.green('✓ Browser Logger plugin initialized'));
+      
+      // Clean up interval when server closes
+      server.httpServer?.on('close', () => {
+        if (timeoutCheckInterval) {
+          clearInterval(timeoutCheckInterval);
+          timeoutCheckInterval = null;
+        }
+      });
     },
     
     // Inject client code to handle browser logs
@@ -208,6 +270,9 @@ export function browserLogger(): Plugin {
               let heartbeatInterval = null;
               let logQueue = [];
               let isProcessingQueue = false;
+              
+              // Heartbeat interval in milliseconds (10 seconds)
+              const HEARTBEAT_INTERVAL = 10000;
               
               // Helper to format timestamp
               const getTimestamp = () => {
@@ -280,7 +345,7 @@ export function browserLogger(): Plugin {
                       console.log('[Browser Logger] Connected as primary logger');
                       
                       // Start heartbeat to maintain connection
-                      heartbeatInterval = setInterval(sendHeartbeat, 30000);
+                      heartbeatInterval = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
                       
                       // Set up disconnect on page unload
                       window.addEventListener('beforeunload', disconnectFromServer);
@@ -289,6 +354,9 @@ export function browserLogger(): Plugin {
                       processLogQueue();
                     } else {
                       console.log('[Browser Logger] Connected as secondary logger (logs will not be sent to server)');
+                      
+                      // Even inactive loggers should send heartbeats to check if they can become active
+                      heartbeatInterval = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
                     }
                   }
                 } catch (e) {
@@ -298,7 +366,7 @@ export function browserLogger(): Plugin {
               
               // Send heartbeat to keep connection alive
               const sendHeartbeat = async () => {
-                if (!connectionId || !isActiveLogger) return;
+                if (!connectionId) return;
                 
                 try {
                   const response = await fetch(\`/vite-browser-log?action=heartbeat&connectionId=\${connectionId}\`, {
@@ -307,11 +375,15 @@ export function browserLogger(): Plugin {
                   
                   if (response.ok) {
                     const data = await response.json();
+                    const wasActive = isActiveLogger;
                     isActiveLogger = data.status === 'active';
                     
-                    if (!isActiveLogger) {
+                    if (!wasActive && isActiveLogger) {
+                      console.log('[Browser Logger] Promoted to primary logger');
+                      // Process any queued logs now that we're active
+                      processLogQueue();
+                    } else if (wasActive && !isActiveLogger) {
                       console.log('[Browser Logger] No longer the primary logger');
-                      clearInterval(heartbeatInterval);
                     }
                   }
                 } catch (e) {
