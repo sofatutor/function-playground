@@ -1,24 +1,6 @@
 import type { Plugin } from 'vite';
 import chalk from 'chalk';
 
-// Flag to disable chalk in tests
-const IS_TEST = process.env.NODE_ENV === 'test';
-
-// Helper function for safe chalk usage in tests
-const safeChalk = {
-  green: (text: string) => IS_TEST ? text : chalk.green(text),
-  yellow: (text: string) => IS_TEST ? text : chalk.yellow(text),
-  red: (text: string) => IS_TEST ? text : chalk.red(text),
-  blue: (text: string) => IS_TEST ? text : chalk.blue(text),
-  magenta: (text: string) => IS_TEST ? text : chalk.magenta(text),
-  white: (text: string) => IS_TEST ? text : chalk.white(text),
-  dim: (text: string) => IS_TEST ? text : chalk.dim(text),
-  cyan: (text: string) => IS_TEST ? text : chalk.cyan(text),
-  bold: {
-    bgBlack: (text: string) => IS_TEST ? text : chalk.bold.bgBlack(text)
-  }
-};
-
 /**
  * Vite plugin to capture browser logs and display them in the terminal
  * This plugin adds a dedicated endpoint for browser logs
@@ -37,7 +19,7 @@ export function browserLogger(): Plugin {
   // Function to check for timed-out connections
   const checkConnectionTimeout = () => {
     if (activeConnectionId && Date.now() - lastHeartbeatTime > CONNECTION_TIMEOUT) {
-      console.log(safeChalk.yellow(`⚠ Browser logger connection timed out (ID: ${activeConnectionId.substring(0, 12)}...)`));
+      console.log(chalk.yellow(`⚠ Browser logger connection timed out (ID: ${activeConnectionId.substring(0, 12)}...)`));
       activeConnectionId = null;
     }
   };
@@ -73,13 +55,21 @@ export function browserLogger(): Plugin {
             // Generate a new connection ID
             const connectionId = `browser-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
             
-            // If this is the first connection, make it active
-            if (activeConnectionId === null) {
+            // Check if the current active connection has timed out
+            const hasActiveConnectionTimedOut = activeConnectionId && (Date.now() - lastHeartbeatTime > CONNECTION_TIMEOUT);
+            
+            // If this is the first connection or the active connection has timed out, make it active
+            if (activeConnectionId === null || hasActiveConnectionTimedOut) {
+              // If there was a timed out connection, log it
+              if (hasActiveConnectionTimedOut) {
+                console.log(chalk.yellow(`⚠ Browser logger connection timed out (ID: ${activeConnectionId.substring(0, 12)}...)`));
+              }
+              
               activeConnectionId = connectionId;
               connectionCount++;
               // Set initial heartbeat time
               lastHeartbeatTime = Date.now();
-              console.log(safeChalk.green(`✓ Browser Logger connected (ID: ${connectionId.substring(0, 12)}...)`));
+              console.log(chalk.green(`✓ Browser Logger connected (ID: ${connectionId.substring(0, 12)}...)`));
               
               // Send success response with connection ID
               res.statusCode = 200;
@@ -92,7 +82,7 @@ export function browserLogger(): Plugin {
             } else {
               // Another connection is already active
               connectionCount++;
-              console.log(safeChalk.yellow(`⚠ Additional browser connection attempted (total: ${connectionCount})`));
+              console.log(chalk.yellow(`⚠ Additional browser connection attempted (total: ${connectionCount})`));
               
               // Send response indicating this is not the active connection
               res.statusCode = 200;
@@ -122,15 +112,29 @@ export function browserLogger(): Plugin {
               // If there's no active connection, this one can become active
               activeConnectionId = connectionId;
               lastHeartbeatTime = Date.now();
-              console.log(safeChalk.green(`✓ Browser Logger reconnected (ID: ${connectionId?.substring(0, 12)}...)`));
+              console.log(chalk.green(`✓ Browser Logger reconnected (ID: ${connectionId?.substring(0, 12)}...)`));
               res.statusCode = 200;
               res.setHeader('Content-Type', 'application/json');
               res.end(JSON.stringify({ status: 'active' }));
             } else {
-              // Send inactive response
-              res.statusCode = 200;
-              res.setHeader('Content-Type', 'application/json');
-              res.end(JSON.stringify({ status: 'inactive' }));
+              // Check if the current active connection has timed out
+              const hasActiveConnectionTimedOut = Date.now() - lastHeartbeatTime > CONNECTION_TIMEOUT;
+              
+              if (hasActiveConnectionTimedOut) {
+                // If the active connection has timed out, make this one active
+                console.log(chalk.yellow(`⚠ Browser logger connection timed out (ID: ${activeConnectionId.substring(0, 12)}...)`));
+                activeConnectionId = connectionId;
+                lastHeartbeatTime = Date.now();
+                console.log(chalk.green(`✓ Browser Logger promoted (ID: ${connectionId?.substring(0, 12)}...)`));
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ status: 'active' }));
+              } else {
+                // Send inactive response
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ status: 'inactive' }));
+              }
             }
             return;
           }
@@ -143,7 +147,7 @@ export function browserLogger(): Plugin {
             if (connectionId === activeConnectionId) {
               activeConnectionId = null;
               connectionCount = Math.max(0, connectionCount - 1);
-              console.log(safeChalk.yellow(`⚠ Primary browser logger disconnected (remaining: ${connectionCount})`));
+              console.log(chalk.yellow(`⚠ Primary browser logger disconnected (remaining: ${connectionCount})`));
             } else {
               connectionCount = Math.max(0, connectionCount - 1);
             }
@@ -194,31 +198,31 @@ export function browserLogger(): Plugin {
             let color;
             switch (level.toLowerCase()) {
               case 'error':
-                color = safeChalk.red;
+                color = chalk.red;
                 break;
               case 'warn':
-                color = safeChalk.yellow;
+                color = chalk.yellow;
                 break;
               case 'info':
-                color = safeChalk.blue;
+                color = chalk.blue;
                 break;
               case 'debug':
-                color = safeChalk.magenta;
+                color = chalk.magenta;
                 break;
               default:
-                color = safeChalk.white;
+                color = chalk.white;
             }
             
             // Format the timestamp and context
-            const formattedTimestamp = timestamp ? safeChalk.dim(timestamp) : '';
-            const formattedContext = context ? safeChalk.cyan(context) : '';
+            const formattedTimestamp = timestamp ? chalk.dim(timestamp) : '';
+            const formattedContext = context ? chalk.cyan(context) : '';
             
             // Clean up the message - remove any remaining URL artifacts
             const cleanedMessage = message.replace(/\?(?:grid|t)=[^:]+:(\d+)/g, ':$1');
             
             // Output the log message to the terminal
             console.log(
-              safeChalk.bold.bgBlack('[BROWSER]'), 
+              chalk.bold.bgBlack('[BROWSER]'), 
               formattedTimestamp, 
               formattedContext, 
               color(cleanedMessage)
@@ -237,7 +241,7 @@ export function browserLogger(): Plugin {
       });
       
       // Log a message to confirm the plugin is loaded
-      console.log(safeChalk.green('✓ Browser Logger plugin initialized'));
+      console.log(chalk.green('✓ Browser Logger plugin initialized'));
       
       // Clean up interval when server closes
       server.httpServer?.on('close', () => {

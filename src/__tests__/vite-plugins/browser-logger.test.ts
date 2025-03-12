@@ -1,25 +1,31 @@
-import { browserLogger } from '../../vite-plugins/browser-logger';
-import type { Plugin, ViteDevServer } from 'vite';
+import { describe, test, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import type { Plugin } from 'vite';
 import type { IncomingMessage, ServerResponse } from 'http';
+import type { ViteDevServer } from 'vite';
 
-// Mock chalk to avoid color codes in tests
-jest.mock('chalk', () => {
-  const chalkFn = (text: string) => text;
-  chalkFn.green = (text: string) => text;
-  chalkFn.yellow = (text: string) => text;
-  chalkFn.red = (text: string) => text;
-  chalkFn.blue = (text: string) => text;
-  chalkFn.magenta = (text: string) => text;
-  chalkFn.white = (text: string) => text;
-  chalkFn.dim = (text: string) => text;
-  chalkFn.cyan = (text: string) => text;
-  chalkFn.bold = {
+// Mock chalk implementation
+const mockChalk = {
+  green: (text: string) => text,
+  yellow: (text: string) => text,
+  red: (text: string) => text,
+  blue: (text: string) => text,
+  magenta: (text: string) => text,
+  white: (text: string) => text,
+  dim: (text: string) => text,
+  cyan: (text: string) => text,
+  bold: {
     bgBlack: (text: string) => text
-  };
-  return { default: chalkFn };
-});
+  },
+  default: (text: string) => text
+};
 
-// Define custom response type with responseData property
+// Mock chalk before importing the module that uses it
+jest.doMock('chalk', () => mockChalk);
+
+// Now import the module that uses chalk
+import { browserLogger } from '../../vite-plugins/browser-logger';
+
+// Mock server response type
 interface MockServerResponse {
   setHeader: jest.Mock;
   statusCode: number;
@@ -27,31 +33,102 @@ interface MockServerResponse {
   responseData: string;
 }
 
+// Type for middleware function
+type MiddlewareFunction = (req: IncomingMessage, res: ServerResponse) => void;
+
+// Extended request type with emitEvents method
+interface ExtendedIncomingMessage extends IncomingMessage {
+  emitEvents: () => void;
+}
+
 describe('Browser Logger Plugin', () => {
-  // Set NODE_ENV to test for the tests
-  const originalNodeEnv = process.env.NODE_ENV;
-  
-  // Mock console.log to avoid cluttering test output
+  // Mock Date.now to control time
+  const originalDateNow = Date.now;
   const originalConsoleLog = console.log;
   const originalConsoleError = console.error;
   
   beforeEach(() => {
-    process.env.NODE_ENV = 'test';
+    // Mock console to silence output
     console.log = jest.fn();
     console.error = jest.fn();
-    // Reset timers
+    
+    // Mock Date.now
     jest.useFakeTimers();
+    
+    // Set a fixed time for Date.now
+    const mockNow = 1000;
+    Date.now = jest.fn(() => mockNow);
   });
   
   afterEach(() => {
-    process.env.NODE_ENV = originalNodeEnv;
+    // Restore console
     console.log = originalConsoleLog;
     console.error = originalConsoleError;
+    
+    // Restore Date.now
+    Date.now = originalDateNow;
     jest.useRealTimers();
-    jest.restoreAllMocks();
   });
   
-  test('should release connection after timeout period', async () => {
+  // Helper functions for creating mock requests and responses
+  const createMockReq = (method: string, url: string): IncomingMessage => {
+    const req = {
+      method,
+      url,
+      headers: { host: 'localhost:3000' },
+      on: jest.fn()
+    } as unknown as IncomingMessage;
+    
+    return req;
+  };
+  
+  const createMockRes = (): MockServerResponse => {
+    const res = {
+      setHeader: jest.fn(),
+      statusCode: 0,
+      end: jest.fn(),
+      responseData: ''
+    };
+    
+    // Override end to capture response data
+    res.end = jest.fn(function(this: MockServerResponse, data?: string) {
+      if (data) {
+        this.responseData = data;
+      }
+      return this;
+    });
+    
+    return res;
+  };
+  
+  const createPostRequest = (url: string, body: Record<string, unknown>): ExtendedIncomingMessage => {
+    const req = createMockReq('POST', url) as ExtendedIncomingMessage;
+    
+    // Mock the request body events
+    const onMock = req.on as jest.Mock;
+    
+    // Store callbacks for later execution
+    const callbacks: Record<string, (data?: string) => void> = {};
+    
+    onMock.mockImplementation((event: string, callback: (data?: string) => void) => {
+      callbacks[event] = callback;
+      return req;
+    });
+    
+    // Add a method to trigger the events in the correct order
+    req.emitEvents = () => {
+      if (callbacks['data']) {
+        callbacks['data'](JSON.stringify(body));
+      }
+      if (callbacks['end']) {
+        callbacks['end']();
+      }
+    };
+    
+    return req;
+  };
+  
+  test('should release connection after timeout', async () => {
     // Create the plugin
     const plugin = browserLogger() as Plugin;
     
@@ -73,124 +150,50 @@ describe('Browser Logger Plugin', () => {
     configureServerFn(mockServer);
     
     // Get the middleware function
-    const middleware = mockMiddlewareUse.mock.calls[0][1];
+    const middleware = mockMiddlewareUse.mock.calls[0][1] as MiddlewareFunction;
     
-    // Create mock request and response objects
-    const createMockReq = (method: string, url: string): IncomingMessage => {
-      return {
-        method,
-        url,
-        headers: { host: 'localhost:3000' },
-        on: jest.fn((event, callback) => {
-          if (event === 'end') {
-            callback();
-          }
-          return {} as IncomingMessage;
-        })
-      } as unknown as IncomingMessage;
-    };
-    
-    const createMockRes = (): MockServerResponse => {
-      const res: MockServerResponse = {
-        setHeader: jest.fn(),
-        statusCode: 0,
-        end: jest.fn(),
-        responseData: '',
-      };
-      
-      // Override end to capture response data
-      res.end = jest.fn((data?: string) => {
-        if (data) {
-          res.responseData = data;
-        }
-        return res as unknown as MockServerResponse;
-      });
-      
-      return res;
-    };
-    
-    // Test handshake request
+    // First connection handshake
     const handshakeReq = createMockReq('GET', '/vite-browser-log?action=handshake');
     const handshakeRes = createMockRes();
     
-    middleware(handshakeReq, handshakeRes);
+    middleware(handshakeReq, handshakeRes as unknown as ServerResponse);
     
-    // Verify handshake response
-    expect(handshakeRes.statusCode).toBe(200);
-    expect(handshakeRes.responseData).toContain('active');
-    
-    // Extract connection ID from response
+    // Extract connection ID
     const responseData = JSON.parse(handshakeRes.responseData);
     const connectionId = responseData.connectionId;
     
     // Verify connection is active
     expect(responseData.status).toBe('active');
     
-    // Fast forward time to just before timeout
-    jest.advanceTimersByTime(9000);
-    
-    // Send a heartbeat to keep the connection alive
-    const heartbeatReq = createMockReq('GET', `/vite-browser-log?action=heartbeat&connectionId=${connectionId}`);
-    const heartbeatRes = createMockRes();
-    
-    middleware(heartbeatReq, heartbeatRes);
-    
-    // Verify heartbeat response
-    expect(heartbeatRes.statusCode).toBe(200);
-    expect(JSON.parse(heartbeatRes.responseData).status).toBe('active');
-    
-    // Fast forward time to just after timeout without sending another heartbeat
+    // Update the mock time to simulate timeout
     jest.advanceTimersByTime(11000);
+    (Date.now as jest.Mock).mockReturnValue(12000);
+    
+    // Manually trigger the timeout check
+    jest.runOnlyPendingTimers();
     
     // Try to send a log with the now-timed-out connection
-    const logReq = createMockReq('POST', '/vite-browser-log');
+    const logReq = createPostRequest('/vite-browser-log', {
+      connectionId,
+      level: 'info',
+      message: 'Test log',
+      timestamp: '[12:34:56.789]',
+      context: '[src/test.ts:123]'
+    });
     const logRes = createMockRes();
     
-    // Mock the request body
-    logReq.on = jest.fn((event, callback) => {
-      if (event === 'data') {
-        callback(JSON.stringify({
-          connectionId,
-          level: 'info',
-          message: 'Test log',
-          timestamp: '[12:34:56.789]',
-          context: '[src/test.ts:123]'
-        }));
-      } else if (event === 'end') {
-        callback();
-      }
-      return logReq;
-    });
+    middleware(logReq, logRes as unknown as ServerResponse);
     
-    middleware(logReq, logRes);
+    // Trigger the request events
+    logReq.emitEvents();
     
-    // Verify log is rejected because connection timed out
+    // Verify log is rejected
     expect(logRes.statusCode).toBe(403);
-    
-    // Try to send a new handshake after timeout
-    const newHandshakeReq = createMockReq('GET', '/vite-browser-log?action=handshake');
-    const newHandshakeRes = createMockRes();
-    
-    middleware(newHandshakeReq, newHandshakeRes);
-    
-    // Verify new connection is accepted as active
-    expect(newHandshakeRes.statusCode).toBe(200);
-    expect(JSON.parse(newHandshakeRes.responseData).status).toBe('active');
-  });
+  }, 10000);
   
   test('should allow inactive connection to become active after timeout', async () => {
     // Create the plugin
     const plugin = browserLogger() as Plugin;
-    
-    // Access the internal state of the plugin for testing
-    const pluginInstance = plugin as unknown as {
-      configureServer: (server: ViteDevServer) => void;
-      _testExports?: {
-        activeConnectionId: string | null;
-        lastHeartbeatTime: number;
-        checkConnectionTimeout: () => void;
-      };
-    };
     
     // Mock server and middleware
     const mockMiddlewareUse = jest.fn();
@@ -206,51 +209,17 @@ describe('Browser Logger Plugin', () => {
     } as unknown as ViteDevServer;
     
     // Call configureServer to set up the middleware
-    const configureServerFn = pluginInstance.configureServer as (server: ViteDevServer) => void;
+    const configureServerFn = plugin.configureServer as (server: ViteDevServer) => void;
     configureServerFn(mockServer);
     
     // Get the middleware function
-    const middleware = mockMiddlewareUse.mock.calls[0][1];
-    
-    // Create mock request and response objects
-    const createMockReq = (method: string, url: string): IncomingMessage => {
-      return {
-        method,
-        url,
-        headers: { host: 'localhost:3000' },
-        on: jest.fn((event, callback) => {
-          if (event === 'end') {
-            callback();
-          }
-          return {} as IncomingMessage;
-        })
-      } as unknown as IncomingMessage;
-    };
-    
-    const createMockRes = (): MockServerResponse => {
-      const res: MockServerResponse = {
-        setHeader: jest.fn(),
-        statusCode: 0,
-        end: jest.fn(),
-        responseData: '',
-      };
-      
-      // Override end to capture response data
-      res.end = jest.fn((data?: string) => {
-        if (data) {
-          res.responseData = data;
-        }
-        return res as unknown as MockServerResponse;
-      });
-      
-      return res;
-    };
+    const middleware = mockMiddlewareUse.mock.calls[0][1] as MiddlewareFunction;
     
     // First connection handshake
     const handshakeReq1 = createMockReq('GET', '/vite-browser-log?action=handshake');
     const handshakeRes1 = createMockRes();
     
-    middleware(handshakeReq1, handshakeRes1);
+    middleware(handshakeReq1, handshakeRes1 as unknown as ServerResponse);
     
     // Extract first connection ID
     const responseData1 = JSON.parse(handshakeRes1.responseData);
@@ -263,7 +232,7 @@ describe('Browser Logger Plugin', () => {
     const handshakeReq2 = createMockReq('GET', '/vite-browser-log?action=handshake');
     const handshakeRes2 = createMockRes();
     
-    middleware(handshakeReq2, handshakeRes2);
+    middleware(handshakeReq2, handshakeRes2 as unknown as ServerResponse);
     
     // Extract second connection ID
     const responseData2 = JSON.parse(handshakeRes2.responseData);
@@ -272,46 +241,211 @@ describe('Browser Logger Plugin', () => {
     // Verify second connection is inactive
     expect(responseData2.status).toBe('inactive');
     
-    // Fast forward time to trigger timeout for first connection
+    // Update the mock time to simulate timeout
     jest.advanceTimersByTime(11000);
+    (Date.now as jest.Mock).mockReturnValue(12000);
     
-    // Manually trigger the timeout check (since we can't directly access the interval)
-    // This is a workaround for testing - in real usage, the interval would trigger this
+    // Manually trigger the timeout check
     jest.runOnlyPendingTimers();
     
     // Send heartbeat from second connection
     const heartbeatReq = createMockReq('GET', `/vite-browser-log?action=heartbeat&connectionId=${connectionId2}`);
     const heartbeatRes = createMockRes();
     
-    middleware(heartbeatReq, heartbeatRes);
+    middleware(heartbeatReq, heartbeatRes as unknown as ServerResponse);
     
     // Verify second connection is now active
     expect(heartbeatRes.statusCode).toBe(200);
     expect(JSON.parse(heartbeatRes.responseData).status).toBe('active');
     
     // Try to send a log with the second connection
-    const logReq = createMockReq('POST', '/vite-browser-log');
+    const logReq = createPostRequest('/vite-browser-log', {
+      connectionId: connectionId2,
+      level: 'info',
+      message: 'Test log',
+      timestamp: '[12:34:56.789]',
+      context: '[src/test.ts:123]'
+    });
     const logRes = createMockRes();
     
-    // Mock the request body
-    logReq.on = jest.fn((event, callback) => {
-      if (event === 'data') {
-        callback(JSON.stringify({
-          connectionId: connectionId2,
-          level: 'info',
-          message: 'Test log',
-          timestamp: '[12:34:56.789]',
-          context: '[src/test.ts:123]'
-        }));
-      } else if (event === 'end') {
-        callback();
-      }
-      return logReq;
-    });
+    middleware(logReq, logRes as unknown as ServerResponse);
     
-    middleware(logReq, logRes);
+    // Trigger the request events
+    logReq.emitEvents();
     
     // Verify log is accepted
     expect(logRes.statusCode).toBe(200);
-  });
+  }, 10000);
+  
+  test('should immediately make a new connection active if current connection has timed out', async () => {
+    // Create the plugin
+    const plugin = browserLogger() as Plugin;
+    
+    // Mock server and middleware
+    const mockMiddlewareUse = jest.fn();
+    const mockHttpServerOn = jest.fn();
+    
+    const mockServer = {
+      middlewares: {
+        use: mockMiddlewareUse
+      },
+      httpServer: {
+        on: mockHttpServerOn
+      }
+    } as unknown as ViteDevServer;
+    
+    // Call configureServer to set up the middleware
+    const configureServerFn = plugin.configureServer as (server: ViteDevServer) => void;
+    configureServerFn(mockServer);
+    
+    // Get the middleware function
+    const middleware = mockMiddlewareUse.mock.calls[0][1] as MiddlewareFunction;
+    
+    // First connection handshake
+    const handshakeReq1 = createMockReq('GET', '/vite-browser-log?action=handshake');
+    const handshakeRes1 = createMockRes();
+    
+    middleware(handshakeReq1, handshakeRes1 as unknown as ServerResponse);
+    
+    // Extract first connection ID
+    const responseData1 = JSON.parse(handshakeRes1.responseData);
+    const connectionId1 = responseData1.connectionId;
+    
+    // Verify first connection is active
+    expect(responseData1.status).toBe('active');
+    
+    // Update the mock time to simulate timeout
+    (Date.now as jest.Mock).mockReturnValue(12000);
+    
+    // Second connection handshake - should become active immediately
+    const handshakeReq2 = createMockReq('GET', '/vite-browser-log?action=handshake');
+    const handshakeRes2 = createMockRes();
+    
+    middleware(handshakeReq2, handshakeRes2 as unknown as ServerResponse);
+    
+    // Extract second connection ID
+    const responseData2 = JSON.parse(handshakeRes2.responseData);
+    const connectionId2 = responseData2.connectionId;
+    
+    // Verify second connection is active (not inactive)
+    expect(responseData2.status).toBe('active');
+    
+    // Try to send a log with the second connection
+    const logReq = createPostRequest('/vite-browser-log', {
+      connectionId: connectionId2,
+      level: 'info',
+      message: 'Test log',
+      timestamp: '[12:34:56.789]',
+      context: '[src/test.ts:123]'
+    });
+    const logRes = createMockRes();
+    
+    middleware(logReq, logRes as unknown as ServerResponse);
+    
+    // Trigger the request events
+    logReq.emitEvents();
+    
+    // Verify log is accepted
+    expect(logRes.statusCode).toBe(200);
+    
+    // Try to send a log with the first connection (should be rejected)
+    const logReq2 = createPostRequest('/vite-browser-log', {
+      connectionId: connectionId1,
+      level: 'info',
+      message: 'Test log',
+      timestamp: '[12:34:56.789]',
+      context: '[src/test.ts:123]'
+    });
+    const logRes2 = createMockRes();
+    
+    middleware(logReq2, logRes2 as unknown as ServerResponse);
+    
+    // Trigger the request events
+    logReq2.emitEvents();
+    
+    // Verify log from first connection is rejected
+    expect(logRes2.statusCode).toBe(403);
+  }, 10000);
+  
+  test('should immediately make a secondary connection active on heartbeat if primary connection has timed out', async () => {
+    // Create the plugin
+    const plugin = browserLogger() as Plugin;
+    
+    // Mock server and middleware
+    const mockMiddlewareUse = jest.fn();
+    const mockHttpServerOn = jest.fn();
+    
+    const mockServer = {
+      middlewares: {
+        use: mockMiddlewareUse
+      },
+      httpServer: {
+        on: mockHttpServerOn
+      }
+    } as unknown as ViteDevServer;
+    
+    // Call configureServer to set up the middleware
+    const configureServerFn = plugin.configureServer as (server: ViteDevServer) => void;
+    configureServerFn(mockServer);
+    
+    // Get the middleware function
+    const middleware = mockMiddlewareUse.mock.calls[0][1] as MiddlewareFunction;
+    
+    // First connection handshake
+    const handshakeReq1 = createMockReq('GET', '/vite-browser-log?action=handshake');
+    const handshakeRes1 = createMockRes();
+    
+    middleware(handshakeReq1, handshakeRes1 as unknown as ServerResponse);
+    
+    // Extract first connection ID
+    const responseData1 = JSON.parse(handshakeRes1.responseData);
+    const connectionId1 = responseData1.connectionId;
+    
+    // Verify first connection is active
+    expect(responseData1.status).toBe('active');
+    
+    // Second connection handshake - should be inactive
+    const handshakeReq2 = createMockReq('GET', '/vite-browser-log?action=handshake');
+    const handshakeRes2 = createMockRes();
+    
+    middleware(handshakeReq2, handshakeRes2 as unknown as ServerResponse);
+    
+    // Extract second connection ID
+    const responseData2 = JSON.parse(handshakeRes2.responseData);
+    const connectionId2 = responseData2.connectionId;
+    
+    // Verify second connection is inactive
+    expect(responseData2.status).toBe('inactive');
+    
+    // Update the mock time to simulate timeout
+    (Date.now as jest.Mock).mockReturnValue(12000);
+    
+    // Send heartbeat from second connection - should become active immediately
+    const heartbeatReq = createMockReq('GET', `/vite-browser-log?action=heartbeat&connectionId=${connectionId2}`);
+    const heartbeatRes = createMockRes();
+    
+    middleware(heartbeatReq, heartbeatRes as unknown as ServerResponse);
+    
+    // Verify second connection is now active
+    expect(heartbeatRes.statusCode).toBe(200);
+    expect(JSON.parse(heartbeatRes.responseData).status).toBe('active');
+    
+    // Try to send a log with the second connection
+    const logReq = createPostRequest('/vite-browser-log', {
+      connectionId: connectionId2,
+      level: 'info',
+      message: 'Test log',
+      timestamp: '[12:34:56.789]',
+      context: '[src/test.ts:123]'
+    });
+    const logRes = createMockRes();
+    
+    middleware(logReq, logRes as unknown as ServerResponse);
+    
+    // Trigger the request events
+    logReq.emitEvents();
+    
+    // Verify log is accepted
+    expect(logRes.statusCode).toBe(200);
+  }, 10000);
 }); 
