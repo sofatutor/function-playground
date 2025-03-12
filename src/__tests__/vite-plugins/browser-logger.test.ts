@@ -448,4 +448,257 @@ describe('Browser Logger Plugin', () => {
     // Verify log is accepted
     expect(logRes.statusCode).toBe(200);
   }, 10000);
+
+  test('should handle disconnect requests properly', async () => {
+    // Create the plugin
+    const plugin = browserLogger() as Plugin;
+    
+    // Mock server and middleware
+    const mockMiddlewareUse = jest.fn();
+    const mockHttpServerOn = jest.fn();
+    
+    const mockServer = {
+      middlewares: {
+        use: mockMiddlewareUse
+      },
+      httpServer: {
+        on: mockHttpServerOn
+      }
+    } as unknown as ViteDevServer;
+    
+    // Call configureServer to set up the middleware
+    const configureServerFn = plugin.configureServer as (server: ViteDevServer) => void;
+    configureServerFn(mockServer);
+    
+    // Get the middleware function
+    const middleware = mockMiddlewareUse.mock.calls[0][1] as MiddlewareFunction;
+    
+    // First connection handshake
+    const handshakeReq = createMockReq('GET', '/vite-browser-log?action=handshake');
+    const handshakeRes = createMockRes();
+    
+    middleware(handshakeReq, handshakeRes as unknown as ServerResponse);
+    
+    // Extract connection ID
+    const responseData = JSON.parse(handshakeRes.responseData);
+    const connectionId = responseData.connectionId;
+    
+    // Verify connection is active
+    expect(responseData.status).toBe('active');
+    
+    // Send disconnect request
+    const disconnectReq = createMockReq('GET', `/vite-browser-log?action=disconnect&connectionId=${connectionId}`);
+    const disconnectRes = createMockRes();
+    
+    middleware(disconnectReq, disconnectRes as unknown as ServerResponse);
+    
+    // Verify disconnect response
+    expect(disconnectRes.statusCode).toBe(200);
+    expect(JSON.parse(disconnectRes.responseData).status).toBe('disconnected');
+    
+    // Try to send a log after disconnect
+    const logReq = createPostRequest('/vite-browser-log', {
+      connectionId,
+      level: 'info',
+      message: 'Test log',
+      timestamp: '[12:34:56.789]',
+      context: '[src/test.ts:123]'
+    });
+    const logRes = createMockRes();
+    
+    middleware(logReq, logRes as unknown as ServerResponse);
+    
+    // Trigger the request events
+    logReq.emitEvents();
+    
+    // Verify log is rejected
+    expect(logRes.statusCode).toBe(403);
+  });
+
+  test('should handle different log levels correctly', async () => {
+    // Create the plugin
+    const plugin = browserLogger() as Plugin;
+    
+    // Mock server and middleware
+    const mockMiddlewareUse = jest.fn();
+    const mockHttpServerOn = jest.fn();
+    
+    const mockServer = {
+      middlewares: {
+        use: mockMiddlewareUse
+      },
+      httpServer: {
+        on: mockHttpServerOn
+      }
+    } as unknown as ViteDevServer;
+    
+    // Call configureServer to set up the middleware
+    const configureServerFn = plugin.configureServer as (server: ViteDevServer) => void;
+    configureServerFn(mockServer);
+    
+    // Get the middleware function
+    const middleware = mockMiddlewareUse.mock.calls[0][1] as MiddlewareFunction;
+    
+    // First connection handshake
+    const handshakeReq = createMockReq('GET', '/vite-browser-log?action=handshake');
+    const handshakeRes = createMockRes();
+    
+    middleware(handshakeReq, handshakeRes as unknown as ServerResponse);
+    
+    // Extract connection ID
+    const responseData = JSON.parse(handshakeRes.responseData);
+    const connectionId = responseData.connectionId;
+    
+    // Test different log levels
+    const logLevels = ['error', 'warn', 'info', 'debug', 'unknown'];
+    
+    for (const level of logLevels) {
+      const logReq = createPostRequest('/vite-browser-log', {
+        connectionId,
+        level,
+        message: `Test ${level} log`,
+        timestamp: '[12:34:56.789]',
+        context: '[src/test.ts:123]'
+      });
+      const logRes = createMockRes();
+      
+      middleware(logReq, logRes as unknown as ServerResponse);
+      
+      // Trigger the request events
+      logReq.emitEvents();
+      
+      // Verify log is accepted
+      expect(logRes.statusCode).toBe(200);
+      expect(logRes.responseData).toBe('OK');
+    }
+  });
+
+  test('should handle malformed log data correctly', async () => {
+    // Create the plugin
+    const plugin = browserLogger() as Plugin;
+    
+    // Mock server and middleware
+    const mockMiddlewareUse = jest.fn();
+    const mockHttpServerOn = jest.fn();
+    
+    const mockServer = {
+      middlewares: {
+        use: mockMiddlewareUse
+      },
+      httpServer: {
+        on: mockHttpServerOn
+      }
+    } as unknown as ViteDevServer;
+    
+    // Call configureServer to set up the middleware
+    const configureServerFn = plugin.configureServer as (server: ViteDevServer) => void;
+    configureServerFn(mockServer);
+    
+    // Get the middleware function
+    const middleware = mockMiddlewareUse.mock.calls[0][1] as MiddlewareFunction;
+    
+    // First connection handshake
+    const handshakeReq = createMockReq('GET', '/vite-browser-log?action=handshake');
+    const handshakeRes = createMockRes();
+    
+    middleware(handshakeReq, handshakeRes as unknown as ServerResponse);
+    
+    // Extract connection ID
+    const responseData = JSON.parse(handshakeRes.responseData);
+    const connectionId = responseData.connectionId;
+    
+    // Test with invalid JSON
+    const invalidReq = createMockReq('POST', '/vite-browser-log') as ExtendedIncomingMessage;
+    const invalidRes = createMockRes();
+    
+    // Mock the request body events with invalid JSON
+    const onMock = invalidReq.on as jest.Mock;
+    onMock.mockImplementation((event: string, callback: (data?: string) => void) => {
+      if (event === 'data') {
+        callback('invalid json');
+      } else if (event === 'end') {
+        callback();
+      }
+      return invalidReq;
+    });
+    
+    middleware(invalidReq, invalidRes as unknown as ServerResponse);
+    
+    // Verify error response
+    expect(invalidRes.statusCode).toBe(400);
+    expect(invalidRes.responseData).toBe('Bad Request');
+    
+    // Test with missing required fields
+    const missingFieldsReq = createPostRequest('/vite-browser-log', {
+      connectionId
+      // missing level, message, etc.
+    });
+    const missingFieldsRes = createMockRes();
+    
+    middleware(missingFieldsReq, missingFieldsRes as unknown as ServerResponse);
+    
+    // Trigger the request events
+    missingFieldsReq.emitEvents();
+    
+    // Verify error response
+    expect(missingFieldsRes.statusCode).toBe(400);
+    expect(missingFieldsRes.responseData).toBe('Bad Request');
+  });
+
+  test('should handle CORS and HTTP methods correctly', async () => {
+    // Create the plugin
+    const plugin = browserLogger() as Plugin;
+    
+    // Mock server and middleware
+    const mockMiddlewareUse = jest.fn();
+    const mockHttpServerOn = jest.fn();
+    
+    const mockServer = {
+      middlewares: {
+        use: mockMiddlewareUse
+      },
+      httpServer: {
+        on: mockHttpServerOn
+      }
+    } as unknown as ViteDevServer;
+    
+    // Call configureServer to set up the middleware
+    const configureServerFn = plugin.configureServer as (server: ViteDevServer) => void;
+    configureServerFn(mockServer);
+    
+    // Get the middleware function
+    const middleware = mockMiddlewareUse.mock.calls[0][1] as MiddlewareFunction;
+    
+    // Test OPTIONS request (CORS preflight)
+    const optionsReq = createMockReq('OPTIONS', '/vite-browser-log');
+    const optionsRes = createMockRes();
+    
+    middleware(optionsReq, optionsRes as unknown as ServerResponse);
+    
+    // Verify CORS headers and response
+    expect(optionsRes.setHeader).toHaveBeenCalledWith('Access-Control-Allow-Origin', '*');
+    expect(optionsRes.setHeader).toHaveBeenCalledWith('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    expect(optionsRes.setHeader).toHaveBeenCalledWith('Access-Control-Allow-Headers', 'Content-Type');
+    expect(optionsRes.statusCode).toBe(200);
+    
+    // Test unknown GET request
+    const unknownGetReq = createMockReq('GET', '/vite-browser-log?action=unknown');
+    const unknownGetRes = createMockRes();
+    
+    middleware(unknownGetReq, unknownGetRes as unknown as ServerResponse);
+    
+    // Verify bad request response
+    expect(unknownGetRes.statusCode).toBe(400);
+    expect(unknownGetRes.responseData).toBe('Bad Request');
+    
+    // Test unsupported method
+    const unsupportedReq = createMockReq('PUT', '/vite-browser-log');
+    const unsupportedRes = createMockRes();
+    
+    middleware(unsupportedReq, unsupportedRes as unknown as ServerResponse);
+    
+    // Verify method not allowed response
+    expect(unsupportedRes.statusCode).toBe(405);
+    expect(unsupportedRes.responseData).toBe('Method Not Allowed');
+  });
 }); 
