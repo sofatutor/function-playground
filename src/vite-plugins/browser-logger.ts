@@ -1,6 +1,24 @@
 import type { Plugin } from 'vite';
 import chalk from 'chalk';
 
+// Flag to disable chalk in tests
+const IS_TEST = process.env.NODE_ENV === 'test';
+
+// Helper function for safe chalk usage in tests
+const safeChalk = {
+  green: (text: string) => IS_TEST ? text : chalk.green(text),
+  yellow: (text: string) => IS_TEST ? text : chalk.yellow(text),
+  red: (text: string) => IS_TEST ? text : chalk.red(text),
+  blue: (text: string) => IS_TEST ? text : chalk.blue(text),
+  magenta: (text: string) => IS_TEST ? text : chalk.magenta(text),
+  white: (text: string) => IS_TEST ? text : chalk.white(text),
+  dim: (text: string) => IS_TEST ? text : chalk.dim(text),
+  cyan: (text: string) => IS_TEST ? text : chalk.cyan(text),
+  bold: {
+    bgBlack: (text: string) => IS_TEST ? text : chalk.bold.bgBlack(text)
+  }
+};
+
 /**
  * Vite plugin to capture browser logs and display them in the terminal
  * This plugin adds a dedicated endpoint for browser logs
@@ -9,12 +27,29 @@ export function browserLogger(): Plugin {
   // Track active connections
   let activeConnectionId: string | null = null;
   let connectionCount = 0;
+  // Track last heartbeat time for active connection
+  let lastHeartbeatTime: number = 0;
+  // Timeout duration in milliseconds (10 seconds)
+  const CONNECTION_TIMEOUT = 10000;
+  // Interval for checking connection timeouts
+  let timeoutCheckInterval: NodeJS.Timeout | null = null;
+
+  // Function to check for timed-out connections
+  const checkConnectionTimeout = () => {
+    if (activeConnectionId && Date.now() - lastHeartbeatTime > CONNECTION_TIMEOUT) {
+      console.log(safeChalk.yellow(`⚠ Browser logger connection timed out (ID: ${activeConnectionId.substring(0, 12)}...)`));
+      activeConnectionId = null;
+    }
+  };
 
   return {
     name: 'vite-plugin-browser-logger',
     apply: 'serve', // Only apply this plugin during development
     
     configureServer(server) {
+      // Start the timeout check interval
+      timeoutCheckInterval = setInterval(checkConnectionTimeout, CONNECTION_TIMEOUT / 2);
+
       // Add middleware to handle browser logs
       server.middlewares.use('/vite-browser-log', (req, res) => {
         // Set CORS headers
@@ -42,7 +77,9 @@ export function browserLogger(): Plugin {
             if (activeConnectionId === null) {
               activeConnectionId = connectionId;
               connectionCount++;
-              console.log(chalk.green(`✓ Browser Logger connected (ID: ${connectionId.substring(0, 12)}...)`));
+              // Set initial heartbeat time
+              lastHeartbeatTime = Date.now();
+              console.log(safeChalk.green(`✓ Browser Logger connected (ID: ${connectionId.substring(0, 12)}...)`));
               
               // Send success response with connection ID
               res.statusCode = 200;
@@ -55,7 +92,7 @@ export function browserLogger(): Plugin {
             } else {
               // Another connection is already active
               connectionCount++;
-              console.log(chalk.yellow(`⚠ Additional browser connection attempted (total: ${connectionCount})`));
+              console.log(safeChalk.yellow(`⚠ Additional browser connection attempted (total: ${connectionCount})`));
               
               // Send response indicating this is not the active connection
               res.statusCode = 200;
@@ -75,7 +112,17 @@ export function browserLogger(): Plugin {
             
             // Check if this is the active connection
             if (connectionId === activeConnectionId) {
+              // Update last heartbeat time
+              lastHeartbeatTime = Date.now();
               // Send success response
+              res.statusCode = 200;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ status: 'active' }));
+            } else if (activeConnectionId === null) {
+              // If there's no active connection, this one can become active
+              activeConnectionId = connectionId;
+              lastHeartbeatTime = Date.now();
+              console.log(safeChalk.green(`✓ Browser Logger reconnected (ID: ${connectionId?.substring(0, 12)}...)`));
               res.statusCode = 200;
               res.setHeader('Content-Type', 'application/json');
               res.end(JSON.stringify({ status: 'active' }));
@@ -96,7 +143,7 @@ export function browserLogger(): Plugin {
             if (connectionId === activeConnectionId) {
               activeConnectionId = null;
               connectionCount = Math.max(0, connectionCount - 1);
-              console.log(chalk.yellow(`⚠ Primary browser logger disconnected (remaining: ${connectionCount})`));
+              console.log(safeChalk.yellow(`⚠ Primary browser logger disconnected (remaining: ${connectionCount})`));
             } else {
               connectionCount = Math.max(0, connectionCount - 1);
             }
@@ -140,35 +187,38 @@ export function browserLogger(): Plugin {
               return;
             }
             
+            // Update last heartbeat time on any successful log
+            lastHeartbeatTime = Date.now();
+            
             // Format the log message with colors based on the log level
             let color;
             switch (level.toLowerCase()) {
               case 'error':
-                color = chalk.red;
+                color = safeChalk.red;
                 break;
               case 'warn':
-                color = chalk.yellow;
+                color = safeChalk.yellow;
                 break;
               case 'info':
-                color = chalk.blue;
+                color = safeChalk.blue;
                 break;
               case 'debug':
-                color = chalk.magenta;
+                color = safeChalk.magenta;
                 break;
               default:
-                color = chalk.white;
+                color = safeChalk.white;
             }
             
             // Format the timestamp and context
-            const formattedTimestamp = timestamp ? chalk.dim(timestamp) : '';
-            const formattedContext = context ? chalk.cyan(context) : '';
+            const formattedTimestamp = timestamp ? safeChalk.dim(timestamp) : '';
+            const formattedContext = context ? safeChalk.cyan(context) : '';
             
             // Clean up the message - remove any remaining URL artifacts
             const cleanedMessage = message.replace(/\?(?:grid|t)=[^:]+:(\d+)/g, ':$1');
             
             // Output the log message to the terminal
             console.log(
-              chalk.bold.bgBlack('[BROWSER]'), 
+              safeChalk.bold.bgBlack('[BROWSER]'), 
               formattedTimestamp, 
               formattedContext, 
               color(cleanedMessage)
@@ -187,7 +237,15 @@ export function browserLogger(): Plugin {
       });
       
       // Log a message to confirm the plugin is loaded
-      console.log(chalk.green('✓ Browser Logger plugin initialized'));
+      console.log(safeChalk.green('✓ Browser Logger plugin initialized'));
+      
+      // Clean up interval when server closes
+      server.httpServer?.on('close', () => {
+        if (timeoutCheckInterval) {
+          clearInterval(timeoutCheckInterval);
+          timeoutCheckInterval = null;
+        }
+      });
     },
     
     // Inject client code to handle browser logs
@@ -208,6 +266,9 @@ export function browserLogger(): Plugin {
               let heartbeatInterval = null;
               let logQueue = [];
               let isProcessingQueue = false;
+              
+              // Heartbeat interval in milliseconds (10 seconds)
+              const HEARTBEAT_INTERVAL = 10000;
               
               // Helper to format timestamp
               const getTimestamp = () => {
@@ -280,7 +341,7 @@ export function browserLogger(): Plugin {
                       console.log('[Browser Logger] Connected as primary logger');
                       
                       // Start heartbeat to maintain connection
-                      heartbeatInterval = setInterval(sendHeartbeat, 30000);
+                      heartbeatInterval = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
                       
                       // Set up disconnect on page unload
                       window.addEventListener('beforeunload', disconnectFromServer);
@@ -289,6 +350,9 @@ export function browserLogger(): Plugin {
                       processLogQueue();
                     } else {
                       console.log('[Browser Logger] Connected as secondary logger (logs will not be sent to server)');
+                      
+                      // Even inactive loggers should send heartbeats to check if they can become active
+                      heartbeatInterval = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
                     }
                   }
                 } catch (e) {
@@ -298,7 +362,7 @@ export function browserLogger(): Plugin {
               
               // Send heartbeat to keep connection alive
               const sendHeartbeat = async () => {
-                if (!connectionId || !isActiveLogger) return;
+                if (!connectionId) return;
                 
                 try {
                   const response = await fetch(\`/vite-browser-log?action=heartbeat&connectionId=\${connectionId}\`, {
@@ -307,11 +371,15 @@ export function browserLogger(): Plugin {
                   
                   if (response.ok) {
                     const data = await response.json();
+                    const wasActive = isActiveLogger;
                     isActiveLogger = data.status === 'active';
                     
-                    if (!isActiveLogger) {
+                    if (!wasActive && isActiveLogger) {
+                      console.log('[Browser Logger] Promoted to primary logger');
+                      // Process any queued logs now that we're active
+                      processLogQueue();
+                    } else if (wasActive && !isActiveLogger) {
                       console.log('[Browser Logger] No longer the primary logger');
-                      clearInterval(heartbeatInterval);
                     }
                   }
                 } catch (e) {
