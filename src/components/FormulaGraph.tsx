@@ -2,8 +2,8 @@ import React, { useMemo, useEffect, useRef, useState } from 'react';
 import { Formula, FormulaPoint } from '@/types/formula';
 import { Point } from '@/types/shapes';
 import { evaluateFormula } from '@/utils/formulaUtils';
-import { isGridDragging } from '@/components/CanvasGrid/GridDragHandler';
 
+// Define any types needed for this component
 interface FormulaGraphProps {
   formula: Formula;
   gridPosition: Point;
@@ -21,9 +21,8 @@ interface FormulaGraphProps {
     mathY: number;
     formula: Formula;
     pointIndex?: number;
-    allPoints?: FormulaPoint[];
-    navigationStepSize?: number;
   }) | null;
+  showPath?: boolean;
 }
 
 const FormulaGraph: React.FC<FormulaGraphProps> = ({ 
@@ -41,6 +40,7 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
   const [selectedPoint, setSelectedPoint] = useState<{ index: number, point: FormulaPoint } | null>(null);
   // Add a ref to store the last valid points
   const lastValidPointsRef = useRef<FormulaPoint[]>([]);
+  const lastDragEndTimeRef = useRef(0);
   
   // Force re-evaluation when grid position changes significantly
   const gridPositionKey = useMemo(() => {
@@ -67,6 +67,39 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
     lastGridPositionRef.current = gridPosition;
   }, [gridPosition]);
 
+  // Handle drag end
+  useEffect(() => {
+    const handleDragEnd = () => {
+      const now = Date.now();
+      if (now - lastDragEndTimeRef.current < 100) {
+        return; // Debounce drag end handling
+      }
+      lastDragEndTimeRef.current = now;
+      
+      // Force a re-evaluation with high quality after drag ends
+      setIsUpdating(true);
+      const points = evaluateFormula(formula, gridPosition, pixelsPerUnit, false);
+      if (points.length > 0) {
+        lastValidPointsRef.current = points;
+      }
+      setIsUpdating(false);
+    };
+
+    // Use window.onmouseup instead of subscribing to isGridDragging
+    const handleMouseUp = () => {
+      if (isDraggingRef.current) {
+        isDraggingRef.current = false;
+        handleDragEnd();
+      }
+    };
+
+    window.addEventListener('mouseup', handleMouseUp);
+    
+    return () => {
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [formula, gridPosition, pixelsPerUnit]);
+
   // Check if this is a tangent function
   const isTangent = formula.expression.includes('Math.tan(') || 
                     formula.expression === 'Math.tan(x)' || 
@@ -87,46 +120,24 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
 
   // Calculate points for the formula
   const points = useMemo(() => {
-    // Set updating state to true
+    // Always evaluate the formula, but with potentially lower quality during dragging
+    return evaluateFormula(formula, gridPosition, pixelsPerUnit, isDraggingRef.current);
+  }, [formula, gridPositionKey, pixelsPerUnit]);
+
+  // Handle point evaluation and updates
+  useEffect(() => {
     setIsUpdating(true);
-    
     console.log(`Evaluating formula: ${formula.expression} with gridPosition:`, gridPosition, `pixelsPerUnit: ${pixelsPerUnit}`);
     
-    // Check both our local dragging detection and the global grid dragging flag
-    const draggingMode = isDraggingRef.current || isGridDragging.value;
-    
-    // Use a timeout to ensure we don't block the UI thread
-    const evaluateAsync = () => {
-      const result = evaluateFormula(formula, gridPosition, pixelsPerUnit, draggingMode);
-      
-      // Store the result as the last valid points if it's not empty
-      if (result.length > 0) {
-        lastValidPointsRef.current = result;
-      }
-
-      console.log(`Generated ${result.length} points for formula (dragging: ${draggingMode})`);
-      setIsUpdating(false);
-    };
-
-    // If we're dragging, use a shorter timeout to ensure responsiveness
-    if (draggingMode) {
-      setTimeout(evaluateAsync, 0);
-      // Return last valid points during dragging instead of empty array
-      return lastValidPointsRef.current;
-    } else {
-      // If not dragging, evaluate synchronously
-      const result = evaluateFormula(formula, gridPosition, pixelsPerUnit, draggingMode);
-      
-      // Store the result as the last valid points
-      if (result.length > 0) {
-        lastValidPointsRef.current = result;
-      }
-
-      setIsUpdating(false);
-      return result;
+    // We've already calculated the points in the useMemo above
+    if (points.length > 0) {
+      lastValidPointsRef.current = points;
     }
-  }, [formula, gridPositionKey, pixelsPerUnit]); // Use gridPositionKey instead of gridPosition
-
+    
+    console.log(`Generated ${points.length} points for formula (dragging: ${isDraggingRef.current})`);
+    setIsUpdating(false);
+  }, [formula, gridPositionKey, pixelsPerUnit, points]);
+  
   // Update local selected point when global selected point changes
   useEffect(() => {
     console.log('FormulaGraph: current formula id:', formula.id);
@@ -457,7 +468,7 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
     if (!onPointSelect) return;
     
     // Don't handle point selection if we're in the middle of a grid drag operation
-    if (isGridDragging.value) {
+    if (isDraggingRef.current) {
       return;
     }
     
@@ -523,7 +534,7 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
   // Clear selection when clicking on the SVG background
   const handleSvgClick = (event: React.MouseEvent) => {
     // Don't clear points if we're in the middle of a grid drag operation
-    if (isGridDragging.value) {
+    if (isDraggingRef.current) {
       return;
     }
     
@@ -597,26 +608,26 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
           style={{ 
             opacity: isUpdating ? 0.5 : 1,
             transition: 'opacity 0.2s ease-in-out',
-            pointerEvents: isGridDragging.value ? 'none' : 'stroke', // Disable pointer events during grid dragging
-            cursor: isGridDragging.value ? 'grabbing' : 'pointer' // Change cursor during grid dragging
+            pointerEvents: isDraggingRef.current ? 'none' : 'stroke', // Disable pointer events during grid dragging
+            cursor: isDraggingRef.current ? 'grabbing' : 'pointer' // Change cursor during grid dragging
           }}
           onMouseDown={(e) => {
             // Prevent handling mouse down if grid is being dragged
-            if (isGridDragging.value) {
+            if (isDraggingRef.current) {
               e.stopPropagation();
               e.preventDefault();
             }
           }}
           onMouseMove={(e) => {
             // Prevent handling mouse move if grid is being dragged
-            if (isGridDragging.value) {
+            if (isDraggingRef.current) {
               e.stopPropagation();
               e.preventDefault();
             }
           }}
           onMouseUp={(e) => {
             // Prevent handling mouse up if grid is being dragged
-            if (isGridDragging.value) {
+            if (isDraggingRef.current) {
               e.stopPropagation();
               e.preventDefault();
               return;

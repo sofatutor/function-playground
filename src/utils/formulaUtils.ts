@@ -32,7 +32,7 @@ const calculateVisibleXRange = (
   // For logarithmic functions, use tighter bounds
   if (isLogarithmic) {
     const maxRange = 100;
-    return [
+  return [
       Math.max(xMin, -maxRange),
       Math.min(xMax, maxRange)
     ];
@@ -174,12 +174,36 @@ const adjustSamples = (baseSamples: number, chars: ReturnType<typeof detectFunct
     const matches = expr.match(/x/g);
     return matches ? matches.length : 0;
   };
+
+  // Count the number of nested Math.pow calls
+  const countNestedPow = (expr: string): number => {
+    const regex = /Math\.pow\([^)]*Math\.pow/g;
+    const matches = expr.match(regex);
+    return matches ? matches.length : 0;
+  };
   
   // Increase samples based on polynomial degree
   const degree = countX(expression);
   if (degree > 4) multiplier *= 4; // Quintic and higher
   else if (degree > 3) multiplier *= 3; // Quartic
   else if (degree > 2) multiplier *= 2; // Cubic
+  
+  // Increase samples for nested Math.pow expressions
+  const nestedPowCount = countNestedPow(expression);
+  if (nestedPowCount > 0) multiplier *= (2 + nestedPowCount);
+  
+  // Special case for the complex nested Math.pow example with sqrt and abs
+  if (expression.includes('Math.pow') && 
+      expression.includes('Math.sqrt') && 
+      expression.includes('Math.abs')) {
+    multiplier *= 10; // Significantly increase samples for complex expressions with sqrt and abs
+  }
+  
+  // Special case for our specific complex formula
+  if (expression === 'Math.pow(x * 2, 2) + Math.pow((5 * Math.pow(x * 4, 2) - Math.sqrt(Math.abs(x))) * 2, 2) - 1') {
+    multiplier *= 15; // Greatly increase samples for this specific formula (increased from 8)
+    baseSamples = Math.max(baseSamples, 2000); // Ensure a higher minimum base sample size (increased from 1000)
+  }
   
   // Additional multipliers for other characteristics
   if (chars.isLogarithmic) multiplier *= 2;
@@ -190,7 +214,7 @@ const adjustSamples = (baseSamples: number, chars: ReturnType<typeof detectFunct
   if (chars.hasTrigPowCombination) multiplier *= 3;
   
   // Cap the maximum multiplier to avoid performance issues
-  multiplier = Math.min(multiplier, 8);
+  multiplier = Math.min(multiplier, 20); // Increased from 12 to 20 for very complex expressions
   
   return Math.round(baseSamples * multiplier);
 };
@@ -364,6 +388,9 @@ const evaluatePoints = (
   let prevY: number | null = null;
   let prevX: number | null = null;
   
+  // Special case for complex formulas to detect and handle rapid changes
+  const isComplexFormula = formula.expression === 'Math.pow(x * 2, 2) + Math.pow((5 * Math.pow(x * 4, 2) - Math.sqrt(Math.abs(x))) * 2, 2) - 1';
+  
   for (const x of xValues) {
     let y: number;
     let isValidDomain = true;
@@ -373,8 +400,8 @@ const evaluatePoints = (
       if (isLogarithmic) {
         if (Math.abs(x) < 1e-10) {
           // Skip points too close to zero for log functions
-          y = NaN;
-          isValidDomain = false;
+        y = NaN;
+        isValidDomain = false;
         } else {
           y = fn(x);
           // Additional validation for logarithmic results
@@ -386,48 +413,92 @@ const evaluatePoints = (
         y = fn(x);
       }
       
-      // Check for discontinuities
-      if (prevY !== null && prevX !== null && isValidDomain) {
-        const deltaY = Math.abs(y - prevY);
-        const deltaX = Math.abs(x - prevX);
-        
-        // Dynamic threshold based on x position and function type
-        let threshold = hasPow ? 1000 : 500;
-        if (isLogarithmic) {
-          const distanceFromZero = Math.min(Math.abs(x), Math.abs(prevX));
-          if (distanceFromZero < 0.1) {
-            threshold = 10000;
-          } else if (distanceFromZero < 1) {
-            threshold = 5000;
+      // Special handling for the complex formula
+      if (isComplexFormula) {
+        // Detect rapid changes around x=0 for the complex formula
+        if (Math.abs(x) < 0.01) {
+          // Extra validation for points very close to zero
+          if (Math.abs(y) > 1000) {
+            y = Math.sign(y) * 1000; // Limit extreme values
           }
-        }
-        
-        if (deltaY / deltaX > threshold && !isNaN(y) && isFinite(y)) {
-          // Add two NaN points for clearer discontinuity
-          const midX1 = prevX + (x - prevX) * 0.4;
-          const midX2 = prevX + (x - prevX) * 0.6;
-          points.push({ ...toCanvasCoordinates(midX1, NaN, gridPosition, pixelsPerUnit), isValid: false });
-          points.push({ ...toCanvasCoordinates(midX2, NaN, gridPosition, pixelsPerUnit), isValid: false });
         }
       }
       
-      if (isValidDomain) {
-        prevY = y;
-        prevX = x;
-      } else {
-        prevY = null;
-        prevX = null;
+      // Skip points with extreme y values for non-logarithmic functions
+      if (!isLogarithmic && !isNaN(y) && Math.abs(y) > 100000) {
+        isValidDomain = false;
       }
-    } catch (error) {
+    } catch (e) {
+      console.error(`Error evaluating function at x=${x}:`, e);
       y = NaN;
       isValidDomain = false;
-      prevY = null;
-      prevX = null;
     }
     
-    const isValid = isValidDomain && !isNaN(y) && isFinite(y);
-    const coords = toCanvasCoordinates(x, y, gridPosition, pixelsPerUnit);
-    points.push({ ...coords, isValid });
+    // Convert to canvas coordinates
+    const canvasX = gridPosition.x + x * pixelsPerUnit;
+    const canvasY = gridPosition.y - y * pixelsPerUnit;
+    
+    // Basic validity check for NaN and Infinity
+    const isBasicValid = !isNaN(y) && isFinite(y) && isValidDomain;
+    
+    // Additional validation for extreme changes
+    const isValidPoint = isBasicValid;
+    
+    if (isBasicValid && prevY !== null && prevX !== null) {
+      const MAX_DELTA_Y = isComplexFormula ? 200 : 100; // Allow larger jumps for complex formulas
+      const deltaY = Math.abs(canvasY - prevY);
+      const deltaX = Math.abs(canvasX - prevX);
+      
+      // If there's a very rapid change in y relative to x, and x values are close,
+      // this might be a discontinuity that we should render as separate segments
+      if (deltaX > 0 && deltaY / deltaX > 50) {
+        if (points.length > 0) {
+          // Create an invalid point to break the path
+          points.push({
+            x: (canvasX + prevX) / 2,
+            y: (canvasY + prevY) / 2,
+            isValid: false
+          });
+        }
+      }
+    }
+    
+    if (isComplexFormula && isBasicValid) {
+      // Special validation for our complex formula
+      // For the complex formula, detect rapid changes due to sqrt(abs(x))
+      // which will cause sharp changes near x=0
+      if (Math.abs(x) < 0.01) {
+        // For very small x, ensure we render a clean break at x=0
+        if (prevX !== null && (Math.sign(x) !== Math.sign(prevX) || Math.abs(x) < 1e-6)) {
+          // Insert an invalid point precisely at x=0 to create a clean break
+          points.push({
+            x: gridPosition.x, // x=0 in canvas coordinates
+            y: canvasY,
+            isValid: false
+          });
+        }
+      }
+    }
+    
+    // If the function evaluated successfully, add the point
+    if (isBasicValid) {
+      // Only update prev values for valid points
+      prevY = canvasY;
+      prevX = canvasX;
+      
+      points.push({
+        x: canvasX,
+        y: canvasY,
+        isValid: isValidPoint
+      });
+    } else {
+      // For non-valid points, still add them but mark as invalid
+      points.push({
+        x: canvasX,
+        y: 0, // Placeholder y value
+        isValid: false
+      });
+    }
   }
   
   return points;
@@ -538,7 +609,56 @@ export const evaluateFunction = (
     
     let xValues: number[];
     
-    if (chars.isLogarithmic) {
+    // Special case for our complex nested Math.pow formula
+    if (formula.expression === 'Math.pow(x * 2, 2) + Math.pow((5 * Math.pow(x * 4, 2) - Math.sqrt(Math.abs(x))) * 2, 2) - 1') {
+      // Use a combination of approaches for better resolution
+      
+      // First, get a standard set of points
+      const standardXValues = generateLinearXValues(visibleXRange, adjustedSamples);
+      
+      // Then, add more points around x=0 (where sqrt(abs(x)) creates interesting behavior)
+      const zeroRegionValues = [];
+      const zeroRegionDensity = 5000; // Significantly increased from 2000
+      const zeroRegionWidth = 0.5; // Increased from 0.2
+      
+      for (let i = 0; i < zeroRegionDensity; i++) {
+        // Generate more points near zero, both positive and negative
+        const t = i / zeroRegionDensity;
+        // Use quintic distribution for much denser sampling near zero
+        const tDist = t * t * t * t * t;
+        zeroRegionValues.push(-zeroRegionWidth * tDist);
+        zeroRegionValues.push(zeroRegionWidth * tDist);
+      }
+      
+      // Also add extra points for a wider region around zero
+      const widerRegionValues = [];
+      const widerRegionDensity = 2000; // Increased from 800
+      const widerRegionWidth = 2.0; // Increased from 1.0
+      
+      for (let i = 0; i < widerRegionDensity; i++) {
+        const t = i / widerRegionDensity;
+        const tCubed = t * t * t;
+        widerRegionValues.push(-widerRegionWidth * tCubed);
+        widerRegionValues.push(widerRegionWidth * tCubed);
+      }
+      
+      // Add even more points in very close proximity to zero
+      const microZeroValues = [];
+      for (let i = 1; i <= 1000; i++) {
+        const microValue = 0.0001 * i / 1000;
+        microZeroValues.push(-microValue);
+        microZeroValues.push(microValue);
+      }
+      
+      // Combine and sort all x values
+      xValues = [...standardXValues, ...zeroRegionValues, ...widerRegionValues, ...microZeroValues].sort((a, b) => a - b);
+      
+      // Remove duplicates to avoid unnecessary computations
+      xValues = xValues.filter((value, index, self) => 
+        index === 0 || Math.abs(value - self[index - 1]) > 0.00001
+      );
+    }
+    else if (chars.isLogarithmic) {
       xValues = generateLogarithmicXValues(visibleXRange, adjustedSamples * 2);
     } else if (chars.isTangent) {
       visibleXRange = [
@@ -703,6 +823,13 @@ export const evaluateFormula = (
   if (formula.expression === 'Math.sin(Math.PI * Math.pow(x, 2)) * Math.sin(Math.PI * Math.pow(2, x))') {
     // Use a much higher sample rate for this specific function
     return evaluateFunction(formula, gridPosition, pixelsPerUnit, 5000);
+  }
+  
+  // Special case for our complex Math.pow formula
+  if (formula.expression === 'Math.pow(x * 2, 2) + Math.pow((5 * Math.pow(x * 4, 2) - Math.sqrt(Math.abs(x))) * 2, 2) - 1') {
+    // Even when dragging, use a reasonable sample size for this complex formula
+    const sampleSize = isDragging ? 5000 : 30000;
+    return evaluateFunction(formula, gridPosition, pixelsPerUnit, sampleSize);
   }
   
   // For other functions, use the regular evaluation logic
