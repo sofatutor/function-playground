@@ -2,9 +2,38 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Point } from '@/types/shapes';
 import { snapToGrid, getGridModifiers } from '@/utils/grid/gridUtils';
 
-// Add a global flag to track if grid dragging is in progress
-// This can be used by other components to optimize rendering during dragging
-export const isGridDragging = { value: false };
+// DragStateHandler class for better drag state management
+export type DragStateListener = (isDragging: boolean) => void;
+
+export class DragStateHandler {
+  private _value: boolean = false;
+  private listeners: Set<DragStateListener> = new Set();
+
+  get value(): boolean {
+    return this._value;
+  }
+
+  set value(newValue: boolean) {
+    if (this._value !== newValue) {
+      this._value = newValue;
+      this.notifyListeners();
+    }
+  }
+
+  subscribe(listener: DragStateListener): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  private notifyListeners(): void {
+    this.listeners.forEach(listener => listener(this._value));
+  }
+}
+
+// Create an instance of the drag state handler
+export const isGridDragging = new DragStateHandler();
 
 interface GridDragHandlerProps {
   origin: Point;
