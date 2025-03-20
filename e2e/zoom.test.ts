@@ -10,27 +10,23 @@ test.describe('Grid Zoom Control', () => {
     await page.goto('/');
     await page.waitForTimeout(2000); // Wait for the UI to stabilize fully
 
-    // Check for zoom controls using more resilient selectors that look for both specific components and generic selectors
-    const zoomControls = page.locator(
-      '[aria-label*="zoom"], button:has(svg.lucide-zoom-in), button:has(svg.lucide-zoom-out), button:has-text("100%"), .zoom-button, [id*="zoom"], button:has(svg[class*="zoom"]), [data-testid*="zoom"]'
-    );
-    await expect(zoomControls).toBeVisible({ timeout: 10000 });
+    // Look for specific zoom buttons based on component structure
+    const zoomOutButton = page.locator('button:has(svg:has(path[d*="M8 11H14"]), svg.lucide-zoom-out)');
+    const zoomInButton = page.locator('button:has(svg:has(path[d*="M11 8V14"]), svg.lucide-zoom-in)');
+    const zoomPercentButton = page.locator('button:has-text("100%"), button:has-text("50%"), button:has-text("200%")');
     
-    // Look for text content indicating zoom percentage with multiple approaches
-    const zoomText = page.getByText(/\d+%/)
-      .or(page.locator('button:has-text("100%")'))
-      .or(page.locator('[class*="zoom-percentage"]'));
+    // Check if at least one of the zoom controls is visible
+    const zoomOutVisible = await zoomOutButton.isVisible();
+    const zoomInVisible = await zoomInButton.isVisible();
+    const zoomPercentVisible = await zoomPercentButton.isVisible();
     
-    if (await zoomText.isVisible()) {
-      await expect(zoomText).toBeVisible();
-    } else {
-      // If zoom text is not visible, at least ensure zoom in/out buttons exist
-      const zoomInButton = page.locator('button:has(svg.lucide-zoom-in), button:has(svg[class*="zoom-in"]), [aria-label*="zoom in"]');
-      const zoomOutButton = page.locator('button:has(svg.lucide-zoom-out), button:has(svg[class*="zoom-out"]), [aria-label*="zoom out"]');
-      
-      // Check that at least one of these buttons is visible
-      const zoomButtonsVisible = await zoomInButton.isVisible() || await zoomOutButton.isVisible();
-      expect(zoomButtonsVisible).toBeTruthy();
+    const zoomControlsVisible = zoomOutVisible || zoomInVisible || zoomPercentVisible;
+    expect(zoomControlsVisible).toBeTruthy();
+    
+    // If the percentage button is visible, verify it shows a number with %
+    if (zoomPercentVisible) {
+      const zoomText = await zoomPercentButton.textContent();
+      expect(zoomText).toMatch(/\d+%/);
     }
   });
   
