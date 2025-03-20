@@ -1,6 +1,4 @@
 import { test, expect, Page } from '@playwright/test';
-import fs from 'fs';
-import path from 'path';
 
 test.describe('Function Plotting', () => {
   test.beforeEach(async ({ page }) => {
