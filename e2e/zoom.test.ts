@@ -58,4 +58,4 @@ test.describe('Grid Zoom Control', () => {
     // Ensure the UI is still responsive
     await expect(page.locator('body')).toBeVisible();
   });
-}); 
+});
