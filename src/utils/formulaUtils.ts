@@ -477,6 +477,18 @@ const evaluatePoints = (
             isValid: false
           });
         }
+        
+        // Special case for extremely small x values in complex formula
+        // Add a visual connection between points that are very close to zero
+        if (Math.abs(x) < 1e-8 && prevX !== null && Math.abs(prevX) < 1e-8 && 
+            Math.sign(x) !== Math.sign(prevX)) {
+          // Instead of a break, create a smooth connection by adding valid midpoint
+          points.push({
+            x: gridPosition.x, // x=0 in canvas coordinates
+            y: (canvasY + prevY!) / 2, // Average of the y-values on both sides
+            isValid: true
+          });
+        }
       }
     }
     
@@ -650,8 +662,24 @@ export const evaluateFunction = (
         microZeroValues.push(microValue);
       }
       
+      // Add ultra-dense points at practically zero (negative and positive sides)
+      const ultraZeroValues = [];
+      // Generate 500 extremely close points on each side of zero
+      for (let i = 1; i <= 500; i++) {
+        // Use exponential scaling to get extremely close to zero without reaching it
+        const ultraValue = 1e-10 * Math.pow(1.5, i);
+        ultraZeroValues.push(-ultraValue);
+        ultraZeroValues.push(ultraValue);
+      }
+      
       // Combine and sort all x values
-      xValues = [...standardXValues, ...zeroRegionValues, ...widerRegionValues, ...microZeroValues].sort((a, b) => a - b);
+      xValues = [
+        ...standardXValues, 
+        ...zeroRegionValues, 
+        ...widerRegionValues, 
+        ...microZeroValues,
+        ...ultraZeroValues
+      ].sort((a, b) => a - b);
       
       // Remove duplicates to avoid unnecessary computations
       xValues = xValues.filter((value, index, self) => 

@@ -31,7 +31,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
-    actionTimeout: 0,
+    actionTimeout: 30000,
     /* Base URL to use in actions like `await page.goto('/')`. */
     baseURL: 'http://localhost:8080',
     /* Run tests in headless mode by default */
@@ -49,14 +49,21 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1280, height: 720 },
+      },
     },
   ],
+
+  /* Folder for test artifacts such as screenshots, videos, traces, etc. */
+  outputDir: 'test-results/',
 
   /* Run your local dev server before starting the tests */
   webServer: {
     command: 'npm run dev',
     url: 'http://localhost:8080',
     reuseExistingServer: !process.env.CI,
+    timeout: 60000,
   },
 }); 
