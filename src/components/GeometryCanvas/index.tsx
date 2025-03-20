@@ -6,7 +6,7 @@ import FormulaGraph from '../FormulaGraph';
 import UnifiedInfoPanel from '../UnifiedInfoPanel';
 import { AnyShape, Point, OperationMode, ShapeType, MeasurementUnit, Triangle } from '@/types/shapes';
 import { Formula, FormulaPoint } from '@/types/formula';
-import { isGridDragging } from '@/components/CanvasGrid/GridDragHandler';
+import { isGridDragging } from '../CanvasGrid/GridDragHandler';
 import { 
   getStoredPixelsPerUnit, 
   DEFAULT_PIXELS_PER_CM, 
@@ -1070,13 +1070,6 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
     setSelectedPoint(null);
   }, [formulas]);
 
-  // Add this function to log the values before rendering
-  const logRenderValues = () => {
-    console.log('Rendering GeometryCanvas with pixelsPerUnit:', pixelsPerUnit, 'and measurementUnit:', measurementUnit);
-    console.log('Rendering formulas with gridPosition:', gridPosition, 'and pixelsPerUnit:', pixelsPerUnit);
-    return null; // Return null to avoid rendering anything
-  };
-
   // Render formulas function
   const renderFormulas = () => {
     if (!formulas || formulas.length === 0 || !gridPosition) {
@@ -1141,53 +1134,36 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
 
   // Create a custom mouseUp handler that combines the existing handleMouseUp with point dismissal logic
   const customMouseUpHandler = (e: React.MouseEvent) => {
-    // Check if we're in the middle of a grid drag operation BEFORE doing anything else
     if (isGridDragging.value) {
-      console.log('GeometryCanvas: Skipping customMouseUpHandler due to grid dragging');
-      return; // Exit immediately if grid is being dragged
+      return;
     }
     
-    // Log the value of isGridDragging
-    console.log('GeometryCanvas: Before handleMouseUp, isGridDragging.value =', isGridDragging.value);
-    
-    // Call the original mouseUp handler
     handleMouseUp(e);
     
-    // Only process point dismissal for mouseup events, not mouseleave
     if (e.type === 'mouseup') {
-      // If the click is on a path (part of the formula graph), don't dismiss
       if ((e.target as Element).tagName === 'path') {
-        // We're clicking on a path, so we'll set the flag but not dismiss
         clickedOnPathRef.current = true;
         return;
       }
       
-      // If the click is on the info box itself, don't dismiss
       const infoBox = document.querySelector('.formula-point-info');
       if (infoBox && infoBox.contains(e.target as Node)) {
         return;
       }
       
-      // Check specifically for navigation buttons in the UnifiedInfoPanel
       const navigationButtons = document.querySelectorAll('.point-nav-button, [data-nav-button]');
       for (const button of navigationButtons) {
         if (button === e.target || button.contains(e.target as Node)) {
-          console.log('Clicked on navigation button, not dismissing info box');
           return;
         }
       }
       
-      // If the click is on the tool button or its container, don't dismiss
       const toolButton = document.querySelector('.btn-tool');
       if (toolButton && (toolButton === e.target || toolButton.contains(e.target as Node))) {
         return;
       }
       
-      // At this point, we know we clicked somewhere else on the canvas
-      // So we should dismiss the info box immediately
       clearAllSelectedPoints();
-      
-      // Reset the flag for the next click
       clickedOnPathRef.current = false;
     }
   };
@@ -1529,7 +1505,6 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
 
   return (
     <div className="relative w-full h-full">
-      {logRenderValues()}
       <div 
         id="geometry-canvas"
         ref={canvasRef}
