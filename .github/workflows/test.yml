@@ -7,7 +7,8 @@ on:
     branches: [ main, master ]
 
 jobs:
-  test:
+  unit-test:
+    name: Unit Tests
     runs-on: ubuntu-latest
 
     strategy:
@@ -33,11 +34,54 @@ jobs:
     - name: Install dependencies
       run: npm ci
     
-    - name: Run tests
+    - name: Run Jest tests
       run: npm run test:ci
     
     - name: Coveralls
       uses: coverallsapp/github-action@v2
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: ./coverage/lcov.info 
+        path-to-lcov: ./coverage/lcov.info
+        
+  e2e-test:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [22.x]
+        
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+    
+    - name: Cache npm dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+          
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps chromium
+      
+    - name: Run Playwright tests
+      run: npm run e2e:ci
+      
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: playwright-report
+        path: |
+          playwright-report/
+          test-results/
+        retention-days: 30 
