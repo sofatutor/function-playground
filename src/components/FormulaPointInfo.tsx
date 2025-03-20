@@ -49,8 +49,12 @@ const FormulaPointInfo: React.FC<FormulaPointInfoProps> = ({
       
       // Handle different formula types
       if (formula.type === 'function') {
+        // Handle the complex nested Math.pow case
+        if (formula.expression === 'Math.pow(x * 2, 2) + Math.pow((5 * Math.pow(x * 4, 2) - Math.sqrt(Math.abs(x))) * 2, 2) - 1') {
+          calculation = `(2×${formatNumber(mathX)})² + (2(5(4×${formatNumber(mathX)})² - sqrt(|${formatNumber(mathX)}|)))² - 1`;
+        }
         // Special case for the exact formula from the screenshot with Math.pow
-        if (formula.expression === 'Math.sin(Math.PI * Math.pow(x, 2)) * Math.sin(Math.PI * Math.pow(2, x))') {
+        else if (formula.expression === 'Math.sin(Math.PI * Math.pow(x, 2)) * Math.sin(Math.PI * Math.pow(2, x))') {
           calculation = `sin(π × ${formatNumber(mathX)}²) × sin(π × 2^${formatNumber(mathX)})`;
         }
         // Special case for the exact formula from the first screenshot
