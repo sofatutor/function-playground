@@ -43,7 +43,7 @@ interface GridDragHandlerProps {
   children: React.ReactNode;
 }
 
-const GridDragHandler: React.FC<GridDragHandlerProps> = ({ 
+export const GridDragHandler: React.FC<GridDragHandlerProps> = ({ 
   origin, 
   onOriginChange,
   onMoveAllShapes,
@@ -241,6 +241,4 @@ const GridDragHandler: React.FC<GridDragHandlerProps> = ({
       {children}
     </svg>
   );
-};
-
-export default GridDragHandler; 
+}; 
