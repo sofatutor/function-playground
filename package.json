@@ -16,6 +16,7 @@
     "test:ci": "COLLECT_COVERAGE=true jest",
     "e2e": "playwright test",
     "e2e:ci": "playwright test --reporter=list",
+    "e2e:optimized": "npm run build:dev && playwright test",
     "e2e:open": "playwright test --ui",
     "e2e:debug": "playwright test --debug",
     "prepare": "husky"
