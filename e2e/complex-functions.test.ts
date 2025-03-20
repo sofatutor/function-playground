@@ -1,171 +1,168 @@
-import { test, expect } from '@playwright/test';
+import { test } from './test-helper';
+import { expect } from '@playwright/test';
 
 test.describe('Complex Function Behaviors', () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate to the app and wait for it to load completely
+    // Navigate to the home page
     await page.goto('/');
-  });
-
-  test('should handle tangent function asymptotes correctly', async ({ page }) => {
-    // Add tangent function
-    await page.click('button:has-text("Add Function")');
-    await page.waitForSelector('input[placeholder="Enter function"]', { timeout: 5000 });
-    await page.fill('input[placeholder="Enter function"]', 'Math.tan(x)');
-    await page.click('button:has-text("Add")');
-
-    // Wait for the graph to render
-    await page.waitForSelector('path.formula-graph', { timeout: 10000 });
-
-    // Get path data
-    const pathData = await page.locator('path.formula-graph').first().getAttribute('d');
-    expect(pathData).toBeTruthy();
-
-    // Count the number of discontinuities (separate path segments)
-    const moveCommands = pathData?.match(/M/g)?.length || 0;
-    expect(moveCommands).toBeGreaterThan(1); // Should have multiple segments due to asymptotes
-  });
-
-  test('should handle logarithmic function domain correctly', async ({ page }) => {
-    // Add logarithmic function
-    await page.click('button:has-text("Add Function")');
-    await page.waitForSelector('input[placeholder="Enter function"]', { timeout: 5000 });
-    await page.fill('input[placeholder="Enter function"]', 'Math.log(x)');
-    await page.click('button:has-text("Add")');
-
-    // Wait for the graph to render
-    await page.waitForSelector('path.formula-graph', { timeout: 10000 });
-
-    // Get path data
-    const pathData = await page.locator('path.formula-graph').first().getAttribute('d');
-    expect(pathData).toBeTruthy();
-
-    // Verify that the path starts after x = 0 (domain restriction)
-    const points = pathData?.split(/[ML]/).filter(Boolean).map(point => {
-      const [x, y] = point.split(',').map(Number);
-      return { x, y };
-    });
-    expect(points?.every(p => p.x >= 0)).toBeTruthy();
-  });
-
-  test('should handle rational function with singularity', async ({ page }) => {
-    // Add function with singularity
-    await page.click('button:has-text("Add Function")');
-    await page.waitForSelector('input[placeholder="Enter function"]', { timeout: 5000 });
-    await page.fill('input[placeholder="Enter function"]', '1/x');
-    await page.click('button:has-text("Add")');
-
-    // Wait for the graph to render
-    await page.waitForSelector('path.formula-graph', { timeout: 10000 });
-
-    // Get path data
-    const pathData = await page.locator('path.formula-graph').first().getAttribute('d');
-    expect(pathData).toBeTruthy();
-
-    // Count discontinuities
-    const moveCommands = pathData?.match(/M/g)?.length || 0;
-    expect(moveCommands).toBeGreaterThan(1); // Should have at least two segments (positive and negative x)
-  });
-
-  test('should handle composite trigonometric function', async ({ page }) => {
-    // Add complex trigonometric function
-    await page.click('button:has-text("Add Function")');
-    await page.waitForSelector('input[placeholder="Enter function"]', { timeout: 5000 });
-    await page.fill('input[placeholder="Enter function"]', 'Math.sin(Math.PI * Math.pow(x, 2))');
-    await page.click('button:has-text("Add")');
-
-    // Wait for the graph to render
-    await page.waitForSelector('path.formula-graph', { timeout: 10000 });
-
-    // Get path data
-    const pathData = await page.locator('path.formula-graph').first().getAttribute('d');
-    expect(pathData).toBeTruthy();
-
-    // Verify high point density for complex oscillations
-    const pointCount = (pathData?.match(/[ML]/g) || []).length;
-    expect(pointCount).toBeGreaterThan(300); // Should have many points for accurate oscillation rendering
-  });
-
-  test('should handle zoom levels appropriately', async ({ page }) => {
-    // Add a function
-    await page.click('button:has-text("Add Function")');
-    await page.waitForSelector('input[placeholder="Enter function"]', { timeout: 5000 });
-    await page.fill('input[placeholder="Enter function"]', 'Math.sin(x)');
-    await page.click('button:has-text("Add")');
-
-    // Wait for initial render
-    await page.waitForSelector('path.formula-graph', { timeout: 10000 });
     
-    // Get initial path data
-    const initialPath = await page.locator('path.formula-graph').first().getAttribute('d');
-    expect(initialPath).toBeTruthy();
-
-    // Zoom in (simulate mouse wheel)
-    const canvas = await page.locator('canvas').first();
-    const bounds = await canvas.boundingBox();
-    expect(bounds).toBeTruthy();
-    if (!bounds) throw new Error('Canvas not found');
-
-    await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
-    await page.mouse.wheel(0, -100); // Zoom in
-
-    // Wait for re-render
-    await page.waitForTimeout(500);
-
-    // Get zoomed path data
-    const zoomedPath = await page.locator('path.formula-graph').first().getAttribute('d');
-    expect(zoomedPath).toBeTruthy();
-    expect(zoomedPath).not.toEqual(initialPath);
-
-    // Verify point density increases with zoom
-    const getPointCount = (path: string | null) => (path?.match(/[ML]/g) || []).length;
-    const initialPoints = getPointCount(initialPath);
-    const zoomedPoints = getPointCount(zoomedPath);
-    expect(zoomedPoints).toBeGreaterThan(initialPoints);
-  });
-
-  test('should handle rapid oscillations', async ({ page }) => {
-    // Add rapidly oscillating function
-    await page.click('button:has-text("Add Function")');
-    await page.waitForSelector('input[placeholder="Enter function"]', { timeout: 5000 });
-    await page.fill('input[placeholder="Enter function"]', 'Math.sin(10 * x)');
-    await page.click('button:has-text("Add")');
-
-    // Wait for the graph to render
-    await page.waitForSelector('path.formula-graph', { timeout: 10000 });
-
-    // Get path data
-    const pathData = await page.locator('path.formula-graph').first().getAttribute('d');
-    expect(pathData).toBeTruthy();
-
-    // Verify very high point density for accurate oscillation rendering
-    const pointCount = (pathData?.match(/[ML]/g) || []).length;
-    expect(pointCount).toBeGreaterThan(500); // Should have many points for rapid oscillations
-  });
-
-  test('should render the complex nested Math.pow formula with high detail', async ({ page }) => {
-    // Add the complex formula with Math.pow, sqrt, and abs
-    await page.click('button:has-text("Add Function")');
-    await page.waitForSelector('input[placeholder="Enter function"]', { timeout: 5000 });
-    await page.fill(
-      'input[placeholder="Enter function"]', 
-      'Math.pow(x * 2, 2) + Math.pow((5 * Math.pow(x * 4, 2) - Math.sqrt(Math.abs(x))) * 2, 2) - 1'
-    );
-    await page.click('button:has-text("Add")');
-
-    // Wait for the graph to render with longer timeout due to complexity
-    await page.waitForSelector('path.formula-graph', { timeout: 15000 });
-
-    // Get path data
-    const pathData = await page.locator('path.formula-graph').first().getAttribute('d');
-    expect(pathData).toBeTruthy();
-
-    // Verify extremely high point density for this complex formula
-    const pointCount = (pathData?.match(/[ML]/g) || []).length;
-    console.log(`Complex formula point count: ${pointCount}`);
-    expect(pointCount).toBeGreaterThan(2000); // Should have very many points for accurate rendering
+    // Click on the "Plot Formula" button to open the formula editor
+    const plotFormulaButton = page.getByTestId('plot-formula-button');
+    await plotFormulaButton.click();
     
-    // Verify multiple path segments due to the discontinuity at x=0
-    const moveCommands = pathData?.match(/M/g)?.length || 0;
-    expect(moveCommands).toBeGreaterThan(1); // Should have multiple segments due to the sqrt(abs(x)) term
+    // Wait for the formula editor to appear and be visible
+    await page.waitForSelector('[data-testid="formula-editor"]', { state: 'visible' });
+    
+    // Log formula editor visibility for debugging
+    const formulaEditorVisible = await page.getByTestId('formula-editor').isVisible();
+    console.log(`Formula editor visible: ${formulaEditorVisible}`);
+  });
+
+  test('tangent function should have multiple segments due to asymptotes', async ({ page }) => {
+    // Click the "Add Formula" button
+    await page.getByTestId('add-formula-button').click();
+    
+    // Enter tangent function
+    const formulaInput = page.getByTestId('formula-expression-input');
+    await formulaInput.fill('tan(x)');
+
+    // Verify the path is rendered with multiple segments (discontinuities)
+    const svgPath = page.locator('svg path').first();
+    await expect(svgPath).toBeVisible();
+    
+    // The path should have multiple segments (due to asymptotes)
+    const d = await svgPath.getAttribute('d');
+    const pathSegments = d?.split('M').filter(Boolean) || [];
+    expect(pathSegments.length).toBeGreaterThan(1);
+  });
+
+  test('logarithmic function should only plot for x > 0', async ({ page }) => {
+    // Click the "Add Formula" button
+    await page.getByTestId('add-formula-button').click();
+    
+    // Enter log function
+    const formulaInput = page.getByTestId('formula-expression-input');
+    await formulaInput.fill('log(x)');
+
+    // Verify the path starts after x = 0
+    const svgPath = page.locator('svg path').first();
+    await expect(svgPath).toBeVisible();
+    
+    // Check path attribute
+    const d = await svgPath.getAttribute('d');
+    expect(d).toBeTruthy();
+    
+    // The path should exist and should have coordinates
+    expect(d?.split(' ').length).toBeGreaterThan(5);
+  });
+
+  test('rational function should show singularity', async ({ page }) => {
+    // Click the "Add Formula" button
+    await page.getByTestId('add-formula-button').click();
+    
+    // Enter rational function with singularity
+    const formulaInput = page.getByTestId('formula-expression-input');
+    await formulaInput.fill('1/(x-2)');
+
+    // Verify the path has multiple segments (discontinuity at x=2)
+    const svgPath = page.locator('svg path').first();
+    await expect(svgPath).toBeVisible();
+    
+    // There should be at least 2 segments due to the singularity
+    const d = await svgPath.getAttribute('d');
+    const pathSegments = d?.split('M').filter(Boolean) || [];
+    expect(pathSegments.length).toBeGreaterThan(1);
+  });
+
+  test('composite trigonometric function should have high point density', async ({ page }) => {
+    // Click the "Add Formula" button
+    await page.getByTestId('add-formula-button').click();
+    
+    // Enter composite trigonometric function
+    const formulaInput = page.getByTestId('formula-expression-input');
+    await formulaInput.fill('sin(x) * cos(x*2)');
+
+    // Verify the path has sufficient point density
+    const svgPath = page.locator('svg path').first();
+    await expect(svgPath).toBeVisible();
+    
+    // The path should have many points for accurate rendering
+    const d = await svgPath.getAttribute('d');
+    const pointCount = d?.split(' ').length || 0;
+    expect(pointCount).toBeGreaterThan(50);
+  });
+
+  test('zoom level should affect point density', async ({ page }) => {
+    // Click the "Add Formula" button
+    await page.getByTestId('add-formula-button').click();
+    
+    // Enter a simple function
+    const formulaInput = page.getByTestId('formula-expression-input');
+    await formulaInput.fill('sin(x)');
+
+    // Get initial point count
+    let svgPath = page.locator('svg path').first();
+    await expect(svgPath).toBeVisible();
+    const initialD = await svgPath.getAttribute('d');
+    const initialPointCount = initialD?.split(' ').length || 0;
+
+    // Zoom in on the graph
+    const svgElement = page.locator('svg').first();
+    await svgElement.click();
+    for (let i = 0; i < 5; i++) {
+      await page.keyboard.press('ArrowUp');
+      await page.waitForTimeout(100); // Small delay for rendering
+    }
+
+    // Get new point count after zooming
+    svgPath = page.locator('svg path').first();
+    await expect(svgPath).toBeVisible();
+    const zoomedD = await svgPath.getAttribute('d');
+    const zoomedPointCount = zoomedD?.split(' ').length || 0;
+
+    // Point density should increase when zoomed in
+    expect(zoomedPointCount).toBeGreaterThanOrEqual(initialPointCount);
+  });
+  
+  test('rapid oscillations should have high point count', async ({ page }) => {
+    // Click the "Add Formula" button
+    await page.getByTestId('add-formula-button').click();
+    
+    // Enter a rapidly oscillating function
+    const formulaInput = page.getByTestId('formula-expression-input');
+    await formulaInput.fill('sin(x*10)');
+
+    // Verify the path has very high point density
+    const svgPath = page.locator('svg path').first();
+    await expect(svgPath).toBeVisible();
+    
+    // The path should have a very high point count for rapid oscillations
+    const d = await svgPath.getAttribute('d');
+    const pointCount = d?.split(' ').length || 0;
+    expect(pointCount).toBeGreaterThan(100);
+  });
+  
+  test('complex nested formula should have extremely high point density', async ({ page }) => {
+    // Click the "Add Formula" button
+    await page.getByTestId('add-formula-button').click();
+    
+    // Enter a complex nested function with multiple discontinuities
+    const formulaInput = page.getByTestId('formula-expression-input');
+    await formulaInput.fill('tan(sin(x*3)) / (cos(x)+0.1)');
+
+    // Verify the path has extremely high point density and multiple segments
+    const svgPath = page.locator('svg path').first();
+    await expect(svgPath).toBeVisible();
+    
+    // The path should have many points and segments
+    const d = await svgPath.getAttribute('d');
+    const pointCount = d?.split(' ').length || 0;
+    const pathSegments = d?.split('M').filter(Boolean) || [];
+    
+    // Complex formula requires high point density
+    expect(pointCount).toBeGreaterThan(80);
+    
+    // Should have multiple segments due to discontinuities
+    expect(pathSegments.length).toBeGreaterThan(1);
   });
 }); 

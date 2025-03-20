@@ -1,5 +1,4 @@
 import { defineConfig, devices } from '@playwright/test';
-import path from 'path';
 
 /**
  * See https://playwright.dev/docs/test-configuration
@@ -26,7 +25,9 @@ export default defineConfig({
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
     ['html', { outputFolder: 'playwright-report' }],
-    ['list']
+    ['list'],
+    // You can add a custom reporter to handle failures
+    // ['./e2e/global-setup.ts', { outputFile: './test-results/failures.json' }]
   ],
   
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
@@ -40,11 +41,11 @@ export default defineConfig({
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on',
     /* Take screenshots on failure and during test execution */
-    screenshot: {
-      mode: 'on',
-      fullPage: false,
-    },
+    screenshot: 'only-on-failure',
   },
+
+  /* Global setup runs once before all tests */
+  globalSetup: './e2e/global-setup.ts',
 
   /* Configure projects for major browsers */
   projects: [
@@ -67,4 +68,4 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 30000,
   },
-}); 
+});
