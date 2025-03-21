@@ -15,6 +15,7 @@
 ## Git
 - Make atomic commits with prefixes: feat, fix, docs, style, refactor, test, chore
 - Group related changes logically
+- NEVER ADD/COMMIT ANY WIP OR REDUNDANT COMMENTS! They have to be removed before.
 
 ## Components
 - Use Shadcn UI components
@@ -29,6 +30,8 @@
 ## Testing
 - Jest for unit tests: `npm run test`
 - Playwright for e2e tests: `npm run e2e:ci`
+- e2e: The server will always be running on the default port. No reason to start it.
+- e2e: Make sure not to add timeouts (use waiting selectors instead) or increase overall timeouts!
 - React Testing Library for components
 - Write tests before fixing bugs
 - Use pattern: "should [expected behavior] when [condition]"

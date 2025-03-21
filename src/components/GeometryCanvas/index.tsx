@@ -275,9 +275,12 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
       // Apply the formula's scale factor
       const scaledMathY = targetMathY * formula.scaleFactor;
       
-      // Convert from mathematical coordinates to canvas coordinates
-      const targetCanvasX = (gridPosition?.x || 0) + targetMathX * pixelsPerUnit;
-      const targetCanvasY = (gridPosition?.y || 0) - scaledMathY * pixelsPerUnit;
+      // Get the zoomed pixels per unit value that includes the zoom factor
+      const zoomedPixelsPerUnit = pixelsPerUnit * zoomFactor;
+      
+      // Convert from mathematical coordinates to canvas coordinates using zoomed pixels per unit
+      const targetCanvasX = (gridPosition?.x || 0) + targetMathX * zoomedPixelsPerUnit;
+      const targetCanvasY = (gridPosition?.y || 0) - scaledMathY * zoomedPixelsPerUnit;
       
       console.log('Evaluated formula at x =', targetMathX.toFixed(4), 'y =', targetMathY.toFixed(4));
       console.log('After scale factor:', formula.scaleFactor, 'y =', scaledMathY.toFixed(4));
@@ -304,7 +307,7 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
     } catch (error) {
       console.error('Error evaluating formula:', error);
     }
-  }, [selectedPoint, gridPosition, pixelsPerUnit, isShiftPressed]);
+  }, [selectedPoint, gridPosition, pixelsPerUnit, isShiftPressed, zoomFactor]);
   
   // Effect to update internal grid position when external grid position changes
   useEffect(() => {
@@ -1005,7 +1008,7 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
   const handleFormulaPointSelect = (point: {
     x: number;
     y: number;
-    mathX: number;
+    mathX: number; 
     mathY: number;
     formula: Formula;
     pointIndex?: number;
@@ -1013,7 +1016,12 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
     navigationStepSize?: number;
     isValid: boolean;
   } | null) => {
-    console.log('Point selected:', point);
+    // Add more concise logging that doesn't dump the entire point object
+    if (point) {
+      console.log(`Point selected at math coordinates: (${point.mathX.toFixed(4)}, ${point.mathY.toFixed(4)})`);
+    } else {
+      console.log('Point selection cleared');
+    }
     
     // Clear any existing selection first
     clearAllSelectedPoints();
@@ -1024,6 +1032,8 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
       clickedOnPathRef.current = true;
       
       // Always ensure navigationStepSize has a default value
+      // The point's mathX and mathY properties already account for the zoom factor
+      // because they were calculated using the pixelsPerUnit value which includes zoom
       const pointWithStepSize = {
         ...point,
         navigationStepSize: point.navigationStepSize || 0.1,
@@ -1044,13 +1054,11 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
       }
       
       // Select the formula in the function tool
-      // This will notify the parent component to update the selected formula
       if (onFormulaSelect) {
         onFormulaSelect(point.formula.id);
       }
       
-      // If we have a mode change handler, switch to formula mode
-      // This will open the formula editor if it's not already open
+      // Switch to select mode
       if (onModeChange) {
         onModeChange('select');
       }
