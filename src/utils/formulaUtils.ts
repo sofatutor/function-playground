@@ -95,7 +95,7 @@ const toCanvasCoordinates = (
   x: number,
   y: number,
   gridPosition: Point,
-  pixelsPerUnit: number
+  pixelsPerUnit: number  // Note: pixelsPerUnit already includes the zoom factor
 ): { x: number; y: number } => ({
   x: gridPosition.x + x * pixelsPerUnit,
   y: gridPosition.y - y * pixelsPerUnit

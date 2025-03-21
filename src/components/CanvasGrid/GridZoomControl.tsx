@@ -40,6 +40,7 @@ const GridZoomControl: React.FC = () => {
               size="icon"
               onClick={handleZoomOut}
               className="h-8 w-8"
+              data-testid="grid-zoom-out"
             >
               <ZoomOut size={16} />
             </Button>
@@ -56,6 +57,7 @@ const GridZoomControl: React.FC = () => {
               size="sm"
               className="h-8 px-2 text-xs min-w-[4rem]"
               onClick={handleReset}
+              data-testid="grid-zoom-reset"
             >
               {Math.round(zoomFactor * 100)}%
             </Button>
@@ -72,6 +74,7 @@ const GridZoomControl: React.FC = () => {
               size="icon"
               onClick={handleZoomIn}
               className="h-8 w-8"
+              data-testid="grid-zoom-in"
             >
               <ZoomIn size={16} />
             </Button>
