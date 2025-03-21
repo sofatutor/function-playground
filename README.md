@@ -13,6 +13,18 @@ Geo-Playground is an interactive web application for creating and manipulating g
 - Measure shape properties (area, perimeter, etc.)
 - Keyboard shortcuts for common operations
 - Responsive design
+- Zoom controls with keyboard shortcuts for navigation
+- Triangle angle and side measurement with interactive editing
+- Function plotting with support for:
+  - Basic arithmetic operations
+  - Trigonometric functions (sin, cos, tan)
+  - Logarithmic functions
+  - Rational functions
+  - Complex composite functions
+- Scale shapes with precise controls
+- Interactive canvas with grid system
+- Point info tool for precise coordinate and function value tracking
+- Grid panning/dragging for easy navigation across the canvas
 
 ## Project Structure
 
@@ -62,6 +74,50 @@ npm run dev
 - `npm run lint` - Run ESLint
 - `npm run test` - Run tests
 - `npm run test:coverage` - Run tests with coverage report
+- `npm run e2e:ci` - Run end-to-end tests with Playwright in CI mode
+- `npm run e2e` - Run end-to-end tests with Playwright in interactive mode
+
+## Using the Application
+
+### Drawing Shapes
+- Use the shape tools (triangle, rectangle, circle) to create shapes on the canvas
+- Click and drag to define size and position
+- Shapes remain at the drawn position until manually moved
+
+### Manipulating Triangles
+- Click on a triangle to select it and view its measurements
+- Click directly on angle or side measurements to edit them
+- Editing an angle will update the triangle shape while maintaining the sum of angles (180°)
+- Editing a side will proportionally adjust the other sides to maintain the triangle's shape
+
+### Function Plotting
+- Click the "Plot Formula" button to enter function plotting mode
+- Use the "Add Function" button to create a new function
+- Enter expressions like `x*x`, `sin(x)`, `log(x)`, `tan(x)`, or complex formulas like `sin(x) * cos(x*2)`
+- Supported operations include arithmetic, trigonometric, logarithmic, and rational functions
+- Functions update in real-time as you enter them
+- Click on points along the function graph to activate the point info panel with precise coordinates and calculations
+- Use left/right arrow navigation in the point info panel to move along the function curve with defined step size
+
+### Zoom Controls
+- Use the zoom buttons or keyboard shortcuts to zoom in/out
+- Arrow Up/Down for zoom control
+- Ctrl + '+' to zoom in
+- The current zoom level is displayed as a percentage
+
+### Point Info Tool
+- View detailed coordinate information by hovering over points on graphs
+- See exact X and Y coordinates of any point on a function graph
+- View the calculation used to determine the Y value at specific X coordinates
+- Navigate between points on a function using arrow controls with customizable step size
+- Alt+Click to access additional measurement options
+
+### Grid Navigation
+- Click and drag on the empty canvas to pan/move the grid in any direction
+- Combine grid dragging with zoom controls for easy navigation across large diagrams
+- Grid maintains object positions while allowing you to focus on different areas
+- Alt+Click to move only the grid origin without affecting shapes
+- Alt+Shift+Click to move both the grid and all shapes together
 
 ## Technologies
 
@@ -70,7 +126,8 @@ npm run dev
 - React
 - shadcn-ui
 - Tailwind CSS
-- Jest (for testing)
+- Jest (for unit testing)
+- Playwright (for end-to-end testing)
 
 ## Recent Improvements
 
