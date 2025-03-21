@@ -1001,7 +1001,7 @@ function ensureNycConfigExists() {
   const c8ConfigFile = path.join(process.cwd(), '.c8rc.json');
   if (!fs.existsSync(c8ConfigFile) && params.runE2E) {
     const c8Config = {
-      "extends": "./.nycrc",
+      "extends": "./.nycrc.json",
       "include": [
         "src/**/*.ts",
         "src/**/*.tsx"

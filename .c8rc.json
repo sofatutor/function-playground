@@ -1,0 +1,13 @@
+{
+  "extends": "./.nycrc.json",
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ],
+  "reporter": [
+    "json"
+  ],
+  "report-dir": "./coverage/e2e",
+  "temp-dir": "./coverage/e2e/tmp",
+  "all": true
+}

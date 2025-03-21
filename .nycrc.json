@@ -1,0 +1,38 @@
+{
+  "extends": "@istanbuljs/nyc-config-typescript",
+  "all": true,
+  "check-coverage": false,
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ],
+  "exclude": [
+    "**/*.d.ts",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/*.e2e.ts",
+    "**/*.e2e.tsx",
+    "src/test/**/*",
+    "src/tests/**/*",
+    "src/e2e/**/*",
+    "src/types/**/*",
+    "dist/**/*",
+    "**/node_modules/**"
+  ],
+  "reporter": [
+    "json",
+    "text-summary",
+    "html"
+  ],
+  "report-dir": "./coverage/unit",
+  "temp-dir": "./coverage/unit/temp",
+  "cwd": "/Users/manuelfittko/github/geo-playground",
+  "source-map": true,
+  "produce-source-map": true,
+  "instrument": true,
+  "require": [
+    "ts-node/register"
+  ]
+}
