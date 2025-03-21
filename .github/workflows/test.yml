@@ -23,8 +23,21 @@ jobs:
       with:
         node-version: 22
         cache: 'npm'
+        cache-dependency-path: '**/package-lock.json'
+    
+    - name: Cache node_modules
+      uses: actions/cache@v4
+      id: node-modules-cache
+      with:
+        path: node_modules
+        key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-modules-${{ github.event.pull_request.base.ref || 'main' }}
+          ${{ runner.os }}-node-modules-main
+          ${{ runner.os }}-node-modules-
     
     - name: Install dependencies
+      if: steps.node-modules-cache.outputs.cache-hit != 'true'
       run: npm ci
     
     - name: Run Jest tests
@@ -42,10 +55,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      
+      - name: Use Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+      
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        id: node-modules-cache
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-${{ github.event.pull_request.base.ref || 'main' }}
+            ${{ runner.os }}-node-modules-main
+            ${{ runner.os }}-node-modules-
+      
       - name: Cache Playwright browsers
         id: playwright-cache
         uses: actions/cache@v4
@@ -57,18 +85,25 @@ jobs:
             ${{ runner.os }}-playwright-${{ github.event.pull_request.base.ref || 'main' }}
             ${{ runner.os }}-playwright-main
             ${{ runner.os }}-playwright-
+      
       - name: Install dependencies
+        if: steps.node-modules-cache.outputs.cache-hit != 'true'
         run: npm ci
+      
       - name: Install coverage tools
+        if: steps.node-modules-cache.outputs.cache-hit == 'true'
         run: npm install --no-save vite-plugin-istanbul nyc
+      
       - name: Install Playwright
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps
+      
       - name: Run Playwright tests
         env:
           CI: true
           VITE_ENABLE_COVERAGE: true
         run: npm run e2e:ci
+      
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -78,8 +113,10 @@ jobs:
             playwright-report/
             test-results/
           retention-days: 30
+      
       - name: Generate coverage report
         run: npx nyc report --reporter=lcov --report-dir=./coverage-e2e
+      
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@v2
         with:
