@@ -510,6 +510,8 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
       setSelectedPoint({ index: closestPointIndex, point });
       
       // Convert canvas coordinates back to mathematical coordinates
+      // The pixelsPerUnit parameter already includes the zoom factor (zoomedPixelsPerUnit)
+      // passed from the GeometryCanvas component
       const mathX = (point.x - gridPosition.x) / pixelsPerUnit;
       const mathY = -(point.y - gridPosition.y) / pixelsPerUnit;
       
