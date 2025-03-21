@@ -58,9 +58,9 @@ jobs:
         run: npm ci
       - name: Install coverage tools
         run: npm install --no-save vite-plugin-istanbul nyc
-      - name: Install Playwright browsers and dependencies
-        run: npx playwright install --with-deps
+      - name: Install Playwright
         if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps
       - name: Run Playwright tests
         env:
           CI: true
