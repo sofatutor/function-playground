@@ -111,11 +111,11 @@ jobs:
           retention-days: 30
       
       - name: Generate coverage report
-        run: npx nyc report --reporter=lcov --report-dir=./coverage-e2e
+        run: npx nyc report --reporter=lcov --reporter=json --report-dir=./coverage/e2e
       
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: ./coverage-e2e/lcov.info
+          path-to-lcov: ./coverage/e2e/lcov.info
           flag-name: e2e-tests 
