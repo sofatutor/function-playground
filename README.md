@@ -1,6 +1,6 @@
 # Geo-Playground
 
-[![Test](https://github.com/manuelfittko/geo-playground/actions/workflows/test.yml/badge.svg)](https://github.com/mfittko/geo-playground/actions/workflows/test.yml)
+[![Test](https://github.com/mfittko/geo-playground/actions/workflows/test.yml/badge.svg)](https://github.com/mfittko/geo-playground/actions/workflows/test.yml)
 [![Coverage Status](https://coveralls.io/repos/github/mfittko/geo-playground/badge.svg?branch=main)](https://coveralls.io/github/mfittko/geo-playground?branch=main)
 
 Geo-Playground is an interactive web application for creating and manipulating geometric shapes. It provides a canvas where you can draw, move, resize, and rotate various shapes, as well as measure their properties.
