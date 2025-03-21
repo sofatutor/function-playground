@@ -488,7 +488,7 @@ async function analyzeCoverage() {
     }
 
     console.log(`${colors.green}Found coverage data for ${Object.keys(coverageData).length} files${colors.reset}`);
-
+    
     // Process the coverage data
     const results = processCoverageData(coverageData, ignorePatterns);
     
@@ -983,7 +983,7 @@ function ensureNycConfigExists() {
         "html"
       ],
       "report-dir": "./coverage/unit",
-      "temp-dir": "./coverage/unit/temp",
+      "temp-dir": "./tmp",
       "cwd": process.cwd(),
       "source-map": true,
       "produce-source-map": true,
