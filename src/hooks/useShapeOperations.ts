@@ -127,13 +127,13 @@ export function useShapeOperations() {
     
     switch (activeShapeType) {
       case 'circle': {
-        // For circles, calculate center and radius from start and end points
-        const center = startPoint;
+        // For circles, calculate position and radius from start and end points
+        const position = { ...startPoint };
         const radius = Math.sqrt(
           Math.pow(endPoint.x - startPoint.x, 2) + 
           Math.pow(endPoint.y - startPoint.y, 2)
         );
-        params = { center, radius };
+        params = { position, radius };
         break;
       }
       case 'rectangle': {
