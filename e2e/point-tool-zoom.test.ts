@@ -223,4 +223,120 @@ test('point coordinates should respect grid zoom factor', async ({ page }) => {
   expect(xDifference).toBeGreaterThan(0.04);
   // If we were checking for correct behavior, we would use:
   // expect(xDifference).toBeLessThan(0.1);
+});
+
+// Test navigation behavior with grid zoom
+test('navigation arrows should maintain coordinates at different zoom levels', async ({ page }) => {
+  // Navigate to the app
+  await page.goto('/');
+  
+  // Click the function plotting tool first
+  await page.getByTestId('plot-formula-button').click();
+  
+  // Wait for the formula editor to appear
+  await page.waitForSelector('[data-testid="formula-editor"]', { state: 'visible' });
+  
+  // Add a simple quadratic function
+  await page.getByTestId('formula-expression-input').fill('x*x');
+  
+  // Wait for the graph to render
+  await page.waitForSelector('path.formula-graph');
+  await page.waitForTimeout(1000);
+  
+  // Switch to the select tool
+  try {
+    await page.locator('#select-tool').click();
+  } catch (e) {
+    console.log('Could not click select tool button, trying keyboard shortcut');
+    await page.keyboard.press('s');  // Assuming 's' is the shortcut for select tool
+  }
+  await page.waitForTimeout(500);
+  
+  // Click at a known point near (1, 1)
+  await page.mouse.click(640, 461);
+  await page.waitForTimeout(500);
+  
+  // Verify the info panel is showing
+  const infoPanel = await page.locator('.unified-info-panel-container');
+  expect(await infoPanel.isVisible()).toBe(true);
+  
+  console.log('Point info panel is visible');
+  await page.screenshot({ path: 'test-results/navigation-initial-click.png' });
+  
+  // Navigate using right arrow several times to reach x=1.5
+  for (let i = 0; i < 5; i++) {
+    // Click the right arrow navigation button
+    await page.locator('text="→"').click();
+    await page.waitForTimeout(200);
+  }
+  
+  // Get the point coordinates after navigation at default zoom
+  const defaultXCoord = await page.locator('text=X Coordinate').locator('xpath=following-sibling::div').textContent();
+  const defaultYCoord = await page.locator('text=Y Coordinate').locator('xpath=following-sibling::div').textContent();
+  
+  console.log(`Coordinates after navigation at default zoom: X=${defaultXCoord}, Y=${defaultYCoord}`);
+  await page.screenshot({ path: 'test-results/navigation-after-arrows.png' });
+  
+  // Store the current point location (should be near x=1.5)
+  const pointLocation = await page.evaluate(() => {
+    const calcText = document.querySelector('.unified-info-panel-container .calculation')?.textContent;
+    return calcText ? calcText : null;
+  });
+  
+  console.log(`Current point calculation: ${pointLocation}`);
+  
+  // Now zoom in several times
+  console.log('Starting zoom operations');
+  for (let i = 0; i < 10; i++) {
+    await page.getByTestId('grid-zoom-in').click();
+    await page.waitForTimeout(50);
+  }
+  await page.waitForTimeout(500);
+  
+  // Get the current zoom level
+  const zoomLevel = await page.getByTestId('grid-zoom-reset').textContent();
+  console.log(`Current zoom level: ${zoomLevel}`);
+  
+  // Take screenshot after zooming
+  await page.screenshot({ path: 'test-results/navigation-after-zoom.png' });
+  
+  // Get the point coordinates after zooming
+  const zoomedXCoord = await page.locator('text=X Coordinate').locator('xpath=following-sibling::div').textContent();
+  const zoomedYCoord = await page.locator('text=Y Coordinate').locator('xpath=following-sibling::div').textContent();
+  
+  console.log(`Coordinates after zooming (${zoomLevel}): X=${zoomedXCoord}, Y=${zoomedYCoord}`);
+  
+  // Navigate one more time using right arrow
+  await page.locator('text="→"').click();
+  await page.waitForTimeout(500);
+  
+  // Get coordinates after navigation at zoomed level
+  const zoomedNavXCoord = await page.locator('text=X Coordinate').locator('xpath=following-sibling::div').textContent();
+  const zoomedNavYCoord = await page.locator('text=Y Coordinate').locator('xpath=following-sibling::div').textContent();
+  
+  console.log(`Coordinates after navigation at zoomed level: X=${zoomedNavXCoord}, Y=${zoomedNavYCoord}`);
+  await page.screenshot({ path: 'test-results/navigation-after-zoom-and-arrow.png' });
+  
+  // Calculate the expected next x-coordinate (should be previous + 0.1)
+  const expectedNextX = parseFloat(zoomedXCoord || '0') + 0.1;
+  const actualNextX = parseFloat(zoomedNavXCoord || '0');
+  
+  // Calculate the difference between expected and actual
+  const xDifference = Math.abs(expectedNextX - actualNextX);
+  
+  console.log(`Expected next X: ${expectedNextX.toFixed(4)}, Actual: ${actualNextX.toFixed(4)}, Difference: ${xDifference.toFixed(4)}`);
+  
+  // The bug is verified if the step size is inconsistent between zoom levels
+  // For a fixed implementation, this difference should be very small
+  expect(xDifference).toBeGreaterThan(0.02); // There is an inconsistency in step size
+  
+  // Also verify the overall coordinates changed from default zoom to zoomed level
+  const defaultX = parseFloat(defaultXCoord || '0');
+  const zoomedX = parseFloat(zoomedXCoord || '0');
+  const totalXDifference = Math.abs(defaultX - zoomedX);
+  
+  console.log(`Total X coordinate difference between zoom levels: ${totalXDifference.toFixed(4)}`);
+  
+  // The bug is verified if coordinates change significantly between zoom levels
+  expect(totalXDifference).toBeGreaterThan(0.01);
 }); 
