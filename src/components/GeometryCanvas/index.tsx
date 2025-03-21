@@ -1013,7 +1013,12 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
     navigationStepSize?: number;
     isValid: boolean;
   } | null) => {
-    console.log('Point selected:', point);
+    // Add more concise logging that doesn't dump the entire point object
+    if (point) {
+      console.log(`Point selected at math coordinates: (${point.mathX.toFixed(4)}, ${point.mathY.toFixed(4)})`);
+    } else {
+      console.log('Point selection cleared');
+    }
     
     // Clear any existing selection first
     clearAllSelectedPoints();
@@ -1044,13 +1049,11 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
       }
       
       // Select the formula in the function tool
-      // This will notify the parent component to update the selected formula
       if (onFormulaSelect) {
         onFormulaSelect(point.formula.id);
       }
       
-      // If we have a mode change handler, switch to formula mode
-      // This will open the formula editor if it's not already open
+      // Switch to select mode
       if (onModeChange) {
         onModeChange('select');
       }
