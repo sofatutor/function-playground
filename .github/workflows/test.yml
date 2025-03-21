@@ -60,6 +60,7 @@ jobs:
         run: npm install --no-save vite-plugin-istanbul nyc
       - name: Install Playwright browsers and dependencies
         run: npx playwright install --with-deps
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
       - name: Run Playwright tests
         env:
           CI: true
