@@ -27,7 +27,7 @@
     "html"
   ],
   "report-dir": "./coverage/unit",
-  "temp-dir": "./tmp",
+  "temp-dir": "./coverage/unit/tmp",
   "cwd": "/Users/manuelfittko/github/geo-playground",
   "source-map": true,
   "produce-source-map": true,

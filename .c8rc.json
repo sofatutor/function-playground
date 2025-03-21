@@ -8,6 +8,6 @@
     "json"
   ],
   "report-dir": "./coverage/e2e",
-  "temp-dir": "./tmp",
+  "temp-dir": "./coverage/e2e/tmp",
   "all": true
 }

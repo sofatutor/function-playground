@@ -111,7 +111,7 @@ jobs:
           retention-days: 30
       
       - name: Prepare coverage directories
-        run: mkdir -p coverage/unit/temp coverage/e2e/tmp
+        run: mkdir -p coverage/unit/tmp coverage/e2e/tmp
       
       - name: Generate coverage report
         run: npx nyc report --reporter=lcov --reporter=json --report-dir=./coverage/e2e

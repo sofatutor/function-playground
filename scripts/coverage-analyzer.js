@@ -983,7 +983,7 @@ function ensureNycConfigExists() {
         "html"
       ],
       "report-dir": "./coverage/unit",
-      "temp-dir": "./tmp",
+      "temp-dir": "./coverage/unit/tmp",
       "cwd": process.cwd(),
       "source-map": true,
       "produce-source-map": true,
