@@ -125,6 +125,8 @@ const Toolbar: React.FC<ToolbarProps> = ({
       {onToggleFormulaEditor && (
         <>
           <ToolButton 
+            id="plot-formula-button"
+            data-testid="plot-formula-button"
             active={isFormulaEditorOpen}
             onClick={onToggleFormulaEditor}
             tooltip={t('tooltips.plot')}
@@ -176,6 +178,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
     return (
       <Button
         id={id}
+        data-testid={id}
         variant={buttonVariant}
         size="icon"
         className={`h-7 w-7 sm:h-8 sm:w-8 ${active ? 'bg-primary text-primary-foreground' : ''}`}
@@ -194,6 +197,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
         <TooltipTrigger asChild>
           <Button
             id={id}
+            data-testid={id}
             variant={buttonVariant}
             size="icon"
             className={`h-7 w-7 sm:h-8 sm:w-8 ${active ? 'bg-primary text-primary-foreground' : ''}`}

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MeasurementUnit, Point } from '@/types/shapes';
 import GridLines from './GridLines';
 import OriginIndicator from './OriginIndicator';
-import GridDragHandler from './GridDragHandler';
+import { GridDragHandler } from './GridDragHandler';
 import GridZoomControl from './GridZoomControl';
 import { useGridZoom } from '@/contexts/GridZoomContext';
 

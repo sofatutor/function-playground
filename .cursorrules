@@ -27,11 +27,13 @@
 - Local state when possible
 
 ## Testing
-- Jest for unit tests
+- Jest for unit tests: `npm run test`
+- Playwright for e2e tests: `npm run e2e:ci`
 - React Testing Library for components
 - Write tests before fixing bugs
 - Use pattern: "should [expected behavior] when [condition]"
 - Run relevant tests after changes
+- Run tests in headless mode and check output (and screenshots in test-results for e2e)
 
 ## Performance/Security
 - Memoize complex calculations

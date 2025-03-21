@@ -254,13 +254,22 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
   const logScaleFactor = Math.log10(currentScaleFactor);
 
   return (
-    <div className="w-full px-1 sm:px-2">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full">
+    <div 
+      className="w-full px-1 sm:px-2" 
+      id="formula-editor"
+      data-testid="formula-editor"
+    >
+      <div 
+        className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full" 
+        id="formula-editor-toolbar"
+      >
         {/* Formula Input Section - Full Width */}
         <div className="flex-grow w-full sm:w-auto">
           <div className="flex items-center gap-2">
             <Input
               ref={formulaInputRef}
+              id="formula-expression-input"
+              data-testid="formula-expression-input"
               type="text"
               placeholder={t('enterFormula')}
               value={findSelectedFormula()?.expression || ''}
@@ -526,9 +535,11 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
+                  id="add-formula-button"
                   variant="outline"
-                  size="icon"
-                  className="h-9 w-9"
+                  size="sm"
+                  className="mt-1 sm:mt-0"
+                  data-testid="add-formula-button"
                   onClick={onNewFormula || handleCreateFormula}
                 >
                   <PlusCircle className="h-4 w-4" />
