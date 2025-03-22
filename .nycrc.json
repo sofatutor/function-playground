@@ -25,7 +25,8 @@
   "reporter": [
     "json",
     "text-summary",
-    "html"
+    "html",
+    "lcov"
   ],
   "report-dir": "./coverage/unit",
   "temp-dir": "./coverage/unit/tmp",
