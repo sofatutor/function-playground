@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: 20
+  NODE_VERSION: 22
 
 jobs:
   unit-test:
@@ -42,7 +42,6 @@ jobs:
     - name: Install dependencies
       if: steps.node-modules-cache.outputs.cache-hit != 'true'
       run: |
-        rm -rf node_modules package-lock.json
         npm install --platform=linux --arch=x64
     
     - name: Run Jest tests with coverage
@@ -94,7 +93,6 @@ jobs:
       - name: Install dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
         run: |
-          rm -rf node_modules package-lock.json
           npm install --platform=linux --arch=x64
       
       - name: Install Playwright
