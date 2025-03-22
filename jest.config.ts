@@ -23,6 +23,8 @@ const config: Config = {
     '!src/vite-env.d.ts',
     '!src/components/ui/**/*.{ts,tsx}',
   ],
+  coverageDirectory: './coverage/unit',
+  coverageReporters: ['lcov', 'json', 'html', 'text'],
   coverageThreshold: {
     global: {
       branches: 10,

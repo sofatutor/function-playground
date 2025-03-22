@@ -49,7 +49,7 @@ function setupCoverage() {
       // Only attempt to convert if the coverage directory exists and has files
       if (fs.existsSync(coverageDir) && fs.readdirSync(coverageDir).length > 0) {
         console.log('Converting V8 coverage to JSON format...');
-        execSync(`npx c8 report --reporter=json --reporter=lcov --report-dir=coverage/e2e --temp-dir=coverage/e2e/tmp`, {
+        execSync(`npx c8 report --reporter=json --report-dir=coverage/e2e --temp-dir=coverage/e2e/tmp`, {
           stdio: 'inherit'
         });
       }

@@ -51,7 +51,7 @@ jobs:
       uses: coverallsapp/github-action@v2
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: ./coverage/lcov.info
+        path-to-lcov: ./coverage/unit/lcov.info
         flag-name: unit-tests
         
   e2e-test:

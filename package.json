@@ -18,7 +18,7 @@
     "e2e:open": "playwright test --ui",
     "e2e:debug": "playwright test --debug",
     "e2e:coverage": "VITE_ENABLE_COVERAGE=true npm run e2e:ci && npm run e2e:coverage:report",
-    "e2e:coverage:report": "npx nyc report --reporter=lcov --reporter=json --reporter=html --reporter=text --temp-dir=./coverage/e2e/tmp",
+    "e2e:coverage:report": "npx nyc report --reporter=lcov --reporter=json --reporter=html --reporter=text --temp-dir=./coverage/e2e/tmp --report-dir=./coverage/e2e",
     "prepare": "husky"
   },
   "dependencies": {
