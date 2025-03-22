@@ -1,4 +1,5 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
+import { test } from './test-helper';
 import type { Locator, Page } from '@playwright/test';
 import path from 'path';
 import fs from 'fs';
@@ -57,7 +58,6 @@ async function testAngleUpdate(page: Page, angleNumber: number): Promise<void> {
     if (await toast.count() > 0) {
       console.log('Found notification toast, attempting to dismiss it');
       await toast.click({ force: true });
-      await page.waitForTimeout(500);
     }
   } catch (error) {
     console.log('No toast found or unable to dismiss it');
@@ -72,12 +72,6 @@ async function testAngleUpdate(page: Page, angleNumber: number): Promise<void> {
     await angleElement.click({ force: true });
     console.log(`Clicked on angle${angleNumber} measurement with force: true`);
   }
-  
-  // Wait for the input field to appear
-  await page.waitForTimeout(500);
-  
-  // Take a screenshot after clicking
-  await takeScreenshot(page, `after-angle${angleNumber}-click`);
   
   // Look for the input field
   const inputField = page.locator('input[type="number"]');
@@ -112,12 +106,6 @@ async function testAngleUpdate(page: Page, angleNumber: number): Promise<void> {
   // Press Enter to save
   await inputField.press('Enter');
   console.log('Pressed Enter to save angle');
-  
-  // Wait for the update to be applied
-  await page.waitForTimeout(3000);
-  
-  // Take a screenshot after saving
-  await takeScreenshot(page, `after-angle${angleNumber}-save`);
   
   // Get the updated measurements
   const updatedMeasurements = await getMeasurements(page);
@@ -229,12 +217,6 @@ test.describe('Triangle Angle Updates', () => {
     await page.mouse.move(endX, endY);
     await page.mouse.up();
     
-    // Take a screenshot after creating the triangle
-    await takeScreenshot(page, 'after-triangle-creation');
-    
-    // Wait for the triangle to be created
-    await page.waitForTimeout(1000);
-    
     // Check if any SVG paths were created (which would indicate a triangle was drawn)
     const pathCount = await page.locator('path').count();
     console.log(`Found ${pathCount} SVG paths`);
@@ -247,12 +229,6 @@ test.describe('Triangle Angle Updates', () => {
     const trianglePath = page.locator('path').first();
     await trianglePath.click();
     console.log('Clicked on the triangle to select it');
-    
-    // Wait a moment for selection to register
-    await page.waitForTimeout(1000);
-    
-    // Take a screenshot after selecting the triangle
-    await takeScreenshot(page, 'after-triangle-selection');
     
     // Test updating angle1
     await testAngleUpdate(page, 1);

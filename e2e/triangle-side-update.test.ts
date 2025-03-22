@@ -1,24 +1,6 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
+import { test } from './test-helper';
 import type { Locator, Page } from '@playwright/test';
-import path from 'path';
-import fs from 'fs';
-
-// Helper function to take screenshots with consistent naming
-async function takeScreenshot(page: Page, name: string): Promise<void> {
-  const testInfo = test.info();
-  const testName = testInfo.title.replace(/\s+/g, '-').toLowerCase();
-  const testFile = path.basename(testInfo.file).replace('.spec.ts', '');
-  
-  // Create directory if it doesn't exist
-  const screenshotDir = path.join('e2e/screenshots', testFile);
-  if (!fs.existsSync(screenshotDir)) {
-    fs.mkdirSync(screenshotDir, { recursive: true });
-  }
-  
-  const screenshotPath = path.join(screenshotDir, `${testName}-${name}.png`);
-  await page.screenshot({ path: screenshotPath });
-  console.log(`Screenshot saved: ${screenshotPath}`);
-}
 
 test.describe('Triangle Side Updates', () => {
   test('should update triangle side immediately when edited', async ({ page }) => {
@@ -28,9 +10,6 @@ test.describe('Triangle Side Updates', () => {
     // Wait for the application to load - use the correct selector with ID
     await page.waitForSelector('#geometry-canvas', { state: 'visible', timeout: 30000 });
     console.log('Canvas found');
-    
-    // Take a screenshot to debug the initial state
-    await takeScreenshot(page, 'initial-state');
     
     // Find the triangle tool using its ID
     const triangleButton = page.locator('#triangle-tool');
@@ -90,12 +69,6 @@ test.describe('Triangle Side Updates', () => {
     await page.mouse.move(endX, endY);
     await page.mouse.up();
     
-    // Take a screenshot after creating the triangle
-    await takeScreenshot(page, 'after-triangle-creation');
-    
-    // Wait for the triangle to be created
-    await page.waitForTimeout(1000);
-    
     // Check if any SVG paths were created (which would indicate a triangle was drawn)
     const pathCount = await page.locator('path').count();
     console.log(`Found ${pathCount} SVG paths`);
@@ -109,23 +82,11 @@ test.describe('Triangle Side Updates', () => {
     await trianglePath.click();
     console.log('Clicked on the triangle to select it');
     
-    // Wait a moment for selection to register
-    await page.waitForTimeout(1000);
-    
-    // Take a screenshot after selecting the triangle
-    await takeScreenshot(page, 'after-triangle-selection');
-    
     // Dump the entire HTML for debugging
     const html = await page.content();
     console.log('HTML content length:', html.length);
     
-    // Look for the measurement panel
     console.log('Looking for measurement panel...');
-    
-    // Wait for the measurement panel to appear
-    await page.waitForTimeout(1000);
-    
-    // Look for the side1 measurement specifically
     console.log('Looking for side1 measurement...');
     
     // Try multiple approaches to find the side1 measurement
@@ -148,9 +109,6 @@ test.describe('Triangle Side Updates', () => {
     const measurementPattern = page.locator('div:has-text(" cm"), span:has-text(" cm")');
     const measurementPatternCount = await measurementPattern.count();
     console.log(`Found ${measurementPatternCount} elements containing measurements with "cm"`);
-    
-    // Take a screenshot of the current state
-    await takeScreenshot(page, 'before-measurement-click');
     
     // Try to find and click on the side1 measurement
     let side1Element: Locator | null = null;
@@ -206,12 +164,6 @@ test.describe('Triangle Side Updates', () => {
     await side1Element.click();
     console.log('Clicked on side measurement');
     
-    // Wait for the input field to appear
-    await page.waitForTimeout(500);
-    
-    // Take a screenshot after clicking
-    await takeScreenshot(page, 'after-measurement-click');
-    
     // Look for the input field
     const inputField = page.locator('input[type="number"]');
     const inputFieldCount = await inputField.count();
@@ -221,10 +173,6 @@ test.describe('Triangle Side Updates', () => {
       // If no input field appears, try clicking again
       console.log('No input field found, trying to click again');
       await side1Element.click({ force: true });
-      await page.waitForTimeout(500);
-      
-      // Take another screenshot
-      await takeScreenshot(page, 'after-second-click');
       
       // Check again for input fields
       const inputFieldCountAfterSecondClick = await inputField.count();
@@ -248,19 +196,9 @@ test.describe('Triangle Side Updates', () => {
     await inputField.fill(newValue);
     console.log(`Filled input with new value: ${newValue}`);
     
-    // Take a screenshot while editing
-    await takeScreenshot(page, 'editing-side');
-    
     // Press Enter to save
     await inputField.press('Enter');
     console.log('Pressed Enter to save');
-    
-    // Wait longer for the update to be applied
-    console.log('Waiting for update to be applied...');
-    await page.waitForTimeout(5000);
-    
-    // Take a screenshot after saving
-    await takeScreenshot(page, 'after-save');
     
     // Get the updated measurements directly from the UI
     const updatedMeasurements = await getMeasurements(page);
@@ -317,12 +255,6 @@ test.describe('Triangle Side Updates', () => {
       await angle1ById.click();
       console.log('Clicked on angle1 measurement');
       
-      // Wait for the input field to appear
-      await page.waitForTimeout(500);
-      
-      // Take a screenshot after clicking
-      await takeScreenshot(page, 'after-angle-click');
-      
       // Look for the input field
       const angleInputField = page.locator('input[type="number"]');
       const angleInputFieldCount = await angleInputField.count();
@@ -342,18 +274,10 @@ test.describe('Triangle Side Updates', () => {
         await angleInputField.fill(newAngleValue);
         console.log(`Filled angle input with new value: ${newAngleValue}`);
         
-        // Take a screenshot while editing
-        await takeScreenshot(page, 'editing-angle');
-        
         // Press Enter to save
         await angleInputField.press('Enter');
         console.log('Pressed Enter to save angle');
         
-        // Wait for the update to be applied
-        await page.waitForTimeout(2000);
-        
-        // Take a screenshot after saving
-        await takeScreenshot(page, 'after-angle-save');
         
         // Get the final measurements
         const finalMeasurements = await getMeasurements(page);

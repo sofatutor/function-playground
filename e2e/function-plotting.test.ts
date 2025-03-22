@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
+import { test } from './test-helper';
 
 test.describe('Function Plotting', () => {
   test.beforeEach(async ({ page }) => {
@@ -35,17 +36,6 @@ test.describe('Function Plotting', () => {
         await plotFormulaButton.click();
       }
       
-      // Take a screenshot right after clicking
-      await page.screenshot({ path: `test-results/after-click-plot-formula-${Date.now()}.png` });
-      
-      // Log HTML structure
-      console.log('Page HTML structure after click:');
-      const formulaEditorHTML = await page.evaluate(() => {
-        const editor = document.querySelector('#formula-editor');
-        return editor ? editor.outerHTML : 'No formula editor found';
-      });
-      console.log(formulaEditorHTML);
-      
       // Get all container elements
       const containers = await page.evaluate(() => {
         return Array.from(document.querySelectorAll('.container, .formula-editor-container')).map(el => ({
@@ -79,14 +69,6 @@ test.describe('Function Plotting', () => {
   // Helper function to find and click the "Add Function" button
   async function findAndClickAddButton(page: Page): Promise<boolean> {
     try {
-      console.log('Looking for add formula button...');
-      
-      // Debug: Log formula editor HTML
-      const formulaEditorHTML = await page.evaluate(() => {
-        const editor = document.querySelector('#formula-editor');
-        return editor ? editor.outerHTML : 'No formula editor found';
-      });
-      console.log('Formula editor HTML:', formulaEditorHTML.substring(0, 200) + '...');
       
       // Try to find the button directly by ID
       const addButton = page.locator('#add-formula-button');
@@ -109,33 +91,22 @@ test.describe('Function Plotting', () => {
           return true;
         }
         
-        // Take a screenshot of the current state
-        await page.screenshot({ path: `test-results/add-button-not-found-${Date.now()}.png` });
-        console.log('Add formula button not found by any means');
+        console.warn('Add formula button not found by any means');
         return false;
       }
       
-      // Click the button
       console.log('Clicking add formula button...');
       await addButton.click();
-      
-      // Take a screenshot after clicking
-      await page.screenshot({ path: `test-results/after-click-add-formula-${Date.now()}.png` });
       
       return true;
     } catch (error) {
       console.error('Error finding and clicking add button:', error);
-      // Take a screenshot for debugging
-      await page.screenshot({ path: `test-results/find-add-button-error-${Date.now()}.png` });
       return false;
     }
   }
 
   test('should plot basic functions correctly', async ({ page }) => {
     await page.goto('/');
-    
-    // Wait for the page to load
-    await page.waitForTimeout(500);
     
     // Click the Plot formula button to activate formula mode
     await expect(clickPlotFormulaButton(page)).resolves.toBe(true);
@@ -179,9 +150,6 @@ test.describe('Function Plotting', () => {
       // Wait for the graph to render - look for any SVG path element instead of .function-plot
       console.log('Waiting for SVG path to appear (function graph)...');
       
-      // Add a brief wait for rendering
-      await page.waitForTimeout(1000);
-      
       // Check for any SVG path elements that might represent the function graph
       console.log('Checking for SVG path elements...');
       const svgPaths = page.locator('svg path');
@@ -189,8 +157,6 @@ test.describe('Function Plotting', () => {
       console.log(`Found ${pathCount} SVG path elements`);
       
       if (pathCount === 0) {
-        // Take a screenshot if no paths were found
-        await page.screenshot({ path: 'test-results/no-paths-found.png' });
         
         // Debug: Log all SVG elements and their children
         const svgContent = await page.evaluate(() => {
@@ -269,10 +235,6 @@ test.describe('Function Plotting', () => {
     // Wait for the graph to render - look for any SVG path element instead of path.formula-graph
     console.log('Waiting for SVG path to appear (function graph)...');
     
-    // Add a brief wait for rendering
-    await page.waitForTimeout(1000);
-    
-    // Check for any SVG path elements that might represent the function graph
     console.log('Checking for SVG path elements...');
     const pathWithData = page.locator('svg path[d]');
     await expect(pathWithData.count()).resolves.toBeGreaterThan(0);
@@ -294,10 +256,6 @@ test.describe('Function Plotting', () => {
     await page.fill('#formula-expression-input', 'Math.sin(x)');
     await page.click('#add-formula-button');
 
-    // Wait for the graph to render - look for any SVG path element
-    console.log('Waiting for SVG path to appear (function graph)...');
-    await page.waitForTimeout(1000);
-    
     const pathWithData = page.locator('svg path[d]');
     await expect(pathWithData.count()).resolves.toBeGreaterThan(0);
     
@@ -356,7 +314,7 @@ test.describe('Function Plotting', () => {
       height: mainSvg.height || 100
     };
     
-    console.log('SVG bounds:', bounds);
+    console.debug('SVG bounds:', bounds);
 
     // Perform drag operation
     await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
@@ -371,8 +329,6 @@ test.describe('Function Plotting', () => {
     // End drag
     await page.mouse.up();
     
-    // Wait for re-render
-    await page.waitForTimeout(200);
 
     // Get final path count
     const pathsAfterRelease = await pathWithData.count();
@@ -392,9 +348,6 @@ test.describe('Function Plotting', () => {
     await page.fill('#formula-expression-input', 'x*x');
     await page.click('#add-formula-button');
 
-    // Wait for the graph to render - look for any SVG path element
-    console.log('Waiting for SVG path to appear (function graph)...');
-    await page.waitForTimeout(1000);
     
     const pathWithData = page.locator('svg path[d]');
     await expect(pathWithData.count()).resolves.toBeGreaterThan(0);
@@ -420,7 +373,6 @@ test.describe('Function Plotting', () => {
   });
 
   test('should handle multiple functions simultaneously', async ({ page }) => {
-    // Add the first function
     await clickPlotFormulaButton(page);
     
     try {
@@ -431,27 +383,16 @@ test.describe('Function Plotting', () => {
       throw error;
     }
     
-    // Fill the input with the first function and add it
-    await page.waitForTimeout(1000);
     await page.fill('#formula-expression-input', 'Math.sin(x)');
     
-    // Find and click the add button directly by its ID
     const addButton = page.locator('#add-formula-button');
     await expect(addButton).toBeVisible({ timeout: 5000 });
-    console.log('Add button found, clicking...');
     await addButton.click();
 
-    // Wait for the first graph to render
-    console.log('Waiting for first function to render...');
-    await page.waitForTimeout(2000);
-    
     // Check that at least one path was created
     const firstPathCheck = page.locator('svg path[d]');
     await expect(firstPathCheck.count()).resolves.toBeGreaterThan(0);
     console.log('First function path found');
-    
-    // Take a screenshot of the state after adding the first function
-    await page.screenshot({ path: 'test-results/after-first-function.png', fullPage: true });
     
     // Try to click the button again after finding it visually by text
     const buttons = page.locator('button');
@@ -464,7 +405,6 @@ test.describe('Function Plotting', () => {
       // Look for any button that might contain an SVG icon
       const hasSvg = await button.locator('svg').count() > 0;
       if (hasSvg) {
-        console.log('Found button with SVG, clicking it');
         await button.click();
         break;
       }
@@ -483,7 +423,6 @@ test.describe('Function Plotting', () => {
         const toolbarButtons = await toolbar.locator('button').all();
         if (toolbarButtons.length > 0) {
           await toolbarButtons[0].click();
-          console.log('Clicked first toolbar button as fallback');
         }
       }
       
@@ -499,20 +438,10 @@ test.describe('Function Plotting', () => {
     await expect(addButtonSecond).toBeVisible({ timeout: 5000 });
     await addButtonSecond.click();
     
-    // Wait for both functions to render
-    await page.waitForTimeout(2000);
-    
     // Check for paths after adding both functions
     const pathWithData = page.locator('svg path[d]');
     const pathCount = await pathWithData.count();
-    console.log(`Found ${pathCount} SVG path elements with 'd' attribute`);
     
-    // We should have paths for both functions
     expect(pathCount).toBeGreaterThan(0);
-    
-    // Verify the page has both functions rendered by checking 
-    // for distinctive visualization elements
-    await page.screenshot({ path: 'test-results/multiple-functions.png', fullPage: true });
-    console.log('Test completed successfully');
   });
-}); 
+});

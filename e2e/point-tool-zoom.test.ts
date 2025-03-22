@@ -1,4 +1,5 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
+import { test } from './test-helper';
 
 /**
  * These tests verify the behavior of the grid zoom feature with respect to:
@@ -57,10 +58,6 @@ test('should convert screen coordinates to correct math coordinates at different
   // Click at a different point at 150% zoom
   const zoomedPoint = { x: 729, y: 372 };
   await page.mouse.click(zoomedPoint.x, zoomedPoint.y);
-  await page.waitForTimeout(500);
-  
-  // Take screenshot after clicking at zoomed level for debugging
-  await page.screenshot({ path: 'test-results/point-tool-zoom-zoomed-click.png' });
   
   // Get coordinates at zoomed level
   const zoomedXCoord = await page.locator('text=X Coordinate').locator('xpath=following-sibling::div').textContent();
@@ -121,8 +118,6 @@ test('should maintain consistent step size with arrow navigation at different zo
   const zoomLevel = await page.getByTestId('grid-zoom-reset').textContent();
   console.log(`Current zoom level: ${zoomLevel}`);
   
-  await page.screenshot({ path: 'test-results/navigation-after-zoom.png' });
-  
   // Click at a specific point at zoomed level
   const zoomedPoint = { x: 730, y: 372 };
   await page.mouse.click(zoomedPoint.x, zoomedPoint.y);
@@ -133,7 +128,6 @@ test('should maintain consistent step size with arrow navigation at different zo
   
   // Navigate one step right at zoomed level
   await page.locator('text="→"').click();
-  await page.waitForTimeout(500);
   
   // Get coordinate after one step at zoomed level
   const zoomedNavXCoord = await page.locator('text=X Coordinate').locator('xpath=following-sibling::div').textContent();
@@ -152,6 +146,4 @@ test('should maintain consistent step size with arrow navigation at different zo
   
   // The step size should be consistent between zoom levels (with small allowance for grid snapping)
   expect(stepSizeDifference).toBeLessThan(0.1);
-  
-  await page.screenshot({ path: 'test-results/navigation-final-state.png' });
-}); 
+});

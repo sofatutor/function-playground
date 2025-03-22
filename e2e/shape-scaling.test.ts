@@ -1,10 +1,10 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
+import { test } from './test-helper';
 
 test.describe('Shape Scaling', () => {
   test('should handle shape creation and interaction', async ({ page }) => {
     // Navigate to the page and wait for it to load
     await page.goto('/');
-    await page.waitForTimeout(2000); // Wait for the UI to stabilize
 
     // Look for the rectangle button using more precise selector
     const rectangleButton = page.locator('#rectangle-tool');
@@ -20,8 +20,6 @@ test.describe('Shape Scaling', () => {
       await page.keyboard.press('r');
     }
     
-    await page.waitForTimeout(1000); // Wait for tool selection to take effect
-
     // Find a suitable area to draw by locating the main element
     const mainElement = page.locator('#geometry-canvas, main, .canvas-container, .main-content');
     await expect(mainElement).toBeVisible();
@@ -40,8 +38,6 @@ test.describe('Shape Scaling', () => {
     await page.mouse.move(centerX + 100, centerY + 100);
     await page.mouse.up();
     
-    await page.waitForTimeout(1000); // Wait for drawing to complete
-
     // Verify something was drawn by checking for shapes in the canvas area (not toolbar icons)
     const drawnElements = page.locator('#geometry-canvas [data-shape-id], .geometry-shape, .canvas-shape');
     
@@ -62,7 +58,6 @@ test.describe('Shape Scaling', () => {
     
     // Test keyboard navigation for zoom
     await page.keyboard.press('ArrowUp'); // Zoom in
-    await page.waitForTimeout(500);
     
     // Verify UI is still responsive
     await expect(page.locator('body')).toBeVisible();

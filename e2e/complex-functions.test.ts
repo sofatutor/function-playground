@@ -12,10 +12,6 @@ test.describe('Complex Function Behaviors', () => {
     
     // Wait for the formula editor to appear and be visible
     await page.waitForSelector('[data-testid="formula-editor"]', { state: 'visible' });
-    
-    // Log formula editor visibility for debugging
-    const formulaEditorVisible = await page.getByTestId('formula-editor').isVisible();
-    console.log(`Formula editor visible: ${formulaEditorVisible}`);
   });
 
   test('tangent function should have appropriate path representation', async ({ page }) => {
@@ -175,4 +171,4 @@ test.describe('Complex Function Behaviors', () => {
     // Should have at least one path segment
     expect(pathSegments.length).toBeGreaterThanOrEqual(1);
   });
-}); 
+});
