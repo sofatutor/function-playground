@@ -43,8 +43,8 @@ jobs:
       if: steps.node-modules-cache.outputs.cache-hit != 'true'
       run: npm ci
     
-    - name: Run Jest tests
-      run: npm run test:ci -- --maxWorkers=4
+    - name: Run Jest tests with coverage
+      run: npm run test:coverage
     
     - name: Upload coverage to Coveralls
       uses: coverallsapp/github-action@v2
@@ -97,11 +97,8 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps
       
-      - name: Run Playwright tests
-        env:
-          CI: true
-          VITE_ENABLE_COVERAGE: true
-        run: npm run e2e:ci
+      - name: Run Playwright tests with coverage
+        run: npm run e2e:coverage
       
       - name: Upload test results
         if: always()
@@ -112,12 +109,6 @@ jobs:
             playwright-report/
             test-results/
           retention-days: 30
-      
-      - name: Prepare coverage directories
-        run: mkdir -p coverage/unit/tmp coverage/e2e/tmp
-      
-      - name: Generate coverage report
-        run: npx nyc report --reporter=lcov --reporter=json --report-dir=./coverage/e2e
       
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@v2
