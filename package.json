@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "test": "jest",
     "test:ci": "jest --ci",
-    "test:coverage": "COLLECT_COVERAGE=true npm run test:ci",
+    "test:coverage": "COLLECT_COVERAGE=true npm run test:ci && npm run test:coverage:report",
     "test:coverage:report": "npx nyc report --reporter=lcov --reporter=json --reporter=html --reporter=text",
     "test:watch": "jest --watch",
     "e2e": "playwright test",
