@@ -18,4 +18,4 @@ export async function captureHtmlSnapshot(page: Page, testInfo: TestInfo, name =
     contentType: 'text/html',
     path: outputPath,
   });
-} 
+}

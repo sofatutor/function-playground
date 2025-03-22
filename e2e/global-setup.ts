@@ -4,6 +4,8 @@ import fs from 'fs';
 import { execSync } from 'child_process';
 import type { Reporter, TestCase, TestResult } from '@playwright/test/reporter';
 
+export const coverageDir = path.join(process.cwd(), 'coverage/e2e/tmp');
+
 // This file is used in playwright.config.ts for global setup
 async function globalSetup(config: FullConfig) {
   console.log('Global setup running...');
@@ -30,13 +32,14 @@ async function globalSetup(config: FullConfig) {
  */
 function setupCoverage() {
   // Create output directory for V8 coverage if it doesn't exist
-  const coverageDir = path.resolve(process.cwd(), 'coverage/e2e/tmp');
   if (!fs.existsSync(coverageDir)) {
     fs.mkdirSync(coverageDir, { recursive: true });
+  } else {
+    // Clear the coverage directory
+    fs.readdirSync(coverageDir).forEach(file => {
+      fs.unlinkSync(path.join(coverageDir, file));
+    });
   }
-  
-  // Set environment variable for V8 coverage
-  process.env.NODE_V8_COVERAGE = coverageDir;
   
   console.log(`E2E tests configured for coverage collection. Output: ${coverageDir}`);
   
@@ -46,7 +49,7 @@ function setupCoverage() {
       // Only attempt to convert if the coverage directory exists and has files
       if (fs.existsSync(coverageDir) && fs.readdirSync(coverageDir).length > 0) {
         console.log('Converting V8 coverage to JSON format...');
-        execSync(`npx c8 report --reporter=json --reporter=lcov --report-dir=coverage/e2e`, {
+        execSync(`npx c8 report --reporter=json --reporter=lcov --report-dir=coverage/e2e --temp-dir=coverage/e2e/tmp`, {
           stdio: 'inherit'
         });
       }
@@ -67,4 +70,4 @@ export class FailureCaptureReporter implements Reporter {
       // This is why the afterEach hook is more powerful
     }
   }
-} 
+}
