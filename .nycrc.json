@@ -19,7 +19,8 @@
     "src/e2e/**/*",
     "src/types/**/*",
     "dist/**/*",
-    "**/node_modules/**"
+    "**/node_modules/**",
+    "node_modules/**"
   ],
   "reporter": [
     "json",
