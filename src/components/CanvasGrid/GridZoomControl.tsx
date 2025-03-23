@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
-import { useGridZoom } from '@/contexts/GridZoomContext';
+import { useGridZoom } from '@/contexts/GridZoomContext/index';
 import { useTranslate } from '@/hooks/useTranslate';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
