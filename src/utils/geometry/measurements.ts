@@ -1,5 +1,7 @@
-import { AnyShape, MeasurementUnit, Point } from '@/types/shapes';
-import { calculateTriangleAngles } from './triangle';
+import { AnyShape, Circle, Rectangle, Triangle, Line, MeasurementUnit, Point } from '@/types/shapes';
+import { distanceBetweenPoints } from './common';
+import { calculateTriangleArea, calculateTriangleAngles } from './triangle';
+import { radiansToDegrees, calculateAngleDegrees } from './rotation';
 
 // Helper function to convert physical measurements to pixels
 export const convertToPixels = (
@@ -39,15 +41,15 @@ export function getShapeMeasurements(shape: AnyShape, convertFromPixels: (pixels
   let originalPoints: [Point, Point, Point];
   let sides: number[];
   let perimeter: number;
-  let _s: number; // Unused variable, prefix with underscore
+  let s: number;
   let pixelArea: number;
   let originalDx: number;
   let originalDy: number;
   let length: number;
   let angles: number[];
   let angle: number;
-  let _base: number; // Unused variable, prefix with underscore
-  let _height: number; // Unused variable, prefix with underscore
+  let base: number;
+  let height: number;
 
   switch (shape.type) {
     case 'rectangle':

@@ -47,66 +47,41 @@ We'll take a systematic approach to addressing these warnings:
 
 Based on our ESLint output, these files need immediate attention:
 
-- [x] `/src/hooks/useShapeOperations.ts` - 8 warnings, critical business logic
-- [ ] `/src/components/GeometryCanvas/index.tsx` - 12 warnings, core component
-- [ ] `/src/components/FormulaEditor.tsx` - 10 warnings, complex UI component 
-- [x] `/src/utils/geometry/measurements.ts` - 11 warnings, utility functions
-- [x] `/src/utils/geometry/shapeOperations.ts` - 7 warnings, core shape logic
+1. `/src/hooks/useShapeOperations.ts` - 8 warnings, critical business logic
+2. `/src/components/GeometryCanvas/index.tsx` - 12 warnings, core component
+3. `/src/components/FormulaEditor.tsx` - 10 warnings, complex UI component 
+4. `/src/utils/geometry/measurements.ts` - 11 warnings, utility functions
+5. `/src/utils/geometry/shapeOperations.ts` - 7 warnings, core shape logic
 
 ## Implementation Plan
 
 ### Phase 1: Core Logic Files (Days 1-2)
 
-- [x] Fix `/src/hooks/useShapeOperations.ts`
-  - [x] Remove unused imports
-  - [x] Prefix unused variables with underscore
-  - [x] Fix hook dependencies
-  - [x] Create/update tests for the file
-- [x] Fix `/src/utils/geometry/measurements.ts`
-  - [x] Remove unused imports
-  - [x] Prefix unused variables with underscore
-  - [x] Ensure functions have proper tests
-- [x] Fix `/src/utils/geometry/shapeOperations.ts`
-  - [x] Remove unused imports
-  - [x] Prefix unused variables with underscore
-  - [x] Verify tests pass
-- [x] Fix `/src/utils/geometry/shapeUpdates.ts`
-  - [x] Remove unused imports
-  - [x] Remove unused code (MeasurementUpdateHandler type, unused functions)
-  - [x] Refactor code to eliminate unnecessary variables
+1. **Address hooks and utilities first:**
+   - Fix `/src/hooks/useShapeOperations.ts`
+   - Fix `/src/utils/geometry/measurements.ts`
+   - Fix `/src/utils/geometry/shapeOperations.ts`
+   - Fix `/src/utils/geometry/shapeUpdates.ts`
 
 ### Phase 2: Component Files (Days 3-4)
 
-- [ ] Fix `/src/components/GeometryCanvas/index.tsx`
-  - [ ] Remove unused imports
-  - [ ] Fix hook dependencies
-  - [ ] Address component structure issues
-- [ ] Fix `/src/components/FormulaEditor.tsx`
-  - [ ] Remove unused imports
-  - [ ] Prefix unused variables with underscore
-  - [ ] Fix hook dependencies
-- [ ] Fix `/src/components/FormulaGraph.tsx`
-  - [ ] Remove unused imports
-  - [ ] Fix hook dependencies
-  - [ ] Ensure component structure is correct
+1. **Address main components:**
+   - Fix `/src/components/GeometryCanvas/index.tsx`
+   - Fix `/src/components/FormulaEditor.tsx`
+   - Fix `/src/components/FormulaGraph.tsx`
 
 ### Phase 3: Supporting Files (Days 5-6)
 
-- [ ] Address service implementations
-  - [ ] Fix unused imports and variables
-  - [ ] Update test coverage as needed
-- [ ] Fix remaining component files
-  - [ ] Address component structure warnings
-  - [ ] Fix unused imports and variables
-- [ ] Fix context providers
-  - [ ] Address fast refresh warnings
-  - [ ] Fix hook dependencies
+1. **Address service implementations:**
+   - Fix service implementation files
+   - Fix remaining component files
+   - Fix context providers
 
 ### Phase 4: Test Files (Day 7)
 
-- [ ] Clean up test files
-  - [ ] Fix test utilities
-  - [ ] Address test-specific warnings
+1. **Clean up test files:**
+   - Fix test utilities
+   - Address test-specific warnings
 
 ## Guidelines for Fixes
 
@@ -129,10 +104,10 @@ When fixing warnings, follow these principles:
 ## Testing Strategy
 
 After each significant set of changes:
-- [ ] Run the lint check: `npm run lint`
-- [ ] Run unit tests: `npm run test`
-- [ ] Run e2e tests: `npm run e2e`
-- [ ] Verify application functionality manually
+1. Run the lint check: `npm run lint`
+2. Run unit tests: `npm run test`
+3. Run e2e tests: `npm run e2e`
+4. Verify application functionality manually
 
 ## Commit Strategy
 
@@ -142,12 +117,4 @@ After each significant set of changes:
    - `fix(lint): correct hook dependencies in [component]`
    - `refactor: extract constants from [component] for proper refresh`
 
-This systematic approach will help us address the ESLint warnings methodically while ensuring we don't break existing functionality.
-
-## Progress
-
-### Completed Files
-- [x] `/src/hooks/useShapeOperations.ts` - Fixed unused variables, imports, and hook dependencies 
-- [x] `/src/utils/geometry/measurements.ts` - Removed unused imports and variables
-- [x] `/src/utils/geometry/shapeUpdates.ts` - Removed unused imports, code and refactored functions 
-- [x] `/src/utils/geometry/shapeOperations.ts` - Removed unused imports and prefixed unused parameters 
+This systematic approach will help us address the ESLint warnings methodically while ensuring we don't break existing functionality. 

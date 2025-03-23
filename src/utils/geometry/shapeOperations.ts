@@ -5,7 +5,8 @@
  * Functions include selecting, moving, resizing, and rotating shapes.
  */
 
-import { AnyShape, Triangle, Line, Point } from '@/types/shapes';
+import { AnyShape, Circle, Rectangle, Triangle, Line, Point } from '@/types/shapes';
+import { distanceBetweenPoints, movePoint, scalePoint, rotatePoint } from './pointOperations';
 
 /**
  * Validates that the shapes array and shapeId are valid
@@ -28,10 +29,10 @@ const findShapeById = (shapes: AnyShape[], shapeId: string | null): AnyShape | u
 /**
  * Selects a shape by ID and deselects all others
  * @param shapes Array of shapes
- * @param _shapeId ID of the shape to select, or null to deselect all
+ * @param shapeId ID of the shape to select, or null to deselect all
  * @returns New array with the same shapes (selection is now handled by selectedShapeId state)
  */
-export const selectShape = (shapes: AnyShape[], _shapeId: string | null): AnyShape[] => {
+export const selectShape = (shapes: AnyShape[], shapeId: string | null): AnyShape[] => {
   if (!shapes || !Array.isArray(shapes) || shapes.length === 0) {
     return [];
   }
