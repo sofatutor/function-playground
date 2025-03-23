@@ -1,0 +1,8 @@
+{
+  "overrides": {
+    "vite": {
+      "rollup": "npm:@rollup/rollup-linux-x64-gnu"
+    },
+    "@swc/core": "npm:@swc/core-linux-x64-gnu"
+  }
+} 
