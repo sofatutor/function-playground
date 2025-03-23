@@ -812,6 +812,7 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
     pixelsPerSmallUnit,
     measurementUnit,
     gridPosition,
+    zoomFactor,
     setIsDrawing,
     setDrawStart,
     setDrawCurrent,
@@ -1610,6 +1611,7 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
           activeShapeType={activeShapeType}
           snapToGrid={isShiftPressed && !isAltPressed}
           pixelsPerSmallUnit={zoomedPixelsPerSmallUnit}
+          zoomFactor={zoomFactor}
         />
         
         {/* Dedicated formula layer with its own SVG */}
