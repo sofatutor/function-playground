@@ -54,7 +54,8 @@ export const getShapeAtPosition = (point: Point, shapes: AnyShape[]): AnyShape |
           Math.pow(point.x - circle.position.x, 2) + 
           Math.pow(point.y - circle.position.y, 2)
         );
-        if (distance <= circle.radius) {
+        // Add a small buffer for easier selection (5px)
+        if (distance <= circle.radius + 5) {
           return shape;
         }
         break;
@@ -64,15 +65,17 @@ export const getShapeAtPosition = (point: Point, shapes: AnyShape[]): AnyShape |
         // Account for rotation
         const rotatedPoint = rotatePoint(
           { x: point.x, y: point.y },
-          { x: rect.position.x, y: rect.position.y },
+          // Use the center of the rectangle for rotation
+          { x: rect.position.x + rect.width / 2, y: rect.position.y + rect.height / 2 },
           -rect.rotation
         );
         
+        // Check if the point is inside the rectangle using the top-left position
         if (
-          rotatedPoint.x >= rect.position.x - rect.width / 2 && 
-          rotatedPoint.x <= rect.position.x + rect.width / 2 && 
-          rotatedPoint.y >= rect.position.y - rect.height / 2 && 
-          rotatedPoint.y <= rect.position.y + rect.height / 2
+          rotatedPoint.x >= rect.position.x - 5 && 
+          rotatedPoint.x <= rect.position.x + rect.width + 5 && 
+          rotatedPoint.y >= rect.position.y - 5 && 
+          rotatedPoint.y <= rect.position.y + rect.height + 5
         ) {
           return shape;
         }
@@ -86,6 +89,17 @@ export const getShapeAtPosition = (point: Point, shapes: AnyShape[]): AnyShape |
           { x: tri.position.x, y: tri.position.y },
           -tri.rotation
         );
+        
+        // Add a buffer to make selection easier
+        // First check if we're near any of the triangle's edges
+        for (let i = 0; i < 3; i++) {
+          const p1 = tri.points[i];
+          const p2 = tri.points[(i + 1) % 3];
+          const distance = distanceFromPointToLineSegment(rotatedPoint, p1, p2);
+          if (distance <= 5) {
+            return shape;
+          }
+        }
         
         // Check if point is inside triangle using the triangle's points
         if (isPointInTriangle(rotatedPoint, tri.points[0], tri.points[1], tri.points[2])) {
