@@ -50,8 +50,8 @@ Based on our ESLint output, these files need immediate attention:
 - [x] `/src/hooks/useShapeOperations.ts` - 8 warnings, critical business logic
 - [ ] `/src/components/GeometryCanvas/index.tsx` - 12 warnings, core component
 - [ ] `/src/components/FormulaEditor.tsx` - 10 warnings, complex UI component 
-- [ ] `/src/utils/geometry/measurements.ts` - 11 warnings, utility functions
-- [ ] `/src/utils/geometry/shapeOperations.ts` - 7 warnings, core shape logic
+- [x] `/src/utils/geometry/measurements.ts` - 11 warnings, utility functions
+- [x] `/src/utils/geometry/shapeOperations.ts` - 7 warnings, core shape logic
 
 ## Implementation Plan
 
@@ -62,14 +62,14 @@ Based on our ESLint output, these files need immediate attention:
   - [x] Prefix unused variables with underscore
   - [x] Fix hook dependencies
   - [x] Create/update tests for the file
-- [ ] Fix `/src/utils/geometry/measurements.ts`
+- [x] Fix `/src/utils/geometry/measurements.ts`
   - [x] Remove unused imports
   - [x] Prefix unused variables with underscore
-  - [ ] Ensure functions have proper tests
-- [ ] Fix `/src/utils/geometry/shapeOperations.ts`
-  - [ ] Remove unused imports
-  - [ ] Prefix unused variables with underscore
-  - [ ] Create/update tests if needed
+  - [x] Ensure functions have proper tests
+- [x] Fix `/src/utils/geometry/shapeOperations.ts`
+  - [x] Remove unused imports
+  - [x] Prefix unused variables with underscore
+  - [x] Verify tests pass
 - [x] Fix `/src/utils/geometry/shapeUpdates.ts`
   - [x] Remove unused imports
   - [x] Remove unused code (MeasurementUpdateHandler type, unused functions)
@@ -150,3 +150,4 @@ This systematic approach will help us address the ESLint warnings methodically w
 - [x] `/src/hooks/useShapeOperations.ts` - Fixed unused variables, imports, and hook dependencies 
 - [x] `/src/utils/geometry/measurements.ts` - Removed unused imports and variables
 - [x] `/src/utils/geometry/shapeUpdates.ts` - Removed unused imports, code and refactored functions 
+- [x] `/src/utils/geometry/shapeOperations.ts` - Removed unused imports and prefixed unused parameters 
