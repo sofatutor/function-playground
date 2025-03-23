@@ -52,9 +52,14 @@
    - [x] Create coverage analysis script (`scripts/coverage-analyzer.js`)
    - [x] Run comprehensive test coverage report: `npm run test:coverage`
    - [x] Identify files/components with < 30% coverage using `node scripts/coverage-analyzer.js`
-   - [ ] Create prioritized list of files for review
-     - [ ] Focus on the 5 high-impact files first
-     - [ ] Examine 35 files with 0% coverage for potential removal
+   - [x] Create prioritized list of files for review (see below)
+     - [x] Focus on the 5 high-impact files first:
+       1. `/src/components/GeometryCanvas/index.tsx` - Coverage: 29.61%, 1665 lines
+       2. `/src/components/FormulaEditor.tsx` - Coverage: 0.00%, 560 lines
+       3. `/src/hooks/useShapeOperations.ts` - Coverage: 0.00%, 494 lines
+       4. `/src/components/GeometryCanvas/CanvasEventHandlers.ts` - Coverage: 22.83%, 589 lines
+       5. `/src/pages/Index.tsx` - Coverage: 0.00%, 443 lines
+     - [x] Examine files with 0% coverage for potential removal (list below)
    - [ ] Consider integration with Coveralls for visualization
 
 2. **Static Code Analysis**
@@ -165,19 +170,29 @@
 Based on the coverage analysis, here's the prioritized cleanup tasks:
 
 1. **Files to Consider for Removal or Merging**
-   - [ ] `/src/components/FormulaPointInfoTest.tsx` - appears to be a test component in production code
-   - [ ] `/src/__tests__/utils/test-chalk.ts` and `/src/__tests__/utils/test-helpers.ts` - unused test helpers
+   - [ ] `/src/components/FormulaPointInfoTest.tsx` - test component in production code
+   - [ ] `/src/__tests__/utils/test-chalk.ts` - unused test helper
+   - [ ] `/src/__tests__/utils/test-helpers.ts` - unused test helper
    - [ ] `/src/components/MeasurementPanel.tsx` vs `/src/components/MeasurementPanel/index.tsx` - potential duplication
+   - [ ] `/src/context/ConfigContext.tsx` vs `/src/config/ConfigContext.tsx` - duplicate files
+   - [ ] `/src/components/CanvasGrid.tsx` vs `/src/components/CanvasGrid/index.tsx` - potential duplication
 
-2. **Files to Test First**
-   - [ ] `/src/hooks/useShapeOperations.ts` - critical business logic with 0% coverage
+2. **Files Requiring Unit Tests**
+   - [ ] `/src/hooks/useShapeOperations.ts` - critical hook with 0% coverage
    - [ ] `/src/components/FormulaEditor.tsx` - complex UI component with 0% coverage
    - [ ] `/src/components/GeometryCanvas/index.tsx` - main canvas component with low coverage
+   - [ ] `/src/components/GeometryCanvas/CanvasEventHandlers.ts` - event handlers with poor coverage
 
-3. **Debug Code to Remove**
-   - [ ] Clean up excessive `console.log` statements throughout the codebase
-   - [ ] Remove commented-out code that's been superseded
-   - [ ] Fix warnings in components like `FormulaGraph.test.tsx` (unrecognized HTML tags)
+3. **Features Requiring E2E Tests**
+   - [ ] Formula Editor interactions - selecting, updating, deleting formulas
+   - [ ] Geometry Canvas interactions - shape creation, movement, resizing
+   - [ ] Measurement Panel interactions - viewing, editing measurements 
+
+4. **Code to Cleanup**
+   - [ ] Remove excessive `console.log` statements throughout codebase
+   - [ ] Fix warning in `FormulaGraph.test.tsx` (unrecognized HTML tags)
+   - [ ] Fix TypeScript error in `src/pages/Index.tsx` (property 'measurementUnit' issue)
+   - [ ] Address 0% coverage components - determine if needed or remove
 
 ## Tools and Implementation
 
@@ -217,14 +232,23 @@ Based on the coverage analysis, here's the prioritized cleanup tasks:
 
 ## Next Steps
 
-1. [ ] Present plan to team for feedback
+1. ~~Present plan to team for feedback~~
 2. [x] Set up local analysis tools and scripts (coverage-analyzer.js)
 3. [x] Run initial coverage analysis using `node scripts/coverage-analyzer.js`
 4. [ ] Add ESLint rules for detecting unused code
 5. [ ] Create prioritized list of e2e tests to add based on analysis results
-6. [ ] Create prioritized cleanup backlog based on analysis results
-7. [ ] Begin writing tests for high-impact files
-8. [ ] Schedule first cleanup session
+6. [x] Create prioritized cleanup backlog based on analysis results
+7. [ ] Perform initial file cleanup:
+   - [ ] Remove test utilities in production code (FormulaPointInfoTest.tsx)
+   - [ ] Remove unused test helpers
+   - [ ] Fix duplicated ConfigContext implementation
+   - [ ] Remove duplicate component implementations
+8. [ ] Begin writing tests for high-impact files:
+   - [ ] Unit tests for `useShapeOperations.ts`
+   - [ ] Unit tests for `FormulaEditor.tsx`
+   - [ ] E2E tests for primary user flows
+9. [ ] Address console logging issues and code comments
+10. [ ] Schedule first cleanup session
 
 ## Using the Coverage Analyzer
 
