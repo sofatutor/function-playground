@@ -1,5 +1,6 @@
 import { expect } from '@playwright/test';
 import { test } from './test-helper';
+import { Logger } from './utils/logger';
 
 /**
  * These tests verify the behavior of the grid zoom feature with respect to:
@@ -28,8 +29,8 @@ async function setupGraphAndSelectTool(page) {
   try {
     await page.locator('#select-tool').click();
   } catch (e) {
-    console.log('Could not click select tool button, trying keyboard shortcut');
-    await page.keyboard.press('s');  // Assuming 's' is the shortcut for select tool
+    Logger.warn('Could not click select tool button, trying keyboard shortcut');
+    await page.keyboard.press('v'); // Assuming 'v' is shortcut for select
   }
 }
 
@@ -44,7 +45,7 @@ test('should convert screen coordinates to correct math coordinates at different
   // Get coordinates at default zoom
   const defaultXCoord = await page.locator('text=X Coordinate').locator('xpath=following-sibling::div').textContent();
   const defaultYCoord = await page.locator('text=Y Coordinate').locator('xpath=following-sibling::div').textContent();
-  console.log(`Coordinates at default zoom: X=${defaultXCoord}, Y=${defaultYCoord}`);
+  Logger.debug(`Coordinates at default zoom: X=${defaultXCoord}, Y=${defaultYCoord}`);
   
   // Zoom in to 150%
   for (let i = 0; i < 10; i++) {
@@ -62,7 +63,7 @@ test('should convert screen coordinates to correct math coordinates at different
   // Get coordinates at zoomed level
   const zoomedXCoord = await page.locator('text=X Coordinate').locator('xpath=following-sibling::div').textContent();
   const zoomedYCoord = await page.locator('text=Y Coordinate').locator('xpath=following-sibling::div').textContent();
-  console.log(`Coordinates at zoomed level (${zoomLevel}): X=${zoomedXCoord}, Y=${zoomedYCoord}`);
+  Logger.debug(`Coordinates at zoomed level (${zoomLevel}): X=${zoomedXCoord}, Y=${zoomedYCoord}`);
   
   // Calculate the difference between default and zoomed coordinates
   const defaultXNum = parseFloat(defaultXCoord || '0');
@@ -89,7 +90,7 @@ test('should maintain consistent step size with arrow navigation at different zo
   
   // Get initial coordinates
   const initialX = await page.locator('text=X Coordinate').locator('xpath=following-sibling::div').textContent();
-  console.log(`Initial X coordinate: ${initialX}`);
+  Logger.debug(`Initial X coordinate: ${initialX}`);
   
   // Navigate 5 steps right using arrow
   for (let i = 0; i < 5; i++) {
@@ -99,13 +100,13 @@ test('should maintain consistent step size with arrow navigation at different zo
   
   // Get coordinates after navigation at default zoom
   const defaultNavXCoord = await page.locator('text=X Coordinate').locator('xpath=following-sibling::div').textContent();
-  console.log(`X coordinate after 5 steps at default zoom: ${defaultNavXCoord}`);
+  Logger.debug(`X coordinate after 5 steps at default zoom: ${defaultNavXCoord}`);
   
   // Calculate the navigation step size at default zoom (average per step)
   const initialXNum = parseFloat(initialX || '0');
   const defaultXNum = parseFloat(defaultNavXCoord || '0');
   const defaultStepSize = (defaultXNum - initialXNum) / 5;
-  console.log(`Average step size at default zoom: ${defaultStepSize.toFixed(4)}`);
+  Logger.debug(`Average step size at default zoom: ${defaultStepSize.toFixed(4)}`);
   
   await page.screenshot({ path: 'test-results/navigation-after-arrows.png' });
   
@@ -116,7 +117,7 @@ test('should maintain consistent step size with arrow navigation at different zo
   }
   
   const zoomLevel = await page.getByTestId('grid-zoom-reset').textContent();
-  console.log(`Current zoom level: ${zoomLevel}`);
+  Logger.debug(`Current zoom level: ${zoomLevel}`);
   
   // Click at a specific point at zoomed level
   const zoomedPoint = { x: 730, y: 372 };
@@ -124,25 +125,25 @@ test('should maintain consistent step size with arrow navigation at different zo
   
   // Get initial zoomed coordinate
   const zoomedInitialX = await page.locator('text=X Coordinate').locator('xpath=following-sibling::div').textContent();
-  console.log(`Initial X coordinate at zoomed level: ${zoomedInitialX}`);
+  Logger.debug(`Initial X coordinate at zoomed level: ${zoomedInitialX}`);
   
   // Navigate one step right at zoomed level
   await page.locator('text="→"').click();
   
   // Get coordinate after one step at zoomed level
   const zoomedNavXCoord = await page.locator('text=X Coordinate').locator('xpath=following-sibling::div').textContent();
-  console.log(`X coordinate after 1 step at zoomed level: ${zoomedNavXCoord}`);
+  Logger.debug(`X coordinate after 1 step at zoomed level: ${zoomedNavXCoord}`);
   
   // Calculate the step size at zoomed level
   const zoomedInitialXNum = parseFloat(zoomedInitialX || '0');
   const zoomedNavXNum = parseFloat(zoomedNavXCoord || '0');
   const zoomedStepSize = zoomedNavXNum - zoomedInitialXNum;
-  console.log(`Step size at zoomed level: ${zoomedStepSize.toFixed(4)}`);
+  Logger.debug(`Step size at zoomed level: ${zoomedStepSize.toFixed(4)}`);
   
   // Verify that the navigation step size is consistent across zoom levels
   // We allow for small differences due to grid snapping
   const stepSizeDifference = Math.abs(zoomedStepSize - defaultStepSize);
-  console.log(`Step size difference: ${stepSizeDifference.toFixed(4)}`);
+  Logger.debug(`Step size difference: ${stepSizeDifference.toFixed(4)}`);
   
   // The step size should be consistent between zoom levels (with small allowance for grid snapping)
   expect(stepSizeDifference).toBeLessThan(0.1);

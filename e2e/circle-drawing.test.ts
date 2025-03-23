@@ -1,5 +1,6 @@
 import { expect } from '@playwright/test';
 import { test } from './test-helper';
+import { Logger } from './utils/logger';
 
 test.describe('Circle Drawing', () => {
   test('should draw a circle that stays at the drawn position', async ({ page }) => {
@@ -13,7 +14,7 @@ test.describe('Circle Drawing', () => {
     try {
       await circleButton.click();
     } catch (e) {
-      console.log('Could not click circle button, trying keyboard shortcut');
+      Logger.warn('Could not click circle button, trying keyboard shortcut');
       await page.keyboard.press('c'); // Assuming 'c' is shortcut for circle
     }
     
@@ -61,7 +62,7 @@ test.describe('Circle Drawing', () => {
     expect(Math.abs(circleCenter.x - centerX)).toBeLessThan(10);
     expect(Math.abs(circleCenter.y - centerY)).toBeLessThan(10);
     
-    console.debug(`Expected circle center: (${centerX}, ${centerY})`);
-    console.debug(`Actual circle center: (${circleCenter.x}, ${circleCenter.y})`);
+    Logger.debug(`Expected circle center: (${centerX}, ${centerY})`);
+    Logger.debug(`Actual circle center: (${circleCenter.x}, ${circleCenter.y})`);
   });
 }); 

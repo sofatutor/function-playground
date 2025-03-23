@@ -1,5 +1,6 @@
 import { expect } from '@playwright/test';
 import { test } from './test-helper';
+import { Logger } from './utils/logger';
 
 test.describe('Grid Zoom Control', () => {
   test.beforeEach(async ({ page }) => {

@@ -3,6 +3,7 @@ import { captureHtmlSnapshot } from './utils/snapshot-helpers';
 import * as fs from 'fs';
 import * as path from 'path';
 import { coverageDir } from './global-setup';
+import { Logger } from './utils/logger';
 // Extend window interface to include coverage property
 declare global {
   interface Window {
@@ -55,7 +56,7 @@ export const test = base.extend({
         }
       } catch (err) {
         // Ignore errors during coverage collection
-        console.error('Error while collecting coverage:', err);
+        Logger.error('Error while collecting coverage:', err);
       }
     }
   },

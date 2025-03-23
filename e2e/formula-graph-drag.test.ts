@@ -1,5 +1,6 @@
 import { expect } from '@playwright/test';
 import { test } from './test-helper';
+import { Logger } from './utils/logger';
 
 test('formula plotting and grid drag handling', async ({ page }) => {
   // Navigate to the app

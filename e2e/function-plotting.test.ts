@@ -1,5 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 import { test } from './test-helper';
+import { Logger } from './utils/logger';
 
 test.describe('Function Plotting', () => {
   test.beforeEach(async ({ page }) => {
@@ -9,34 +10,23 @@ test.describe('Function Plotting', () => {
   // Helper function to click the "Plot Formula" button
   async function clickPlotFormulaButton(page: Page): Promise<boolean> {
     try {
-      // Use the id attribute instead of data-testid
-      const plotFormulaButton = page.locator('#plot-formula-button');
+      // Use a more robust selector that handles both possibilities - by ID or by icon
+      const plotFormulaButton = page.locator('#plot-formula-button, button:has(svg.lucide-function-square)').first();
       
-      // Log if the button is visible
+      // Check if the button is visible
       const isVisible = await plotFormulaButton.isVisible();
-      console.log(`Plot Formula button visible: ${isVisible}`);
+      Logger.debug(`Plot Formula button visible: ${isVisible}`);
       
       if (!isVisible) {
-        console.log('Plot formula button not found, looking for it by other means...');
-        // Try finding it by icon
-        const buttonByIcon = page.locator('button:has(svg.lucide-function-square)');
-        const iconButtonVisible = await buttonByIcon.isVisible();
-        console.log(`Button with function-square icon visible: ${iconButtonVisible}`);
-        
-        if (iconButtonVisible) {
-          console.log('Found button by icon, clicking it');
-          await buttonByIcon.click();
-        } else {
-          console.log('Could not find plot formula button by any means');
-          return false;
-        }
-      } else {
-        // Click the button
-        console.log('Clicking plot formula button...');
-        await plotFormulaButton.click();
+        Logger.warn('Could not find plot formula button by any means');
+        return false;
       }
       
-      // Get all container elements
+      // Click the button
+      Logger.debug('Clicking plot formula button...');
+      await plotFormulaButton.click();
+      
+      // Get all container elements for debugging
       const containers = await page.evaluate(() => {
         return Array.from(document.querySelectorAll('.container, .formula-editor-container')).map(el => ({
           className: el.className,
@@ -44,22 +34,22 @@ test.describe('Function Plotting', () => {
           isVisible: el.getBoundingClientRect().height > 0
         }));
       });
-      console.log('Container elements:', containers);
+      Logger.debug('Container elements:', containers);
       
       // Wait for the formula editor to appear
-      console.log('Waiting for formula editor container...');
+      Logger.debug('Waiting for formula editor container...');
       try {
         await page.waitForSelector('#formula-editor', { timeout: 5000 });
-        console.log('Found formula editor!');
+        Logger.debug('Found formula editor!');
         return true;
       } catch (error) {
-        console.error('Error waiting for formula editor:', error);
+        Logger.error('Error waiting for formula editor:', error);
         // Take another screenshot
         await page.screenshot({ path: `test-results/formula-editor-not-found-${Date.now()}.png` });
         return false;
       }
     } catch (error) {
-      console.error('Error clicking plot formula button:', error);
+      Logger.error('Error clicking plot formula button:', error);
       // Take a screenshot for debugging
       await page.screenshot({ path: `test-results/click-plot-formula-error-${Date.now()}.png` });
       return false;
@@ -75,86 +65,73 @@ test.describe('Function Plotting', () => {
       
       // Check if it's visible
       const isVisible = await addButton.isVisible();
-      console.log(`Add formula button visible: ${isVisible}`);
+      Logger.debug(`Add formula button visible: ${isVisible}`);
       
       if (!isVisible) {
-        console.log('Add formula button not visible by ID, trying alternative selectors');
+        Logger.debug('Add formula button not visible by ID, trying alternative selectors');
         
         // Try some alternative selectors
         const buttonByPlusCircle = page.locator('button:has(svg.lucide-circle-plus)');
         const plusButtonVisible = await buttonByPlusCircle.isVisible();
-        console.log(`Button with plus-circle icon visible: ${plusButtonVisible}`);
+        Logger.debug(`Button with plus-circle icon visible: ${plusButtonVisible}`);
         
         if (plusButtonVisible) {
-          console.log('Found button by plus icon, clicking it');
+          Logger.debug('Found button by plus icon, clicking it');
           await buttonByPlusCircle.click();
           return true;
         }
         
-        console.warn('Add formula button not found by any means');
+        Logger.warn('Add formula button not found by any means');
         return false;
       }
       
-      console.log('Clicking add formula button...');
+      Logger.debug('Clicking add formula button...');
       await addButton.click();
       
       return true;
     } catch (error) {
-      console.error('Error finding and clicking add button:', error);
+      Logger.error('Error finding and clicking add button:', error);
       return false;
     }
   }
 
   test('should plot basic functions correctly', async ({ page }) => {
-    await page.goto('/');
+    // Open the formula editor
+    expect(await clickPlotFormulaButton(page)).toBe(true);
     
-    // Click the Plot formula button to activate formula mode
-    await expect(clickPlotFormulaButton(page)).resolves.toBe(true);
-    
-    // Find and click the Add Function button
-    await expect(findAndClickAddButton(page)).resolves.toBe(true);
-    
+    // Fill the function input and add it
     try {
-      // Fill the function input field using ID instead of placeholder
-      console.log('Looking for formula input by ID...');
+      // Fill the formula input field using ID
+      Logger.debug('Looking for formula input by ID...');
       const formulaInput = page.locator('#formula-expression-input');
       
       // Check if the input is visible
       const inputVisible = await formulaInput.isVisible();
-      console.log(`Formula input visible: ${inputVisible}`);
+      Logger.debug(`Formula input visible: ${inputVisible}`);
       
       if (!inputVisible) {
-        console.log('Input not visible, taking screenshot for debugging');
+        Logger.debug('Input not visible, taking screenshot for debugging');
         await page.screenshot({ path: 'test-results/input-not-visible.png' });
         throw new Error('Formula input field not visible');
       }
       
       // Fill the input and continue
       await formulaInput.fill('x*x');
-      console.log('Input filled with x*x');
+      Logger.debug('Input filled with x*x');
       
-      // Click the Add button
-      const addButton = page.getByRole('button', { name: /add/i });
-      const addButtonVisible = await addButton.isVisible();
-      console.log(`Add button visible: ${addButtonVisible}`);
+      // Click directly on the add-formula-button (more reliable than using role)
+      const addButton = page.locator('#add-formula-button');
+      await addButton.click();
+      Logger.debug('Clicked Add button');
       
-      if (addButtonVisible) {
-        await addButton.click();
-        console.log('Clicked Add button');
-      } else {
-        // If we can't find the button by role, try clicking the same add-formula-button again
-        console.log('Add button not found by role, clicking add-formula-button again');
-        await page.locator('#add-formula-button').click();
-      }
-      
-      // Wait for the graph to render - look for any SVG path element instead of .function-plot
-      console.log('Waiting for SVG path to appear (function graph)...');
+      // Wait for the graph to render - look for any SVG path element
+      Logger.debug('Waiting for SVG path to appear (function graph)...');
       
       // Check for any SVG path elements that might represent the function graph
-      console.log('Checking for SVG path elements...');
+      Logger.debug('Checking for SVG path elements...');
       const svgPaths = page.locator('svg path');
       const pathCount = await svgPaths.count();
-      console.log(`Found ${pathCount} SVG path elements`);
+      Logger.debug(`Found ${pathCount} SVG path elements`);
       
       if (pathCount === 0) {
         
@@ -190,7 +167,7 @@ test.describe('Function Plotting', () => {
           return JSON.stringify(results, null, 2);
         });
         
-        console.log('SVG elements on page:', svgContent);
+        Logger.debug('SVG elements on page:', svgContent);
         
         throw new Error('No SVG path elements found for the function graph');
       }
@@ -198,7 +175,7 @@ test.describe('Function Plotting', () => {
       // Check if any of the paths have data (d attribute) which would mean it's a plotted function
       const pathWithData = page.locator('svg path[d]');
       const pathWithDataCount = await pathWithData.count();
-      console.log(`Found ${pathWithDataCount} SVG path elements with 'd' attribute`);
+      Logger.debug(`Found ${pathWithDataCount} SVG path elements with 'd' attribute`);
       
       expect(pathWithDataCount).toBeGreaterThan(0);
       
@@ -208,7 +185,7 @@ test.describe('Function Plotting', () => {
       
       // Get the path data for verification
       const pathData = await firstPath.getAttribute('d');
-      console.log(`Path data: ${pathData?.substring(0, 50)}...`);
+      Logger.debug(`Path data: ${pathData?.substring(0, 50)}...`);
       
       // The path should have data for the quadratic function
       expect(pathData).toBeTruthy();
@@ -216,12 +193,11 @@ test.describe('Function Plotting', () => {
       
     } catch (e) {
       // Log the state of the page when test fails
-      console.log('Test "should plot basic functions correctly" failed, capturing HTML and other diagnostics');
+      Logger.warn('Test "should plot basic functions correctly" failed, capturing HTML and other diagnostics');
       
       // Take a screenshot
-      await page.screenshot({ path: 'test-results/basic-functions-failure.png', fullPage: true });
+      await page.screenshot({ path: 'test-results/test-failed-functions.png' });
       
-      // Re-throw the error
       throw e;
     }
   });
@@ -233,9 +209,9 @@ test.describe('Function Plotting', () => {
     await page.click('#add-formula-button');
 
     // Wait for the graph to render - look for any SVG path element instead of path.formula-graph
-    console.log('Waiting for SVG path to appear (function graph)...');
+    Logger.debug('Waiting for SVG path to appear (function graph)...');
     
-    console.log('Checking for SVG path elements...');
+    Logger.debug('Checking for SVG path elements...');
     const pathWithData = page.locator('svg path[d]');
     await expect(pathWithData.count()).resolves.toBeGreaterThan(0);
 
@@ -267,7 +243,7 @@ test.describe('Function Plotting', () => {
     // First take a screenshot to help debug
     await page.screenshot({ path: 'test-results/before-drag-grid.png', fullPage: true });
     
-    console.log('Looking for SVG element that contains the graph...');
+    Logger.debug('Looking for SVG element that contains the graph...');
     
     // Use a more specific approach to find the main SVG containing the graph
     const mainSvg = await page.evaluate(() => {
@@ -314,7 +290,7 @@ test.describe('Function Plotting', () => {
       height: mainSvg.height || 100
     };
     
-    console.debug('SVG bounds:', bounds);
+    Logger.debug('SVG bounds:', bounds);
 
     // Perform drag operation
     await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
@@ -323,7 +299,7 @@ test.describe('Function Plotting', () => {
     
     // Get path data during drag - instead of comparing path strings, just verify there are still paths
     const pathsAfterDrag = await pathWithData.count();
-    console.log(`Number of paths after drag started: ${pathsAfterDrag}`);
+    Logger.debug(`Number of paths after drag started: ${pathsAfterDrag}`);
     expect(pathsAfterDrag).toBeGreaterThan(0);
 
     // End drag
@@ -332,7 +308,7 @@ test.describe('Function Plotting', () => {
 
     // Get final path count
     const pathsAfterRelease = await pathWithData.count();
-    console.log(`Number of paths after mouse release: ${pathsAfterRelease}`);
+    Logger.debug(`Number of paths after mouse release: ${pathsAfterRelease}`);
     expect(pathsAfterRelease).toBeGreaterThan(0);
 
     // Verify that we have at least one path visible after all operations
@@ -378,7 +354,7 @@ test.describe('Function Plotting', () => {
     try {
       await page.waitForSelector('#formula-editor', { timeout: 10000 });
     } catch (error) {
-      console.error('Formula editor not visible for first function:', error);
+      Logger.error('Formula editor not visible for first function:', error);
       await page.screenshot({ path: 'test-results/formula-editor-not-visible-1.png', fullPage: true });
       throw error;
     }
@@ -392,13 +368,13 @@ test.describe('Function Plotting', () => {
     // Check that at least one path was created
     const firstPathCheck = page.locator('svg path[d]');
     await expect(firstPathCheck.count()).resolves.toBeGreaterThan(0);
-    console.log('First function path found');
+    Logger.debug('First function path found');
     
     // Try to click the button again after finding it visually by text
     const buttons = page.locator('button');
     const allButtons = await buttons.all();
     
-    console.log('Searching for plot button among', allButtons.length, 'buttons');
+    Logger.debug('Searching for plot button among', allButtons.length, 'buttons');
     
     // Search for buttons with icons that might be the plot button
     for (const button of allButtons) {
@@ -413,9 +389,9 @@ test.describe('Function Plotting', () => {
     // Check if formula editor appears
     try {
       await page.waitForSelector('#formula-editor', { timeout: 10000 });
-      console.log('Formula editor found for second function');
+      Logger.debug('Formula editor found for second function');
     } catch (error) {
-      console.error('Formula editor not found for second function, trying alternate approach');
+      Logger.error('Formula editor not found for second function, trying alternate approach');
       
       // Try clicking the first icon in the toolbar as a fallback
       const toolbar = page.locator('.toolbar, nav, header').first();
