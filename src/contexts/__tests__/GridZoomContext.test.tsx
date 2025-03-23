@@ -1,6 +1,6 @@
 import React from 'react';
-import { render, act } from '@testing-library/react';
-import { GridZoomProvider, useGridZoom } from '../GridZoomContext';
+import { render, screen } from '@testing-library/react';
+import { useGridZoom, GridZoomProvider } from '../GridZoomContext';
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -20,43 +20,38 @@ Object.defineProperty(window, 'localStorage', {
   value: localStorageMock
 });
 
-// Test component that uses the GridZoomContext
+// Test component that uses the hook
 const TestComponent = () => {
-  const { zoomFactor, zoomIn, zoomOut, setZoomFactor } = useGridZoom();
-  return (
-    <div>
-      <div data-testid="zoom-factor">{zoomFactor}</div>
-      <button data-testid="zoom-in" onClick={zoomIn}>Zoom In</button>
-      <button data-testid="zoom-out" onClick={zoomOut}>Zoom Out</button>
-      <button data-testid="zoom-reset" onClick={() => setZoomFactor(1)}>Reset</button>
-    </div>
-  );
+  const { zoomFactor } = useGridZoom();
+  return <div data-testid="zoom-factor">{zoomFactor}</div>;
 };
 
 describe('GridZoomContext', () => {
   beforeEach(() => {
-    localStorageMock.clear();
+    // Clear localStorage before each test
+    localStorage.clear();
   });
 
-  it('should provide default zoom factor of 1', () => {
-    const { getByTestId } = render(
+  it('should have default zoom factor of 1', () => {
+    render(
       <GridZoomProvider>
         <TestComponent />
       </GridZoomProvider>
     );
-    
-    expect(getByTestId('zoom-factor').textContent).toBe('1');
+
+    expect(screen.getByTestId('zoom-factor').textContent).toBe('1');
   });
 
   it('should load zoom factor from localStorage if available', () => {
-    localStorageMock.setItem('gridZoomFactor', '1.5');
+    // Setting zoom factor in localStorage before rendering the component
+    localStorage.setItem('gridZoomFactor', '1.5');
     
-    const { getByTestId } = render(
+    render(
       <GridZoomProvider>
         <TestComponent />
       </GridZoomProvider>
     );
     
-    expect(getByTestId('zoom-factor').textContent).toBe('1.5');
+    expect(screen.getByTestId('zoom-factor').textContent).toBe('1.5');
   });
 }); 
