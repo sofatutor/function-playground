@@ -3,9 +3,8 @@ import { Formula, FormulaExample } from '@/types/formula';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { PlusCircle, Trash2, BookOpen, ZoomIn, ZoomOut, Palette, Sparkles, Loader2, AlertCircle, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+import { PlusCircle, Trash2, BookOpen, ZoomIn, ZoomOut, Sparkles, Loader2, AlertCircle, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { MeasurementUnit } from '@/types/shapes';
 import { getFormulaExamples, createDefaultFormula, validateFormula, convertToLatex } from '@/utils/formulaUtils';
 import { useTranslate } from '@/utils/translate';
@@ -19,14 +18,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import 'katex/dist/katex.min.css';
 import { InlineMath } from 'react-katex';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { JSX } from 'react';
 
 interface FormulaEditorProps {
   formulas: Formula[];
   onAddFormula: (formula: Formula) => void;
   onUpdateFormula: (id: string, updates: Partial<Formula>) => void;
   onDeleteFormula: (id: string) => void;
-  measurementUnit: MeasurementUnit;
+  _measurementUnit: MeasurementUnit;
   isOpen: boolean;
   selectedFormulaId?: string | null;
   onSelectFormula?: (id: string) => void;
@@ -38,7 +36,7 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
   onAddFormula,
   onUpdateFormula,
   onDeleteFormula,
-  measurementUnit,
+  _measurementUnit,
   isOpen,
   selectedFormulaId,
   onSelectFormula,
@@ -51,9 +49,8 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
   const [isNaturalLanguageOpen, setIsNaturalLanguageOpen] = useState(false);
   const [examplesOpen, setExamplesOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string | null>>({});
-  const isMobile = useIsMobile();
+  const _isMobile = useIsMobile();
   const formulaInputRef = useRef<HTMLInputElement>(null);
-  const examples = getFormulaExamples();
   const validationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Function to find the selected formula
@@ -112,21 +109,16 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
     }
   };
 
-  // Load an example formula
   const handleLoadExample = (example: FormulaExample) => {
     if (selectedFormulaId) {
-      // Update the current formula instead of creating a new one
+      // Update existing formula
       onUpdateFormula(selectedFormulaId, {
-        expression: example.expression,
-        xRange: example.xRange
+        expression: example.expression
       });
     } else {
-      // Create a new formula from the example
-      const newFormula = {
-        ...createDefaultFormula('function'),
-        expression: example.expression,
-        xRange: example.xRange
-      };
+      // Create new formula from example
+      const newFormula = createDefaultFormula('function');
+      newFormula.expression = example.expression;
       // Ensure the expression is set
       if (!newFormula.expression) {
         newFormula.expression = 'x*x';
@@ -148,23 +140,6 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
       // This gives finer control at lower values
       const actualScaleFactor = Math.pow(10, value[0]);
       onUpdateFormula(selectedFormulaId, { scaleFactor: actualScaleFactor });
-    }
-  };
-
-  // Handle zoom in/out buttons
-  const handleZoomIn = () => {
-    if (selectedFormulaId) {
-      const currentScaleFactor = findSelectedFormula()?.scaleFactor || 1.0;
-      const newScaleFactor = Math.min(currentScaleFactor * 1.25, 10);
-      onUpdateFormula(selectedFormulaId, { scaleFactor: newScaleFactor });
-    }
-  };
-  
-  const handleZoomOut = () => {
-    if (selectedFormulaId) {
-      const currentScaleFactor = findSelectedFormula()?.scaleFactor || 1.0;
-      const newScaleFactor = Math.max(currentScaleFactor / 1.25, 0.001);
-      onUpdateFormula(selectedFormulaId, { scaleFactor: newScaleFactor });
     }
   };
 
@@ -250,9 +225,6 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
   // Get the current scale factor
   const currentScaleFactor = findSelectedFormula()?.scaleFactor || 1.0;
   
-  // Convert actual scale factor to logarithmic value for the slider
-  const logScaleFactor = Math.log10(currentScaleFactor);
-
   return (
     <div 
       className="w-full px-1 sm:px-2" 

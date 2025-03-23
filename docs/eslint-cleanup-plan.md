@@ -28,7 +28,7 @@ Based on our ESLint output, these files need immediate attention:
 
 - [x] `/src/hooks/useShapeOperations.ts` - 8 warnings, critical business logic
 - [x] `/src/components/GeometryCanvas/index.tsx` - 12 warnings, core component
-- [ ] `/src/components/FormulaEditor.tsx` - 10 warnings, complex UI component 
+- [x] `/src/components/FormulaEditor.tsx` - 10 warnings, complex UI component 
 - [x] `/src/utils/geometry/measurements.ts` - 11 warnings, utility functions
 - [x] `/src/utils/geometry/shapeOperations.ts` - 7 warnings, core shape logic
 
@@ -44,7 +44,7 @@ Based on our ESLint output, these files need immediate attention:
 ### Phase 2: Component Files (Days 3-4)
 
 - [x] Fix `/src/components/GeometryCanvas/index.tsx`
-- [ ] Fix `/src/components/FormulaEditor.tsx`
+- [x] Fix `/src/components/FormulaEditor.tsx`
 - [ ] Fix `/src/components/FormulaGraph.tsx`
 
 ### Phase 3: Supporting Files (Days 5-6)
@@ -96,3 +96,4 @@ Commit changes in small, logical groups with descriptive messages:
 - [x] `/src/utils/geometry/shapeUpdates.ts` - Removed unused imports, code and refactored functions 
 - [x] `/src/utils/geometry/shapeOperations.ts` - Removed unused imports and prefixed unused parameters
 - [x] `/src/components/GeometryCanvas/index.tsx` - Marked unused variables, reduced excessive console logging, and added e2e test
+- [x] `/src/components/FormulaEditor.tsx` - Removed unused imports, marked unused parameters, and removed unused functions
