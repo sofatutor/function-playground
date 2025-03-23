@@ -24,6 +24,9 @@
   "overrides": {
     "vite": {
       "rollup": "npm:@rollup/wasm-node"
+    },
+    "@vitejs/plugin-react-swc": {
+      "@swc/core": "npm:@swc/core-linux-x64-gnu"
     }
   },
   "dependencies": {
