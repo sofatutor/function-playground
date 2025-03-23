@@ -252,29 +252,96 @@ Based on the coverage analysis, here's the prioritized cleanup tasks:
 
 ## For Next Cleanup Session
 
-Based on our initial steps, here's what we should focus on next:
+Based on our latest coverage analysis, these are the high-impact areas we should focus on:
 
-1. **Fix TypeScript Error in Index.tsx**:
-   - The measurementUnit prop issue is causing TypeScript errors
-   - We need to update the FormulaEditor component to use _measurementUnit consistently
+### High-Impact Priorities
 
-2. **Clean Up Console Logs**:
-   - Create an ESLint rule to detect unnecessary console logs
-   - Add proper logger abstraction where needed 
-   - Remove debug console logs
+1. **Files with 0% Coverage to Evaluate**
+   - [ ] `/src/components/FormulaEditor.tsx` - Impact: 532.00, Lines: 532
+   - [ ] `/src/hooks/useShapeOperations.ts` - Impact: 494.00, Lines: 494 
+   - [ ] `/src/pages/Index.tsx` - Impact: 443.00, Lines: 443
+   - [ ] `/src/components/FormulaPointInfoTest.tsx` - Identified as test component in production code
+   - [ ] `/src/components/CalibrationTool.tsx` - Needs evaluation for usage
+   - [ ] `/src/components/ConfigModal.tsx` - Needs evaluation for usage
 
-3. **Address the FormulaGraph.test.tsx Warning**:
-   - Fix the unrecognized HTML tag warning for `<path>` elements
-   - Add SVG namespace in test environment
+2. **Low Coverage Critical Components**
+   - [ ] `/src/components/GeometryCanvas/index.tsx` - Coverage: 29.61%, Impact: 1173.42, Lines: 1667
+   - [ ] `/src/components/GeometryCanvas/CanvasEventHandlers.ts` - Coverage: 22.83%, Impact: 486.16, Lines: 630
+   - [ ] `/src/context/ConfigContext.tsx` - Coverage: 17.72%, Potential duplicate with `/src/config/ConfigContext.tsx`
 
-4. **Focus on Test Coverage for Critical Components**:
-   - Add tests for useShapeOperations.ts (highest priority)
-   - Add tests for FormulaEditor.tsx
-   - Create e2e tests for formula editing workflow
+3. **TypeScript Errors**
+   - [ ] Fix TypeScript error in `/src/pages/Index.tsx`: Property 'measurementUnit' issue
 
-5. **Implement Detection for Unused Code**:
-   - Add ESLint rules for detecting dead code
-   - Implement a git hook to prevent committing unused code
+4. **Console Logs/Warnings**
+   - [ ] Clean up numerous console logs in GeometryCanvas components
+   - [ ] Address warnings about unhandled measurement keys in various shape services
+
+### Approach
+1. For each file with 0% coverage: Determine if it's unused or needs tests
+2. For low coverage files: Add targeted tests or refactor to simplify
+3. Fix TypeScript errors to ensure code quality
+4. Remove or refactor redundant console logs
+
+### Testing Strategy
+- Prioritize tests for GeometryCanvas components due to their high impact
+- Focus on critical paths in the application (shape creation, formula editing, etc.)
+- Use both unit tests and e2e tests to verify functionality
+
+### Duplicate Files Resolution Plan
+
+We have identified several sets of potential duplicate files that need resolution:
+
+1. **ConfigContext duplication**:
+   - [ ] Compare `/src/context/ConfigContext.tsx` vs `/src/config/ConfigContext.tsx`
+   - [ ] Determine which one is actively used through import analysis
+   - [ ] Merge any unique functionality into the correct file
+   - [ ] Update all imports to reference the correct file
+   - [ ] Remove the redundant file
+
+2. **Component duplication**:
+   - [ ] Compare `/src/components/MeasurementPanel.tsx` vs `/src/components/MeasurementPanel/index.tsx`
+   - [ ] Compare `/src/components/CanvasGrid.tsx` vs `/src/components/CanvasGrid/index.tsx`
+   - [ ] For each pair, analyze imports throughout the codebase
+   - [ ] Keep the file that's actively used or contains the most complete implementation
+   - [ ] Update all references and remove redundant files
+
+3. **Test components in production**:
+   - [ ] Move `/src/components/FormulaPointInfoTest.tsx` to the test directory if needed or remove
+   - [ ] Check for any other test files in the main source tree
+
+The approach for each duplicate will be:
+1. Analyze imports to determine usage
+2. Compare implementation details
+3. Migrate unique functionality to the correct file
+4. Update imports throughout the codebase
+5. Remove the redundant file
+6. Add tests to verify nothing broke
+
+### Console Warnings Cleanup
+
+During test runs, we observed several recurring console warnings that should be addressed:
+
+1. **Unhandled Measurement Keys**:
+   - [ ] Fix warnings in `TriangleServiceImpl.ts` (line 455): "Unhandled measurement key: 'unknown'"
+   - [ ] Fix warnings in `RectangleServiceImpl.ts` (line 233): "Unhandled measurement key: 'unknown'"
+   - [ ] Fix warnings in `LineServiceImpl.ts` (line 236): "Unhandled measurement key: 'unknown'"
+   - [ ] Implement a more robust error handling strategy for measurement keys
+
+2. **Invalid Dimension Warnings**:
+   - [ ] Address warnings in `RectangleServiceImpl.ts` about invalid width/height (lines 324, 366)
+   - [ ] Improve validation and error handling for shape dimensions
+
+3. **Missing Unit Values**:
+   - [ ] Fix repeated warnings: "No stored value for cm, using default: 60"
+   - [ ] Fix warning: "No stored value for in, using default: 152.4"
+   - [ ] Implement better unit value initialization or storage
+
+4. **Debug Logs**:
+   - [ ] Remove or convert to debug-level logging: "GeometryCanvas: gridPosition changed"
+   - [ ] Remove or convert to debug-level logging: "GeometryCanvas: Formulas updated"
+   - [ ] Implement a proper logger with configurable log levels
+
+These warnings indicate potential issues in the code that could lead to bugs or unexpected behavior. Addressing them will improve code quality and make debugging easier.
 
 ## Using the Coverage Analyzer
 
