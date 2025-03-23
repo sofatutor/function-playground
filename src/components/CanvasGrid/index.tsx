@@ -4,7 +4,7 @@ import GridLines from './GridLines';
 import OriginIndicator from './OriginIndicator';
 import { GridDragHandler } from './GridDragHandler';
 import GridZoomControl from './GridZoomControl';
-import { useGridZoom } from '@/contexts/GridZoomContext';
+import { useGridZoom } from '@/contexts/GridZoomContext/index';
 
 // Remove global flag as we'll handle initialization differently
 // const HAS_COMPLETED_FIRST_RENDER = { value: false };
@@ -28,6 +28,7 @@ const CanvasGrid: React.FC<CanvasGridProps> = ({
   initialPosition,
   onPositionChange
 }) => {
+  const { zoomFactor } = useGridZoom();
   const hasInitialized = useRef(false);
   const hasOriginMoved = useRef(false);
   const isHandlingExternalUpdate = useRef(false);
