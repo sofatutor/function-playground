@@ -170,12 +170,12 @@
 Based on the coverage analysis, here's the prioritized cleanup tasks:
 
 1. **Files to Consider for Removal or Merging**
-   - [ ] `/src/components/FormulaPointInfoTest.tsx` - test component in production code
-   - [ ] `/src/__tests__/utils/test-chalk.ts` - unused test helper
-   - [ ] `/src/__tests__/utils/test-helpers.ts` - unused test helper
-   - [ ] `/src/components/MeasurementPanel.tsx` vs `/src/components/MeasurementPanel/index.tsx` - potential duplication
-   - [ ] `/src/context/ConfigContext.tsx` vs `/src/config/ConfigContext.tsx` - duplicate files
-   - [ ] `/src/components/CanvasGrid.tsx` vs `/src/components/CanvasGrid/index.tsx` - potential duplication
+   - [x] `/src/components/FormulaPointInfoTest.tsx` - test component in production code
+   - [x] `/src/__tests__/utils/test-chalk.ts` - unused test helper
+   - [x] `/src/__tests__/utils/test-helpers.ts` - unused test helper
+   - [x] `/src/components/MeasurementPanel.tsx` vs `/src/components/MeasurementPanel/index.tsx` - potential duplication
+   - [x] `/src/context/ConfigContext.tsx` vs `/src/config/ConfigContext.tsx` - duplicate files
+   - [x] `/src/components/CanvasGrid.tsx` vs `/src/components/CanvasGrid/index.tsx` - potential duplication
 
 2. **Files Requiring Unit Tests**
    - [ ] `/src/hooks/useShapeOperations.ts` - critical hook with 0% coverage
@@ -238,17 +238,43 @@ Based on the coverage analysis, here's the prioritized cleanup tasks:
 4. [ ] Add ESLint rules for detecting unused code
 5. [ ] Create prioritized list of e2e tests to add based on analysis results
 6. [x] Create prioritized cleanup backlog based on analysis results
-7. [ ] Perform initial file cleanup:
-   - [ ] Remove test utilities in production code (FormulaPointInfoTest.tsx)
-   - [ ] Remove unused test helpers
-   - [ ] Fix duplicated ConfigContext implementation
-   - [ ] Remove duplicate component implementations
+7. [x] Perform initial file cleanup:
+   - [x] Remove test utilities in production code (FormulaPointInfoTest.tsx)
+   - [x] Remove unused test helpers
+   - [x] Fix duplicated ConfigContext implementation
+   - [x] Remove duplicate component implementations
 8. [ ] Begin writing tests for high-impact files:
    - [ ] Unit tests for `useShapeOperations.ts`
    - [ ] Unit tests for `FormulaEditor.tsx`
    - [ ] E2E tests for primary user flows
 9. [ ] Address console logging issues and code comments
 10. [ ] Schedule first cleanup session
+
+## For Next Cleanup Session
+
+Based on our initial steps, here's what we should focus on next:
+
+1. **Fix TypeScript Error in Index.tsx**:
+   - The measurementUnit prop issue is causing TypeScript errors
+   - We need to update the FormulaEditor component to use _measurementUnit consistently
+
+2. **Clean Up Console Logs**:
+   - Create an ESLint rule to detect unnecessary console logs
+   - Add proper logger abstraction where needed 
+   - Remove debug console logs
+
+3. **Address the FormulaGraph.test.tsx Warning**:
+   - Fix the unrecognized HTML tag warning for `<path>` elements
+   - Add SVG namespace in test environment
+
+4. **Focus on Test Coverage for Critical Components**:
+   - Add tests for useShapeOperations.ts (highest priority)
+   - Add tests for FormulaEditor.tsx
+   - Create e2e tests for formula editing workflow
+
+5. **Implement Detection for Unused Code**:
+   - Add ESLint rules for detecting dead code
+   - Implement a git hook to prevent committing unused code
 
 ## Using the Coverage Analyzer
 
