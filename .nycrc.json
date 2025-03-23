@@ -18,6 +18,13 @@
     "src/tests/**/*",
     "src/e2e/**/*",
     "src/types/**/*",
+    "src/_tests_/**/*",
+    "src/config/**/*",
+    "src/i18n/**/*",
+    "src/vite-plugins/**/*",
+    "src/main.tsx",
+    "src/setupTests.ts",
+    "src/vite-env.d.ts",
     "dist/**/*",
     "**/node_modules/**",
     "node_modules/**"
