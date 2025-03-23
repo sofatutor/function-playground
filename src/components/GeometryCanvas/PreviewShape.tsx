@@ -8,6 +8,7 @@ interface PreviewShapeProps {
   activeShapeType: ShapeType;
   snapToGrid?: boolean;
   pixelsPerSmallUnit?: number;
+  zoomFactor?: number;
 }
 
 const PreviewShape: React.FC<PreviewShapeProps> = ({
@@ -16,7 +17,8 @@ const PreviewShape: React.FC<PreviewShapeProps> = ({
   drawCurrent,
   activeShapeType,
   snapToGrid = false,
-  pixelsPerSmallUnit
+  pixelsPerSmallUnit,
+  zoomFactor = 1
 }) => {
   if (!isDrawing || !drawStart || !drawCurrent) return null;
   
@@ -44,25 +46,82 @@ const PreviewShape: React.FC<PreviewShapeProps> = ({
   const borderColor = snapToGrid ? 'rgba(76, 175, 80, 0.7)' : 'rgba(155, 135, 245, 0.7)';
   const fillColor = snapToGrid ? 'rgba(76, 175, 80, 0.1)' : 'rgba(155, 135, 245, 0.1)';
   
+  // Calculate width and height in screen coordinates (these will be exact pixel measurements)
+  const screenWidth = Math.abs(effectiveCurrent.x - effectiveStart.x);
+  const screenHeight = Math.abs(effectiveCurrent.y - effectiveStart.y);
+  
+  // For the preview shape we need to match what the final shape will be
+  // The final shape's size is determined by screenWidth/zoomFactor
+  // So for our preview to match that, we need to use that exact size
+  const finalWidth = screenWidth;
+  const finalHeight = screenHeight;
+  
+  // Figure out if we're dragging right/down or left/up
+  const isRightward = effectiveCurrent.x > effectiveStart.x;
+  const isDownward = effectiveCurrent.y > effectiveStart.y;
+  
   switch (activeShapeType) {
     case 'circle':
-      return renderCirclePreview(effectiveStart, effectiveCurrent, borderStyle, borderColor, fillColor);
+      return renderCirclePreview(
+        effectiveStart,
+        finalWidth,
+        finalHeight,
+        isRightward,
+        isDownward,
+        borderStyle,
+        borderColor,
+        fillColor
+      );
     case 'rectangle':
-      return renderRectanglePreview(effectiveStart, effectiveCurrent, borderStyle, borderColor, fillColor);
+      return renderRectanglePreview(
+        effectiveStart,
+        finalWidth,
+        finalHeight,
+        isRightward,
+        isDownward,
+        borderStyle,
+        borderColor,
+        fillColor
+      );
     case 'triangle':
-      return renderTrianglePreview(effectiveStart, effectiveCurrent, borderStyle, borderColor, fillColor);
+      return renderTrianglePreview(
+        effectiveStart,
+        finalWidth,
+        finalHeight,
+        isRightward,
+        isDownward,
+        borderStyle,
+        borderColor,
+        fillColor
+      );
     case 'line':
-      return renderLinePreview(effectiveStart, effectiveCurrent, borderStyle, borderColor, fillColor);
+      return renderLinePreview(
+        effectiveStart,
+        finalWidth,
+        finalHeight,
+        isRightward,
+        isDownward,
+        borderStyle,
+        borderColor,
+        fillColor
+      );
     default:
       return null;
   }
 };
 
-const renderCirclePreview = (start: Point, current: Point, borderStyle: string, borderColor: string, fillColor: string) => {
-  const radius = Math.sqrt(
-    Math.pow(current.x - start.x, 2) + 
-    Math.pow(current.y - start.y, 2)
-  );
+const renderCirclePreview = (
+  start: Point,
+  width: number,
+  height: number, 
+  isRightward: boolean,
+  isDownward: boolean,
+  borderStyle: string, 
+  borderColor: string, 
+  fillColor: string
+) => {
+  // For circles, calculate the radius based on normalized width/height
+  const radius = Math.sqrt(width * width + height * height);
   
   return (
     <div
@@ -80,46 +139,65 @@ const renderCirclePreview = (start: Point, current: Point, borderStyle: string, 
   );
 };
 
-const renderRectanglePreview = (start: Point, current: Point, borderStyle: string, borderColor: string, fillColor: string) => {
-  const left = Math.min(start.x, current.x);
-  const top = Math.min(start.y, current.y);
-  const width = Math.abs(current.x - start.x);
-  const height = Math.abs(current.y - start.y);
+const renderRectanglePreview = (
+  start: Point,
+  width: number,
+  height: number,
+  isRightward: boolean,
+  isDownward: boolean,
+  borderStyle: string, 
+  borderColor: string, 
+  fillColor: string
+) => {
+  // Calculate the position based on whether drawing right/down or left/up
+  const position = {
+    x: isRightward ? start.x : start.x - width,
+    y: isDownward ? start.y : start.y - height
+  };
   
   return (
     <div
       className="absolute pointer-events-none border-[1px]"
       style={{
-        left,
-        top,
+        left: position.x,
+        top: position.y,
         width,
         height,
         borderColor,
         backgroundColor: fillColor,
-        borderStyle
+        borderStyle,
+        // Add comment explaining this style is designed to match the final shape size
+        // when rendered at the current zoom level
       }}
     />
   );
 };
 
-const renderTrianglePreview = (start: Point, current: Point, borderStyle: string, borderColor: string, fillColor: string) => {
-  // Calculate the three points of the right triangle
-  // Point 1: Bottom left (where the right angle is)
-  const p1 = {
-    x: start.x,
-    y: current.y
-  };
-  
-  // Point 2: Top point
-  const p2 = {
+const renderTrianglePreview = (
+  start: Point,
+  width: number,
+  height: number,
+  isRightward: boolean,
+  isDownward: boolean,
+  borderStyle: string, 
+  borderColor: string, 
+  fillColor: string
+) => {
+  // Calculate the three points of the triangle
+  // Position depends on drawing direction
+  const p1 = { // Top point
     x: start.x,
     y: start.y
   };
   
-  // Point 3: Bottom right
-  const p3 = {
-    x: current.x,
-    y: current.y
+  const p2 = { // Bottom left
+    x: start.x,
+    y: isDownward ? start.y + height : start.y - height
+  };
+  
+  const p3 = { // Bottom right
+    x: isRightward ? start.x + width : start.x - width,
+    y: isDownward ? start.y + height : start.y - height
   };
   
   // Calculate the bounding box
@@ -169,24 +247,37 @@ const renderTrianglePreview = (start: Point, current: Point, borderStyle: string
   );
 };
 
-const renderLinePreview = (start: Point, current: Point, borderStyle: string, borderColor: string, fillColor: string) => {
-  // For a line preview, we'll use SVG to draw a dashed line
-
+const renderLinePreview = (
+  start: Point,
+  width: number,
+  height: number,
+  isRightward: boolean,
+  isDownward: boolean,
+  borderStyle: string, 
+  borderColor: string, 
+  fillColor: string
+) => {
+  // Calculate end point based on normalized dimensions and direction
+  const end = {
+    x: isRightward ? start.x + width : start.x - width,
+    y: isDownward ? start.y + height : start.y - height
+  };
+  
   // Calculate the bounding box (add some padding)
   const padding = 10;
-  const minX = Math.min(start.x, current.x) - padding;
-  const minY = Math.min(start.y, current.y) - padding;
-  const maxX = Math.max(start.x, current.x) + padding;
-  const maxY = Math.max(start.y, current.y) + padding;
+  const minX = Math.min(start.x, end.x) - padding;
+  const minY = Math.min(start.y, end.y) - padding;
+  const maxX = Math.max(start.x, end.x) + padding;
+  const maxY = Math.max(start.y, end.y) + padding;
   
-  const width = maxX - minX;
-  const height = maxY - minY;
+  const boxWidth = maxX - minX;
+  const boxHeight = maxY - minY;
   
   // Define start and end points relative to the container
   const startX = start.x - minX;
   const startY = start.y - minY;
-  const endX = current.x - minX;
-  const endY = current.y - minY;
+  const endX = end.x - minX;
+  const endY = end.y - minY;
   
   // Determine the dash array based on border style
   const strokeDasharray = borderStyle === 'dashed' ? '5,5' : 'none';
@@ -197,13 +288,13 @@ const renderLinePreview = (start: Point, current: Point, borderStyle: string, bo
       style={{
         left: minX,
         top: minY,
-        width,
-        height
+        width: boxWidth,
+        height: boxHeight
       }}
     >
       <svg 
-        width={width} 
-        height={height} 
+        width={boxWidth} 
+        height={boxHeight} 
         className="absolute"
       >
         <line
