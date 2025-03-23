@@ -45,7 +45,7 @@ Based on our ESLint output, these files need immediate attention:
 
 - [x] Fix `/src/components/GeometryCanvas/index.tsx`
 - [x] Fix `/src/components/FormulaEditor.tsx`
-- [ ] Fix `/src/components/FormulaGraph.tsx`
+- [x] Fix `/src/components/FormulaGraph.tsx`
 
 ### Phase 3: Supporting Files (Days 5-6)
 
@@ -97,3 +97,4 @@ Commit changes in small, logical groups with descriptive messages:
 - [x] `/src/utils/geometry/shapeOperations.ts` - Removed unused imports and prefixed unused parameters
 - [x] `/src/components/GeometryCanvas/index.tsx` - Marked unused variables, reduced excessive console logging, and added e2e test
 - [x] `/src/components/FormulaEditor.tsx` - Removed unused imports, marked unused parameters, and removed unused functions
+- [x] `/src/components/FormulaGraph.tsx` - Marked unused variables, fixed hook dependencies, and wrapped functions in useCallback
