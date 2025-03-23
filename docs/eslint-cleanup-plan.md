@@ -27,7 +27,7 @@ We have 196 ESLint warnings to address, covering unused code, React hook depende
 Based on our ESLint output, these files need immediate attention:
 
 - [x] `/src/hooks/useShapeOperations.ts` - 8 warnings, critical business logic
-- [ ] `/src/components/GeometryCanvas/index.tsx` - 12 warnings, core component
+- [x] `/src/components/GeometryCanvas/index.tsx` - 12 warnings, core component
 - [ ] `/src/components/FormulaEditor.tsx` - 10 warnings, complex UI component 
 - [x] `/src/utils/geometry/measurements.ts` - 11 warnings, utility functions
 - [x] `/src/utils/geometry/shapeOperations.ts` - 7 warnings, core shape logic
@@ -43,7 +43,7 @@ Based on our ESLint output, these files need immediate attention:
 
 ### Phase 2: Component Files (Days 3-4)
 
-- [ ] Fix `/src/components/GeometryCanvas/index.tsx`
+- [x] Fix `/src/components/GeometryCanvas/index.tsx`
 - [ ] Fix `/src/components/FormulaEditor.tsx`
 - [ ] Fix `/src/components/FormulaGraph.tsx`
 
@@ -94,4 +94,5 @@ Commit changes in small, logical groups with descriptive messages:
 - [x] `/src/hooks/useShapeOperations.ts` - Fixed unused variables, imports, and hook dependencies 
 - [x] `/src/utils/geometry/measurements.ts` - Removed unused imports and variables
 - [x] `/src/utils/geometry/shapeUpdates.ts` - Removed unused imports, code and refactored functions 
-- [x] `/src/utils/geometry/shapeOperations.ts` - Removed unused imports and prefixed unused parameters 
+- [x] `/src/utils/geometry/shapeOperations.ts` - Removed unused imports and prefixed unused parameters
+- [x] `/src/components/GeometryCanvas/index.tsx` - Marked unused variables, reduced excessive console logging, and added e2e test
