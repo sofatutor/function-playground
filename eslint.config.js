@@ -23,7 +23,20 @@ export default tseslint.config(
         "warn",
         { allowConstantExport: true },
       ],
-      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { 
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_"
+        }
+      ],
+      "no-unreachable": "warn",
+      "no-empty": "warn",
+      "no-empty-function": "warn",
+      "no-unused-expressions": "warn",
+      "no-warning-comments": ["warn", { terms: ["TODO", "FIXME", "WIP", "EXPERIMENTAL"], location: "anywhere" }],
     },
   }
 );
