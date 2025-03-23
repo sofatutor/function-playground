@@ -7,10 +7,7 @@ import {
   rotatePointRadians, 
   calculateAngleRadians, 
   degreesToRadians, 
-  radiansToDegrees,
   normalizeAngleRadians,
-  toClockwiseAngle,
-  toCounterclockwiseAngle
 } from '@/utils/geometry/rotation';
 
 /**

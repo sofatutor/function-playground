@@ -49,7 +49,7 @@ Based on our ESLint output, these files need immediate attention:
 
 ### Phase 3: Supporting Files (Days 5-6)
 
-- [ ] Address service implementations
+- [x] Address service implementations
 - [ ] Fix remaining component files
 - [ ] Fix context providers
 
@@ -98,3 +98,4 @@ Commit changes in small, logical groups with descriptive messages:
 - [x] `/src/components/GeometryCanvas/index.tsx` - Marked unused variables, reduced excessive console logging, and added e2e test
 - [x] `/src/components/FormulaEditor.tsx` - Removed unused imports, marked unused parameters, and removed unused functions
 - [x] `/src/components/FormulaGraph.tsx` - Marked unused variables, fixed hook dependencies, and wrapped functions in useCallback
+- [x] `/src/services/implementations/*.ts` - Prefixed unused parameters with underscores and removed unused imports
