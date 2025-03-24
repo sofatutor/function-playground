@@ -1,12 +1,12 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { ZoomIn, ZoomOut } from 'lucide-react';
 import { useGridZoom } from '@/contexts/GridZoomContext/index';
 import { useTranslate } from '@/hooks/useTranslate';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const GridZoomControl: React.FC = () => {
-  const t = useTranslate();
+  const _t = useTranslate();
   const { zoomFactor, setZoomFactor } = useGridZoom();
 
   const handleZoomIn = () => {

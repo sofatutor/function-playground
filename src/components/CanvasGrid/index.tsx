@@ -28,7 +28,7 @@ const CanvasGrid: React.FC<CanvasGridProps> = ({
   initialPosition,
   onPositionChange
 }) => {
-  const { zoomFactor } = useGridZoom();
+  const { zoomFactor: _zoomFactor } = useGridZoom();
   const hasInitialized = useRef(false);
   const hasOriginMoved = useRef(false);
   const isHandlingExternalUpdate = useRef(false);

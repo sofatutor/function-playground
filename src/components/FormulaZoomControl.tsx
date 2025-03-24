@@ -35,7 +35,7 @@ const FormulaZoomControl: React.FC<FormulaZoomControlProps> = ({
   const currentScaleFactor = selectedFormula.scaleFactor || 1.0;
   
   // Convert actual scale factor to logarithmic value for the slider
-  const logScaleFactor = Math.log10(currentScaleFactor);
+  const _logScaleFactor = Math.log10(currentScaleFactor);
   
   // Handle scale factor change
   const handleScaleChange = (value: number) => {

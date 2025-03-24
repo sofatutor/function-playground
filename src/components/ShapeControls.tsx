@@ -1,4 +1,3 @@
-
 import React from 'react';
 import type { AnyShape, Line } from '@/types/shapes';
 
@@ -80,11 +79,11 @@ const ShapeControls: React.FC<ShapeControlsProps> = ({
       
       // Calculate the center of the triangle
       const centerX = (tri.points[0].x + tri.points[1].x + tri.points[2].x) / 3;
-      const centerY = (tri.points[0].y + tri.points[1].y + tri.points[2].y) / 3;
+      const _centerY = (tri.points[0].y + tri.points[1].y + tri.points[2].y) / 3;
       
       // Calculate the top-most point of the triangle
       const minY = Math.min(tri.points[0].y, tri.points[1].y, tri.points[2].y);
-      const topPointIndex = tri.points.findIndex(p => p.y === minY);
+      const _topPointIndex = tri.points.findIndex(p => p.y === minY);
       
       // Resize point at the bottommost vertex
       const maxY = Math.max(tri.points[0].y, tri.points[1].y, tri.points[2].y);
