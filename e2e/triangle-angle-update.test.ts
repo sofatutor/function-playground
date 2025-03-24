@@ -64,7 +64,7 @@ async function testAngleUpdate(page: Page, angleNumber: number): Promise<void> {
       Logger.debug('Found notification toast, attempting to dismiss it');
       await toast.click({ force: true });
     }
-  } catch (error) {
+  } catch (_error) {
     Logger.debug('No toast found or unable to dismiss it');
   }
   
@@ -72,7 +72,7 @@ async function testAngleUpdate(page: Page, angleNumber: number): Promise<void> {
   try {
     await angleElement.click({ timeout: 5000 });
     Logger.debug(`Clicked on angle${angleNumber} measurement`);
-  } catch (error) {
+  } catch (_error) {
     Logger.warn(`Failed to click on angle${angleNumber} measurement, trying with force: true`);
     await angleElement.click({ force: true });
     Logger.debug(`Clicked on angle${angleNumber} measurement with force: true`);

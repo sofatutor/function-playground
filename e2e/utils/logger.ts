@@ -4,7 +4,7 @@
  */
 
 // Use string constants instead of enum for better compatibility
-const LOG_LEVEL = {
+const _LOG_LEVEL = {
   DEBUG: 'debug',
   INFO: 'info',
   WARN: 'warn',

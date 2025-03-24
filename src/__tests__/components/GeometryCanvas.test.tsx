@@ -1,8 +1,8 @@
 import React from 'react';
-import { render, screen, act, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import GeometryCanvas from '@/components/GeometryCanvas';
-import { DEFAULT_PIXELS_PER_CM, DEFAULT_PIXELS_PER_MM, DEFAULT_PIXELS_PER_INCH } from '@/components/GeometryCanvas/CanvasUtils';
+import { DEFAULT_PIXELS_PER_MM } from '@/components/GeometryCanvas/CanvasUtils';
 import { ServiceProvider } from '@/providers/ServiceProvider';
 import { Formula } from '@/types/formula';
 
@@ -106,7 +106,7 @@ describe('GeometryCanvas', () => {
 
   test('handleCalibrationUpdate should set pixelsPerSmallUnit to 1/10th of the new value', () => {
     const pixelsPerUnit = 60; // Default pixels per cm
-    const newPixelsPerUnit = 80; // New calibration value
+    const _newPixelsPerUnit = 80; // New calibration value
     
     render(
       <ServiceProvider>

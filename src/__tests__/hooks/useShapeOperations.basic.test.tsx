@@ -1,9 +1,8 @@
 import { renderHook, act } from '@testing-library/react';
 import { useShapeOperations } from '@/hooks/useShapeOperations';
 import { AnyShape, Point, OperationMode } from '@/types/shapes';
-import * as urlEncoding from '@/utils/urlEncoding';
-import * as commonUtils from '@/utils/geometry/common';
-import { toast } from 'sonner';
+import * as _urlEncoding from '@/utils/urlEncoding';
+import * as _commonUtils from '@/utils/geometry/common';
 
 // Mock dependencies
 jest.mock('@/utils/urlEncoding', () => ({

@@ -390,7 +390,7 @@ test.describe('Function Plotting', () => {
     try {
       await page.waitForSelector('#formula-editor', { timeout: 10000 });
       Logger.debug('Formula editor found for second function');
-    } catch (error) {
+    } catch (_error) {
       Logger.error('Formula editor not found for second function, trying alternate approach');
       
       // Try clicking the first icon in the toolbar as a fallback
