@@ -1,6 +1,6 @@
 import React from 'react';
 import { AnyShape, Point, OperationMode, ShapeType, Circle, Rectangle, Triangle } from '@/types/shapes';
-import { getCanvasPoint, getShapeAtPosition, rotatePoint } from './CanvasUtils';
+import { getCanvasPoint, getShapeAtPosition } from './CanvasUtils';
 import { snapToGrid, getGridModifiers } from '@/utils/grid/gridUtils';
 import { ShapeServiceFactory } from '@/services/ShapeService';
 
@@ -57,7 +57,7 @@ export const createHandleMouseDown = (params: EventHandlerParams) => {
     setDragStart,
     setOriginalPosition,
     onShapeSelect,
-    onShapeMove
+    onShapeMove: _onShapeMove
   } = params;
   
   // Replace the existing snapToGrid function with our new utility
@@ -332,6 +332,7 @@ export const createHandleMouseUp = (params: EventHandlerParams) => {
     const point = getCanvasPoint(e, canvasRef);
     
     // If Shift is pressed, snap the final point to the grid
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const effectivePoint = (e.shiftKey && pixelsPerSmallUnit && pixelsPerSmallUnit > 0) 
       ? handleSnapToGrid(point) 
       : point;
@@ -486,7 +487,7 @@ export const createHandleKeyDown = (params: EventHandlerParams) => {
     selectedShapeId,
     pixelsPerUnit,
     pixelsPerSmallUnit,
-    measurementUnit,
+    measurementUnit: _measurementUnit,
     gridPosition,
     onShapeMove,
     onShapeResize,
