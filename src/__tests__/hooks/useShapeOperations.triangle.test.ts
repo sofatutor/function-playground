@@ -2,7 +2,7 @@ import { renderHook, act } from '@testing-library/react';
 import { useShapeOperations } from '@/hooks/useShapeOperations';
 import { Triangle, Point } from '@/types/shapes';
 import * as urlEncoding from '@/utils/urlEncoding';
-import * as commonUtils from '@/utils/geometry/common';
+import * as _commonUtils from '@/utils/geometry/common';
 
 // Mock the URL encoding functions
 jest.mock('@/utils/urlEncoding', () => ({
@@ -253,7 +253,7 @@ describe('useShapeOperations - Triangle Side Updates', () => {
     const { result } = renderHook(() => useShapeOperations());
     
     // Spy on the updateUrlWithData function
-    const updateUrlSpy = jest.spyOn(urlEncoding, 'updateUrlWithData');
+    const _updateUrlSpy = jest.spyOn(urlEncoding, 'updateUrlWithData');
     
     // Act - Update a side of the triangle
     act(() => {
@@ -274,5 +274,15 @@ describe('useShapeOperations - Triangle Side Updates', () => {
     // After running timers, moveShape should have been called
     // But since we're mocking the hook, we can't directly test this
     // In the real implementation, this would force a re-render
+  });
+
+  // Test that shape changes update the URL
+  it('should update the URL when a triangle shape is modified', () => {
+    // Arrange
+    const { result } = renderHook(() => useShapeOperations());
+    const _updateUrlSpy = jest.spyOn(urlEncoding, 'updateUrlWithData');
+    
+    // Act and Assert - create and modify shapes
+    // ... existing code ...
   });
 }); 

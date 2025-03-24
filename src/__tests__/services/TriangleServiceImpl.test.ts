@@ -11,7 +11,7 @@ jest.mock('@/utils/geometry/common', () => ({
 describe('TriangleServiceImpl', () => {
   let service: TriangleServiceImpl;
   let triangle: Triangle;
-  let trianglePoints: [Point, Point, Point];
+  let _trianglePoints: [Point, Point, Point];
 
   beforeEach(() => {
     service = new TriangleServiceImpl();
