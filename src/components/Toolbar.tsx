@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
-import { Square, Circle, Triangle, MousePointer, Move, RotateCw, Trash, Ruler, FunctionSquare } from 'lucide-react';
+import { Square, Circle, Triangle, MousePointer, RotateCw, Ruler, FunctionSquare } from 'lucide-react';
 import 'katex/dist/katex.min.css';
 import { InlineMath } from 'react-katex';
 import type { ShapeType, OperationMode } from '@/types/shapes';
@@ -16,10 +16,10 @@ interface ToolbarProps {
   activeShapeType: ShapeType;
   onModeChange: (mode: OperationMode) => void;
   onShapeTypeChange: (type: ShapeType) => void;
-  onClear: () => void;
-  onDelete: () => void;
+  _onClear: () => void;
+  _onDelete: () => void;
   hasSelectedShape: boolean;
-  canDelete: boolean;
+  _canDelete: boolean;
   onToggleFormulaEditor?: () => void;
   isFormulaEditorOpen?: boolean;
 }
@@ -29,16 +29,16 @@ const Toolbar: React.FC<ToolbarProps> = ({
   activeShapeType,
   onModeChange,
   onShapeTypeChange,
-  onClear,
-  onDelete,
+  _onClear,
+  _onDelete,
   hasSelectedShape,
-  canDelete,
+  _canDelete,
   onToggleFormulaEditor,
   isFormulaEditorOpen = false
 }) => {
   const t = useTranslate();
   const { language } = useConfig();
-  const isMobile = useIsMobile();
+  const _isMobile = useIsMobile();
   
   return (
     <div id="geometry-toolbar" className="flex items-center space-x-1 p-1 bg-white rounded-lg shadow-sm border border-gray-200 animate-fade-in">
@@ -163,7 +163,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
   variant = 'default',
   id
 }) => {
-  const t = useTranslate();
+  const _t = useTranslate();
   const isMobile = useIsMobile();
   
   // Determine the button variant based on active state and provided variant
