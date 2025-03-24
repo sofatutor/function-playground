@@ -24,7 +24,7 @@ import {
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import GlobalControls from '@/components/GlobalControls';
-import UnifiedInfoPanel from '@/components/UnifiedInfoPanel';
+import _UnifiedInfoPanel from '@/components/UnifiedInfoPanel';
 
 const Index = () => {
   // Get the service factory
