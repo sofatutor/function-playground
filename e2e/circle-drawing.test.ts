@@ -13,7 +13,7 @@ test.describe('Circle Drawing', () => {
     
     try {
       await circleButton.click();
-    } catch (e) {
+    } catch (_e) {
       Logger.warn('Could not click circle button, trying keyboard shortcut');
       await page.keyboard.press('c'); // Assuming 'c' is shortcut for circle
     }

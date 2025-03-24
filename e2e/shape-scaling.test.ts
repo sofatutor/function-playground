@@ -16,7 +16,7 @@ test.describe('Shape Scaling', () => {
     // Click the rectangle button or use keyboard shortcut if button isn't clickable
     try {
       await rectangleButton.click();
-    } catch (e) {
+    } catch (_e) {
       Logger.warn('Could not click rectangle button, trying keyboard shortcut');
       await page.keyboard.press('r');
     }

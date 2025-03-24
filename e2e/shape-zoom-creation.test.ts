@@ -185,7 +185,7 @@ test.describe('Shape Creation with Zoom', () => {
     
     // Test for line tool specifically 
     await page.locator('#line-tool').click();
-    console.log('[DEBUG] Testing line tool specifically');
+    Logger.debug('Testing line tool specifically');
     
     // Draw a line from top-left to bottom-right
     await page.mouse.move(centerX - 50, centerY - 50);
@@ -210,7 +210,7 @@ test.describe('Shape Creation with Zoom', () => {
         Math.pow(Number(previewX2) - Number(previewX1), 2) +
         Math.pow(Number(previewY2) - Number(previewY1), 2)
       );
-      console.log(`[DEBUG] Preview line distance: ${previewDistance}`);
+      Logger.debug(`Preview line distance: ${previewDistance}`);
     }
     
     await page.mouse.up();
@@ -222,7 +222,7 @@ test.describe('Shape Creation with Zoom', () => {
     const lineElement = await page.locator('svg').first();
     const lineElementBoundingBox = await lineElement.boundingBox();
     
-    console.log('[DEBUG] Line element bounding box:', lineElementBoundingBox);
+    Logger.debug('Line element bounding box:', lineElementBoundingBox);
     
     // We'll consider the test successful if a line element exists with a reasonable size
     expect(lineElementBoundingBox).not.toBeNull();
@@ -232,7 +232,7 @@ test.describe('Shape Creation with Zoom', () => {
       expect(lineElementBoundingBox.width).toBeGreaterThan(0);
       expect(lineElementBoundingBox.height).toBeGreaterThan(0);
       
-      console.log('[DEBUG] Line creation successful with our fix!');
+      Logger.debug('Line creation successful with our fix!');
     }
   });
 }); 

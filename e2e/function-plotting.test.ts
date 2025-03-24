@@ -57,7 +57,7 @@ test.describe('Function Plotting', () => {
   }
 
   // Helper function to find and click the "Add Function" button
-  async function findAndClickAddButton(page: Page): Promise<boolean> {
+  async function _findAndClickAddButton(page: Page): Promise<boolean> {
     try {
       
       // Try to find the button directly by ID

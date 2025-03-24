@@ -1,6 +1,5 @@
 import { test } from './test-helper';
 import { expect } from '@playwright/test';
-import { Logger } from './utils/logger';
 
 test.describe('Complex Function Behaviors', () => {
   test.beforeEach(async ({ page }) => {

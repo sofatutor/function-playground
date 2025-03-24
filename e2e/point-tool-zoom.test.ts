@@ -28,7 +28,7 @@ async function setupGraphAndSelectTool(page) {
   // Switch to the select tool
   try {
     await page.locator('#select-tool').click();
-  } catch (e) {
+  } catch (_e) {
     Logger.warn('Could not click select tool button, trying keyboard shortcut');
     await page.keyboard.press('v'); // Assuming 'v' is shortcut for select
   }

@@ -1,4 +1,4 @@
-import { chromium, type FullConfig } from '@playwright/test';
+import { type FullConfig } from '@playwright/test';
 import path from 'path';
 import fs from 'fs';
 import { execSync } from 'child_process';
@@ -8,7 +8,7 @@ import { Logger } from './utils/logger';
 export const coverageDir = path.join(process.cwd(), 'coverage/e2e/tmp');
 
 // This file is used in playwright.config.ts for global setup
-async function globalSetup(config: FullConfig) {
+export default async function globalSetup(_config: FullConfig) {
   Logger.info('Global setup running...');
   
   // Register a global error handler
@@ -59,8 +59,6 @@ function setupCoverage() {
     }
   });
 }
-
-export default globalSetup;
 
 // You could also create a custom reporter to handle failures
 export class FailureCaptureReporter implements Reporter {

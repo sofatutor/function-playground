@@ -1,6 +1,6 @@
-import { expect } from '@playwright/test';
 import { test } from './test-helper';
-import type { Locator, Page } from '@playwright/test';
+import { expect } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import path from 'path';
 import fs from 'fs';
 import { Logger } from './utils/logger';
@@ -252,9 +252,9 @@ test.describe('Triangle Angle Updates', () => {
       
       // Success if we got this far
       Logger.debug('Angle update test completed successfully');
-    } catch (error) {
-      Logger.error('Error in test:', error);
-      throw error;
+    } catch (_error) {
+      Logger.error('Error in test:', _error);
+      throw _error;
     }
   });
 });
