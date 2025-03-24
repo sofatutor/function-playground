@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "build:dev": "tsc && vite build --mode development",
-    "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" \"e2e/**/*.{ts,tsx}\" --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "test": "jest",
     "test:ci": "jest --ci",

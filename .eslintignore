@@ -1,0 +1,10 @@
+# Generated files
+coverage/
+dist/
+build/
+
+# Dependencies
+node_modules/
+
+# Other
+*.d.ts 

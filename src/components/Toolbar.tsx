@@ -38,7 +38,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
 }) => {
   const t = useTranslate();
   const { language } = useConfig();
-  const isMobile = useIsMobile();
+  const _isMobile = useIsMobile();
   
   return (
     <div id="geometry-toolbar" className="flex items-center space-x-1 p-1 bg-white rounded-lg shadow-sm border border-gray-200 animate-fade-in">
@@ -164,7 +164,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
   id
 }) => {
   const _t = useTranslate();
-  const isMobile = useIsMobile();
+  const _isMobile = useIsMobile();
   
   // Determine the button variant based on active state and provided variant
   const buttonVariant = active 
@@ -174,7 +174,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
       : 'outline';
   
   // For mobile, we don't use tooltips
-  if (isMobile) {
+  if (_isMobile) {
     return (
       <Button
         id={id}

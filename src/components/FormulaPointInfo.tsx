@@ -22,9 +22,9 @@ interface FormulaPointInfoProps {
 
 const FormulaPointInfo: React.FC<FormulaPointInfoProps> = ({ 
   point, 
-  gridPosition: _gridPos,
-  pixelsPerUnit: _pixels,
-  measurementUnit: _unit,
+  gridPosition: _gridPosition,
+  pixelsPerUnit: _pixelsPerUnit,
+  measurementUnit: _measurementUnit,
 }) => {
   const t = useTranslate();
 
