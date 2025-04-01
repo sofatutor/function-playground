@@ -311,13 +311,14 @@ const Index = () => {
   return (
     <div className={`min-h-screen bg-gray-50 ${isFullscreen || isMobile ? 'p-0' : ''}`}>
       <div className={`${isFullscreen || isMobile ? 'max-w-full p-0' : 'container py-0 sm:py-2 md:py-4 lg:py-8 px-0 sm:px-2 md:px-4'} transition-all duration-200 h-[calc(100vh-0rem)] sm:h-[calc(100vh-0.5rem)]`}>
-        <GeometryHeader isFullscreen={isFullscreen} />
+        {/* Only show the header in the standard position when toolbar is visible */}
+        {isToolbarVisible && <GeometryHeader isFullscreen={isFullscreen} />}
         
         {/* Include both modals */}
         <ConfigModal />
         <ComponentConfigModal />
         
-        <div className={`${isMobile || isFullscreen ? 'h-full' : 'h-[calc(100%-3rem)] sm:h-[calc(100%-4rem)]'}`}>
+        <div className={`${isMobile || isFullscreen ? 'h-full' : isToolbarVisible ? 'h-[calc(100%-3rem)] sm:h-[calc(100%-4rem)]' : 'h-full'}`}>
           <div className="h-full">
             <div className="flex flex-col h-full">
               <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between ${isFullscreen || isMobile ? 'space-y-1 sm:space-y-0 sm:space-x-1 px-1' : 'space-y-1 sm:space-y-0 sm:space-x-2 px-1 sm:px-2'} ${isMobile ? 'mb-0' : 'mb-1 sm:mb-2'}`}>
@@ -338,8 +339,10 @@ const Index = () => {
                     />
                   </div>
                 ) : (
-                  /* Empty spacer to maintain layout when toolbar is hidden */
-                  <div className="flex-1"></div>
+                  /* Show header in the toolbar position when toolbar is hidden */
+                  <div className="flex-1">
+                    <GeometryHeader isFullscreen={isFullscreen} />
+                  </div>
                 )}
                 
                 <div className="ml-auto">
