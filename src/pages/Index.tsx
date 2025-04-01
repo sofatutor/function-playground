@@ -30,7 +30,7 @@ const Index = () => {
   // Get the service factory
   const serviceFactory = useServiceFactory();
   const { setComponentConfigModalOpen } = useComponentConfig();
-  const { isToolbarVisible, setToolbarVisible } = useGlobalConfig();
+  const { isToolbarVisible, setToolbarVisible, defaultTool } = useGlobalConfig();
   const isMobile = useIsMobile();
   
   const {
@@ -307,6 +307,19 @@ const Index = () => {
     console.log('Index: Grid position changed:', newPosition);
     updateGridPosition(newPosition);
   }, [updateGridPosition]);
+
+  // Set initial tool based on defaultTool from ConfigContext
+  useEffect(() => {
+    if (defaultTool === 'select') {
+      setActiveMode('select');
+    } else if (defaultTool === 'function') {
+      setActiveMode('create');
+      setIsFormulaEditorOpen(true);
+    } else {
+      setActiveMode('create');
+      setActiveShapeType(defaultTool);
+    }
+  }, [defaultTool, setActiveMode, setActiveShapeType]);
 
   return (
     <div className={`min-h-screen bg-gray-50 ${isFullscreen || isMobile ? 'p-0' : ''}`}>

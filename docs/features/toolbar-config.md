@@ -15,7 +15,7 @@ This feature allows users to hide the toolbar and default to a specific shape to
 
 - [x] **Configuration Context Updates**
   - [x] Add `isToolbarVisible` boolean setting (default: true)
-  - [ ] Add `defaultTool` string setting for tool selection
+  - [x] Add `defaultTool` string setting for tool selection
   - [x] Add setter functions for both settings
   - [x] Implement localStorage persistence
   - [x] Update type definitions
@@ -44,10 +44,10 @@ This feature allows users to hide the toolbar and default to a specific shape to
   - [x] Update all supported language files
 
 - [ ] **Testing**
-  - [ ] Unit tests for context functionality
-  - [ ] Component tests for ConfigModal UI
-  - [ ] Integration tests for toolbar visibility
-  - [ ] Test default tool selection behavior
+  - [x] Unit tests for context functionality (Partially done)
+  - [x] Component tests for ConfigModal UI
+  - [x] Integration tests for toolbar visibility (Partially done)
+  - [x] Test default tool selection behavior (Partially done)
   - [ ] Test URL tool parameter functionality
   - [ ] E2E tests for hidden toolbar workflow
 
