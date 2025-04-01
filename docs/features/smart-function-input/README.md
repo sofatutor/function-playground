@@ -61,62 +61,66 @@ This document outlines the implementation plan for enhancing the function input 
    - [x] Ensure proper z-indexing for all components
    - [x] Add responsive breakpoints for mobile views
 
-### Phase 1: Enhanced Function Input
-1. Create enhanced formula input component
-   - [ ] Add support for standard mathematical notation
-   - [ ] Add support for exponents and superscripts
-   - [ ] Add support for common mathematical functions
-   - [ ] Implement real-time formatting
+### Phase 1: Parameter Detection and Dynamic Controls
+1. Parameter Detection
+   - [ ] Create parameter detection utility
+   - [ ] Implement regex-based parameter extraction
+   - [ ] Filter out mathematical function names (sqrt, sin, cos, etc.)
+   - [ ] Handle nested functions and complex expressions
+   - [ ] Add tests for parameter detection
+   - [ ] Set default value of 1 for all detected parameters
 
-2. Implement formula validation and error handling
-   - [ ] Add real-time syntax checking
-   - [ ] Provide clear error messages
-   - [ ] Show formula preview
-   - [ ] Handle edge cases and invalid inputs
+2. Dynamic Slider Creation
+   - [ ] Create reusable slider component
+   - [ ] Implement dynamic slider generation based on parameters
+   - [ ] Add proper styling and layout for sliders
+   - [ ] Ensure accessibility of dynamic controls
+   - [ ] Add tests for slider component and generation
 
-3. Add formula templates and suggestions
-   - [ ] Create common function templates
-   - [ ] Implement smart suggestions
-   - [ ] Add quick-insert buttons for common functions
-   - [ ] Support formula history
+3. Live Formula Updates
+   - [ ] Implement parameter value state management
+   - [ ] Create formula evaluation with parameter substitution
+   - [ ] Add real-time graph updates when parameters change
+   - [ ] Optimize performance for frequent updates
+   - [ ] Add tests for live updates
 
-### Phase 2: Advanced Features
-1. Add support for multiple functions
-   - [ ] Allow simultaneous display of multiple functions
-   - [ ] Implement function comparison
-   - [ ] Add function composition
-   - [ ] Support function operations (addition, multiplication, etc.)
+### Success Criteria
+1. Parameter Detection
+   - Correctly identifies parameters in formulas
+   - Ignores mathematical function names
+   - Handles complex expressions
+   - Sets appropriate default values
 
-2. Implement function analysis tools
-   - [ ] Add derivative calculation
-   - [ ] Show critical points
-   - [ ] Display asymptotes
-   - [ ] Calculate integrals
+2. Dynamic Controls
+   - Sliders appear automatically for detected parameters
+   - Controls are properly styled and accessible
+   - Sliders have appropriate ranges and step sizes
+   - UI remains responsive with many parameters
 
-3. Add interactive features
-   - [ ] Implement function transformation controls
-   - [ ] Add parameter sliders
-   - [ ] Support function animation
-   - [ ] Add point tracking
+3. Live Updates
+   - Graph updates immediately when parameters change
+   - Performance remains smooth with multiple formulas
+   - No visual glitches during updates
+   - All changes are properly persisted
 
-### Phase 3: Integration and Polish
-1. Integrate with existing geometry features
-   - [ ] Enable intersection points
-   - [ ] Add area calculations
-   - [ ] Support geometric transformations
-   - [ ] Implement combined measurements
+### Technical Considerations
+1. Parameter Detection
+   - Use regex for initial parameter extraction
+   - Maintain list of mathematical function names to filter
+   - Consider using a proper math expression parser
+   - Handle edge cases (e.g., parameters in nested functions)
 
-2. Add export and sharing capabilities
-   - [ ] Support formula export
-   - [ ] Add function documentation
-   - [ ] Enable formula sharing
-   - [ ] Implement formula libraries
+2. Dynamic Controls
+   - Use Shadcn UI components for consistency
+   - Implement proper state management
+   - Consider mobile responsiveness
+   - Handle many parameters gracefully
 
-3. Performance optimization
-   - [ ] Optimize rendering performance
-   - [ ] Implement efficient calculations
-   - [ ] Add caching mechanisms
-   - [ ] Optimize memory usage
+3. Performance
+   - Debounce parameter updates
+   - Optimize formula evaluation
+   - Consider using Web Workers for heavy computations
+   - Implement proper cleanup and memory management
 
 ## Technical Considerations
 
