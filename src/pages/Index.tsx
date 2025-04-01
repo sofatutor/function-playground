@@ -10,7 +10,7 @@ import FormulaEditor from '@/components/FormulaEditor';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTranslate } from '@/utils/translate';
-import { Point } from '@/types/shapes';
+import { Point, ShapeType, OperationMode } from '@/types/shapes';
 import { Formula } from '@/types/formula';
 import { getStoredPixelsPerUnit } from '@/utils/geometry/common';
 import { createDefaultFormula } from '@/utils/formulaUtils';
@@ -19,7 +19,8 @@ import ComponentConfigModal from '@/components/ComponentConfigModal';
 import { Trash2, Wrench } from 'lucide-react';
 import { 
   updateUrlWithData, 
-  getFormulasFromUrl
+  getFormulasFromUrl,
+  getToolFromUrl
 } from '@/utils/urlEncoding';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -162,38 +163,41 @@ const Index = () => {
     }
   }, [isFullscreen, requestFullscreen, exitFullscreen]);
   
-  // Load formulas from URL when component mounts
+  // Load data from URL on initial mount
   useEffect(() => {
-    if (hasLoadedFromUrl.current) {
-      return;
+    // Get formulas from URL
+    const urlFormulas = getFormulasFromUrl();
+    if (urlFormulas) {
+      setFormulas(urlFormulas);
     }
 
-    // Load formulas from URL
-    const formulasFromUrl = getFormulasFromUrl();
-    if (formulasFromUrl && formulasFromUrl.length > 0) {
-      setFormulas(formulasFromUrl);
-      setSelectedFormulaId(formulasFromUrl[0].id);
-      setIsFormulaEditorOpen(true);
-      toast.success(`Loaded ${formulasFromUrl.length} formulas from URL`);
+    // Get tool from URL
+    const urlTool = getToolFromUrl();
+    if (urlTool) {
+      // Validate that the tool is a valid shape type
+      if (['select', 'rectangle', 'circle', 'triangle', 'line', 'function'].includes(urlTool)) {
+        setActiveShapeType(urlTool as ShapeType);
+        setActiveMode(urlTool === 'function' ? 'function' as OperationMode : 'draw' as OperationMode);
+      }
     }
 
-    // Mark as loaded from URL
+    // Mark that we've loaded from URL
     hasLoadedFromUrl.current = true;
   }, []);
-  
-  // Update URL whenever shapes, formulas, or grid position change, but only after initial load
+
+  // Update URL whenever shapes, formulas, grid position, or tool changes
   useEffect(() => {
     if (!hasLoadedFromUrl.current) {
       return;
     }
 
-    if (shapes.length > 0 || formulas.length > 0 || gridPosition) {
+    if (shapes.length > 0 || formulas.length > 0 || gridPosition || activeShapeType) {
       if (urlUpdateTimeoutRef.current) {
         clearTimeout(urlUpdateTimeoutRef.current);
       }
 
       urlUpdateTimeoutRef.current = setTimeout(() => {
-        updateUrlWithData(shapes, formulas, gridPosition);
+        updateUrlWithData(shapes, formulas, gridPosition, activeShapeType);
         urlUpdateTimeoutRef.current = null;
       }, 300);
     }
@@ -203,7 +207,7 @@ const Index = () => {
         clearTimeout(urlUpdateTimeoutRef.current);
       }
     };
-  }, [shapes, formulas, gridPosition]);
+  }, [shapes, formulas, gridPosition, activeShapeType]);
 
   // Handle formula operations
   const handleAddFormula = useCallback((formula: Formula) => {
