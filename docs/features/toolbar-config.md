@@ -13,22 +13,22 @@ This feature allows users to hide the toolbar and default to a specific shape to
 
 ## Implementation Checklist
 
-- [ ] **Configuration Context Updates**
-  - [ ] Add `isToolbarVisible` boolean setting (default: true)
+- [x] **Configuration Context Updates**
+  - [x] Add `isToolbarVisible` boolean setting (default: true)
   - [ ] Add `defaultTool` string setting for tool selection
-  - [ ] Add setter functions for both settings
-  - [ ] Implement localStorage persistence
-  - [ ] Update type definitions
+  - [x] Add setter functions for both settings
+  - [x] Implement localStorage persistence
+  - [x] Update type definitions
 
-- [ ] **ConfigModal UI Updates**
-  - [ ] Add "Display" tab to configuration modal
-  - [ ] Add toolbar visibility toggle switch
+- [x] **ConfigModal UI Updates**
+  - [x] Add "Display" tab to configuration modal
+  - [x] Add toolbar visibility toggle switch
   - [ ] Add default tool dropdown selection
-  - [ ] Create appropriate labeling and help text
+  - [x] Create appropriate labeling and help text
 
-- [ ] **Index Component Integration**
-  - [ ] Conditionally render toolbar based on visibility setting
-  - [ ] Add toolbar toggle button when toolbar is hidden
+- [x] **Index Component Integration**
+  - [x] Conditionally render toolbar based on visibility setting
+  - [-] ~~Add toolbar toggle button when toolbar is hidden~~ (UI requires settings panel)
   - [ ] Initialize with default tool on application load
   - [ ] Support function tool default with auto-opening formula editor
   - [ ] Add keyboard shortcut for toggling toolbar (optional)
@@ -39,9 +39,9 @@ This feature allows users to hide the toolbar and default to a specific shape to
   - [ ] Apply tool selection from URL or fall back to user preference
   - [ ] Update URL when tool selection changes
 
-- [ ] **Translations**
-  - [ ] Add translation keys for new UI elements
-  - [ ] Update all supported language files
+- [x] **Translations**
+  - [x] Add translation keys for new UI elements
+  - [x] Update all supported language files
 
 - [ ] **Testing**
   - [ ] Unit tests for context functionality
@@ -98,9 +98,10 @@ The `tool` parameter can have the following values:
 ### Key UX Considerations
 
 When the toolbar is hidden:
-1. Provide a subtle indication that tools are still accessible via keyboard shortcuts
-2. Show a minimal toggle button to reveal the toolbar temporarily
+1. Maintain access to tools via the settings panel only
+2. Move the application header into the freed toolbar space
 3. Ensure the canvas still displays the current tool cursor
+4. The configuration menu will still be accessible from the global controls
 
 ## Dependencies
 
