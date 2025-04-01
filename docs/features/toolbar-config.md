@@ -43,7 +43,7 @@ This feature allows users to hide the toolbar and default to a specific shape to
 </details>
 
 <details>
-<summary>[-] URL Integration</summary>
+<summary>[x] URL Integration</summary>
 
 - [x] Add tool selection parameter to URL encoding functions
 - [x] Parse tool parameter from URL on application load
