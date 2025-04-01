@@ -74,21 +74,25 @@ export default function FunctionSidebar({
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
-              <Separator className="my-2" />
-              <FormulaEditor
-                formulas={[formula]}
-                onAddFormula={() => {}}
-                onUpdateFormula={onUpdateFormula}
-                onDeleteFormula={onDeleteFormula}
-                _measurementUnit={measurementUnit}
-                isOpen={true}
-                selectedFormulaId={selectedFormula?.id === formula.id ? formula.id : undefined}
-                onSelectFormula={() => onSelectFormula(formula)}
-              />
             </div>
           ))}
         </div>
       </ScrollArea>
+
+      {selectedFormula && (
+        <div className="border-t p-4">
+          <FormulaEditor
+            formulas={[selectedFormula]}
+            onAddFormula={() => {}}
+            onUpdateFormula={onUpdateFormula}
+            onDeleteFormula={onDeleteFormula}
+            _measurementUnit={measurementUnit}
+            isOpen={true}
+            selectedFormulaId={selectedFormula.id}
+            onSelectFormula={() => onSelectFormula(selectedFormula)}
+          />
+        </div>
+      )}
     </div>
   );
 } 
