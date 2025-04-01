@@ -42,24 +42,24 @@ This document outlines the implementation plan for enhancing the function input 
 
 ### Phase 0: Layout Restructuring
 1. Move function controls to a dedicated sidebar
-   - [ ] Create a new sidebar component for function controls
-   - [ ] Position the sidebar next to the canvas
-   - [ ] Move formula editor and controls from overlay to sidebar
-   - [ ] Adjust canvas width to accommodate sidebar
-   - [ ] Ensure responsive behavior for different screen sizes
-   - [ ] Update layout to maintain proper spacing and alignment
+   - [x] Create a new sidebar component for function controls
+   - [x] Position the sidebar next to the canvas
+   - [x] Move formula editor and controls from overlay to sidebar
+   - [x] Adjust canvas width to accommodate sidebar
+   - [x] Ensure responsive behavior for different screen sizes
+   - [x] Update layout to maintain proper spacing and alignment
 
 2. Update component hierarchy
-   - [ ] Modify GeometryCanvas to accept sidebar as a prop
-   - [ ] Update Index component to handle new layout structure
-   - [ ] Ensure proper state management between components
-   - [ ] Maintain existing functionality during transition
+   - [x] Modify GeometryCanvas to accept sidebar as a prop
+   - [x] Update Index component to handle new layout structure
+   - [x] Ensure proper state management between components
+   - [x] Maintain existing functionality during transition
 
 3. Style and UI improvements
-   - [ ] Design consistent sidebar styling
-   - [ ] Add smooth transitions for sidebar open/close
-   - [ ] Ensure proper z-indexing for all components
-   - [ ] Add responsive breakpoints for mobile views
+   - [x] Design consistent sidebar styling
+   - [x] Add smooth transitions for sidebar open/close
+   - [x] Ensure proper z-indexing for all components
+   - [x] Add responsive breakpoints for mobile views
 
 ### Phase 1: Enhanced Function Input
 1. Create enhanced formula input component
