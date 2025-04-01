@@ -13,43 +13,61 @@ This feature allows users to hide the toolbar and default to a specific shape to
 
 ## Implementation Checklist
 
-- [x] **Configuration Context Updates**
-  - [x] Add `isToolbarVisible` boolean setting (default: true)
-  - [x] Add `defaultTool` string setting for tool selection
-  - [x] Add setter functions for both settings
-  - [x] Implement localStorage persistence
-  - [x] Update type definitions
+<details>
+<summary>[x] Configuration Context Updates</summary>
 
-- [x] **ConfigModal UI Updates**
-  - [x] Add "Display" tab to configuration modal
-  - [x] Add toolbar visibility toggle switch
-  - [ ] Add default tool dropdown selection
-  - [x] Create appropriate labeling and help text
+- [x] Add `isToolbarVisible` boolean setting (default: true)
+- [x] Add `defaultTool` string setting for tool selection
+- [x] Add setter functions for both settings
+- [x] Implement localStorage persistence
+- [x] Update type definitions
+</details>
 
-- [x] **Index Component Integration**
-  - [x] Conditionally render toolbar based on visibility setting
-  - [-] ~~Add toolbar toggle button when toolbar is hidden~~ (UI requires settings panel)
-  - [ ] Initialize with default tool on application load
-  - [ ] Support function tool default with auto-opening formula editor
-  - [ ] Add keyboard shortcut for toggling toolbar (optional)
+<details>
+<summary>[-] ConfigModal UI Updates</summary>
 
-- [ ] **URL Integration**
-  - [ ] Add tool selection parameter to URL encoding functions
-  - [ ] Parse tool parameter from URL on application load
-  - [ ] Apply tool selection from URL or fall back to user preference
-  - [ ] Update URL when tool selection changes
+- [x] Add "Display" tab to configuration modal
+- [x] Add toolbar visibility toggle switch
+- [ ] Add default tool dropdown selection
+- [x] Create appropriate labeling and help text
+</details>
 
-- [x] **Translations**
-  - [x] Add translation keys for new UI elements
-  - [x] Update all supported language files
+<details>
+<summary>[-] Index Component Integration</summary>
 
-- [ ] **Testing**
-  - [x] Unit tests for context functionality (Partially done)
-  - [x] Component tests for ConfigModal UI
-  - [x] Integration tests for toolbar visibility (Partially done)
-  - [x] Test default tool selection behavior (Partially done)
-  - [ ] Test URL tool parameter functionality
-  - [ ] E2E tests for hidden toolbar workflow
+- [x] Conditionally render toolbar based on visibility setting
+- [-] ~~Add toolbar toggle button when toolbar is hidden~~ (UI requires settings panel)
+- [ ] Initialize with default tool on application load
+- [ ] Support function tool default with auto-opening formula editor
+- [ ] Add keyboard shortcut for toggling toolbar (optional)
+</details>
+
+<details>
+<summary>[ ] URL Integration</summary>
+
+- [ ] Add tool selection parameter to URL encoding functions
+- [ ] Parse tool parameter from URL on application load
+- [ ] Apply tool selection from URL or fall back to user preference
+- [ ] Update URL when tool selection changes
+</details>
+
+<details>
+<summary>[x] Translations</summary>
+
+- [x] Add translation keys for new UI elements
+- [x] Update all supported language files
+</details>
+
+<details>
+<summary>[-] Testing</summary>
+
+- [x] Unit tests for context functionality (Partially done)
+- [x] Component tests for ConfigModal UI
+- [x] Integration tests for toolbar visibility (Partially done)
+- [x] Test default tool selection behavior (Partially done)
+- [ ] Test URL tool parameter functionality
+- [ ] E2E tests for hidden toolbar workflow
+</details>
 
 ## Technical Details
 
