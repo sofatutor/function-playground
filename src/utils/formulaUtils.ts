@@ -1,5 +1,6 @@
 import { Formula, FormulaPoint, FormulaExample, FormulaType } from "@/types/formula";
 import { Point } from "@/types/shapes";
+import { detectParameters as detectFormulaParameters } from './parameterDetection';
 
 // Constants
 const MAX_SAMPLES = 100000;
@@ -55,6 +56,11 @@ const calculateVisibleXRange = (
   ];
 };
 
+const detectParameters = (expression: string): { name: string; defaultValue: number }[] => {
+  // Use our existing implementation
+  return detectFormulaParameters(expression);
+};
+
 const createFunctionFromExpression = (
   expression: string,
   scaleFactor: number
@@ -63,20 +69,18 @@ const createFunctionFromExpression = (
     return () => NaN;
   }
 
-  if (expression === 'Math.exp(x)') {
-    return (x: number) => Math.exp(x) * scaleFactor;
-  }
-  if (expression === '1 / (1 + Math.exp(-x))') {
-    return (x: number) => (1 / (1 + Math.exp(-x))) * scaleFactor;
-  }
-  if (expression === 'Math.sqrt(Math.abs(x))') {
-    return (x: number) => Math.sqrt(Math.abs(x)) * scaleFactor;
-  }
-
   try {
+    // Detect parameters in the expression
+    const parameters = detectParameters(expression);
+    
     // Only wrap x in parentheses if it's not part of another identifier (like Math.exp)
     const scaledExpression = expression.replace(/(?<!\w)x(?!\w)/g, '(x)');
-    return new Function('x', `
+    
+    // Create a function with parameters
+    const paramNames = parameters.map(p => p.name).join(',');
+    const paramDefaults = parameters.map(p => p.defaultValue).join(',');
+    
+    return new Function('x', paramNames, `
       try {
         const {sin, cos, tan, exp, log, sqrt, abs, pow, PI, E} = Math;
         return (${scaledExpression}) * ${scaleFactor};
@@ -84,7 +88,7 @@ const createFunctionFromExpression = (
         console.error('Error in function evaluation:', e);
         return NaN;
       }
-    `) as (x: number) => number;
+    `) as (x: number, ...params: number[]) => number;
   } catch (e) {
     console.error('Error creating function from expression:', e);
     return () => NaN;
@@ -379,11 +383,15 @@ const evaluatePoints = (
   gridPosition: Point,
   pixelsPerUnit: number,
   xValues: number[],
-  fn: (x: number) => number
+  fn: (x: number, ...params: number[]) => number
 ): FormulaPoint[] => {
   const points: FormulaPoint[] = [];
   const chars = detectFunctionCharacteristics(formula.expression);
   const { isLogarithmic, allowsNegativeX, hasPow } = chars;
+  
+  // Detect parameters and get their default values
+  const parameters = detectParameters(formula.expression);
+  const paramValues = parameters.map(p => p.defaultValue).map(Number);
   
   let prevY: number | null = null;
   let prevX: number | null = null;
@@ -403,14 +411,14 @@ const evaluatePoints = (
         y = NaN;
         isValidDomain = false;
         } else {
-          y = fn(x);
+          y = fn(x, ...paramValues);
           // Additional validation for logarithmic results
           if (Math.abs(y) > 100) {
             y = Math.sign(y) * 100; // Limit extreme values
           }
         }
       } else {
-        y = fn(x);
+        y = fn(x, ...paramValues);
       }
       
       // Special handling for the complex formula
