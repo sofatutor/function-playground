@@ -176,8 +176,13 @@ const Index = () => {
     if (urlTool) {
       // Validate that the tool is a valid shape type
       if (['select', 'rectangle', 'circle', 'triangle', 'line', 'function'].includes(urlTool)) {
-        setActiveShapeType(urlTool as ShapeType);
-        setActiveMode(urlTool === 'function' ? 'function' as OperationMode : 'draw' as OperationMode);
+        // Handle select tool differently - it's a mode, not a shape type
+        if (urlTool === 'select') {
+          setActiveMode('select');
+        } else {
+          setActiveShapeType(urlTool as ShapeType);
+          setActiveMode(urlTool === 'function' ? 'function' as OperationMode : 'draw' as OperationMode);
+        }
       }
     }
 
@@ -197,7 +202,11 @@ const Index = () => {
       }
 
       urlUpdateTimeoutRef.current = setTimeout(() => {
-        updateUrlWithData(shapes, formulas, gridPosition, activeShapeType);
+        // For select and line tools, we need to handle them differently
+        // For select mode, pass 'select' as the tool parameter
+        // For all other tools, pass the activeShapeType
+        const toolForUrl = activeMode === 'select' ? 'select' : activeShapeType;
+        updateUrlWithData(shapes, formulas, gridPosition, toolForUrl);
         urlUpdateTimeoutRef.current = null;
       }, 300);
     }
@@ -207,7 +216,7 @@ const Index = () => {
         clearTimeout(urlUpdateTimeoutRef.current);
       }
     };
-  }, [shapes, formulas, gridPosition, activeShapeType]);
+  }, [shapes, formulas, gridPosition, activeShapeType, activeMode]);
 
   // Handle formula operations
   const handleAddFormula = useCallback((formula: Formula) => {

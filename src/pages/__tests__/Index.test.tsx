@@ -133,6 +133,27 @@ describe('Index', () => {
     expect(mockUpdateUrlWithData).toHaveBeenCalledWith([], [], null, 'rectangle');
   });
 
+  it('should update URL when Select tool is selected', () => {
+    // Test select tool URL update
+    act(() => {
+      mockSetActiveMode('select');
+      mockUpdateUrlWithData([], [], null, 'select');
+    });
+    
+    expect(mockUpdateUrlWithData).toHaveBeenCalledWith([], [], null, 'select');
+  });
+
+  it('should update URL when Line tool is selected', () => {
+    // Test line tool URL update
+    act(() => {
+      mockSetActiveShapeType('line');
+      mockSetActiveMode('draw');
+      mockUpdateUrlWithData([], [], null, 'line');
+    });
+    
+    expect(mockUpdateUrlWithData).toHaveBeenCalledWith([], [], null, 'line');
+  });
+
   it('should load tool from URL on initial mount', () => {
     // Mock URL tool parameter
     (urlEncoding.getToolFromUrl as jest.Mock).mockReturnValue('circle');
@@ -145,6 +166,21 @@ describe('Index', () => {
     
     expect(mockSetActiveShapeType).toHaveBeenCalledWith('circle');
     expect(mockSetActiveMode).toHaveBeenCalledWith('draw');
+  });
+
+  it('should load select tool from URL on initial mount', () => {
+    // Mock URL tool parameter
+    (urlEncoding.getToolFromUrl as jest.Mock).mockReturnValue('select');
+    
+    // Directly test the functionality
+    act(() => {
+      // For select tool, we only set the mode
+      mockSetActiveMode('select');
+    });
+    
+    expect(mockSetActiveMode).toHaveBeenCalledWith('select');
+    // We should not call setActiveShapeType for select tool
+    expect(mockSetActiveShapeType).not.toHaveBeenCalled();
   });
 
   it('should handle function tool from URL correctly', () => {

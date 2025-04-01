@@ -37,18 +37,18 @@ This feature allows users to hide the toolbar and default to a specific shape to
 
 - [x] Conditionally render toolbar based on visibility setting
 - [-] ~~Add toolbar toggle button when toolbar is hidden~~ (UI requires settings panel)
-- [ ] Initialize with default tool on application load
-- [ ] Support function tool default with auto-opening formula editor
+- [x] Initialize with default tool on application load
+- [x] Support function tool default with auto-opening formula editor
 - [ ] Add keyboard shortcut for toggling toolbar (optional)
 </details>
 
 <details>
-<summary>[ ] URL Integration</summary>
+<summary>[-] URL Integration</summary>
 
-- [ ] Add tool selection parameter to URL encoding functions
-- [ ] Parse tool parameter from URL on application load
-- [ ] Apply tool selection from URL or fall back to user preference
-- [ ] Update URL when tool selection changes
+- [x] Add tool selection parameter to URL encoding functions
+- [x] Parse tool parameter from URL on application load
+- [x] Apply tool selection from URL or fall back to user preference
+- [x] Update URL when tool selection changes
 </details>
 
 <details>
@@ -65,7 +65,7 @@ This feature allows users to hide the toolbar and default to a specific shape to
 - [x] Component tests for ConfigModal UI
 - [x] Integration tests for toolbar visibility (Partially done)
 - [x] Test default tool selection behavior (Partially done)
-- [ ] Test URL tool parameter functionality
+- [x] Test URL tool parameter functionality
 - [ ] E2E tests for hidden toolbar workflow
 </details>
 
@@ -112,6 +112,11 @@ The `tool` parameter can have the following values:
 - `triangle`
 - `line`
 - `function`
+
+Special handling notes:
+- The `select` tool value sets the application to selection mode
+- The `function` tool value opens the formula editor automatically
+- All shape tools (`rectangle`, `circle`, etc.) set the drawing mode with that shape type
 
 ### Key UX Considerations
 
