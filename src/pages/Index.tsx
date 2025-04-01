@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useShapeOperations } from '@/hooks/useShapeOperations';
 import { useServiceFactory } from '@/providers/ServiceProvider';
-import { useComponentConfig } from '@/context/ConfigContext';
+import { useComponentConfig, useGlobalConfig } from '@/context/ConfigContext';
 import GeometryHeader from '@/components/GeometryHeader';
 import GeometryCanvas from '@/components/GeometryCanvas';
 import Toolbar from '@/components/Toolbar';
@@ -30,6 +30,7 @@ const Index = () => {
   // Get the service factory
   const serviceFactory = useServiceFactory();
   const { setComponentConfigModalOpen } = useComponentConfig();
+  const { isToolbarVisible, setToolbarVisible } = useGlobalConfig();
   const isMobile = useIsMobile();
   
   const {
@@ -320,26 +321,34 @@ const Index = () => {
           <div className="h-full">
             <div className="flex flex-col h-full">
               <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between ${isFullscreen || isMobile ? 'space-y-1 sm:space-y-0 sm:space-x-1 px-1' : 'space-y-1 sm:space-y-0 sm:space-x-2 px-1 sm:px-2'} ${isMobile ? 'mb-0' : 'mb-1 sm:mb-2'}`}>
-                <div className="flex flex-row items-center space-x-1 sm:space-x-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 no-scrollbar">
-                  <Toolbar
-                    activeMode={activeMode}
-                    activeShapeType={activeShapeType}
-                    onModeChange={setActiveMode}
-                    onShapeTypeChange={setActiveShapeType}
-                    _onClear={deleteAllShapes}
-                    _onDelete={() => selectedShapeId && deleteShape(selectedShapeId)}
-                    hasSelectedShape={!!selectedShapeId}
-                    _canDelete={!!selectedShapeId}
-                    onToggleFormulaEditor={toggleFormulaEditor}
-                    isFormulaEditorOpen={isFormulaEditorOpen}
+                
+                {isToolbarVisible ? (
+                  <div className="flex flex-row items-center space-x-1 sm:space-x-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 no-scrollbar">
+                    <Toolbar
+                      activeMode={activeMode}
+                      activeShapeType={activeShapeType}
+                      onModeChange={setActiveMode}
+                      onShapeTypeChange={setActiveShapeType}
+                      _onClear={deleteAllShapes}
+                      _onDelete={() => selectedShapeId && deleteShape(selectedShapeId)}
+                      hasSelectedShape={!!selectedShapeId}
+                      _canDelete={!!selectedShapeId}
+                      onToggleFormulaEditor={toggleFormulaEditor}
+                      isFormulaEditorOpen={isFormulaEditorOpen}
+                    />
+                  </div>
+                ) : (
+                  /* Empty spacer to maintain layout when toolbar is hidden */
+                  <div className="flex-1"></div>
+                )}
+                
+                <div className="ml-auto">
+                  <GlobalControls 
+                    isFullscreen={isFullscreen} 
+                    onToggleFullscreen={toggleFullscreen}
+                    onShare={shareCanvasUrl}
                   />
                 </div>
-                
-                <GlobalControls 
-                  isFullscreen={isFullscreen} 
-                  onToggleFullscreen={toggleFullscreen}
-                  onShare={shareCanvasUrl}
-                />
               </div>
               
               {isFormulaEditorOpen && (

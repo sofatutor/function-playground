@@ -65,6 +65,55 @@ export const translations = {
     zoomOut: 'Zoom Out',
     zoomLevel: 'Zoom Level',
     zoomReset: 'Reset Zoom',
+    showToolbar: "Show Toolbar",
+    hideToolbar: "Hide Toolbar",
+    configModal: {
+      title: "Configuration",
+      description: "Configure application settings",
+      tabs: {
+        general: "General",
+        display: "Display",
+        openai: "OpenAI API",
+        developer: "Developer"
+      },
+      general: {
+        description: "General application settings",
+        languageLabel: "Language",
+        languagePlaceholder: "Select a language"
+      },
+      display: {
+        description: "Configure how the application looks and behaves.",
+        toolbarVisibilityLabel: "Show Toolbar",
+        toolbarVisibilityDescription: "Toggle the visibility of the toolbar. When hidden, you can still use keyboard shortcuts."
+      },
+      openai: {
+        description: "OpenAI API settings",
+        apiKeyLabel: "API Key",
+        apiKeyPlaceholder: "Enter your OpenAI API key",
+        apiKeyHint: "Your API key is stored locally and encrypted",
+        clearApiKey: "Clear API key"
+      },
+      developer: {
+        description: "Developer options",
+        loggingLabel: "Logging level",
+        loggingDescription: "Set the detail level of logs"
+      },
+      calibration: {
+        title: "Calibration",
+        description: "Calibrate your screen for accurate measurements",
+        instructions: "To calibrate, measure a known distance on your screen",
+        lengthLabel: "Reference length",
+        startButton: "Start calibration",
+        placeRuler: "Place a ruler on your screen",
+        lineDescription: "Adjust the line to measure exactly {length} {unit}",
+        coarseAdjustment: "Coarse adjustment",
+        fineAdjustment: "Fine adjustment",
+        currentValue: "Current value",
+        pixelsPerUnit: "pixels/{unit}",
+        cancelButton: "Cancel",
+        applyButton: "Apply"
+      }
+    },
   },
   es: {
     formulaEditor: "Trazador de Fórmulas",
@@ -132,6 +181,55 @@ export const translations = {
     zoomOut: 'Alejar',
     zoomLevel: 'Nivel de Zoom',
     zoomReset: 'Resetear Zoom',
+    showToolbar: "Mostrar Barra de Herramientas",
+    hideToolbar: "Ocultar Barra de Herramientas",
+    configModal: {
+      title: "Configuración",
+      description: "Configurar ajustes de la aplicación",
+      tabs: {
+        general: "General",
+        display: "Visualización",
+        openai: "API de OpenAI",
+        developer: "Desarrollador"
+      },
+      general: {
+        description: "Ajustes generales de la aplicación",
+        languageLabel: "Idioma",
+        languagePlaceholder: "Seleccionar un idioma"
+      },
+      display: {
+        description: "Configure cómo se ve y comporta la aplicación.",
+        toolbarVisibilityLabel: "Mostrar Barra de Herramientas",
+        toolbarVisibilityDescription: "Activa o desactiva la visibilidad de la barra de herramientas. Cuando está oculta, puedes seguir usando atajos de teclado."
+      },
+      openai: {
+        description: "Configuración de la API de OpenAI",
+        apiKeyLabel: "Clave API",
+        apiKeyPlaceholder: "Ingresa tu clave API de OpenAI",
+        apiKeyHint: "Tu clave API se almacena localmente y está cifrada",
+        clearApiKey: "Borrar clave API"
+      },
+      developer: {
+        description: "Opciones de desarrollador",
+        loggingLabel: "Nivel de registro",
+        loggingDescription: "Establecer el nivel de detalle de los registros"
+      },
+      calibration: {
+        title: "Calibración",
+        description: "Calibra tu pantalla para mediciones precisas",
+        instructions: "Para calibrar, mide una distancia conocida en tu pantalla",
+        lengthLabel: "Longitud de referencia",
+        startButton: "Iniciar calibración",
+        placeRuler: "Coloca una regla en tu pantalla",
+        lineDescription: "Ajusta la línea para medir exactamente {length} {unit}",
+        coarseAdjustment: "Ajuste grueso",
+        fineAdjustment: "Ajuste fino",
+        currentValue: "Valor actual",
+        pixelsPerUnit: "píxeles/{unit}",
+        cancelButton: "Cancelar",
+        applyButton: "Aplicar"
+      }
+    },
   },
   fr: {
     formulaEditor: "Traceur de Formules",
@@ -200,6 +298,7 @@ export const translations = {
       description: "Paramètres globaux de l'application",
       tabs: {
         general: "Général",
+        display: "Affichage",
         openai: "OpenAI",
         developer: "Développeur"
       },
@@ -207,6 +306,11 @@ export const translations = {
         description: "Paramètres généraux de l'application",
         languageLabel: "Langue",
         languagePlaceholder: "Sélectionnez une langue"
+      },
+      display: {
+        description: "Configurez l'apparence et le comportement de l'application.",
+        toolbarVisibilityLabel: "Afficher la Barre d'Outils",
+        toolbarVisibilityDescription: "Activez ou désactivez la visibilité de la barre d'outils. Lorsqu'elle est masquée, vous pouvez toujours utiliser les raccourcis clavier."
       },
       openai: {
         description: "Paramètres de l'API OpenAI",
@@ -242,6 +346,8 @@ export const translations = {
     zoomOut: 'Alejar',
     zoomLevel: 'Niveau de Zoom',
     zoomReset: 'Resetear Zoom',
+    showToolbar: "Afficher la Barre d'Outils",
+    hideToolbar: "Masquer la Barre d'Outils",
   },
   de: {
     formulaEditor: "Formelplotter",
@@ -309,5 +415,54 @@ export const translations = {
     zoomOut: 'Verkleinern',
     zoomLevel: 'Zoomstufe',
     zoomReset: 'Zoom zurücksetzen',
+    showToolbar: "Werkzeugleiste anzeigen",
+    hideToolbar: "Werkzeugleiste ausblenden",
+    configModal: {
+      title: "Konfiguration",
+      description: "Anwendungseinstellungen konfigurieren",
+      tabs: {
+        general: "Allgemein",
+        display: "Anzeige",
+        openai: "OpenAI API",
+        developer: "Entwickler"
+      },
+      general: {
+        description: "Allgemeine Anwendungseinstellungen",
+        languageLabel: "Sprache",
+        languagePlaceholder: "Sprache auswählen"
+      },
+      display: {
+        description: "Konfigurieren Sie das Aussehen und Verhalten der Anwendung.",
+        toolbarVisibilityLabel: "Werkzeugleiste anzeigen",
+        toolbarVisibilityDescription: "Schalten Sie die Sichtbarkeit der Werkzeugleiste um. Bei Ausblendung können Sie weiterhin Tastaturkürzel verwenden."
+      },
+      openai: {
+        description: "OpenAI API-Einstellungen",
+        apiKeyLabel: "API-Schlüssel",
+        apiKeyPlaceholder: "Geben Sie Ihren OpenAI API-Schlüssel ein",
+        apiKeyHint: "Ihr API-Schlüssel wird lokal gespeichert und verschlüsselt",
+        clearApiKey: "API-Schlüssel löschen"
+      },
+      developer: {
+        description: "Entwickleroptionen",
+        loggingLabel: "Protokollierungsstufe",
+        loggingDescription: "Detailgrad der Protokollierung festlegen"
+      },
+      calibration: {
+        title: "Kalibrierung",
+        description: "Kalibrieren Sie Ihren Bildschirm für genaue Messungen",
+        instructions: "Zur Kalibrierung messen Sie eine bekannte Distanz auf Ihrem Bildschirm",
+        lengthLabel: "Referenzlänge",
+        startButton: "Kalibrierung starten",
+        placeRuler: "Legen Sie ein Lineal auf Ihren Bildschirm",
+        lineDescription: "Passen Sie die Linie an, um genau {length} {unit} zu messen",
+        coarseAdjustment: "Grobe Anpassung",
+        fineAdjustment: "Feine Anpassung",
+        currentValue: "Aktueller Wert",
+        pixelsPerUnit: "Pixel/{unit}",
+        cancelButton: "Abbrechen",
+        applyButton: "Anwenden"
+      }
+    },
   }
 };

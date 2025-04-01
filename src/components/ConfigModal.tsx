@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Globe, Trash2, Terminal } from 'lucide-react';
+import { Globe, Trash2, Terminal, Eye } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 
 const ConfigModal: React.FC = () => {
@@ -19,7 +19,9 @@ const ConfigModal: React.FC = () => {
     openaiApiKey,
     setOpenaiApiKey,
     loggingEnabled,
-    setLoggingEnabled
+    setLoggingEnabled,
+    isToolbarVisible,
+    setToolbarVisible
   } = useGlobalConfig();
   
   const [apiKeyInput, setApiKeyInput] = useState(openaiApiKey || '');
@@ -65,8 +67,9 @@ const ConfigModal: React.FC = () => {
         </DialogHeader>
         
         <Tabs defaultValue="general" className="mt-2">
-          <TabsList className="grid w-full" style={{ gridTemplateColumns: isDevelopment ? '1fr 1fr 1fr' : '1fr 1fr' }}>
+          <TabsList className="grid w-full" style={{ gridTemplateColumns: isDevelopment ? '1fr 1fr 1fr 1fr' : '1fr 1fr 1fr' }}>
             <TabsTrigger value="general">{t('configModal.tabs.general')}</TabsTrigger>
+            <TabsTrigger value="display">{t('configModal.tabs.display')}</TabsTrigger>
             <TabsTrigger value="openai">{t('configModal.tabs.openai')}</TabsTrigger>
             {isDevelopment && (
               <TabsTrigger value="developer">{t('configModal.tabs.developer')}</TabsTrigger>
@@ -95,6 +98,33 @@ const ConfigModal: React.FC = () => {
                   <SelectItem value="fr">Français</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </TabsContent>
+          
+          {/* Display Tab */}
+          <TabsContent value="display" className="space-y-3 py-2">
+            <p className="text-sm text-muted-foreground">
+              {t('configModal.display.description')}
+            </p>
+            
+            <div className="space-y-4">
+              {/* Toolbar Visibility Toggle */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="toolbar-toggle" className="flex items-center gap-2">
+                    <Eye className="h-4 w-4" />
+                    <span>{t('configModal.display.toolbarVisibilityLabel')}</span>
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    {t('configModal.display.toolbarVisibilityDescription')}
+                  </p>
+                </div>
+                <Switch
+                  id="toolbar-toggle"
+                  checked={isToolbarVisible}
+                  onCheckedChange={setToolbarVisible}
+                />
+              </div>
             </div>
           </TabsContent>
           
