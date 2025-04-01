@@ -16,16 +16,15 @@ import { getStoredPixelsPerUnit } from '@/utils/geometry/common';
 import { createDefaultFormula } from '@/utils/formulaUtils';
 import ConfigModal from '@/components/ConfigModal';
 import ComponentConfigModal from '@/components/ComponentConfigModal';
-import { Settings, Trash2, Wrench, PlusCircle } from 'lucide-react';
+import { Trash2, Wrench } from 'lucide-react';
 import { 
   updateUrlWithData, 
-  getShapesFromUrl, 
-  getGridPositionFromUrl,
   getFormulasFromUrl
 } from '@/utils/urlEncoding';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import GlobalControls from '@/components/GlobalControls';
+import _UnifiedInfoPanel from '@/components/UnifiedInfoPanel';
 
 const Index = () => {
   // Get the service factory
@@ -61,7 +60,7 @@ const Index = () => {
   const [formulas, setFormulas] = useState<Formula[]>([]);
   const [isFormulaEditorOpen, setIsFormulaEditorOpen] = useState(false);
   const [selectedFormulaId, setSelectedFormulaId] = useState<string | null>(null);
-  const [pixelsPerUnit, setPixelsPerUnit] = useState<number>(getStoredPixelsPerUnit(measurementUnit));
+  const [_pixelsPerUnit, setPixelsPerUnit] = useState<number>(getStoredPixelsPerUnit(measurementUnit));
   
   // Add a ref to track if we've loaded from URL
   const hasLoadedFromUrl = useRef(false);
@@ -259,7 +258,7 @@ const Index = () => {
       
       return newState;
     });
-  }, [formulas.length, handleAddFormula, selectedFormulaId]);
+  }, [formulas, handleAddFormula, selectedFormulaId]);
 
   // Open formula editor when a formula is selected (e.g., by clicking a point on the graph)
   useEffect(() => {
@@ -327,10 +326,10 @@ const Index = () => {
                     activeShapeType={activeShapeType}
                     onModeChange={setActiveMode}
                     onShapeTypeChange={setActiveShapeType}
-                    onClear={deleteAllShapes}
-                    onDelete={() => selectedShapeId && deleteShape(selectedShapeId)}
+                    _onClear={deleteAllShapes}
+                    _onDelete={() => selectedShapeId && deleteShape(selectedShapeId)}
                     hasSelectedShape={!!selectedShapeId}
-                    canDelete={!!selectedShapeId}
+                    _canDelete={!!selectedShapeId}
                     onToggleFormulaEditor={toggleFormulaEditor}
                     isFormulaEditorOpen={isFormulaEditorOpen}
                   />
@@ -350,7 +349,7 @@ const Index = () => {
                     onAddFormula={handleAddFormula}
                     onUpdateFormula={handleUpdateFormula}
                     onDeleteFormula={handleDeleteFormula}
-                    measurementUnit={measurementUnit}
+                    _measurementUnit={measurementUnit}
                     isOpen={isFormulaEditorOpen}
                     selectedFormulaId={selectedFormulaId}
                     onSelectFormula={setSelectedFormulaId}

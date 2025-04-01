@@ -67,7 +67,7 @@ export class CircleServiceImpl implements CircleService {
    * @param angle The angle to rotate by (in radians)
    * @returns The rotated shape (circles don't visually change with rotation)
    */
-  rotateShape(shape: Circle, angle: number): Circle {
+  rotateShape(shape: Circle, _angle: number): Circle {
     // Circles don't visually change with rotation, so we return the same shape
     return shape;
   }

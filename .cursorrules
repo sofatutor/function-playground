@@ -37,6 +37,7 @@
 - Use pattern: "should [expected behavior] when [condition]"
 - Run relevant tests after changes
 - Run tests in headless mode and check output (and screenshots in test-results for e2e)
+- Adding test coverage is great. Just be careful not to cover any unused stuff just for the sake of better overage! Always prefer removing unused code over covering it.
 
 ## Performance/Security
 - Memoize complex calculations

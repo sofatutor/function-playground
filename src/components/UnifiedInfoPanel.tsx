@@ -9,7 +9,7 @@ import { normalizeAngleDegrees } from '@/utils/geometry/rotation';
 import { useIsMobile } from '@/hooks/use-mobile';
 import 'katex/dist/katex.min.css';
 import { InlineMath } from 'react-katex';
-import { convertToLatex, formatExpressionForDisplay, getFormulaLatexDisplay } from '@/utils/formulaUtils';
+import { convertToLatex, getFormulaLatexDisplay } from '@/utils/formulaUtils';
 
 interface UnifiedInfoPanelProps {
   // Shape info props
@@ -28,8 +28,8 @@ interface UnifiedInfoPanelProps {
     navigationStepSize?: number;
     isValid?: boolean;
   } | null;
-  gridPosition?: Point;
-  pixelsPerUnit?: number;
+  _gridPosition?: Point;
+  _pixelsPerUnit?: number;
   
   // Point navigation prop
   onNavigatePoint?: (direction: 'prev' | 'next', stepSize: number) => void;
@@ -44,8 +44,8 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
   
   // Point info props
   point,
-  gridPosition,
-  pixelsPerUnit,
+  _gridPosition,
+  _pixelsPerUnit,
   
   // Point navigation prop
   onNavigatePoint
@@ -151,7 +151,7 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
   };
 
   // Prevent click events from propagating to the canvas
-  const handlePanelClick = (e: React.MouseEvent) => {
+  const _handlePanelClick = (e: React.MouseEvent) => {
     e.stopPropagation();
   };
 

@@ -812,6 +812,7 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
     pixelsPerSmallUnit,
     measurementUnit,
     gridPosition,
+    zoomFactor,
     setIsDrawing,
     setDrawStart,
     setDrawCurrent,
@@ -1610,6 +1611,7 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
           activeShapeType={activeShapeType}
           snapToGrid={isShiftPressed && !isAltPressed}
           pixelsPerSmallUnit={zoomedPixelsPerSmallUnit}
+          zoomFactor={zoomFactor}
         />
         
         {/* Dedicated formula layer with its own SVG */}
@@ -1637,8 +1639,8 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
                 navigationStepSize: isShiftPressed ? 1.0 : selectedPoint.navigationStepSize,
                 isValid: true
               } : null}
-              gridPosition={gridPosition}
-              pixelsPerUnit={zoomedPixelsPerUnit}
+              _gridPosition={gridPosition}
+              _pixelsPerUnit={zoomedPixelsPerUnit}
               onNavigatePoint={(direction, stepSize) => {
                 // Convert the direction format from 'prev'/'next' to 'previous'/'next'
                 const directionMapping: Record<string, 'previous' | 'next'> = {

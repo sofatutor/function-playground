@@ -2,7 +2,8 @@ import { test as base } from '@playwright/test';
 import { captureHtmlSnapshot } from './utils/snapshot-helpers';
 import * as fs from 'fs';
 import * as path from 'path';
-
+import { coverageDir } from './global-setup';
+import { Logger } from './utils/logger';
 // Extend window interface to include coverage property
 declare global {
   interface Window {
@@ -15,11 +16,6 @@ declare global {
  */
 export const test = base.extend({
   context: async ({ context }, runTest) => {
-    // Create the coverage directory if it doesn't exist
-    const coverageDir = path.join(process.cwd(), '.nyc_output');
-    if (!fs.existsSync(coverageDir)) {
-      fs.mkdirSync(coverageDir, { recursive: true });
-    }
 
     // Add the coverage collection
     await context.addInitScript(() => {
@@ -60,7 +56,7 @@ export const test = base.extend({
         }
       } catch (err) {
         // Ignore errors during coverage collection
-        console.error('Error while collecting coverage:', err);
+        Logger.error('Error while collecting coverage:', err);
       }
     }
   },
@@ -71,4 +67,4 @@ test.afterEach(async ({ page }, testInfo) => {
   if (testInfo.status !== testInfo.expectedStatus) {
     await captureHtmlSnapshot(page, testInfo, 'page-failure');
   }
-}); 
+});

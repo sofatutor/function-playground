@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { DEFAULT_PIXELS_PER_CM, DEFAULT_PIXELS_PER_MM } from '@/components/GeometryCanvas/CanvasUtils';
 import GridLines from '@/components/CanvasGrid/GridLines';

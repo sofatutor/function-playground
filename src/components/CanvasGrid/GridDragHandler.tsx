@@ -56,7 +56,7 @@ export const GridDragHandler: React.FC<GridDragHandlerProps> = ({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [originalOrigin, setOriginalOrigin] = useState({ x: 0, y: 0 });
   const [lastDelta, setLastDelta] = useState({ dx: 0, dy: 0 });
-  const [virtualOrigin, setVirtualOrigin] = useState({ x: 0, y: 0 });
+  const [_virtualOrigin, setVirtualOrigin] = useState({ x: 0, y: 0 });
   
   // Keep a ref to the current origin to avoid stale closures in event handlers
   const originRef = useRef(origin);
@@ -73,7 +73,7 @@ export const GridDragHandler: React.FC<GridDragHandlerProps> = ({
   }, [isDragging]);
 
   // Replace the existing snapToGrid function with our new utility
-  const handleSnapToGrid = useCallback((point: Point): Point => {
+  const _handleSnapToGrid = useCallback((point: Point): Point => {
     if (!pixelsPerSmallUnit || pixelsPerSmallUnit <= 0) {
       return point;
     }

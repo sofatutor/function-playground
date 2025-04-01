@@ -1,8 +1,8 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import FormulaGraph from '@/components/FormulaGraph';
 import { Formula } from '@/types/formula';
-import * as loggerModule from '@/utils/logger';
+import * as _loggerModule from '@/utils/logger';
 
 // Mock the logger
 jest.mock('@/utils/logger', () => {

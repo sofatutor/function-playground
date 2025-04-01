@@ -1,4 +1,4 @@
-import { Rectangle, Point } from '@/types/shapes';
+import { Rectangle } from '@/types/shapes';
 import { RectangleServiceImpl } from '@/services/implementations/RectangleServiceImpl';
 import * as commonUtils from '@/utils/geometry/common';
 

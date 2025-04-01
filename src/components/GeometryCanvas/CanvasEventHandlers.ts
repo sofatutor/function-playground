@@ -1,6 +1,6 @@
 import React from 'react';
 import { AnyShape, Point, OperationMode, ShapeType, Circle, Rectangle, Triangle } from '@/types/shapes';
-import { getCanvasPoint, getShapeAtPosition, rotatePoint } from './CanvasUtils';
+import { getCanvasPoint, getShapeAtPosition } from './CanvasUtils';
 import { snapToGrid, getGridModifiers } from '@/utils/grid/gridUtils';
 import { ShapeServiceFactory } from '@/services/ShapeService';
 
@@ -23,6 +23,7 @@ export interface EventHandlerParams {
   pixelsPerSmallUnit?: number;
   measurementUnit?: string;
   gridPosition?: Point | null;
+  zoomFactor?: number;
   setIsDrawing: (value: boolean) => void;
   setDrawStart: (point: Point | null) => void;
   setDrawCurrent: (point: Point | null) => void;
@@ -56,7 +57,7 @@ export const createHandleMouseDown = (params: EventHandlerParams) => {
     setDragStart,
     setOriginalPosition,
     onShapeSelect,
-    onShapeMove
+    onShapeMove: _onShapeMove
   } = params;
   
   // Replace the existing snapToGrid function with our new utility
@@ -300,6 +301,7 @@ export const createHandleMouseUp = (params: EventHandlerParams) => {
     drawCurrent,
     pixelsPerSmallUnit,
     gridPosition,
+    zoomFactor = 1,
     setIsDrawing,
     setDrawStart,
     setDrawCurrent,
@@ -310,7 +312,8 @@ export const createHandleMouseUp = (params: EventHandlerParams) => {
     setRotateStart,
     setOriginalRotation,
     onShapeCreate,
-    onModeChange
+    onModeChange,
+    activeShapeType
   } = params;
   
   // Helper function to snap a point to the millimeter grid
@@ -329,6 +332,7 @@ export const createHandleMouseUp = (params: EventHandlerParams) => {
     const point = getCanvasPoint(e, canvasRef);
     
     // If Shift is pressed, snap the final point to the grid
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const effectivePoint = (e.shiftKey && pixelsPerSmallUnit && pixelsPerSmallUnit > 0) 
       ? handleSnapToGrid(point) 
       : point;
@@ -349,8 +353,46 @@ export const createHandleMouseUp = (params: EventHandlerParams) => {
           ? handleSnapToGrid(drawCurrent) 
           : drawCurrent;
         
-        // Create a new shape
-        onShapeCreate(effectiveStart, effectiveEnd);
+        // The problem is that normalizing the coordinates changes both the size AND position.
+        // We need to maintain the position while adjusting the size correctly.
+        
+        // For shape creation, we create shapes based on their absolute coordinates,
+        // but their dimensions should not be affected by zoom factor.
+        
+        // Instead of fully normalizing coordinates, we'll only adjust the dimensions
+        // This way, the position remains in the visible area where the user drew the shape
+        if (activeShapeType === 'rectangle' || activeShapeType === 'circle' || activeShapeType === 'line') {
+          // Calculate width and height
+          const width = Math.abs(effectiveEnd.x - effectiveStart.x);
+          const height = Math.abs(effectiveEnd.y - effectiveStart.y);
+          
+          // Normalize dimensions by zoom factor
+          const normalizedWidth = width / zoomFactor;
+          const normalizedHeight = height / zoomFactor;
+          
+          // Calculate the normalized endpoint based on the start point and normalized dimensions
+          // This maintains the shape position while adjusting its size
+          const normalizedEnd = {
+            x: effectiveStart.x + (effectiveEnd.x > effectiveStart.x ? normalizedWidth : -normalizedWidth),
+            y: effectiveStart.y + (effectiveEnd.y > effectiveStart.y ? normalizedHeight : -normalizedHeight)
+          };
+          
+          // Create a new shape using the original start point but normalized endpoint
+          onShapeCreate(effectiveStart, normalizedEnd);
+        } else {
+          // Only for triangle now
+          const normalizedVector = {
+            x: (effectiveEnd.x - effectiveStart.x) / zoomFactor,
+            y: (effectiveEnd.y - effectiveStart.y) / zoomFactor
+          };
+          
+          const normalizedEnd = {
+            x: effectiveStart.x + normalizedVector.x,
+            y: effectiveStart.y + normalizedVector.y
+          };
+          
+          onShapeCreate(effectiveStart, normalizedEnd);
+        }
         
         // Switch to select mode after creating a shape
         if (onModeChange) {
@@ -445,7 +487,7 @@ export const createHandleKeyDown = (params: EventHandlerParams) => {
     selectedShapeId,
     pixelsPerUnit,
     pixelsPerSmallUnit,
-    measurementUnit,
+    measurementUnit: _measurementUnit,
     gridPosition,
     onShapeMove,
     onShapeResize,

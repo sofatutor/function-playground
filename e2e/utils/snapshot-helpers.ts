@@ -1,4 +1,4 @@
-import { Page, TestInfo } from '@playwright/test';
+import { type Page, type TestInfo } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -18,4 +18,4 @@ export async function captureHtmlSnapshot(page: Page, testInfo: TestInfo, name =
     contentType: 'text/html',
     path: outputPath,
   });
-} 
+}

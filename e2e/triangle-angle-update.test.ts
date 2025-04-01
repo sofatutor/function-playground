@@ -1,10 +1,16 @@
-import { test, expect } from '@playwright/test';
-import type { Locator, Page } from '@playwright/test';
+import { test } from './test-helper';
+import { expect } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import path from 'path';
 import fs from 'fs';
+import { Logger } from './utils/logger';
 
-// Helper function to take screenshots with consistent naming
-async function takeScreenshot(page: Page, name: string): Promise<void> {
+// Helper function to take screenshots only when needed for debugging
+async function takeScreenshot(page: Page, name: string, onlyOnFailure = true): Promise<void> {
+  if (onlyOnFailure && !process.env.DEBUG) {
+    return; // Only take screenshots on failure or when DEBUG is set
+  }
+  
   const testInfo = test.info();
   const testName = testInfo.title.replace(/\s+/g, '-').toLowerCase();
   const testFile = path.basename(testInfo.file).replace('.spec.ts', '');
@@ -17,16 +23,16 @@ async function takeScreenshot(page: Page, name: string): Promise<void> {
   
   const screenshotPath = path.join(screenshotDir, `${testName}-${name}.png`);
   await page.screenshot({ path: screenshotPath });
-  console.log(`Screenshot saved: ${screenshotPath}`);
+  Logger.debug(`Screenshot captured: ${screenshotPath}`);
 }
 
 // Helper function to test updating an angle
 async function testAngleUpdate(page: Page, angleNumber: number): Promise<void> {
-  console.log(`\n--- Testing update of angle${angleNumber} ---`);
+  Logger.debug(`\n--- Testing update of angle${angleNumber} ---`);
   
   // Get the initial measurements
   const initialMeasurements = await getMeasurements(page);
-  console.log('Initial measurements:', initialMeasurements);
+  Logger.debug('Initial measurements:', initialMeasurements);
   
   // Verify that we have angle measurements
   if (!initialMeasurements[`angle${angleNumber}`]) {
@@ -40,12 +46,12 @@ async function testAngleUpdate(page: Page, angleNumber: number): Promise<void> {
     parseFloat(initialMeasurements.angle3 || '0')
   ];
   
-  console.log(`Initial angles: ${initialAngles[0]}°, ${initialAngles[1]}°, ${initialAngles[2]}°`);
+  Logger.debug(`Initial angles: ${initialAngles[0]}°, ${initialAngles[1]}°, ${initialAngles[2]}°`);
   
   // Find and click on the angle measurement
   const angleElement = page.locator(`#measurement-angle${angleNumber}`);
   const angleElementCount = await angleElement.count();
-  console.log(`Found ${angleElementCount} elements with id="measurement-angle${angleNumber}"`);
+  Logger.debug(`Found ${angleElementCount} elements with id="measurement-angle${angleNumber}"`);
   
   if (angleElementCount === 0) {
     throw new Error(`Angle${angleNumber} measurement element not found`);
@@ -55,34 +61,27 @@ async function testAngleUpdate(page: Page, angleNumber: number): Promise<void> {
   try {
     const toast = page.locator('[data-sonner-toast]');
     if (await toast.count() > 0) {
-      console.log('Found notification toast, attempting to dismiss it');
+      Logger.debug('Found notification toast, attempting to dismiss it');
       await toast.click({ force: true });
-      await page.waitForTimeout(500);
     }
-  } catch (error) {
-    console.log('No toast found or unable to dismiss it');
+  } catch (_error) {
+    Logger.debug('No toast found or unable to dismiss it');
   }
   
   // Click on the angle measurement to edit it
   try {
     await angleElement.click({ timeout: 5000 });
-    console.log(`Clicked on angle${angleNumber} measurement`);
-  } catch (error) {
-    console.log(`Failed to click on angle${angleNumber} measurement, trying with force: true`);
+    Logger.debug(`Clicked on angle${angleNumber} measurement`);
+  } catch (_error) {
+    Logger.warn(`Failed to click on angle${angleNumber} measurement, trying with force: true`);
     await angleElement.click({ force: true });
-    console.log(`Clicked on angle${angleNumber} measurement with force: true`);
+    Logger.debug(`Clicked on angle${angleNumber} measurement with force: true`);
   }
-  
-  // Wait for the input field to appear
-  await page.waitForTimeout(500);
-  
-  // Take a screenshot after clicking
-  await takeScreenshot(page, `after-angle${angleNumber}-click`);
   
   // Look for the input field
   const inputField = page.locator('input[type="number"]');
   const inputFieldCount = await inputField.count();
-  console.log(`Found ${inputFieldCount} input fields for angle`);
+  Logger.debug(`Found ${inputFieldCount} input fields for angle`);
   
   if (inputFieldCount === 0) {
     throw new Error('No input field appeared after clicking the angle measurement');
@@ -90,7 +89,7 @@ async function testAngleUpdate(page: Page, angleNumber: number): Promise<void> {
   
   // Get the current angle value
   const currentValue = await inputField.inputValue();
-  console.log(`Current angle value: "${currentValue}"`);
+  Logger.debug(`Current angle value: "${currentValue}"`);
   
   // Calculate a new angle value (add 15 degrees, but ensure it's not too close to 0 or 180)
   const currentAngle = parseFloat(currentValue || '0');
@@ -100,28 +99,24 @@ async function testAngleUpdate(page: Page, angleNumber: number): Promise<void> {
   if (newAngleValue >= 179) newAngleValue = 150;
   if (newAngleValue <= 1) newAngleValue = 30;
   
-  console.log(`New angle value to enter: ${newAngleValue}`);
+  Logger.debug(`New angle value to enter: ${newAngleValue}`);
   
   // Enter the new value
   await inputField.fill(newAngleValue.toString());
-  console.log(`Filled angle input with new value: ${newAngleValue}`);
+  Logger.debug(`Filled angle input with new value: ${newAngleValue}`);
   
-  // Take a screenshot while editing
-  await takeScreenshot(page, `editing-angle${angleNumber}`);
+  // Take a screenshot while editing only in debug mode
+  if (process.env.DEBUG) {
+    await takeScreenshot(page, `editing-angle${angleNumber}`, false);
+  }
   
   // Press Enter to save
   await inputField.press('Enter');
-  console.log('Pressed Enter to save angle');
-  
-  // Wait for the update to be applied
-  await page.waitForTimeout(3000);
-  
-  // Take a screenshot after saving
-  await takeScreenshot(page, `after-angle${angleNumber}-save`);
+  Logger.debug('Pressed Enter to save angle');
   
   // Get the updated measurements
   const updatedMeasurements = await getMeasurements(page);
-  console.log('Updated measurements:', updatedMeasurements);
+  Logger.debug('Updated measurements:', updatedMeasurements);
   
   // Parse the updated angles
   const updatedAngles = [
@@ -130,30 +125,30 @@ async function testAngleUpdate(page: Page, angleNumber: number): Promise<void> {
     parseFloat(updatedMeasurements.angle3 || '0')
   ];
   
-  console.log(`Updated angles: ${updatedAngles[0]}°, ${updatedAngles[1]}°, ${updatedAngles[2]}°`);
+  Logger.debug(`Updated angles: ${updatedAngles[0]}°, ${updatedAngles[1]}°, ${updatedAngles[2]}°`);
   
   // Check if our entered value appears in one of the angles
-  console.log(`Value we entered for angle${angleNumber}: ${newAngleValue}`);
+  Logger.debug(`Value we entered for angle${angleNumber}: ${newAngleValue}`);
   
   // Check which angle is closest to the value we entered
   const angleDiffs = updatedAngles.map(angle => Math.abs(angle - newAngleValue));
   const closestAngleIndex = angleDiffs.indexOf(Math.min(...angleDiffs));
   
-  console.log(`The value we entered (${newAngleValue}) is closest to angle${closestAngleIndex + 1} (${updatedAngles[closestAngleIndex]})`);
+  Logger.debug(`The value we entered (${newAngleValue}) is closest to angle${closestAngleIndex + 1} (${updatedAngles[closestAngleIndex]})`);
   
   // FAIL TEST: The entered value should be applied to the angle we're editing
-  console.log(`Expecting angle${angleNumber} (${updatedAngles[angleNumber-1]}) to be close to our entered value (${newAngleValue})`);
+  Logger.debug(`Expecting angle${angleNumber} (${updatedAngles[angleNumber-1]}) to be close to our entered value (${newAngleValue})`);
   expect(updatedAngles[angleNumber-1]).toBeCloseTo(newAngleValue, 0);
-  console.log(`✅ angle${angleNumber} was correctly updated with our entered value`);
+  Logger.debug(`✅ angle${angleNumber} was correctly updated with our entered value`);
   
   // Verify that the sum of angles is still 180 degrees
   const updatedSum = updatedAngles.reduce((sum, angle) => sum + angle, 0);
-  console.log(`Updated sum of angles: ${updatedSum}°`);
+  Logger.debug(`Updated sum of angles: ${updatedSum}°`);
   expect(updatedSum).toBeCloseTo(180, 1);
-  console.log('Sum of angles is still approximately 180 degrees');
+  Logger.debug('Sum of angles is still approximately 180 degrees');
   
   // Verify that the triangle shape has been updated by checking side measurements
-  console.log('Verifying that the triangle shape has been updated');
+  Logger.debug('Verifying that the triangle shape has been updated');
   const initialSides = [
     parseFloat(initialMeasurements.side1 || '0'),
     parseFloat(initialMeasurements.side2 || '0'),
@@ -166,8 +161,8 @@ async function testAngleUpdate(page: Page, angleNumber: number): Promise<void> {
     parseFloat(updatedMeasurements.side3 || '0')
   ];
   
-  console.log(`Initial sides: ${initialSides.join(', ')}`);
-  console.log(`Updated sides: ${updatedSides.join(', ')}`);
+  Logger.debug(`Initial sides: ${initialSides.join(', ')}`);
+  Logger.debug(`Updated sides: ${updatedSides.join(', ')}`);
   
   // At least one side should have changed
   const sidesChanged = initialSides.some((side, index) => 
@@ -175,90 +170,92 @@ async function testAngleUpdate(page: Page, angleNumber: number): Promise<void> {
   );
   
   expect(sidesChanged).toBe(true);
-  console.log('Triangle sides have changed, confirming shape update');
+  Logger.debug('Triangle sides have changed, confirming shape update');
 }
 
 test.describe('Triangle Angle Updates', () => {
   test('should update triangle angles correctly', async ({ page }) => {
-    // Navigate to the application
-    await page.goto('http://localhost:8080/');
-    
-    // Wait for the application to load
-    await page.waitForSelector('#geometry-canvas', { state: 'visible', timeout: 30000 });
-    console.log('Canvas found');
-    
-    // Take a screenshot to debug the initial state
-    await takeScreenshot(page, 'initial-state');
-    
-    // Find the triangle tool using its ID or aria-label
-    const triangleButton = page.locator('#triangle-tool, button[aria-label="Triangle"]');
-    console.log('Looking for triangle button');
-    
-    // Check if the triangle button exists
-    const triangleButtonCount = await triangleButton.count();
-    console.log(`Triangle button count: ${triangleButtonCount}`);
-    
-    if (triangleButtonCount === 0) {
-      throw new Error('Triangle button not found');
+    try {
+      await page.goto('/');
+      
+      // Wait for the application to load
+      await page.waitForSelector('#geometry-canvas', { state: 'visible', timeout: 30000 });
+      Logger.debug('Canvas found');
+      
+      // Take a screenshot to debug the initial state only in debug mode
+      if (process.env.DEBUG) {
+        await takeScreenshot(page, 'initial-state', false);
+      }
+      
+      // Find the triangle tool with robust selector that checks multiple attributes
+      const triangleButton = page.locator('#triangle-tool, button[aria-label="Triangle"]').first();
+      Logger.debug('Looking for triangle button');
+      
+      // Check if the button is visible
+      const isVisible = await triangleButton.isVisible();
+      Logger.debug(`Triangle button visible: ${isVisible}`);
+      
+      if (!isVisible) {
+        // Last resort logging of all buttons to help debug
+        const buttons = await page.locator('button').all();
+        for (const button of buttons) {
+          const text = await button.textContent();
+          const ariaLabel = await button.getAttribute('aria-label');
+          Logger.debug(`Button found: text="${text}", aria-label="${ariaLabel}"`);
+        }
+        throw new Error('Triangle button not found');
+      }
+      
+      // Click the button
+      await triangleButton.click();
+      Logger.debug('Clicked triangle button');
+      
+      // Find the canvas area
+      const canvas = page.locator('#geometry-canvas');
+      
+      // Create a triangle by dragging on the canvas
+      const canvasRect = await canvas.boundingBox();
+      if (!canvasRect) {
+        throw new Error('Canvas area not found');
+      }
+      
+      Logger.debug(`Canvas dimensions: ${JSON.stringify(canvasRect)}`);
+      
+      // Create a triangle with distinct angles (not equilateral)
+      const startX = canvasRect.x + canvasRect.width / 4;
+      const startY = canvasRect.y + canvasRect.height / 4;
+      const endX = startX + 300;  // Make a wider triangle to have more distinct angles
+      const endY = startY + 150;
+      
+      Logger.debug(`Drawing triangle from (${startX}, ${startY}) to (${endX}, ${endY})`);
+      
+      await page.mouse.move(startX, startY);
+      await page.mouse.down();
+      await page.mouse.move(endX, endY);
+      await page.mouse.up();
+      
+      // Check if any SVG paths were created (which would indicate a triangle was drawn)
+      const pathCount = await page.locator('path').count();
+      Logger.debug(`Found ${pathCount} SVG paths`);
+      
+      if (pathCount === 0) {
+        throw new Error('No triangle was created');
+      }
+      
+      // Click on the triangle to ensure it's selected
+      const trianglePath = page.locator('path').first();
+      await trianglePath.click();
+      Logger.debug('Clicked on the triangle to select it');
+      
+      // Test updating angle1
+      await testAngleUpdate(page, 1);
+      
+      // Success if we got this far
+      Logger.debug('Angle update test completed successfully');
+    } catch (_error) {
+      Logger.error('Error in test:', _error);
+      throw _error;
     }
-    
-    await triangleButton.click();
-    console.log('Clicked triangle button');
-    
-    // Find the canvas area
-    const canvas = page.locator('#geometry-canvas');
-    
-    // Create a triangle by dragging on the canvas
-    const canvasRect = await canvas.boundingBox();
-    if (!canvasRect) {
-      throw new Error('Canvas area not found');
-    }
-    
-    console.log(`Canvas dimensions: ${JSON.stringify(canvasRect)}`);
-    
-    // Create a triangle with distinct angles (not equilateral)
-    const startX = canvasRect.x + canvasRect.width / 4;
-    const startY = canvasRect.y + canvasRect.height / 4;
-    const endX = startX + 300;  // Make a wider triangle to have more distinct angles
-    const endY = startY + 150;
-    
-    console.log(`Drawing triangle from (${startX}, ${startY}) to (${endX}, ${endY})`);
-    
-    await page.mouse.move(startX, startY);
-    await page.mouse.down();
-    await page.mouse.move(endX, endY);
-    await page.mouse.up();
-    
-    // Take a screenshot after creating the triangle
-    await takeScreenshot(page, 'after-triangle-creation');
-    
-    // Wait for the triangle to be created
-    await page.waitForTimeout(1000);
-    
-    // Check if any SVG paths were created (which would indicate a triangle was drawn)
-    const pathCount = await page.locator('path').count();
-    console.log(`Found ${pathCount} SVG paths`);
-    
-    if (pathCount === 0) {
-      throw new Error('No triangle was created');
-    }
-    
-    // Click on the triangle to ensure it's selected
-    const trianglePath = page.locator('path').first();
-    await trianglePath.click();
-    console.log('Clicked on the triangle to select it');
-    
-    // Wait a moment for selection to register
-    await page.waitForTimeout(1000);
-    
-    // Take a screenshot after selecting the triangle
-    await takeScreenshot(page, 'after-triangle-selection');
-    
-    // Test updating angle1
-    await testAngleUpdate(page, 1);
-    
-    // Success if we got this far
-    console.log('Angle update test completed successfully');
   });
 });
 

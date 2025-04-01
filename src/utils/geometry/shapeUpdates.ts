@@ -10,13 +10,10 @@
  */
 
 import { AnyShape, Circle, Rectangle, Triangle, Point, Line, isCircle, isRectangle, isTriangle, isLine } from '@/types/shapes';
-import { updateTriangleFromSideLength, updateTriangleFromAngle, calculateTriangleAngles, calculateTriangleArea } from './triangle';
+import { updateTriangleFromAngle, calculateTriangleAngles, calculateTriangleArea } from './triangle';
 import { distanceBetweenPoints } from './common';
 import { calculateShapeCenter } from './shapeOperations';
-import { degreesToRadians, toCounterclockwiseAngle } from './rotation';
-
-// Type for measurement update handlers
-type MeasurementUpdateHandler<T extends AnyShape> = (shape: T, measurementKey: string, newValue: number, valueInPixels: number) => T;
+import { degreesToRadians } from './rotation';
 
 /**
  * Updates a shape based on a measurement change
@@ -334,63 +331,6 @@ const updateRectangleFromMeasurement = (
 // Triangle measurement update handlers
 
 /**
- * Updates a triangle based on a side length change
- * @param triangle The triangle to update
- * @param measurementKey The key of the measurement being changed
- * @param valueInPixels The new value in pixels
- * @returns A new triangle with the updated side length
- */
-const updateTriangleSideLength = (
-  triangle: Triangle,
-  measurementKey: string,
-  valueInPixels: number
-): Triangle => {
-  if (valueInPixels <= 0) {
-    console.warn(`Invalid side length value: ${valueInPixels}. Must be greater than 0.`);
-    return triangle;
-  }
-  
-  const sideIndex = parseInt(measurementKey.slice(-1)) - 1;
-  if (sideIndex < 0 || sideIndex > 2) {
-    console.warn(`Invalid side index: ${sideIndex}. Must be 0, 1, or 2.`);
-    return triangle;
-  }
-  
-  // Calculate current side length
-  const p1 = triangle.points[sideIndex];
-  const p2 = triangle.points[(sideIndex + 1) % 3];
-  const currentLength = distanceBetweenPoints(p1, p2);
-  
-  // Calculate scale factor
-  const scaleFactor = valueInPixels / currentLength;
-  
-  // Scale the triangle from its center
-  const center = {
-    x: (triangle.points[0].x + triangle.points[1].x + triangle.points[2].x) / 3,
-    y: (triangle.points[0].y + triangle.points[1].y + triangle.points[2].y) / 3
-  };
-  
-  // Scale points from center
-  const newPoints = triangle.points.map(point => ({
-    x: center.x + (point.x - center.x) * scaleFactor,
-    y: center.y + (point.y - center.y) * scaleFactor
-  })) as [Point, Point, Point];
-  
-  console.log(`Scaling triangle side ${sideIndex + 1} from ${currentLength} to ${valueInPixels} (scale factor: ${scaleFactor})`);
-  console.log(`Original points:`, triangle.points);
-  console.log(`New points:`, newPoints);
-  
-  return {
-    ...triangle,
-    points: newPoints,
-    originalDimensions: {
-      ...triangle.originalDimensions,
-      points: newPoints
-    }
-  };
-};
-
-/**
  * Updates a triangle based on an angle change
  * @param triangle The triangle to update
  * @param measurementKey The key of the measurement being changed
@@ -462,16 +402,23 @@ const updateTriangleAngle = (
     // Get the indices of the other two angles
     const otherIndices = [0, 1, 2].filter(i => i !== angleIndex);
     
-    // Maintain the proportion between the other two angles
-    const originalOtherSum = currentAngles[otherIndices[0]] + currentAngles[otherIndices[1]];
-    const ratio0 = currentAngles[otherIndices[0]] / originalOtherSum;
-    const ratio1 = currentAngles[otherIndices[1]] / originalOtherSum;
-    
     // Create a new array of angles
     const targetAngles: [number, number, number] = [...currentAngles] as [number, number, number];
     targetAngles[angleIndex] = intAngleValue;
-    targetAngles[otherIndices[0]] = Math.max(1, Math.min(178, remainingAngleSum * ratio0));
-    targetAngles[otherIndices[1]] = 180 - intAngleValue - targetAngles[otherIndices[0]];
+    
+    // Calculate the remaining angles by distributing them proportionally
+    const originalOtherSum = currentAngles[otherIndices[0]] + currentAngles[otherIndices[1]];
+    
+    if (originalOtherSum > 0) {
+      // Use the original proportion between the other two angles
+      const proportion = currentAngles[otherIndices[0]] / originalOtherSum;
+      targetAngles[otherIndices[0]] = Math.max(1, Math.min(178, remainingAngleSum * proportion));
+      targetAngles[otherIndices[1]] = 180 - intAngleValue - targetAngles[otherIndices[0]];
+    } else {
+      // If we can't determine the original proportion, split evenly
+      targetAngles[otherIndices[0]] = Math.round(remainingAngleSum / 2);
+      targetAngles[otherIndices[1]] = remainingAngleSum - targetAngles[otherIndices[0]];
+    }
     
     // Create a new triangle with these angles
     // We'll keep one side fixed (e.g., side1) and recalculate the others
@@ -687,7 +634,7 @@ const updateTriangleFromMeasurement = (
         }
       };
     }
-    return updateTriangleSideLength(triangle, measurementKey, valueInPixels);
+    return updateTriangleAngle(triangle, measurementKey, newValue);
   }
   else if (measurementKey.startsWith('angle')) {
     return updateTriangleAngle(triangle, measurementKey, newValue);
@@ -829,52 +776,4 @@ const calculateTrianglePerimeter = (points: [Point, Point, Point]): number => {
     distanceBetweenPoints(points[1], points[2]) +
     distanceBetweenPoints(points[2], points[0])
   );
-};
-
-// Helper function to calculate new triangle points based on measurement changes
-const calculateNewTrianglePoints = (
-  triangle: Triangle,
-  measurementKey: string,
-  valueInPixels: number
-): [Point, Point, Point] => {
-  const currentPoints = triangle.points;
-  
-  // For now, just scale the triangle uniformly from its center
-  const center = {
-    x: (currentPoints[0].x + currentPoints[1].x + currentPoints[2].x) / 3,
-    y: (currentPoints[0].y + currentPoints[1].y + currentPoints[2].y) / 3
-  };
-  
-  // Calculate scale factor based on the measurement key and value
-  let scaleFactor = 1;
-  
-  if (measurementKey === 'area') {
-    // Calculate current area
-    const currentArea = calculateTriangleArea(currentPoints);
-    scaleFactor = Math.sqrt(valueInPixels / currentArea);
-  } 
-  else if (measurementKey === 'perimeter') {
-    // Calculate current perimeter
-    const currentPerimeter = calculateTrianglePerimeter(currentPoints);
-    scaleFactor = valueInPixels / currentPerimeter;
-  }
-  else if (measurementKey.startsWith('side')) {
-    // Get the side index (0, 1, or 2)
-    const sideIndex = parseInt(measurementKey.slice(-1)) - 1;
-    if (sideIndex >= 0 && sideIndex <= 2) {
-      // Calculate current side length
-      const p1 = currentPoints[sideIndex];
-      const p2 = currentPoints[(sideIndex + 1) % 3];
-      const currentLength = distanceBetweenPoints(p1, p2);
-      
-      // Calculate scale factor
-      scaleFactor = valueInPixels / currentLength;
-    }
-  }
-  
-  // Scale points from center
-  return currentPoints.map(point => ({
-    x: center.x + (point.x - center.x) * scaleFactor,
-    y: center.y + (point.y - center.y) * scaleFactor
-  })) as [Point, Point, Point];
 }; 

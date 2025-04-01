@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useRef, useState } from 'react';
+import React, { useMemo, useEffect, useRef, useState, useCallback } from 'react';
 import { Formula, FormulaPoint } from '@/types/formula';
 import { Point } from '@/types/shapes';
 import { evaluateFormula } from '@/utils/formulaUtils';
@@ -37,7 +37,7 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
   const lastEvaluationTimeRef = useRef(0);
   const lastGridPositionRef = useRef<Point | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [selectedPoint, setSelectedPoint] = useState<{ index: number, point: FormulaPoint } | null>(null);
+  const [_selectedPoint, setSelectedPoint] = useState<{ index: number, point: FormulaPoint } | null>(null);
   // Add a ref to store the last valid points
   const lastValidPointsRef = useRef<FormulaPoint[]>([]);
   const lastDragEndTimeRef = useRef(0);
@@ -113,7 +113,7 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
                         formula.expression.includes('ln(');
 
   // Check if this is a trigonometric function
-  const hasTrigFunction = formula.expression.includes('Math.sin(') || 
+  const _hasTrigFunction = formula.expression.includes('Math.sin(') || 
                           formula.expression.includes('Math.cos(') ||
                           formula.expression.includes('sin(') || 
                           formula.expression.includes('cos(');
@@ -122,7 +122,7 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
   const points = useMemo(() => {
     // Always evaluate the formula, but with potentially lower quality during dragging
     return evaluateFormula(formula, gridPosition, pixelsPerUnit, isDraggingRef.current);
-  }, [formula, gridPositionKey, pixelsPerUnit]);
+  }, [formula, pixelsPerUnit, gridPosition]);
 
   // Handle point evaluation and updates
   useEffect(() => {
@@ -136,55 +136,10 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
     
     console.log(`Generated ${points.length} points for formula (dragging: ${isDraggingRef.current})`);
     setIsUpdating(false);
-  }, [formula, gridPositionKey, pixelsPerUnit, points]);
-  
-  // Update local selected point when global selected point changes
-  useEffect(() => {
-    console.log('FormulaGraph: current formula id:', formula.id);
-    
-    // If there's no global selected point or it's for a different formula, clear local selection
-    if (!globalSelectedPoint || globalSelectedPoint.formula.id !== formula.id) {
-      console.log('FormulaGraph: Clearing local selection');
-      setSelectedPoint(null);
-      return;
-    }
-    
-    console.log('FormulaGraph: Global selected point is for this formula');
-    
-    // If we have a global selected point for this formula, update the local selection
-    if (globalSelectedPoint.pointIndex !== undefined && points.length > 0) {
-      console.log('FormulaGraph: Using pointIndex to update local selection:', globalSelectedPoint.pointIndex);
-      // Make sure the index is valid
-      const index = globalSelectedPoint.pointIndex;
-      if (index >= 0 && index < points.length) {
-        console.log('FormulaGraph: Setting local selected point to index:', index);
-        setSelectedPoint({
-          index,
-          point: points[index]
-        });
-      } else {
-        console.log('FormulaGraph: Invalid index:', index, 'points length:', points.length);
-      }
-    } else if (points.length > 0) {
-      console.log('FormulaGraph: No pointIndex, finding closest point');
-      // If we don't have a pointIndex but we have coordinates, find the closest point
-      const closestPointIndex = findClosestPointIndex(globalSelectedPoint.x, globalSelectedPoint.y);
-      if (closestPointIndex >= 0) {
-        console.log('FormulaGraph: Found closest point at index:', closestPointIndex);
-        setSelectedPoint({
-          index: closestPointIndex,
-          point: points[closestPointIndex]
-        });
-      } else {
-        console.log('FormulaGraph: No closest point found');
-      }
-    } else {
-      console.log('FormulaGraph: No points available');
-    }
-  }, [globalSelectedPoint, formula.id, points]);
+  }, [formula, gridPositionKey, pixelsPerUnit, points, gridPosition]);
   
   // Helper function to find the closest point to given coordinates
-  const findClosestPointIndex = (x: number, y: number): number => {
+  const findClosestPointIndex = useCallback((x: number, y: number): number => {
     if (!points || points.length === 0) return -1;
     
     let closestIndex = -1;
@@ -204,7 +159,33 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
     });
     
     return closestIndex;
-  };
+  }, [points]);
+  
+  // Update local selected point when global selected point changes
+  useEffect(() => {
+    console.log('FormulaGraph: current formula id:', formula.id);
+    
+    // If there's no global selected point or it's for a different formula, clear local selection
+    if (!globalSelectedPoint || globalSelectedPoint.formula.id !== formula.id) {
+      console.log('FormulaGraph: Clearing local selection');
+      setSelectedPoint(null);
+      return;
+    }
+
+    // Find the point in our local points array
+    if (points && points.length > 0) {
+      const pointIndex = findClosestPointIndex(globalSelectedPoint.x, globalSelectedPoint.y);
+      
+      if (pointIndex >= 0) {
+        setSelectedPoint({
+          index: pointIndex,
+          point: points[pointIndex]
+        });
+      }
+    } else {
+      console.log('FormulaGraph: No points available');
+    }
+  }, [globalSelectedPoint, formula.id, points, findClosestPointIndex]);
   
   // Log when points are updated
   useEffect(() => {
@@ -530,26 +511,6 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
       // If no point is close enough, clear the selection
       setSelectedPoint(null);
       onPointSelect(null);
-    }
-  };
-
-  // Clear selection when clicking on the SVG background
-  const handleSvgClick = (event: React.MouseEvent) => {
-    // Don't clear points if we're in the middle of a grid drag operation
-    if (isDraggingRef.current) {
-      return;
-    }
-    
-    // Only handle if the click is directly on the SVG (not on a path)
-    if (event.target === event.currentTarget && onPointSelect) {
-      // Clear local selection
-      setSelectedPoint(null);
-      
-      // Clear global selection
-      onPointSelect(null);
-      
-      // Stop propagation to prevent multiple handlers from firing
-      event.stopPropagation();
     }
   };
 

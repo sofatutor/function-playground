@@ -87,7 +87,7 @@ export class RectangleServiceImpl implements RectangleService {
    * @param center The center point of rotation (optional)
    * @returns The rotated shape
    */
-  rotateShape(shape: Rectangle, angle: number, center?: Point): Rectangle {
+  rotateShape(shape: Rectangle, angle: number, _center?: Point): Rectangle {
     // For simplicity, we're just updating the rotation property
     // In a real implementation, you might need to adjust the position based on the center of rotation
     return {
@@ -288,7 +288,7 @@ export class RectangleServiceImpl implements RectangleService {
     rectangle: Rectangle, 
     scaleX: number, 
     scaleY: number, 
-    center?: Point
+    _center?: Point
   ): Rectangle {
     // Store original dimensions if they don't exist yet
     const originalDimensions = rectangle.originalDimensions || {

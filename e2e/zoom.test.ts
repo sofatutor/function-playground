@@ -1,14 +1,13 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
+import { test } from './test-helper';
 
 test.describe('Grid Zoom Control', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/', { waitUntil: 'networkidle' });
-    await page.waitForTimeout(1000); // Increase wait time for UI to stabilize
   });
 
   test('should display zoom controls', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(2000); // Wait for the UI to stabilize fully
 
     // Look for specific zoom buttons based on component structure
     const zoomOutButton = page.locator('button:has(svg:has(path[d*="M8 11H14"]), svg.lucide-zoom-out)');
@@ -32,7 +31,6 @@ test.describe('Grid Zoom Control', () => {
   
   test('should handle zooming with keyboard shortcuts', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(2000); // Wait for the UI to stabilize fully
 
     // Get initial canvas state - look for any drawing surface element
     const canvas = page
@@ -43,14 +41,12 @@ test.describe('Grid Zoom Control', () => {
     
     // Use keyboard shortcuts to zoom in
     await page.keyboard.press('Control+=');
-    await page.waitForTimeout(1000);
     
     // Check that the canvas is still visible after zooming
     await expect(canvas).toBeVisible();
     
     // Try alternative zoom with arrow keys
     await page.keyboard.press('ArrowUp');
-    await page.waitForTimeout(1000);
     
     // Check that the canvas is still visible after zooming
     await expect(canvas).toBeVisible();

@@ -1,14 +1,11 @@
-import { test, expect } from '@playwright/test';
-import { captureHtmlSnapshot } from './utils/snapshot-helpers';
+import { expect } from '@playwright/test';
+import { test } from './test-helper';
+import { Logger } from './utils/logger';
 
 test.describe('Circle Drawing', () => {
   test('should draw a circle that stays at the drawn position', async ({ page }) => {
     // Navigate to the page and wait for it to load
     await page.goto('/');
-    await page.waitForTimeout(2000); // Wait for the UI to stabilize
-
-    // Take a screenshot of the initial state
-    await page.screenshot({ path: 'test-results/circle-before.png' });
 
     // Find and click the circle tool button
     const circleButton = page.locator('#circle-tool');
@@ -16,13 +13,11 @@ test.describe('Circle Drawing', () => {
     
     try {
       await circleButton.click();
-    } catch (e) {
-      console.log('Could not click circle button, trying keyboard shortcut');
+    } catch (_e) {
+      Logger.warn('Could not click circle button, trying keyboard shortcut');
       await page.keyboard.press('c'); // Assuming 'c' is shortcut for circle
     }
     
-    await page.waitForTimeout(1000); // Wait for tool selection to take effect
-
     // Find the canvas container
     const canvasContainer = page.locator('#geometry-canvas, .canvas-container');
     await expect(canvasContainer).toBeVisible();
@@ -44,14 +39,6 @@ test.describe('Circle Drawing', () => {
     await page.mouse.move(centerX + 100, centerY);
     await page.mouse.up();
     
-    await page.waitForTimeout(1000); // Wait for drawing to complete
-
-    // Take a screenshot after drawing
-    await page.screenshot({ path: 'test-results/circle-after-draw.png' });
-    
-    // Save a snapshot of the HTML content
-    await captureHtmlSnapshot(page, test.info(), 'circle-after-draw');
-
     // Verify the circle is visible and in the correct position
     // We'll look for div elements with rounded borders (circles)
     const circleElements = page.locator('.rounded-full');
@@ -75,10 +62,7 @@ test.describe('Circle Drawing', () => {
     expect(Math.abs(circleCenter.x - centerX)).toBeLessThan(10);
     expect(Math.abs(circleCenter.y - centerY)).toBeLessThan(10);
     
-    console.log(`Expected circle center: (${centerX}, ${centerY})`);
-    console.log(`Actual circle center: (${circleCenter.x}, ${circleCenter.y})`);
-    
-    // Take a final screenshot
-    await page.screenshot({ path: 'test-results/circle-final.png' });
+    Logger.debug(`Expected circle center: (${centerX}, ${centerY})`);
+    Logger.debug(`Actual circle center: (${circleCenter.x}, ${circleCenter.y})`);
   });
 }); 

@@ -7,7 +7,6 @@ import { AnyShape, MeasurementUnit } from '@/types/shapes';
 import { useTranslate } from '@/utils/translate';
 import { getFormula } from '@/utils/geometryUtils';
 import { useConfig } from '@/context/ConfigContext';
-import { normalizeAngleDegrees } from '@/utils/geometry/rotation';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface MeasurementItemProps {

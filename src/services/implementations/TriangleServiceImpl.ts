@@ -357,7 +357,7 @@ export class TriangleServiceImpl implements TriangleService {
           // Maintain the proportion between the other two angles
           const originalOtherSum = currentAngles[otherIndices[0]] + currentAngles[otherIndices[1]];
           const ratio0 = currentAngles[otherIndices[0]] / originalOtherSum;
-          const ratio1 = currentAngles[otherIndices[1]] / originalOtherSum;
+          const _ratio1 = currentAngles[otherIndices[1]] / originalOtherSum;
           
           // Create a new array of angles
           const targetAngles: [number, number, number] = [...currentAngles] as [number, number, number];

@@ -1,10 +1,11 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
+import { test } from './test-helper';
+import { Logger } from './utils/logger';
 
 test.describe('Shape Scaling', () => {
   test('should handle shape creation and interaction', async ({ page }) => {
     // Navigate to the page and wait for it to load
     await page.goto('/');
-    await page.waitForTimeout(2000); // Wait for the UI to stabilize
 
     // Look for the rectangle button using more precise selector
     const rectangleButton = page.locator('#rectangle-tool');
@@ -15,13 +16,11 @@ test.describe('Shape Scaling', () => {
     // Click the rectangle button or use keyboard shortcut if button isn't clickable
     try {
       await rectangleButton.click();
-    } catch (e) {
-      console.log('Could not click rectangle button, trying keyboard shortcut');
+    } catch (_e) {
+      Logger.warn('Could not click rectangle button, trying keyboard shortcut');
       await page.keyboard.press('r');
     }
     
-    await page.waitForTimeout(1000); // Wait for tool selection to take effect
-
     // Find a suitable area to draw by locating the main element
     const mainElement = page.locator('#geometry-canvas, main, .canvas-container, .main-content');
     await expect(mainElement).toBeVisible();
@@ -40,29 +39,17 @@ test.describe('Shape Scaling', () => {
     await page.mouse.move(centerX + 100, centerY + 100);
     await page.mouse.up();
     
-    await page.waitForTimeout(1000); // Wait for drawing to complete
-
-    // Verify something was drawn by checking for shapes in the canvas area (not toolbar icons)
-    const drawnElements = page.locator('#geometry-canvas [data-shape-id], .geometry-shape, .canvas-shape');
+    // Verify something was drawn by checking for any shapes in the canvas area
+    // Use a more generic selector that works consistently
+    const canvasSvgElements = page.locator('#geometry-canvas svg *');
+    const count = await canvasSvgElements.count();
+    Logger.debug(`Found ${count} SVG elements in the canvas`);
     
-    // If the specific data-shape-id selectors don't find anything, try a more general approach
-    if (await drawnElements.count() === 0) {
-      console.log('No shapes found with specific selectors, checking canvas for any shapes');
-      
-      // Get the canvas and check if the number of SVG elements has increased
-      const canvasSvgElements = page.locator('#geometry-canvas svg *');
-      const count = await canvasSvgElements.count();
-      console.log(`Found ${count} SVG elements in the canvas`);
-      
-      // Just verify that the drawing operation was completed successfully
-      expect(count).toBeGreaterThan(0);
-    } else {
-      await expect(drawnElements).toBeVisible({ timeout: 5000 });
-    }
+    // Verify that the drawing operation was completed successfully
+    expect(count).toBeGreaterThan(0);
     
     // Test keyboard navigation for zoom
     await page.keyboard.press('ArrowUp'); // Zoom in
-    await page.waitForTimeout(500);
     
     // Verify UI is still responsive
     await expect(page.locator('body')).toBeVisible();

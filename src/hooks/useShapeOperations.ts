@@ -1,13 +1,13 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { 
-  AnyShape, Point, ShapeType, OperationMode, MeasurementUnit
+  AnyShape, Point, ShapeType, OperationMode
 } from '@/types/shapes';
 import { toast } from 'sonner';
 import { useComponentConfig } from '@/context/ConfigContext';
 
 // Import utility functions
 import { getStoredPixelsPerUnit } from '@/utils/geometry/common';
-import { getShapeMeasurements, convertToPixels, convertFromPixels } from '@/utils/geometry/measurements';
+import { convertToPixels, convertFromPixels } from '@/utils/geometry/measurements';
 // Import URL encoding utilities
 import { 
   updateUrlWithData, 
@@ -36,7 +36,7 @@ export function useShapeOperations() {
   const hasLoadedFromUrl = useRef(false);
   
   // Add a ref to track if we're currently dragging the grid
-  const isDraggingGrid = useRef(false);
+  const _isDraggingGrid = useRef(false);
   // Add a ref for the grid position update timeout
   const gridUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -108,12 +108,12 @@ export function useShapeOperations() {
   // Calculate pixelsPerMm (1 cm = 10 mm)
   const pixelsPerMm = useMemo(() => pixelsPerCm / 10, [pixelsPerCm]);
   
-  // Dynamic conversion functions that use the calibrated values
-  const pixelsToCm = useCallback((pixels: number): number => {
+  // Dynamic conversion functions that use the calibrated values - marked with underscore as they're currently not used directly
+  const _pixelsToCm = useCallback((pixels: number): number => {
     return pixels / pixelsPerCm;
   }, [pixelsPerCm]);
   
-  const pixelsToInches = useCallback((pixels: number): number => {
+  const _pixelsToInches = useCallback((pixels: number): number => {
     return pixels / pixelsPerInch;
   }, [pixelsPerInch]);
   
@@ -353,13 +353,13 @@ export function useShapeOperations() {
     }
   }, [gridPosition]);
   
-  // Convert physical measurements to pixels based on the current unit
-  const handleConvertToPixels = useCallback((value: number): number => {
+  // Convert physical measurements to pixels based on the current unit - marked with underscore as it's currently not used directly
+  const _handleConvertToPixels = useCallback((value: number): number => {
     return convertToPixels(value, measurementUnit, pixelsPerCm, pixelsPerInch);
   }, [measurementUnit, pixelsPerCm, pixelsPerInch]);
   
-  // Convert pixels to physical measurements based on the current unit
-  const handleConvertFromPixels = useCallback((pixels: number): number => {
+  // Convert pixels to physical measurements based on the current unit - marked with underscore as it's currently not used directly
+  const _handleConvertFromPixels = useCallback((pixels: number): number => {
     return convertFromPixels(pixels, measurementUnit, pixelsPerCm, pixelsPerInch);
   }, [measurementUnit, pixelsPerCm, pixelsPerInch]);
   
@@ -448,7 +448,7 @@ export function useShapeOperations() {
         return [...prevShapes];
       });
     }, 10);
-  }, [selectedShapeId, getSelectedShape, serviceFactory, measurementUnit, gridPosition, updateUrlWithData]);
+  }, [selectedShapeId, getSelectedShape, serviceFactory, measurementUnit, gridPosition]);
   
   // Function to share the current canvas state via URL
   const shareCanvasUrl = useCallback(() => {

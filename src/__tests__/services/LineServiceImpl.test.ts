@@ -1,7 +1,7 @@
 import { Line, Point } from '@/types/shapes';
 import { LineServiceImpl } from '@/services/implementations/LineServiceImpl';
 import * as commonUtils from '@/utils/geometry/common';
-import { degreesToRadians, radiansToDegrees, toCounterclockwiseAngle } from '@/utils/geometry/rotation';
+import { degreesToRadians, radiansToDegrees } from '@/utils/geometry/rotation';
 
 // Mock the getStoredPixelsPerUnit function
 jest.mock('@/utils/geometry/common', () => ({

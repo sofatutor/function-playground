@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent, screen } from '@testing-library/react';
-import { GridZoomProvider } from '@/contexts/GridZoomContext';
+import { GridZoomProvider } from '@/contexts/GridZoomContext/index';
 import GridZoomControl from '../GridZoomControl';
 
 // Mock translations
@@ -65,11 +65,8 @@ describe('GridZoomControl', () => {
     // Click zoom in button
     fireEvent.click(zoomInButton);
     
-    // With our new implementation, zoom increases by 0.05 (5%)
-    // Get the middle button which contains the percentage
-    expect(percentageButton).toHaveTextContent(/\d+%/);
-    // Verify it's not still 100%
-    expect(percentageButton).not.toHaveTextContent('100');
+    // With our implementation, zoom increases by a step (5%)
+    expect(percentageButton).toHaveTextContent('105%');
   });
 
   it('should handle zoom out button click', () => {
@@ -87,11 +84,8 @@ describe('GridZoomControl', () => {
     // Click zoom out button
     fireEvent.click(zoomOutButton);
     
-    // With our new implementation, zoom decreases by 0.05 (5%)
-    // Get the middle button which contains the percentage
-    expect(percentageButton).toHaveTextContent(/\d+%/);
-    // Verify it's not still 100%
-    expect(percentageButton).not.toHaveTextContent('100');
+    // With our implementation, zoom decreases by a step (5%)
+    expect(percentageButton).toHaveTextContent('95%');
   });
 
   it('should handle reset button click', () => {
@@ -103,30 +97,51 @@ describe('GridZoomControl', () => {
     fireEvent.click(zoomInButton);
     
     // Verify it's not 100%
-    expect(screen.queryByText('100%')).not.toBeInTheDocument();
+    const percentageButton = buttons[1];
+    expect(percentageButton).toHaveTextContent('105%');
     
-    // Then reset - get the middle button which shows the percentage
+    // Then reset - click the middle button which shows the percentage
     const resetButton = buttons[1];
     fireEvent.click(resetButton);
     
     // Should reset to 100%
-    expect(screen.getByText('100%')).toBeInTheDocument();
+    expect(percentageButton).toHaveTextContent('100%');
   });
 
   it('should handle keyboard shortcuts', () => {
     renderComponent();
     
+    // Initial state check
+    const buttons = screen.getAllByRole('button');
+    const percentageButton = buttons[1];
+    expect(percentageButton).toHaveTextContent('100%');
+    
     // Test zoom in with Ctrl + Plus
-    fireEvent.keyDown(window, { key: '+', ctrlKey: true });
+    fireEvent.keyDown(document, { key: '+', ctrlKey: true });
     
-    // Verify it's not 100%
-    expect(screen.queryByText('100%')).not.toBeInTheDocument();
+    // Check if zoom changed - we'll test for any change from 100%
+    expect(percentageButton).not.toHaveTextContent('100%');
     
-    // Test zoom out with Ctrl + Minus
-    fireEvent.keyDown(window, { key: '-', ctrlKey: true });
+    // Save current zoom level
+    const currentZoom = percentageButton.textContent || '';
+    
+    // Test zoom in with Meta + Plus (Mac)
+    fireEvent.keyDown(document, { key: '+', metaKey: true });
+    
+    // Should have zoomed in further
+    expect(percentageButton).not.toHaveTextContent(currentZoom);
+    
+    // Test reset with Ctrl + 0
+    fireEvent.keyDown(document, { key: '0', ctrlKey: true });
     
     // Should be back to 100%
-    expect(screen.getByText('100%')).toBeInTheDocument();
+    expect(percentageButton).toHaveTextContent('100%');
+    
+    // Test zoom out with Meta + Minus (Mac)
+    fireEvent.keyDown(document, { key: '-', metaKey: true });
+    
+    // Should have zoomed out
+    expect(percentageButton).not.toHaveTextContent('100%');
   });
 
   it('should handle zoom limits', () => {
@@ -135,6 +150,7 @@ describe('GridZoomControl', () => {
     const buttons = screen.getAllByRole('button');
     const zoomOutButton = buttons[0];
     const zoomInButton = buttons[2];
+    const percentageButton = buttons[1];
     
     // Try to zoom out beyond minimum (0.3)
     for (let i = 0; i < 20; i++) {
@@ -142,7 +158,7 @@ describe('GridZoomControl', () => {
     }
     
     // Minimum zoom is 30%
-    expect(screen.getByText('30%')).toBeInTheDocument();
+    expect(percentageButton).toHaveTextContent('30%');
     
     // Try to zoom in beyond maximum (3)
     for (let i = 0; i < 60; i++) {
@@ -150,6 +166,6 @@ describe('GridZoomControl', () => {
     }
     
     // Maximum zoom is 300%
-    expect(screen.getByText('300%')).toBeInTheDocument();
+    expect(percentageButton).toHaveTextContent('300%');
   });
 }); 

@@ -12,8 +12,7 @@ import {
   hasPoints,
   hasEndpoints,
   hasRadius,
-  castShape,
-  ShapeType
+  castShape
 } from '@/types/shapes';
 
 describe('Shape Type Guards', () => {

@@ -225,3 +225,35 @@ Simply open [Lovable](https://lovable.dev/projects/61b9f1ed-c0ae-4354-87f1-e6f0c
 ## I want to use a custom domain - is that possible?
 
 We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+
+## Testing
+
+The project includes comprehensive testing:
+
+- Unit tests using Jest
+- End-to-end tests using Playwright
+
+### End-to-End Testing
+
+E2E tests simulate user interactions to ensure the application works correctly from a user's perspective. 
+
+Running E2E tests:
+
+- `npm run e2e` - Run all E2E tests
+- `npm run e2e:ci` - Run E2E tests in CI mode with GitHub reporting
+- `npm run e2e:ci:debug` - Run E2E tests with debug logging enabled
+- `npm run e2e:open` - Open Playwright UI for interactive testing
+- `npm run e2e:debug` - Run tests in debug mode
+
+### Debug Logging
+
+The E2E tests use a debug logging system that suppresses verbose output by default. 
+To see detailed logs, use the `e2e:ci:debug` command or set the `DEBUG=true` environment variable.
+
+```bash
+# Run with debug logs
+npm run e2e:ci:debug
+
+# Or manually set the DEBUG env variable
+DEBUG=true npm run e2e:ci
+```

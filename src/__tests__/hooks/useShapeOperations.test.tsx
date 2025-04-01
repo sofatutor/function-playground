@@ -1,7 +1,3 @@
-import React from 'react';
-import { Triangle, ShapeType } from '@/types/shapes';
-import { TriangleServiceImpl } from '@/services/implementations/TriangleServiceImpl';
-
 // Direct test of the triangle creation logic without using the hook
 describe('Triangle Creation Logic', () => {
   // Test the logic that creates a right triangle
@@ -18,7 +14,7 @@ describe('Triangle Creation Logic', () => {
     ];
     
     // Calculate the position (centroid)
-    const position = {
+    const _position = {
       x: (points[0].x + points[1].x + points[2].x) / 3,
       y: (points[0].y + points[1].y + points[2].y) / 3
     };
