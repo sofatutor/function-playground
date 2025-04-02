@@ -4,9 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PlusCircle, Trash2, BookOpen, ZoomIn, ZoomOut, Sparkles, Loader2, AlertCircle, ChevronLeftIcon, ChevronRightIcon, Settings } from 'lucide-react';
+import { PlusCircle, Trash2, BookOpen, ZoomIn, ZoomOut, Sparkles, Loader2, AlertCircle, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { MeasurementUnit } from '@/types/shapes';
 import { getFormulaExamples, createDefaultFormula, validateFormula, convertToLatex } from '@/utils/formulaUtils';
 import { useTranslate } from '@/utils/translate';
@@ -20,7 +18,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import 'katex/dist/katex.min.css';
 import { InlineMath } from 'react-katex';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { detectParameters } from '@/utils/parameterDetection';
 
 interface FormulaEditorProps {
   formulas: Formula[];
@@ -51,7 +48,6 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isNaturalLanguageOpen, setIsNaturalLanguageOpen] = useState(false);
   const [examplesOpen, setExamplesOpen] = useState(false);
-  const [isOptionsOpen, setIsOptionsOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string | null>>({});
   const _isMobile = useIsMobile();
   const formulaInputRef = useRef<HTMLInputElement>(null);
@@ -96,7 +92,7 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
   }, []);
 
   // Update the formula being edited
-  const handleUpdateFormula = (key: keyof Formula, value: string | number | boolean | [number, number] | Record<string, number>) => {
+  const handleUpdateFormula = (key: keyof Formula, value: string | number | boolean | [number, number]) => {
     if (!selectedFormulaId) return;
     
     // Update the formula
@@ -319,20 +315,19 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
           <Popover open={isNaturalLanguageOpen} onOpenChange={setIsNaturalLanguageOpen}>
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger asChild>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
+                <PopoverTrigger asChild>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
                       size="icon"
                       className="h-9 w-9"
-                      disabled={isProcessing}
                     >
                       <Sparkles className="h-4 w-4" />
                     </Button>
-                  </PopoverTrigger>
-                </TooltipTrigger>
+                  </TooltipTrigger>
+                </PopoverTrigger>
                 <TooltipContent>
-                  <p>{t('naturalLanguageButton')}</p>
+                  <p>{t('naturalLanguageTooltip')}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -358,166 +353,6 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
               </div>
             </PopoverContent>
           </Popover>
-
-          {/* Formula Options Button */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9"
-                  onClick={() => setIsOptionsOpen(true)}
-                >
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{t('formula.optionsTooltip')}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          {/* Formula Options Dialog */}
-          <Dialog open={isOptionsOpen} onOpenChange={setIsOptionsOpen}>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader className="pb-2">
-                <DialogTitle>{t('formula.options')}</DialogTitle>
-                <DialogDescription>
-                  {t('formula.description')}
-                </DialogDescription>
-              </DialogHeader>
-              
-              <Tabs defaultValue="general" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="general">{t('formula.tabs.general')}</TabsTrigger>
-                  <TabsTrigger value="parameters">{t('formula.tabs.parameters')}</TabsTrigger>
-                </TabsList>
-                
-                {/* General Tab */}
-                <TabsContent value="general" className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="formula-name">{t('formula.name')}</Label>
-                    <Input
-                      id="formula-name"
-                      value={findSelectedFormula()?.name || ''}
-                      onChange={(e) => handleUpdateFormula('name', e.target.value)}
-                      placeholder={t('formula.untitled')}
-                    />
-                  </div>
-                </TabsContent>
-                
-                {/* Parameters Tab */}
-                <TabsContent value="parameters" className="space-y-4">
-                  <div className="space-y-4">
-                    {detectParameters(findSelectedFormula()?.expression || '').map((param) => (
-                      <div key={param.name} className="space-y-4 p-4 border rounded-lg">
-                        <div className="flex items-center justify-between">
-                          <div className="space-y-1">
-                            <Label className="text-base">{param.name}</Label>
-                            <Input
-                              type="text"
-                              className="w-40"
-                              value={findSelectedFormula()?.parameters?.[`${param.name}_displayName`] ?? param.displayName}
-                              onChange={(e) => handleUpdateFormula('parameters', {
-                                ...(findSelectedFormula()?.parameters || {}),
-                                [`${param.name}_displayName`]: e.target.value
-                              } as Record<string, number>)}
-                              placeholder={t('formula.parameterName')}
-                            />
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Input
-                              type="number"
-                              className="w-20"
-                              value={findSelectedFormula()?.parameters?.[param.name] ?? param.defaultValue}
-                              onChange={(e) => handleUpdateFormula('parameters', {
-                                ...(findSelectedFormula()?.parameters || {}),
-                                [param.name]: e.target.value ? parseFloat(e.target.value) : param.defaultValue
-                              } as Record<string, number>)}
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>{t('formula.parameterRange')}</Label>
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="space-y-1">
-                              <Label className="text-xs">{t('formula.minValue')}</Label>
-                              <Input
-                                type="number"
-                                value={param.minValue}
-                                onChange={(e) => {
-                                  const newMinValue = e.target.value ? parseFloat(e.target.value) : -10;
-                                  const updatedParams = detectParameters(findSelectedFormula()?.expression || '')
-                                    .map(p => p.name === param.name 
-                                      ? { ...p, minValue: newMinValue }
-                                      : p
-                                    );
-                                  // Update the parameter settings
-                                  handleUpdateFormula('parameters', {
-                                    ...(findSelectedFormula()?.parameters || {}),
-                                    [param.name]: Math.max(newMinValue, findSelectedFormula()?.parameters?.[param.name] ?? param.defaultValue)
-                                  } as Record<string, number>);
-                                }}
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs">{t('formula.maxValue')}</Label>
-                              <Input
-                                type="number"
-                                value={param.maxValue}
-                                onChange={(e) => {
-                                  const newMaxValue = e.target.value ? parseFloat(e.target.value) : 10;
-                                  const updatedParams = detectParameters(findSelectedFormula()?.expression || '')
-                                    .map(p => p.name === param.name 
-                                      ? { ...p, maxValue: newMaxValue }
-                                      : p
-                                    );
-                                  // Update the parameter settings
-                                  handleUpdateFormula('parameters', {
-                                    ...(findSelectedFormula()?.parameters || {}),
-                                    [param.name]: Math.min(newMaxValue, findSelectedFormula()?.parameters?.[param.name] ?? param.defaultValue)
-                                  } as Record<string, number>);
-                                }}
-                              />
-                            </div>
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-xs">{t('formula.step')}</Label>
-                            <Input
-                              type="number"
-                              value={findSelectedFormula()?.parameters?.[`${param.name}_step`] ?? param.step}
-                              onChange={(e) => {
-                                const newStep = e.target.value ? parseFloat(e.target.value) : 0.1;
-                                // Update the parameter settings with the new step size
-                                handleUpdateFormula('parameters', {
-                                  ...(findSelectedFormula()?.parameters || {}),
-                                  [`${param.name}_step`]: newStep
-                                } as Record<string, number>);
-                              }}
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>{t('formula.quickAdjust')}</Label>
-                          <Slider
-                            value={[findSelectedFormula()?.parameters?.[param.name] ?? param.defaultValue]}
-                            min={param.minValue}
-                            max={param.maxValue}
-                            step={findSelectedFormula()?.parameters?.[`${param.name}_step`] ?? param.step}
-                            onValueChange={(value) => handleUpdateFormula('parameters', {
-                              ...(findSelectedFormula()?.parameters || {}),
-                              [param.name]: value[0]
-                            } as Record<string, number>)}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </DialogContent>
-          </Dialog>
 
           {/* Examples */}
           <Popover open={examplesOpen} onOpenChange={setExamplesOpen}>
