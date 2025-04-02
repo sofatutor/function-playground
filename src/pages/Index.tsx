@@ -161,6 +161,10 @@ const Index = () => {
     const urlFormulas = getFormulasFromUrl();
     if (urlFormulas) {
       setFormulas(urlFormulas);
+      // Select the first formula if in embedded mode so parameter controls will show
+      if (isEmbedded && urlFormulas.length > 0) {
+        setSelectedFormulaId(urlFormulas[0].id);
+      }
     }
 
     // Get tool from URL
@@ -180,7 +184,7 @@ const Index = () => {
 
     // Mark that we've loaded from URL
     hasLoadedFromUrl.current = true;
-  }, []);
+  }, [isEmbedded]);
 
   // Update URL whenever shapes, formulas, grid position, or tool changes
   useEffect(() => {
