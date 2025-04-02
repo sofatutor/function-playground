@@ -337,28 +337,30 @@ const Index = () => {
           />
         )}
 
-        {/* Function Controls - Moved to top */}
-        <div className="p-4 border-b">
-          <div className="flex items-center gap-2">
-            <div className="flex-1">
-              <FormulaEditor
-                formulas={formulas}
-                onAddFormula={handleAddFormula}
-                onUpdateFormula={handleUpdateFormula}
-                onDeleteFormula={handleDeleteFormula}
-                _measurementUnit={measurementUnit}
-                isOpen={true}
-                selectedFormulaId={selectedFormulaId}
-                onSelectFormula={setSelectedFormulaId}
-                onNewFormula={() => {
-                  const newFormula = createDefaultFormula('function');
-                  newFormula.expression = "x*x";
-                  handleAddFormula(newFormula);
-                }}
-              />
+        {/* Function Controls - Hide when embedded */}
+        {!isEmbedded && (
+          <div className="p-4 border-b">
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <FormulaEditor
+                  formulas={formulas}
+                  onAddFormula={handleAddFormula}
+                  onUpdateFormula={handleUpdateFormula}
+                  onDeleteFormula={handleDeleteFormula}
+                  _measurementUnit={measurementUnit}
+                  isOpen={true}
+                  selectedFormulaId={selectedFormulaId}
+                  onSelectFormula={setSelectedFormulaId}
+                  onNewFormula={() => {
+                    const newFormula = createDefaultFormula('function');
+                    newFormula.expression = "x*x";
+                    handleAddFormula(newFormula);
+                  }}
+                />
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Canvas and Sidebar */}
         <div className="flex-1 flex">
@@ -383,27 +385,29 @@ const Index = () => {
             />
           </div>
 
-          {/* Function Sidebar - Now only for formula selection */}
-          <FunctionSidebar
-            formulas={formulas}
-            selectedFormula={formulas.find(f => f.id === selectedFormulaId) || null}
-            onAddFormula={() => {
-              const newFormula = createDefaultFormula('function');
-              newFormula.expression = "x*x";
-              handleAddFormula(newFormula);
-            }}
-            onDeleteFormula={handleDeleteFormula}
-            onSelectFormula={(formula) => setSelectedFormulaId(formula.id)}
-            onUpdateFormula={handleUpdateFormula}
-            measurementUnit={measurementUnit}
-            className={cn(
-              'w-80',
-              isFormulaEditorOpen ? 'block' : 'hidden',
-              isMobile ? 'fixed inset-y-0 right-0 z-50' : ''
-            )}
-            isFullscreen={isFullscreen}
-            onToggleFullscreen={toggleFullscreen}
-          />
+          {/* Function Sidebar - Hide when embedded */}
+          {!isEmbedded && (
+            <FunctionSidebar
+              formulas={formulas}
+              selectedFormula={formulas.find(f => f.id === selectedFormulaId) || null}
+              onAddFormula={() => {
+                const newFormula = createDefaultFormula('function');
+                newFormula.expression = "x*x";
+                handleAddFormula(newFormula);
+              }}
+              onDeleteFormula={handleDeleteFormula}
+              onSelectFormula={(formula) => setSelectedFormulaId(formula.id)}
+              onUpdateFormula={handleUpdateFormula}
+              measurementUnit={measurementUnit}
+              className={cn(
+                'w-80',
+                isFormulaEditorOpen ? 'block' : 'hidden',
+                isMobile ? 'fixed inset-y-0 right-0 z-50' : ''
+              )}
+              isFullscreen={isFullscreen}
+              onToggleFullscreen={toggleFullscreen}
+            />
+          )}
         </div>
 
         {/* Parameter Controls */}
