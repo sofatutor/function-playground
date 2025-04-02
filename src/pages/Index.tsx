@@ -26,12 +26,14 @@ import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import GlobalControls from '@/components/GlobalControls';
 import _UnifiedInfoPanel from '@/components/UnifiedInfoPanel';
+import { useViewMode } from '@/contexts/ViewModeContext';
 
 const Index = () => {
   // Get the service factory
   const serviceFactory = useServiceFactory();
   const { setComponentConfigModalOpen } = useComponentConfig();
   const { isToolbarVisible, setToolbarVisible } = useGlobalConfig();
+  const { isEmbedded } = useViewMode();
   const isMobile = useIsMobile();
   
   const {
@@ -262,6 +264,16 @@ const Index = () => {
     });
   }, [formulas, handleAddFormula, selectedFormulaId]);
 
+  // Auto-open formula editor in embedded mode
+  useEffect(() => {
+    if (isEmbedded && !isFormulaEditorOpen && formulas.length === 0) {
+      const newFormula = createDefaultFormula('function');
+      newFormula.expression = "x*x";
+      handleAddFormula(newFormula);
+      setIsFormulaEditorOpen(true);
+    }
+  }, [isEmbedded, isFormulaEditorOpen, formulas.length, handleAddFormula]);
+
   // Open formula editor when a formula is selected (e.g., by clicking a point on the graph)
   useEffect(() => {
     // If a formula is selected but the editor is not open, open it
@@ -355,7 +367,8 @@ const Index = () => {
                 </div>
               </div>
               
-              {isFormulaEditorOpen && (
+              {/* Only show FormulaEditor in non-embedded mode */}
+              {isFormulaEditorOpen && !isEmbedded && (
                 <div className="w-full mb-1 sm:mb-2 md:mb-3">
                   <FormulaEditor
                     formulas={formulas}
@@ -446,6 +459,7 @@ const Index = () => {
                     }
                   />
                 </div>
+                {/* Always show FunctionSidebar when formula editor is open, even in embedded mode */}
                 {isFormulaEditorOpen && (
                   <div className="w-80 border-l border-gray-200 bg-white">
                     <FunctionSidebar

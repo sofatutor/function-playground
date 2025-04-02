@@ -5,6 +5,7 @@ interface ViewModeContextType {
   viewMode: ViewMode;
   isEmbedded: boolean;
   isFullscreen: boolean;
+  isStandalone: boolean;
 }
 
 const ViewModeContext = createContext<ViewModeContextType | undefined>(undefined);
@@ -35,6 +36,7 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
     viewMode,
     isEmbedded: viewMode === 'embedded',
     isFullscreen: viewMode === 'fullscreen',
+    isStandalone: viewMode === 'standalone',
   };
 
   return (
