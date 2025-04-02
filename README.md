@@ -77,6 +77,29 @@ npm run dev
 - `npm run e2e:ci` - Run end-to-end tests with Playwright in CI mode
 - `npm run e2e` - Run end-to-end tests with Playwright in interactive mode
 
+## Deployment
+
+The application is automatically deployed to Vercel when changes are pushed to the main branch.
+
+### Production Deployment
+- Production deployment is triggered automatically on pushing to the `main` branch
+- The GitHub Actions workflow handles testing and deploying to Vercel
+- You can monitor deployment status in the GitHub Actions tab
+
+### Manual Deployment
+To deploy manually:
+
+1. Install the Vercel CLI: `npm install --global vercel`
+2. Log in to Vercel: `vercel login`
+3. Run: `vercel` (for preview) or `vercel --prod` (for production)
+
+### Required Secrets
+For the automated deployment to work, add these secrets to your GitHub repository:
+
+- `VERCEL_TOKEN`: Your Vercel API token
+- `VERCEL_ORG_ID`: Your Vercel organization ID
+- `VERCEL_PROJECT_ID`: Your Vercel project ID
+
 ## Using the Application
 
 ### Drawing Shapes
