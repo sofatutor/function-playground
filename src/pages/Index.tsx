@@ -33,7 +33,7 @@ const Index = () => {
   const serviceFactory = useServiceFactory();
   const { setComponentConfigModalOpen } = useComponentConfig();
   const { isToolbarVisible, setToolbarVisible } = useGlobalConfig();
-  const { isEmbedded } = useViewMode();
+  const { isFullscreen, isEmbedded, setIsFullscreen } = useViewMode();
   const isMobile = useIsMobile();
   
   const {
@@ -60,9 +60,8 @@ const Index = () => {
     shareCanvasUrl
   } = useShapeOperations();
 
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [formulas, setFormulas] = useState<Formula[]>([]);
   const [isFormulaEditorOpen, setIsFormulaEditorOpen] = useState(false);
+  const [formulas, setFormulas] = useState<Formula[]>([]);
   const [selectedFormulaId, setSelectedFormulaId] = useState<string | null>(null);
   const [_pixelsPerUnit, setPixelsPerUnit] = useState<number>(getStoredPixelsPerUnit(measurementUnit));
   
@@ -75,18 +74,6 @@ const Index = () => {
   useEffect(() => {
     setPixelsPerUnit(getStoredPixelsPerUnit(measurementUnit));
   }, [measurementUnit]);
-
-  // Check fullscreen status
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-    };
-  }, []);
 
   // Function to request fullscreen with better mobile support
   const requestFullscreen = useCallback(() => {
@@ -324,8 +311,8 @@ const Index = () => {
   return (
     <div className={`min-h-screen bg-gray-50 ${isFullscreen || isMobile ? 'p-0' : ''}`}>
       <div className={`${isFullscreen || isMobile ? 'max-w-full p-0' : 'container py-0 sm:py-2 md:py-4 lg:py-8 px-0 sm:px-2 md:px-4'} transition-all duration-200 h-[calc(100vh-0rem)] sm:h-[calc(100vh-0.5rem)]`}>
-        {/* Only show the header in the standard position when toolbar is visible */}
-        {isToolbarVisible && <GeometryHeader isFullscreen={isFullscreen} />}
+        {/* Only show the header in the standard position when toolbar is visible and not in embedded mode */}
+        {isToolbarVisible && !isEmbedded && <GeometryHeader isFullscreen={isFullscreen} />}
         
         {/* Include both modals */}
         <ConfigModal />
@@ -336,7 +323,7 @@ const Index = () => {
             <div className="flex flex-col h-full">
               <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between ${isFullscreen || isMobile ? 'space-y-1 sm:space-y-0 sm:space-x-1 px-1' : 'space-y-1 sm:space-y-0 sm:space-x-2 px-1 sm:px-2'} ${isMobile ? 'mb-0' : 'mb-1 sm:mb-2'}`}>
                 
-                {isToolbarVisible ? (
+                {isToolbarVisible && !isEmbedded ? (
                   <div className="flex flex-row items-center space-x-1 sm:space-x-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 no-scrollbar">
                     <Toolbar
                       activeMode={activeMode}
@@ -352,18 +339,23 @@ const Index = () => {
                     />
                   </div>
                 ) : (
-                  /* Show header in the toolbar position when toolbar is hidden */
-                  <div className="flex-1">
-                    <GeometryHeader isFullscreen={isFullscreen} />
-                  </div>
+                  /* Show header in the toolbar position when toolbar is hidden and not in embedded mode */
+                  !isEmbedded && (
+                    <div className="flex-1">
+                      <GeometryHeader isFullscreen={isFullscreen} />
+                    </div>
+                  )
                 )}
                 
                 <div className="ml-auto">
-                  <GlobalControls 
-                    isFullscreen={isFullscreen} 
-                    onToggleFullscreen={toggleFullscreen}
-                    onShare={shareCanvasUrl}
-                  />
+                  {/* Only show GlobalControls in non-embedded mode */}
+                  {!isEmbedded && (
+                    <GlobalControls 
+                      isFullscreen={isFullscreen} 
+                      onToggleFullscreen={toggleFullscreen}
+                      onShare={shareCanvasUrl}
+                    />
+                  )}
                 </div>
               </div>
               
