@@ -134,27 +134,6 @@ export const translations = {
         applyButton: "Apply"
       }
     },
-    formula: {
-      title: "Formula",
-      untitled: "Untitled",
-      delete: "Delete",
-      parameters: "Parameters",
-      options: "Formula Options",
-      optionsTooltip: "Configure formula settings",
-      description: "Configure formula settings and parameters",
-      name: "Name",
-      minValue: "Min Value",
-      maxValue: "Max Value",
-      step: "Step",
-      parameterRange: "Parameter Range",
-      quickAdjust: "Quick Adjust",
-      parameterName: "Display Name",
-      tabs: {
-        general: "General",
-        parameters: "Parameters"
-      },
-      parametersDescription: "Configure formula parameters and their default values"
-    },
   },
   es: {
     formulaEditor: "Trazador de Fórmulas",
@@ -278,7 +257,7 @@ export const translations = {
       calibration: {
         title: "Calibración",
         description: "Calibra tu pantalla para mediciones precisas",
-        instructions: "Para calibrar, mide una distancia connida en tu pantalla",
+        instructions: "Para calibrar, mide una distancia conocida en tu pantalla",
         lengthLabel: "Longitud de referencia",
         startButton: "Iniciar calibración",
         placeRuler: "Coloca una regla en tu pantalla",
@@ -290,27 +269,6 @@ export const translations = {
         cancelButton: "Cancelar",
         applyButton: "Aplicar"
       }
-    },
-    formula: {
-      title: "Fórmula",
-      untitled: "Sin título",
-      delete: "Eliminar",
-      parameters: "Parámetros",
-      options: "Opciones de fórmula",
-      optionsTooltip: "Configurar ajustes de fórmula",
-      description: "Configurar ajustes y parámetros de la fórmula",
-      name: "Nombre de la fórmula",
-      minValue: "Valor Mínimo",
-      maxValue: "Valor Máximo",
-      step: "Paso",
-      parameterRange: "Rango de Parámetro",
-      quickAdjust: "Ajustar Rápidamente",
-      parameterName: "Nombre de visualización",
-      tabs: {
-        general: "General",
-        parameters: "Parámetros"
-      },
-      parametersDescription: "Configurar parámetros de la fórmula y sus valores predeterminados"
     },
   },
   fr: {
@@ -450,27 +408,6 @@ export const translations = {
     zoomReset: 'Resetear Zoom',
     showToolbar: "Afficher la Barre d'Outils",
     hideToolbar: "Masquer la Barre d'Outils",
-    formula: {
-      title: "Formule",
-      untitled: "Sans titre",
-      delete: "Supprimer",
-      parameters: "Paramètres",
-      options: "Options de formule",
-      optionsTooltip: "Configurer les paramètres de la formule",
-      description: "Configurer les paramètres et options de la formule",
-      name: "Nom de la formule",
-      minValue: "Valeur Minimale",
-      maxValue: "Valeur Maximale",
-      step: "Étape",
-      parameterRange: "Plage de Paramètre",
-      quickAdjust: "Régler Rapidement",
-      parameterName: "Nom d'affichage",
-      tabs: {
-        general: "Général",
-        parameters: "Paramètres"
-      },
-      parametersDescription: "Configurer les paramètres de la formule et leurs valeurs par défaut"
-    },
   },
   de: {
     formulaEditor: "Formelplotter",
@@ -606,27 +543,6 @@ export const translations = {
         cancelButton: "Abbrechen",
         applyButton: "Anwenden"
       }
-    },
-    formula: {
-      title: "Formel",
-      untitled: "Unbenannt",
-      delete: "Löschen",
-      parameters: "Parameter",
-      options: "Formeloptionen",
-      optionsTooltip: "Formeleinstellungen konfigurieren",
-      description: "Formeleinstellungen und Parameter konfigurieren",
-      name: "Formelname",
-      minValue: "Minimalwert",
-      maxValue: "Maximalwert",
-      step: "Schritt",
-      parameterRange: "Parameterbereich",
-      quickAdjust: "Schnell einstellen",
-      parameterName: "Anzeigename",
-      tabs: {
-        general: "Allgemein",
-        parameters: "Parameter"
-      },
-      parametersDescription: "Formelparameter und deren Standardwerte konfigurieren"
     },
   }
 };
