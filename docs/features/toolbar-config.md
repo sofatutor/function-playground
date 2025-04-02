@@ -9,7 +9,7 @@ This feature allows users to hide the toolbar and default to a specific shape to
 1. As a user, I want to be able to hide the toolbar to maximize the canvas space for drawing.
 2. As a user, I want to configure a default tool (shape or function) to be selected when the application loads.
 3. As a user, I want these preferences to be persisted across sessions.
-4. As a user, I want to be able to share a URL with a pre-selected tool.
+4. [x] As a user, I want to be able to share a URL with a pre-selected tool.
 
 ## Implementation Checklist
 
@@ -24,12 +24,13 @@ This feature allows users to hide the toolbar and default to a specific shape to
 </details>
 
 <details>
-<summary>[-] ConfigModal UI Updates</summary>
+<summary>[x] ConfigModal UI Updates</summary>
 
 - [x] Add "Display" tab to configuration modal
 - [x] Add toolbar visibility toggle switch
-- [ ] Add default tool dropdown selection
+- [x] Add default tool dropdown selection in "Sharing" tab
 - [x] Create appropriate labeling and help text
+- [x] Add share URL button that copies a URL with the selected default tool
 </details>
 
 <details>
@@ -49,6 +50,8 @@ This feature allows users to hide the toolbar and default to a specific shape to
 - [x] Parse tool parameter from URL on application load
 - [x] Apply tool selection from URL or fall back to user preference
 - [x] Update URL when tool selection changes
+- [x] Add UI for generating share URLs with specific tool parameter
+- [x] Implement clipboard copy functionality for sharing URLs
 </details>
 
 <details>
