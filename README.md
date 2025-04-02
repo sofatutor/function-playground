@@ -121,6 +121,11 @@ For the automated deployment to work, add these secrets to your GitHub repositor
 - Functions update in real-time as you enter them
 - Click on points along the function graph to activate the point info panel with precise coordinates and calculations
 - Use left/right arrow navigation in the point info panel to move along the function curve with defined step size
+- Configure formula parameters with custom ranges and step sizes:
+  - Set minimum and maximum values for each parameter
+  - Adjust step size for fine-grained control
+  - Use sliders for quick parameter adjustments
+  - Parameters are automatically detected from the formula expression
 
 ### Zoom Controls
 - Use the zoom buttons or keyboard shortcuts to zoom in/out
