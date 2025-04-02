@@ -474,14 +474,14 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
                             <Label className="text-xs">{t('formula.step')}</Label>
                             <Input
                               type="number"
-                              value={param.step}
+                              value={findSelectedFormula()?.parameters?.[`${param.name}_step`] ?? param.step}
                               onChange={(e) => {
                                 const newStep = e.target.value ? parseFloat(e.target.value) : 0.1;
-                                const updatedParams = detectParameters(findSelectedFormula()?.expression || '')
-                                  .map(p => p.name === param.name 
-                                    ? { ...p, step: newStep }
-                                    : p
-                                  );
+                                // Update the parameter settings with the new step size
+                                handleUpdateFormula('parameters', {
+                                  ...(findSelectedFormula()?.parameters || {}),
+                                  [`${param.name}_step`]: newStep
+                                } as Record<string, number>);
                               }}
                             />
                           </div>
@@ -492,7 +492,7 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
                             value={[findSelectedFormula()?.parameters?.[param.name] ?? param.defaultValue]}
                             min={param.minValue}
                             max={param.maxValue}
-                            step={param.step}
+                            step={findSelectedFormula()?.parameters?.[`${param.name}_step`] ?? param.step}
                             onValueChange={(value) => handleUpdateFormula('parameters', {
                               ...(findSelectedFormula()?.parameters || {}),
                               [param.name]: value[0]
