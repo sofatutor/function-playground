@@ -323,16 +323,35 @@ const Index = () => {
 
   // Set initial tool based on defaultTool from ConfigContext
   useEffect(() => {
-    if (defaultTool === 'select') {
-      setActiveMode('select');
-    } else if (defaultTool === 'function') {
-      setActiveMode('create');
-      setIsFormulaEditorOpen(true);
-    } else {
-      setActiveMode('create');
-      setActiveShapeType(defaultTool);
+    // Only set initial tool based on URL or default when first loading
+    // This prevents the defaultTool setting from changing the current tool
+    if (!hasLoadedFromUrl.current) {
+      const urlTool = getToolFromUrl();
+      
+      if (urlTool) {
+        // Use tool from URL if available
+        if (['select', 'rectangle', 'circle', 'triangle', 'line', 'function'].includes(urlTool)) {
+          if (urlTool === 'select') {
+            setActiveMode('select');
+          } else {
+            setActiveShapeType(urlTool as ShapeType);
+            setActiveMode(urlTool === 'function' ? 'function' as OperationMode : 'create' as OperationMode);
+          }
+        }
+      } else if (defaultTool) {
+        // Fall back to defaultTool if no URL parameter
+        if (defaultTool === 'select') {
+          setActiveMode('select');
+        } else if (defaultTool === 'function') {
+          setActiveMode('create');
+          setIsFormulaEditorOpen(true);
+        } else {
+          setActiveMode('create');
+          setActiveShapeType(defaultTool);
+        }
+      }
     }
-  }, [defaultTool, setActiveMode, setActiveShapeType]);
+  }, []);
 
   return (
     <div className={`min-h-screen bg-gray-50 ${isFullscreen || isMobile ? 'p-0' : ''}`}>
