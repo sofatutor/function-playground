@@ -4,7 +4,9 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { PlusCircle, Trash2, BookOpen, ZoomIn, ZoomOut, Sparkles, Loader2, AlertCircle, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PlusCircle, Trash2, BookOpen, ZoomIn, ZoomOut, Sparkles, Loader2, AlertCircle, ChevronLeftIcon, ChevronRightIcon, Settings } from 'lucide-react';
 import { MeasurementUnit } from '@/types/shapes';
 import { getFormulaExamples, createDefaultFormula, validateFormula, convertToLatex } from '@/utils/formulaUtils';
 import { useTranslate } from '@/utils/translate';
@@ -48,6 +50,7 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isNaturalLanguageOpen, setIsNaturalLanguageOpen] = useState(false);
   const [examplesOpen, setExamplesOpen] = useState(false);
+  const [isOptionsOpen, setIsOptionsOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string | null>>({});
   const _isMobile = useIsMobile();
   const formulaInputRef = useRef<HTMLInputElement>(null);
@@ -315,19 +318,20 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
           <Popover open={isNaturalLanguageOpen} onOpenChange={setIsNaturalLanguageOpen}>
             <TooltipProvider>
               <Tooltip>
-                <PopoverTrigger asChild>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="outline" 
+                <TooltipTrigger asChild>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
                       size="icon"
                       className="h-9 w-9"
+                      disabled={isProcessing}
                     >
                       <Sparkles className="h-4 w-4" />
                     </Button>
-                  </TooltipTrigger>
-                </PopoverTrigger>
+                  </PopoverTrigger>
+                </TooltipTrigger>
                 <TooltipContent>
-                  <p>{t('naturalLanguageTooltip')}</p>
+                  <p>{t('naturalLanguageButton')}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -353,6 +357,65 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
               </div>
             </PopoverContent>
           </Popover>
+
+          {/* Formula Options Button */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9"
+                  onClick={() => setIsOptionsOpen(true)}
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{t('formula.optionsTooltip')}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          {/* Formula Options Dialog */}
+          <Dialog open={isOptionsOpen} onOpenChange={setIsOptionsOpen}>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader className="pb-2">
+                <DialogTitle>{t('formula.options')}</DialogTitle>
+                <DialogDescription>
+                  {t('formula.description')}
+                </DialogDescription>
+              </DialogHeader>
+              
+              <Tabs defaultValue="general" className="mt-2">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="general">{t('formula.tabs.general')}</TabsTrigger>
+                  <TabsTrigger value="parameters">{t('formula.tabs.parameters')}</TabsTrigger>
+                </TabsList>
+                
+                {/* General Tab */}
+                <TabsContent value="general" className="space-y-3 py-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="formula-name">{t('formula.name')}</Label>
+                    <Input
+                      id="formula-name"
+                      value={findSelectedFormula()?.name || ''}
+                      onChange={(e) => handleUpdateFormula('name', e.target.value)}
+                      placeholder={t('formula.untitled')}
+                    />
+                  </div>
+                </TabsContent>
+                
+                {/* Parameters Tab */}
+                <TabsContent value="parameters" className="space-y-3 py-2">
+                  <p className="text-sm text-muted-foreground">
+                    {t('formula.parametersDescription')}
+                  </p>
+                  {/* We'll add parameter configuration here later */}
+                </TabsContent>
+              </Tabs>
+            </DialogContent>
+          </Dialog>
 
           {/* Examples */}
           <Popover open={examplesOpen} onOpenChange={setExamplesOpen}>

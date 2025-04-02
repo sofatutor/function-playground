@@ -114,6 +114,21 @@ export const translations = {
         applyButton: "Apply"
       }
     },
+    formula: {
+      title: "Formula",
+      untitled: "Untitled",
+      delete: "Delete",
+      parameters: "Parameters",
+      options: "Formula Options",
+      optionsTooltip: "Configure formula settings",
+      description: "Configure formula settings and parameters",
+      name: "Formula Name",
+      tabs: {
+        general: "General",
+        parameters: "Parameters"
+      },
+      parametersDescription: "Configure formula parameters and their default values"
+    },
   },
   es: {
     formulaEditor: "Trazador de Fórmulas",
@@ -229,6 +244,21 @@ export const translations = {
         cancelButton: "Cancelar",
         applyButton: "Aplicar"
       }
+    },
+    formula: {
+      title: "Fórmula",
+      untitled: "Sin título",
+      delete: "Eliminar",
+      parameters: "Parámetros",
+      options: "Opciones de fórmula",
+      optionsTooltip: "Configurar ajustes de fórmula",
+      description: "Configurar ajustes y parámetros de la fórmula",
+      name: "Nombre de la fórmula",
+      tabs: {
+        general: "General",
+        parameters: "Parámetros"
+      },
+      parametersDescription: "Configurar parámetros de la fórmula y sus valores predeterminados"
     },
   },
   fr: {
@@ -348,6 +378,21 @@ export const translations = {
     zoomReset: 'Resetear Zoom',
     showToolbar: "Afficher la Barre d'Outils",
     hideToolbar: "Masquer la Barre d'Outils",
+    formula: {
+      title: "Formule",
+      untitled: "Sans titre",
+      delete: "Supprimer",
+      parameters: "Paramètres",
+      options: "Options de formule",
+      optionsTooltip: "Configurer les paramètres de la formule",
+      description: "Configurer les paramètres et options de la formule",
+      name: "Nom de la formule",
+      tabs: {
+        general: "Général",
+        parameters: "Paramètres"
+      },
+      parametersDescription: "Configurer les paramètres de la formule et leurs valeurs par défaut"
+    },
   },
   de: {
     formulaEditor: "Formelplotter",
@@ -463,6 +508,21 @@ export const translations = {
         cancelButton: "Abbrechen",
         applyButton: "Anwenden"
       }
+    },
+    formula: {
+      title: "Formel",
+      untitled: "Unbenannt",
+      delete: "Löschen",
+      parameters: "Parameter",
+      options: "Formeloptionen",
+      optionsTooltip: "Formeleinstellungen konfigurieren",
+      description: "Formeleinstellungen und Parameter konfigurieren",
+      name: "Formelname",
+      tabs: {
+        general: "Allgemein",
+        parameters: "Parameter"
+      },
+      parametersDescription: "Formelparameter und deren Standardwerte konfigurieren"
     },
   }
 };

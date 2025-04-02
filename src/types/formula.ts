@@ -5,6 +5,7 @@ export type FormulaType = 'function' | 'parametric' | 'polar';
 export interface Formula {
   id: string;
   type: FormulaType;
+  name?: string; // Optional name for the formula
   expression: string;
   color: string;
   strokeWidth: number;
