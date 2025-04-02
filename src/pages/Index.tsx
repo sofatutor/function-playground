@@ -35,7 +35,7 @@ const Index = () => {
   // Get the service factory
   const serviceFactory = useServiceFactory();
   const { setComponentConfigModalOpen } = useComponentConfig();
-  const { isToolbarVisible, setToolbarVisible } = useGlobalConfig();
+  const { isToolbarVisible, setToolbarVisible, defaultTool } = useGlobalConfig();
   const { isFullscreen, isEmbedded, setIsFullscreen } = useViewMode();
   const isMobile = useIsMobile();
   
@@ -249,7 +249,7 @@ const Index = () => {
       const newState = !prevState;
       
       // If opening the formula editor and there are no formulas, create a default one
-      if (newState && formulas.length === 0) {
+      if (newState && formulas.length === 0 && !hasLoadedFromUrl.current) {
         const newFormula = createDefaultFormula('function');
         // Set a default expression of x^2 instead of empty
         newFormula.expression = "x*x";
@@ -264,11 +264,11 @@ const Index = () => {
       
       return newState;
     });
-  }, [formulas, handleAddFormula, selectedFormulaId]);
+  }, [formulas, handleAddFormula, selectedFormulaId, hasLoadedFromUrl]);
 
   // Auto-open formula editor in embedded mode
   useEffect(() => {
-    if (isEmbedded && !isFormulaEditorOpen && formulas.length === 0) {
+    if (isEmbedded && !isFormulaEditorOpen && formulas.length === 0 && !hasLoadedFromUrl.current) {
       const newFormula = createDefaultFormula('function');
       newFormula.expression = "x*x";
       handleAddFormula(newFormula);
