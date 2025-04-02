@@ -1,8 +1,8 @@
 import { detectViewMode, isInIframe, isFullscreen } from '@/utils/viewDetection';
 
 describe('viewDetection', () => {
-  let originalWindow: any;
-  let originalDocument: any;
+  let originalWindow: Partial<typeof window>;
+  let originalDocument: Partial<typeof document>;
 
   beforeEach(() => {
     originalWindow = { ...window };
@@ -50,8 +50,27 @@ describe('viewDetection', () => {
   });
 
   afterEach(() => {
-    window = originalWindow;
-    document = originalDocument;
+    // Restore original properties instead of reassigning globals
+    Object.defineProperty(window, 'self', {
+      value: originalWindow.self,
+      writable: true
+    });
+    Object.defineProperty(window, 'top', {
+      value: originalWindow.top,
+      writable: true
+    });
+    Object.defineProperty(window, 'parent', {
+      value: originalWindow.parent,
+      writable: true
+    });
+
+    // Restore document properties
+    if (originalDocument.fullscreenElement !== undefined) {
+      Object.defineProperty(document, 'fullscreenElement', {
+        value: originalDocument.fullscreenElement,
+        writable: true
+      });
+    }
   });
 
   describe('isInIframe', () => {
