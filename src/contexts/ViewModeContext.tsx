@@ -6,6 +6,7 @@ interface ViewModeContextType {
   isEmbedded: boolean;
   isFullscreen: boolean;
   isStandalone: boolean;
+  setIsFullscreen: (isFullscreen: boolean) => void;
 }
 
 const ViewModeContext = createContext<ViewModeContextType | undefined>(undefined);
@@ -32,11 +33,26 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  const setIsFullscreen = (isFullscreen: boolean) => {
+    if (isFullscreen) {
+      document.documentElement.requestFullscreen().catch(() => {
+        // Handle error if fullscreen is not supported
+        console.warn('Fullscreen not supported');
+      });
+    } else {
+      document.exitFullscreen().catch(() => {
+        // Handle error if fullscreen is not supported
+        console.warn('Fullscreen not supported');
+      });
+    }
+  };
+
   const value = {
     viewMode,
     isEmbedded: viewMode === 'embedded',
     isFullscreen: viewMode === 'fullscreen',
     isStandalone: viewMode === 'standalone',
+    setIsFullscreen,
   };
 
   return (
