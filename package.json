@@ -112,6 +112,10 @@
     "vite": "^6.2.2",
     "vite-plugin-istanbul": "^7.0.0"
   },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "4.9.1",
+    "@rollup/rollup-linux-x64-musl": "4.9.1"
+  },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
       "npm test -- --findRelatedTests"
