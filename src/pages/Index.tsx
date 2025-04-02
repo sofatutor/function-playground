@@ -474,6 +474,8 @@ const Index = () => {
                       onSelectFormula={(formula) => setSelectedFormulaId(formula.id)}
                       onUpdateFormula={handleUpdateFormula}
                       measurementUnit={measurementUnit}
+                      isFullscreen={isFullscreen}
+                      onToggleFullscreen={toggleFullscreen}
                     />
                   </div>
                 )}
