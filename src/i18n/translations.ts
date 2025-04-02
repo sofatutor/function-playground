@@ -65,6 +65,75 @@ export const translations = {
     zoomOut: 'Zoom Out',
     zoomLevel: 'Zoom Level',
     zoomReset: 'Reset Zoom',
+    showToolbar: "Show Toolbar",
+    hideToolbar: "Hide Toolbar",
+    configModal: {
+      title: "Configuration",
+      description: "Configure application settings",
+      tabs: {
+        general: "General",
+        display: "Display",
+        openai: "OpenAI API",
+        developer: "Developer",
+        sharing: "Sharing"
+      },
+      general: {
+        description: "General application settings",
+        languageLabel: "Language",
+        languagePlaceholder: "Select a language"
+      },
+      display: {
+        description: "Configure how the application looks and behaves.",
+        toolbarVisibilityLabel: "Show Toolbar",
+        toolbarVisibilityDescription: "Toggle the visibility of the toolbar. When hidden, you can still use keyboard shortcuts."
+      },
+      sharing: {
+        description: "Configure settings for sharing URLs with others.",
+        defaultToolLabel: "Default Tool",
+        defaultToolPlaceholder: "Select default tool for shared URLs",
+        defaultToolDescription: "Choose which tool will be selected by default when someone opens your shared URL.",
+        generateShareUrl: "Copy URL with tool",
+        generateAndCopyUrl: "Generate & Copy Sharing URL",
+        urlCopiedSuccess: "URL with selected tool copied to clipboard!",
+        urlCopiedError: "Failed to copy URL to clipboard",
+        sharingNote: "This setting only affects generated sharing URLs and doesn't change your current workspace.",
+        tools: {
+          select: "Selection Tool",
+          rectangle: "Rectangle",
+          circle: "Circle",
+          triangle: "Triangle",
+          line: "Line",
+          function: "Function Plot"
+        }
+      },
+      openai: {
+        description: "OpenAI API settings",
+        apiKeyLabel: "API Key",
+        apiKeyPlaceholder: "Enter your OpenAI API key",
+        apiKeyHint: "Your API key is stored locally and encrypted",
+        clearApiKey: "Clear API key"
+      },
+      developer: {
+        description: "Developer options",
+        loggingLabel: "Logging level",
+        loggingDescription: "Set the detail level of logs"
+      },
+      calibration: {
+        title: "Calibration",
+        description: "Calibrate your screen for accurate measurements",
+        instructions: "To calibrate, measure a known distance on your screen",
+        lengthLabel: "Reference length",
+        startButton: "Start calibration",
+        placeRuler: "Place a ruler on your screen",
+        lineDescription: "Adjust the line to measure exactly {length} {unit}",
+        coarseAdjustment: "Coarse adjustment",
+        fineAdjustment: "Fine adjustment",
+        currentValue: "Current value",
+        pixelsPerUnit: "pixels/{unit}",
+        cancelButton: "Cancel",
+        applyButton: "Apply"
+      }
+    },
   },
   es: {
     formulaEditor: "Trazador de Fórmulas",
@@ -132,6 +201,75 @@ export const translations = {
     zoomOut: 'Alejar',
     zoomLevel: 'Nivel de Zoom',
     zoomReset: 'Resetear Zoom',
+    showToolbar: "Mostrar Barra de Herramientas",
+    hideToolbar: "Ocultar Barra de Herramientas",
+    configModal: {
+      title: "Configuración",
+      description: "Configurar ajustes de la aplicación",
+      tabs: {
+        general: "General",
+        display: "Visualización",
+        openai: "API de OpenAI",
+        developer: "Desarrollador",
+        sharing: "Compartir"
+      },
+      general: {
+        description: "Ajustes generales de la aplicación",
+        languageLabel: "Idioma",
+        languagePlaceholder: "Seleccionar un idioma"
+      },
+      display: {
+        description: "Configure cómo se ve y comporta la aplicación.",
+        toolbarVisibilityLabel: "Mostrar Barra de Herramientas",
+        toolbarVisibilityDescription: "Activa o desactiva la visibilidad de la barra de herramientas. Cuando está oculta, puedes seguir usando atajos de teclado."
+      },
+      sharing: {
+        description: "Configura ajustes para compartir URLs con otros.",
+        defaultToolLabel: "Herramienta Predeterminada",
+        defaultToolPlaceholder: "Seleccionar herramienta para URLs compartidas",
+        defaultToolDescription: "Elige qué herramienta se seleccionará por defecto cuando alguien abra tu URL compartida.",
+        generateShareUrl: "Copiar URL con herramienta",
+        generateAndCopyUrl: "Generar y Copiar URL para Compartir",
+        urlCopiedSuccess: "¡URL con la herramienta seleccionada copiada al portapapeles!",
+        urlCopiedError: "Error al copiar la URL al portapapeles",
+        sharingNote: "Esta configuración solo afecta a las URLs de compartir generadas y no cambia tu espacio de trabajo actual.",
+        tools: {
+          select: "Herramienta de Selección",
+          rectangle: "Rectángulo",
+          circle: "Círculo",
+          triangle: "Triángulo",
+          line: "Línea",
+          function: "Trazador de Fórmulas"
+        }
+      },
+      openai: {
+        description: "Configuración de la API de OpenAI",
+        apiKeyLabel: "Clave API",
+        apiKeyPlaceholder: "Ingresa tu clave API de OpenAI",
+        apiKeyHint: "Tu clave API se almacena localmente y está cifrada",
+        clearApiKey: "Borrar clave API"
+      },
+      developer: {
+        description: "Opciones de desarrollador",
+        loggingLabel: "Nivel de registro",
+        loggingDescription: "Establecer el nivel de detalle de los registros"
+      },
+      calibration: {
+        title: "Calibración",
+        description: "Calibra tu pantalla para mediciones precisas",
+        instructions: "Para calibrar, mide una distancia conocida en tu pantalla",
+        lengthLabel: "Longitud de referencia",
+        startButton: "Iniciar calibración",
+        placeRuler: "Coloca una regla en tu pantalla",
+        lineDescription: "Ajusta la línea para medir exactamente {length} {unit}",
+        coarseAdjustment: "Ajuste grueso",
+        fineAdjustment: "Ajuste fino",
+        currentValue: "Valor actual",
+        pixelsPerUnit: "píxeles/{unit}",
+        cancelButton: "Cancelar",
+        applyButton: "Aplicar"
+      }
+    },
   },
   fr: {
     formulaEditor: "Traceur de Formules",
@@ -200,13 +338,39 @@ export const translations = {
       description: "Paramètres globaux de l'application",
       tabs: {
         general: "Général",
+        display: "Affichage",
         openai: "OpenAI",
-        developer: "Développeur"
+        developer: "Développeur",
+        sharing: "Partage"
       },
       general: {
         description: "Paramètres généraux de l'application",
         languageLabel: "Langue",
         languagePlaceholder: "Sélectionnez une langue"
+      },
+      display: {
+        description: "Configurez l'apparence et le comportement de l'application.",
+        toolbarVisibilityLabel: "Afficher la Barre d'Outils",
+        toolbarVisibilityDescription: "Activez ou désactivez la visibilité de la barre d'outils. Lorsqu'elle est masquée, vous pouvez toujours utiliser les raccourcis clavier."
+      },
+      sharing: {
+        description: "Configurez les paramètres pour partager des URLs avec d'autres.",
+        defaultToolLabel: "Outil par Défaut",
+        defaultToolPlaceholder: "Sélectionner l'outil pour les URLs partagées",
+        defaultToolDescription: "Choisissez quel outil sera sélectionné par défaut lorsque quelqu'un ouvre votre URL partagée.",
+        generateShareUrl: "Copier l'URL avec l'outil",
+        generateAndCopyUrl: "Générer et Copier l'URL de Partage",
+        urlCopiedSuccess: "URL avec l'outil sélectionné copiée dans le presse-papiers !",
+        urlCopiedError: "Échec de la copie de l'URL dans le presse-papiers",
+        sharingNote: "Ce paramètre n'affecte que les URLs de partage générées et ne modifie pas votre espace de travail actuel.",
+        tools: {
+          select: "Outil de Sélection",
+          rectangle: "Rectangle",
+          circle: "Cercle",
+          triangle: "Triangle",
+          line: "Ligne",
+          function: "Traceur de Formules"
+        }
       },
       openai: {
         description: "Paramètres de l'API OpenAI",
@@ -242,6 +406,8 @@ export const translations = {
     zoomOut: 'Alejar',
     zoomLevel: 'Niveau de Zoom',
     zoomReset: 'Resetear Zoom',
+    showToolbar: "Afficher la Barre d'Outils",
+    hideToolbar: "Masquer la Barre d'Outils",
   },
   de: {
     formulaEditor: "Formelplotter",
@@ -309,5 +475,74 @@ export const translations = {
     zoomOut: 'Verkleinern',
     zoomLevel: 'Zoomstufe',
     zoomReset: 'Zoom zurücksetzen',
+    showToolbar: "Werkzeugleiste anzeigen",
+    hideToolbar: "Werkzeugleiste ausblenden",
+    configModal: {
+      title: "Konfiguration",
+      description: "Anwendungseinstellungen konfigurieren",
+      tabs: {
+        general: "Allgemein",
+        display: "Anzeige",
+        openai: "OpenAI API",
+        developer: "Entwickler",
+        sharing: "Teilen"
+      },
+      general: {
+        description: "Allgemeine Anwendungseinstellungen",
+        languageLabel: "Sprache",
+        languagePlaceholder: "Sprache auswählen"
+      },
+      display: {
+        description: "Konfigurieren Sie das Aussehen und Verhalten der Anwendung.",
+        toolbarVisibilityLabel: "Werkzeugleiste anzeigen",
+        toolbarVisibilityDescription: "Schalten Sie die Sichtbarkeit der Werkzeugleiste um. Bei Ausblendung können Sie weiterhin Tastaturkürzel verwenden."
+      },
+      sharing: {
+        description: "Konfigurieren Sie Einstellungen für das Teilen von URLs mit anderen.",
+        defaultToolLabel: "Standardwerkzeug",
+        defaultToolPlaceholder: "Standardwerkzeug für geteilte URLs auswählen",
+        defaultToolDescription: "Wählen Sie, welches Werkzeug standardmäßig ausgewählt wird, wenn jemand Ihre geteilte URL öffnet.",
+        generateShareUrl: "URL mit Werkzeug kopieren",
+        generateAndCopyUrl: "Teil-URL generieren und kopieren",
+        urlCopiedSuccess: "URL mit ausgewähltem Werkzeug in die Zwischenablage kopiert!",
+        urlCopiedError: "Fehler beim Kopieren der URL in die Zwischenablage",
+        sharingNote: "Diese Einstellung wirkt sich nur auf generierte Freigabe-URLs aus und ändert nicht Ihren aktuellen Arbeitsbereich.",
+        tools: {
+          select: "Auswahlwerkzeug",
+          rectangle: "Rechteck",
+          circle: "Kreis",
+          triangle: "Dreieck",
+          line: "Linie",
+          function: "Formelplotter"
+        }
+      },
+      openai: {
+        description: "OpenAI API-Einstellungen",
+        apiKeyLabel: "API-Schlüssel",
+        apiKeyPlaceholder: "Geben Sie Ihren OpenAI API-Schlüssel ein",
+        apiKeyHint: "Ihr API-Schlüssel wird lokal gespeichert und verschlüsselt",
+        clearApiKey: "API-Schlüssel löschen"
+      },
+      developer: {
+        description: "Entwickleroptionen",
+        loggingLabel: "Protokollierungsstufe",
+        loggingDescription: "Detailgrad der Protokollierung festlegen"
+      },
+      calibration: {
+        title: "Kalibrierung",
+        description: "Kalibrieren Sie Ihren Bildschirm für genaue Messungen",
+        instructions: "Zur Kalibrierung messen Sie eine bekannte Distanz auf Ihrem Bildschirm",
+        lengthLabel: "Referenzlänge",
+        startButton: "Kalibrierung starten",
+        placeRuler: "Legen Sie ein Lineal auf Ihren Bildschirm",
+        lineDescription: "Passen Sie die Linie an, um genau {length} {unit} zu messen",
+        coarseAdjustment: "Grobe Anpassung",
+        fineAdjustment: "Feine Anpassung",
+        currentValue: "Aktueller Wert",
+        pixelsPerUnit: "Pixel/{unit}",
+        cancelButton: "Abbrechen",
+        applyButton: "Anwenden"
+      }
+    },
   }
 };

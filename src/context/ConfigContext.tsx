@@ -1,14 +1,19 @@
-import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
-import { MeasurementUnit } from '@/types/shapes';
+import React, { createContext, ReactNode, useContext, useEffect, useState, useCallback } from 'react';
+import { MeasurementUnit, ShapeType } from '@/types/shapes';
 import { encryptData, decryptData } from '@/utils/encryption';
 import { setLoggingEnabled, isLoggingEnabled, LOGGER_STORAGE_KEY } from '@/utils/logger';
+
+// Tool type that includes all possible tools
+export type ToolType = 'select' | ShapeType | 'function';
 
 // Constants for localStorage keys (non-human readable)
 const STORAGE_KEYS = {
   LANGUAGE: 'lang',
   OPENAI_API_KEY: '_gp_oai_k',
   MEASUREMENT_UNIT: 'mu',
-  LOGGING_ENABLED: LOGGER_STORAGE_KEY
+  LOGGING_ENABLED: LOGGER_STORAGE_KEY,
+  TOOLBAR_VISIBLE: 'tb_vis', // New storage key for toolbar visibility
+  DEFAULT_TOOL: 'def_tool' // New storage key for default tool
 };
 
 // Separate types for global vs component settings
@@ -28,6 +33,14 @@ type GlobalConfigContextType = {
   // Modal control for global settings
   isGlobalConfigModalOpen: boolean;
   setGlobalConfigModalOpen: (isOpen: boolean) => void;
+  
+  // Toolbar visibility setting
+  isToolbarVisible: boolean;
+  setToolbarVisible: (visible: boolean) => void;
+
+  // Default tool setting
+  defaultTool: ToolType;
+  setDefaultTool: (tool: ToolType) => void;
 };
 
 type ComponentConfigContextType = {
@@ -67,6 +80,12 @@ const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // Logging settings
   const [loggingEnabled, setLoggingEnabledState] = useState<boolean>(isLoggingEnabled);
   
+  // Toolbar visibility setting
+  const [isToolbarVisible, setToolbarVisibleState] = useState<boolean>(() => {
+    const storedValue = localStorage.getItem(STORAGE_KEYS.TOOLBAR_VISIBLE);
+    return storedValue === null ? true : storedValue === 'true';
+  });
+  
   // Component-specific settings
   const [pixelsPerUnit, setPixelsPerUnit] = useState<number>(60); // Default: 60 pixels per unit
   const [measurementUnit, setMeasurementUnit] = useState<MeasurementUnit>(() => {
@@ -75,6 +94,12 @@ const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   });
   
   const [isComponentConfigModalOpen, setComponentConfigModalOpen] = useState<boolean>(false);
+  
+  // Default tool setting
+  const [defaultTool, setDefaultToolState] = useState<ToolType>(() => {
+    const storedTool = localStorage.getItem(STORAGE_KEYS.DEFAULT_TOOL);
+    return (storedTool as ToolType) || 'circle';
+  });
   
   // Load the API key from localStorage on initial render
   useEffect(() => {
@@ -156,6 +181,20 @@ const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     setLoggingEnabled(enabled);
   };
   
+  // Function to update toolbar visibility
+  const setToolbarVisible = useCallback((visible: boolean) => {
+    setToolbarVisibleState(visible);
+    localStorage.setItem(STORAGE_KEYS.TOOLBAR_VISIBLE, visible.toString());
+  }, []);
+
+  // Function to update default tool
+  const setDefaultTool = useCallback((tool: ToolType) => {
+    setDefaultToolState(tool);
+    localStorage.setItem(STORAGE_KEYS.DEFAULT_TOOL, tool);
+    // Note: We don't update the URL here to maintain separation between
+    // the default tool setting and the current URL's tool parameter
+  }, []);
+  
   // Global context value
   const globalContextValue: GlobalConfigContextType = {
     language,
@@ -166,6 +205,10 @@ const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     setLoggingEnabled: handleSetLoggingEnabled,
     isGlobalConfigModalOpen,
     setGlobalConfigModalOpen,
+    isToolbarVisible,
+    setToolbarVisible,
+    defaultTool,
+    setDefaultTool,
   };
   
   // Component context value

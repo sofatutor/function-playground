@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useShapeOperations } from '@/hooks/useShapeOperations';
 import { useServiceFactory } from '@/providers/ServiceProvider';
-import { useComponentConfig } from '@/context/ConfigContext';
+import { useComponentConfig, useGlobalConfig } from '@/context/ConfigContext';
 import GeometryHeader from '@/components/GeometryHeader';
 import GeometryCanvas from '@/components/GeometryCanvas';
 import Toolbar from '@/components/Toolbar';
@@ -10,7 +10,7 @@ import FormulaEditor from '@/components/FormulaEditor';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTranslate } from '@/utils/translate';
-import { Point } from '@/types/shapes';
+import { Point, ShapeType, OperationMode } from '@/types/shapes';
 import { Formula } from '@/types/formula';
 import { getStoredPixelsPerUnit } from '@/utils/geometry/common';
 import { createDefaultFormula } from '@/utils/formulaUtils';
@@ -19,7 +19,8 @@ import ComponentConfigModal from '@/components/ComponentConfigModal';
 import { Trash2, Wrench } from 'lucide-react';
 import { 
   updateUrlWithData, 
-  getFormulasFromUrl
+  getFormulasFromUrl,
+  getToolFromUrl
 } from '@/utils/urlEncoding';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -30,6 +31,7 @@ const Index = () => {
   // Get the service factory
   const serviceFactory = useServiceFactory();
   const { setComponentConfigModalOpen } = useComponentConfig();
+  const { isToolbarVisible, setToolbarVisible, defaultTool } = useGlobalConfig();
   const isMobile = useIsMobile();
   
   const {
@@ -161,38 +163,50 @@ const Index = () => {
     }
   }, [isFullscreen, requestFullscreen, exitFullscreen]);
   
-  // Load formulas from URL when component mounts
+  // Load data from URL on initial mount
   useEffect(() => {
-    if (hasLoadedFromUrl.current) {
-      return;
+    // Get formulas from URL
+    const urlFormulas = getFormulasFromUrl();
+    if (urlFormulas) {
+      setFormulas(urlFormulas);
     }
 
-    // Load formulas from URL
-    const formulasFromUrl = getFormulasFromUrl();
-    if (formulasFromUrl && formulasFromUrl.length > 0) {
-      setFormulas(formulasFromUrl);
-      setSelectedFormulaId(formulasFromUrl[0].id);
-      setIsFormulaEditorOpen(true);
-      toast.success(`Loaded ${formulasFromUrl.length} formulas from URL`);
+    // Get tool from URL
+    const urlTool = getToolFromUrl();
+    if (urlTool) {
+      // Validate that the tool is a valid shape type
+      if (['select', 'rectangle', 'circle', 'triangle', 'line', 'function'].includes(urlTool)) {
+        // Handle select tool differently - it's a mode, not a shape type
+        if (urlTool === 'select') {
+          setActiveMode('select');
+        } else {
+          setActiveShapeType(urlTool as ShapeType);
+          setActiveMode(urlTool === 'function' ? 'function' as OperationMode : 'draw' as OperationMode);
+        }
+      }
     }
 
-    // Mark as loaded from URL
+    // Mark that we've loaded from URL
     hasLoadedFromUrl.current = true;
   }, []);
-  
-  // Update URL whenever shapes, formulas, or grid position change, but only after initial load
+
+  // Update URL whenever shapes, formulas, grid position, or tool changes
   useEffect(() => {
     if (!hasLoadedFromUrl.current) {
       return;
     }
 
-    if (shapes.length > 0 || formulas.length > 0 || gridPosition) {
+    if (shapes.length > 0 || formulas.length > 0 || gridPosition || activeShapeType) {
       if (urlUpdateTimeoutRef.current) {
         clearTimeout(urlUpdateTimeoutRef.current);
       }
 
       urlUpdateTimeoutRef.current = setTimeout(() => {
-        updateUrlWithData(shapes, formulas, gridPosition);
+        // For select and line tools, we need to handle them differently
+        // For select mode, pass 'select' as the tool parameter
+        // For all other tools, pass the activeShapeType
+        const toolForUrl = activeMode === 'select' ? 'select' : activeShapeType;
+        updateUrlWithData(shapes, formulas, gridPosition, toolForUrl);
         urlUpdateTimeoutRef.current = null;
       }, 300);
     }
@@ -202,7 +216,7 @@ const Index = () => {
         clearTimeout(urlUpdateTimeoutRef.current);
       }
     };
-  }, [shapes, formulas, gridPosition]);
+  }, [shapes, formulas, gridPosition, activeShapeType, activeMode]);
 
   // Handle formula operations
   const handleAddFormula = useCallback((formula: Formula) => {
@@ -307,39 +321,82 @@ const Index = () => {
     updateGridPosition(newPosition);
   }, [updateGridPosition]);
 
+  // Set initial tool based on defaultTool from ConfigContext
+  useEffect(() => {
+    // Only set initial tool based on URL or default when first loading
+    // This prevents the defaultTool setting from changing the current tool
+    if (!hasLoadedFromUrl.current) {
+      const urlTool = getToolFromUrl();
+      
+      if (urlTool) {
+        // Use tool from URL if available
+        if (['select', 'rectangle', 'circle', 'triangle', 'line', 'function'].includes(urlTool)) {
+          if (urlTool === 'select') {
+            setActiveMode('select');
+          } else {
+            setActiveShapeType(urlTool as ShapeType);
+            setActiveMode(urlTool === 'function' ? 'function' as OperationMode : 'create' as OperationMode);
+          }
+        }
+      } else if (defaultTool) {
+        // Fall back to defaultTool if no URL parameter
+        if (defaultTool === 'select') {
+          setActiveMode('select');
+        } else if (defaultTool === 'function') {
+          setActiveMode('create');
+          setIsFormulaEditorOpen(true);
+        } else {
+          setActiveMode('create');
+          setActiveShapeType(defaultTool);
+        }
+      }
+    }
+  }, []);
+
   return (
     <div className={`min-h-screen bg-gray-50 ${isFullscreen || isMobile ? 'p-0' : ''}`}>
       <div className={`${isFullscreen || isMobile ? 'max-w-full p-0' : 'container py-0 sm:py-2 md:py-4 lg:py-8 px-0 sm:px-2 md:px-4'} transition-all duration-200 h-[calc(100vh-0rem)] sm:h-[calc(100vh-0.5rem)]`}>
-        <GeometryHeader isFullscreen={isFullscreen} />
+        {/* Only show the header in the standard position when toolbar is visible */}
+        {isToolbarVisible && <GeometryHeader isFullscreen={isFullscreen} />}
         
         {/* Include both modals */}
         <ConfigModal />
         <ComponentConfigModal />
         
-        <div className={`${isMobile || isFullscreen ? 'h-full' : 'h-[calc(100%-3rem)] sm:h-[calc(100%-4rem)]'}`}>
+        <div className={`${isMobile || isFullscreen ? 'h-full' : isToolbarVisible ? 'h-[calc(100%-3rem)] sm:h-[calc(100%-4rem)]' : 'h-full'}`}>
           <div className="h-full">
             <div className="flex flex-col h-full">
               <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between ${isFullscreen || isMobile ? 'space-y-1 sm:space-y-0 sm:space-x-1 px-1' : 'space-y-1 sm:space-y-0 sm:space-x-2 px-1 sm:px-2'} ${isMobile ? 'mb-0' : 'mb-1 sm:mb-2'}`}>
-                <div className="flex flex-row items-center space-x-1 sm:space-x-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 no-scrollbar">
-                  <Toolbar
-                    activeMode={activeMode}
-                    activeShapeType={activeShapeType}
-                    onModeChange={setActiveMode}
-                    onShapeTypeChange={setActiveShapeType}
-                    _onClear={deleteAllShapes}
-                    _onDelete={() => selectedShapeId && deleteShape(selectedShapeId)}
-                    hasSelectedShape={!!selectedShapeId}
-                    _canDelete={!!selectedShapeId}
-                    onToggleFormulaEditor={toggleFormulaEditor}
-                    isFormulaEditorOpen={isFormulaEditorOpen}
+                
+                {isToolbarVisible ? (
+                  <div className="flex flex-row items-center space-x-1 sm:space-x-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 no-scrollbar">
+                    <Toolbar
+                      activeMode={activeMode}
+                      activeShapeType={activeShapeType}
+                      onModeChange={setActiveMode}
+                      onShapeTypeChange={setActiveShapeType}
+                      _onClear={deleteAllShapes}
+                      _onDelete={() => selectedShapeId && deleteShape(selectedShapeId)}
+                      hasSelectedShape={!!selectedShapeId}
+                      _canDelete={!!selectedShapeId}
+                      onToggleFormulaEditor={toggleFormulaEditor}
+                      isFormulaEditorOpen={isFormulaEditorOpen}
+                    />
+                  </div>
+                ) : (
+                  /* Show header in the toolbar position when toolbar is hidden */
+                  <div className="flex-1">
+                    <GeometryHeader isFullscreen={isFullscreen} />
+                  </div>
+                )}
+                
+                <div className="ml-auto">
+                  <GlobalControls 
+                    isFullscreen={isFullscreen} 
+                    onToggleFullscreen={toggleFullscreen}
+                    onShare={shareCanvasUrl}
                   />
                 </div>
-                
-                <GlobalControls 
-                  isFullscreen={isFullscreen} 
-                  onToggleFullscreen={toggleFullscreen}
-                  onShare={shareCanvasUrl}
-                />
               </div>
               
               {isFormulaEditorOpen && (
