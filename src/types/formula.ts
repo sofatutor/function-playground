@@ -12,6 +12,7 @@ export interface Formula {
   tRange?: [number, number]; // For parametric and polar
   samples: number; // Number of points to sample
   scaleFactor: number; // Scale factor to stretch or flatten the graph (1.0 is normal)
+  parameters?: Record<string, number>; // Map of parameter names to their current values
 }
 
 export interface FormulaPoint {
