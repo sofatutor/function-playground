@@ -33,5 +33,24 @@ describe('ConfigContext', () => {
       expect(result.current.defaultTool).toBe('line');
       expect(localStorage.getItem('def_tool')).toBe('line');
     });
+    
+    it('should not update URL when defaultTool is changed', () => {
+      // Mock window.history.pushState to detect URL changes
+      const originalPushState = window.history.pushState;
+      const mockPushState = jest.fn();
+      window.history.pushState = mockPushState;
+      
+      const { result } = renderHook(() => useGlobalConfig(), { wrapper });
+      
+      act(() => {
+        result.current.setDefaultTool('triangle');
+      });
+      
+      // Verify pushState wasn't called (no URL update)
+      expect(mockPushState).not.toHaveBeenCalled();
+      
+      // Restore original pushState
+      window.history.pushState = originalPushState;
+    });
   });
 }); 

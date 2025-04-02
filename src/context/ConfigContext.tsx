@@ -191,6 +191,8 @@ const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const setDefaultTool = useCallback((tool: ToolType) => {
     setDefaultToolState(tool);
     localStorage.setItem(STORAGE_KEYS.DEFAULT_TOOL, tool);
+    // Note: We don't update the URL here to maintain separation between
+    // the default tool setting and the current URL's tool parameter
   }, []);
   
   // Global context value
