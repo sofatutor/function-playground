@@ -103,6 +103,7 @@ export default function FunctionSidebar({
                 parameterName={param.name}
                 value={selectedFormula.parameters?.[param.name] ?? param.defaultValue}
                 onChange={(value) => handleParameterChange(param.name, value)}
+                parameters={selectedFormula.parameters}
               />
             ))}
           </div>
