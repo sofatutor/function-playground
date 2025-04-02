@@ -5,7 +5,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Plus, Trash2 } from 'lucide-react';
 import { Formula } from '@/types/formula';
-import FormulaEditor from '@/components/FormulaEditor';
 import { MeasurementUnit } from '@/types/shapes';
 import { ParameterSlider } from '@/components/Formula/ParameterSlider';
 import { detectParameters } from '@/utils/parameterDetection';
@@ -96,19 +95,6 @@ export default function FunctionSidebar({
 
       {selectedFormula && (
         <div className="border-t p-4 space-y-4">
-          <FormulaEditor
-            formulas={[selectedFormula]}
-            onAddFormula={() => {}}
-            onUpdateFormula={onUpdateFormula}
-            onDeleteFormula={onDeleteFormula}
-            _measurementUnit={measurementUnit}
-            isOpen={true}
-            selectedFormulaId={selectedFormula.id}
-            onSelectFormula={() => onSelectFormula(selectedFormula)}
-          />
-
-          <Separator />
-
           <div className="space-y-4">
             <h3 className="text-sm font-medium">{t('formula.parameters')}</h3>
             {detectParameters(selectedFormula.expression).map((param) => (
