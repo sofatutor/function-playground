@@ -473,6 +473,9 @@ const Index = () => {
 
       {/* Component Config Modal */}
       <ComponentConfigModal />
+
+      {/* Global Config Modal */}
+      <ConfigModal />
     </div>
   );
 };

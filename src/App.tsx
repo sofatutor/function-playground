@@ -16,9 +16,9 @@ const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <ConfigProvider>
-          <ServiceProvider>
-            <ViewModeProvider>
+        <ViewModeProvider>
+          <ConfigProvider>
+            <ServiceProvider>
               <Toaster />
               <Sonner />
               <BrowserRouter>
@@ -28,9 +28,9 @@ const App: React.FC = () => {
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </BrowserRouter>
-            </ViewModeProvider>
-          </ServiceProvider>
-        </ConfigProvider>
+            </ServiceProvider>
+          </ConfigProvider>
+        </ViewModeProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
