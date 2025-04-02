@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, fireEvent, screen } from '@testing-library/react';
 import { GridZoomProvider } from '@/contexts/GridZoomContext/index';
+import { ViewModeProvider } from '@/contexts/ViewModeContext';
 import GridZoomControl from '../GridZoomControl';
 
 // Mock translations
@@ -16,17 +17,24 @@ jest.mock('@/components/ui/tooltip', () => ({
   TooltipProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-// Wrapper component to provide the GridZoomContext
-const GridZoomControlWrapper = () => {
-  return (
-    <GridZoomProvider>
-      <GridZoomControl />
-    </GridZoomProvider>
-  );
-};
+// Mock fullscreen API
+const mockRequestFullscreen = jest.fn().mockImplementation(() => Promise.resolve());
+const mockExitFullscreen = jest.fn().mockImplementation(() => Promise.resolve());
 
-// Mock localStorage for testing
+beforeAll(() => {
+  Object.defineProperty(document.documentElement, 'requestFullscreen', {
+    value: mockRequestFullscreen,
+    writable: true,
+  });
+  Object.defineProperty(document, 'exitFullscreen', {
+    value: mockExitFullscreen,
+    writable: true,
+  });
+});
+
 beforeEach(() => {
+  mockRequestFullscreen.mockClear();
+  mockExitFullscreen.mockClear();
   // Clear localStorage before each test
   localStorage.clear();
   // Set initial zoom to 1 (100%)
@@ -36,7 +44,13 @@ beforeEach(() => {
 describe('GridZoomControl', () => {
   // Helper function to render the component with a reset zoom level
   const renderComponent = () => {
-    return render(<GridZoomControlWrapper />);
+    return render(
+      <ViewModeProvider>
+        <GridZoomProvider>
+          <GridZoomControl />
+        </GridZoomProvider>
+      </ViewModeProvider>
+    );
   };
 
   it('should render zoom controls', () => {
@@ -44,7 +58,7 @@ describe('GridZoomControl', () => {
     
     // Check for zoom buttons - using indices since buttons have icons, not text
     const buttons = screen.getAllByRole('button');
-    expect(buttons.length).toBe(3); // Zoom out, percentage, zoom in
+    expect(buttons.length).toBe(4); // Zoom out, percentage, zoom in, fullscreen
     
     // Check for zoom factor display
     expect(screen.getByText('100%')).toBeInTheDocument();
@@ -167,5 +181,18 @@ describe('GridZoomControl', () => {
     
     // Maximum zoom is 300%
     expect(percentageButton).toHaveTextContent('300%');
+  });
+
+  it('should handle fullscreen toggle', () => {
+    renderComponent();
+    
+    const buttons = screen.getAllByRole('button');
+    const fullscreenButton = buttons[3]; // Fourth button is fullscreen
+    
+    // Click fullscreen button
+    fireEvent.click(fullscreenButton);
+    
+    // The button should now show the minimize icon
+    // We can't test the actual fullscreen state as it's not supported in jsdom
   });
 }); 

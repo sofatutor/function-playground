@@ -1,5 +1,6 @@
 import { Formula, FormulaPoint, FormulaExample, FormulaType } from "@/types/formula";
 import { Point } from "@/types/shapes";
+import { detectParameters as detectFormulaParameters } from './parameterDetection';
 
 // Constants
 const MAX_SAMPLES = 100000;
@@ -55,28 +56,32 @@ const calculateVisibleXRange = (
   ];
 };
 
+const detectParameters = (expression: string): { name: string; defaultValue: number }[] => {
+  // Use our existing implementation
+  return detectFormulaParameters(expression);
+};
+
 const createFunctionFromExpression = (
   expression: string,
-  scaleFactor: number
+  scaleFactor: number,
+  parameters?: Record<string, number>
 ): ((x: number) => number) => {
   if (!expression || expression.trim() === '') {
     return () => NaN;
   }
 
-  if (expression === 'Math.exp(x)') {
-    return (x: number) => Math.exp(x) * scaleFactor;
-  }
-  if (expression === '1 / (1 + Math.exp(-x))') {
-    return (x: number) => (1 / (1 + Math.exp(-x))) * scaleFactor;
-  }
-  if (expression === 'Math.sqrt(Math.abs(x))') {
-    return (x: number) => Math.sqrt(Math.abs(x)) * scaleFactor;
-  }
-
   try {
+    // Detect parameters in the expression
+    const detectedParams = detectParameters(expression);
+    
     // Only wrap x in parentheses if it's not part of another identifier (like Math.exp)
     const scaledExpression = expression.replace(/(?<!\w)x(?!\w)/g, '(x)');
-    return new Function('x', `
+    
+    // Create a function with parameters
+    const paramNames = detectedParams.map(p => p.name).join(',');
+    const paramDefaults = detectedParams.map(p => parameters?.[p.name] ?? p.defaultValue).join(',');
+    
+    return new Function('x', paramNames, `
       try {
         const {sin, cos, tan, exp, log, sqrt, abs, pow, PI, E} = Math;
         return (${scaledExpression}) * ${scaleFactor};
@@ -84,7 +89,7 @@ const createFunctionFromExpression = (
         console.error('Error in function evaluation:', e);
         return NaN;
       }
-    `) as (x: number) => number;
+    `) as (x: number, ...params: number[]) => number;
   } catch (e) {
     console.error('Error creating function from expression:', e);
     return () => NaN;
@@ -379,140 +384,32 @@ const evaluatePoints = (
   gridPosition: Point,
   pixelsPerUnit: number,
   xValues: number[],
-  fn: (x: number) => number
+  fn: (x: number, ...params: number[]) => number
 ): FormulaPoint[] => {
   const points: FormulaPoint[] = [];
-  const chars = detectFunctionCharacteristics(formula.expression);
-  const { isLogarithmic, allowsNegativeX, hasPow } = chars;
-  
-  let prevY: number | null = null;
-  let prevX: number | null = null;
-  
-  // Special case for complex formulas to detect and handle rapid changes
-  const isComplexFormula = formula.expression === 'Math.pow(x * 2, 2) + Math.pow((5 * Math.pow(x * 4, 2) - Math.sqrt(Math.abs(x))) * 2, 2) - 1';
-  
+  const detectedParams = detectParameters(formula.expression);
+  const paramValues = detectedParams.map(p => formula.parameters?.[p.name] ?? p.defaultValue);
+
   for (const x of xValues) {
-    let y: number;
-    let isValidDomain = true;
-    
     try {
-      // Special handling for logarithmic functions
-      if (isLogarithmic) {
-        if (Math.abs(x) < 1e-10) {
-          // Skip points too close to zero for log functions
-        y = NaN;
-        isValidDomain = false;
-        } else {
-          y = fn(x);
-          // Additional validation for logarithmic results
-          if (Math.abs(y) > 100) {
-            y = Math.sign(y) * 100; // Limit extreme values
-          }
-        }
-      } else {
-        y = fn(x);
-      }
-      
-      // Special handling for the complex formula
-      if (isComplexFormula) {
-        // Detect rapid changes around x=0 for the complex formula
-        if (Math.abs(x) < 0.01) {
-          // Extra validation for points very close to zero
-          if (Math.abs(y) > 1000) {
-            y = Math.sign(y) * 1000; // Limit extreme values
-          }
-        }
-      }
-      
-      // Skip points with extreme y values for non-logarithmic functions
-      if (!isLogarithmic && !isNaN(y) && Math.abs(y) > 100000) {
-        isValidDomain = false;
-      }
-    } catch (e) {
-      console.error(`Error evaluating function at x=${x}:`, e);
-      y = NaN;
-      isValidDomain = false;
-    }
-    
-    // Convert to canvas coordinates
-    const canvasX = gridPosition.x + x * pixelsPerUnit;
-    const canvasY = gridPosition.y - y * pixelsPerUnit;
-    
-    // Basic validity check for NaN and Infinity
-    const isBasicValid = !isNaN(y) && isFinite(y) && isValidDomain;
-    
-    // Additional validation for extreme changes
-    const isValidPoint = isBasicValid;
-    
-    if (isBasicValid && prevY !== null && prevX !== null) {
-      const MAX_DELTA_Y = isComplexFormula ? 200 : 100; // Allow larger jumps for complex formulas
-      const deltaY = Math.abs(canvasY - prevY);
-      const deltaX = Math.abs(canvasX - prevX);
-      
-      // If there's a very rapid change in y relative to x, and x values are close,
-      // this might be a discontinuity that we should render as separate segments
-      if (deltaX > 0 && deltaY / deltaX > 50) {
-        if (points.length > 0) {
-          // Create an invalid point to break the path
-          points.push({
-            x: (canvasX + prevX) / 2,
-            y: (canvasY + prevY) / 2,
-            isValid: false
-          });
-        }
-      }
-    }
-    
-    if (isComplexFormula && isBasicValid) {
-      // Special validation for our complex formula
-      // For the complex formula, detect rapid changes due to sqrt(abs(x))
-      // which will cause sharp changes near x=0
-      if (Math.abs(x) < 0.01) {
-        // For very small x, ensure we render a clean break at x=0
-        if (prevX !== null && (Math.sign(x) !== Math.sign(prevX) || Math.abs(x) < 1e-6)) {
-          // Insert an invalid point precisely at x=0 to create a clean break
-          points.push({
-            x: gridPosition.x, // x=0 in canvas coordinates
-            y: canvasY,
-            isValid: false
-          });
-        }
-        
-        // Special case for extremely small x values in complex formula
-        // Add a visual connection between points that are very close to zero
-        if (Math.abs(x) < 1e-8 && prevX !== null && Math.abs(prevX) < 1e-8 && 
-            Math.sign(x) !== Math.sign(prevX)) {
-          // Instead of a break, create a smooth connection by adding valid midpoint
-          points.push({
-            x: gridPosition.x, // x=0 in canvas coordinates
-            y: (canvasY + prevY!) / 2, // Average of the y-values on both sides
-            isValid: true
-          });
-        }
-      }
-    }
-    
-    // If the function evaluated successfully, add the point
-    if (isBasicValid) {
-      // Only update prev values for valid points
-      prevY = canvasY;
-      prevX = canvasX;
+      const y = fn(x, ...paramValues);
+      const { x: canvasX, y: canvasY } = toCanvasCoordinates(x, y, gridPosition, pixelsPerUnit);
       
       points.push({
         x: canvasX,
         y: canvasY,
-        isValid: isValidPoint
+        isValid: !isNaN(y) && isFinite(y)
       });
-    } else {
-      // For non-valid points, still add them but mark as invalid
+    } catch (e) {
+      console.error('Error evaluating point:', e);
       points.push({
-        x: canvasX,
-        y: 0, // Placeholder y value
+        x: 0,
+        y: 0,
         isValid: false
       });
     }
   }
-  
+
   return points;
 };
 
@@ -601,118 +498,22 @@ export const evaluateFunction = (
   pixelsPerUnit: number,
   overrideSamples?: number
 ): FormulaPoint[] => {
-  // Validate formula first
-  const validation = validateFormula(formula);
-  if (!validation.isValid) {
-    console.error(`Invalid function formula: ${validation.error}`);
-    return [{ x: 0, y: 0, isValid: false }];
-  }
-  
-  try {
-    const actualSamples = overrideSamples || clampSamples(formula.samples);
-    const chars = detectFunctionCharacteristics(formula.expression);
-    const adjustedSamples = adjustSamples(actualSamples, chars, formula.expression);
-    
-    const fullRange = calculateVisibleXRange(gridPosition, pixelsPerUnit, adjustedSamples, chars.isLogarithmic);
-    let visibleXRange: [number, number] = [
-      Math.max(fullRange[0], formula.xRange[0]),
-      Math.min(fullRange[1], formula.xRange[1])
-    ];
-    
-    let xValues: number[];
-    
-    // Special case for our complex nested Math.pow formula
-    if (formula.expression === 'Math.pow(x * 2, 2) + Math.pow((5 * Math.pow(x * 4, 2) - Math.sqrt(Math.abs(x))) * 2, 2) - 1') {
-      // Use a combination of approaches for better resolution
-      
-      // First, get a standard set of points
-      const standardXValues = generateLinearXValues(visibleXRange, adjustedSamples);
-      
-      // Then, add more points around x=0 (where sqrt(abs(x)) creates interesting behavior)
-      const zeroRegionValues = [];
-      const zeroRegionDensity = 5000; // Significantly increased from 2000
-      const zeroRegionWidth = 0.5; // Increased from 0.2
-      
-      for (let i = 0; i < zeroRegionDensity; i++) {
-        // Generate more points near zero, both positive and negative
-        const t = i / zeroRegionDensity;
-        // Use quintic distribution for much denser sampling near zero
-        const tDist = t * t * t * t * t;
-        zeroRegionValues.push(-zeroRegionWidth * tDist);
-        zeroRegionValues.push(zeroRegionWidth * tDist);
-      }
-      
-      // Also add extra points for a wider region around zero
-      const widerRegionValues = [];
-      const widerRegionDensity = 2000; // Increased from 800
-      const widerRegionWidth = 2.0; // Increased from 1.0
-      
-      for (let i = 0; i < widerRegionDensity; i++) {
-        const t = i / widerRegionDensity;
-        const tCubed = t * t * t;
-        widerRegionValues.push(-widerRegionWidth * tCubed);
-        widerRegionValues.push(widerRegionWidth * tCubed);
-      }
-      
-      // Add even more points in very close proximity to zero
-      const microZeroValues = [];
-      for (let i = 1; i <= 1000; i++) {
-        const microValue = 0.0001 * i / 1000;
-        microZeroValues.push(-microValue);
-        microZeroValues.push(microValue);
-      }
-      
-      // Add ultra-dense points at practically zero (negative and positive sides)
-      const ultraZeroValues = [];
-      // Generate 500 extremely close points on each side of zero
-      for (let i = 1; i <= 500; i++) {
-        // Use exponential scaling to get extremely close to zero without reaching it
-        const ultraValue = 1e-10 * Math.pow(1.5, i);
-        ultraZeroValues.push(-ultraValue);
-        ultraZeroValues.push(ultraValue);
-      }
-      
-      // Combine and sort all x values
-      xValues = [
-        ...standardXValues, 
-        ...zeroRegionValues, 
-        ...widerRegionValues, 
-        ...microZeroValues,
-        ...ultraZeroValues
-      ].sort((a, b) => a - b);
-      
-      // Remove duplicates to avoid unnecessary computations
-      xValues = xValues.filter((value, index, self) => 
-        index === 0 || Math.abs(value - self[index - 1]) > 0.00001
-      );
-    }
-    else if (chars.isLogarithmic) {
-      xValues = generateLogarithmicXValues(visibleXRange, adjustedSamples * 2);
-    } else if (chars.isTangent) {
-      visibleXRange = [
-        Math.max(fullRange[0], -Math.PI/2 + 0.01),
-        Math.min(fullRange[1], Math.PI/2 - 0.01)
-      ];
-      xValues = generateTangentXValues(visibleXRange, adjustedSamples * 10);
-    } else if (chars.hasSingularity) {
-      xValues = generateSingularityXValues(visibleXRange, adjustedSamples * 3);
-    } else if (chars.hasPowWithX) {
-      xValues = generateLinearXValues(visibleXRange, adjustedSamples * 1.5);
-    } else {
-      xValues = generateLinearXValues(visibleXRange, adjustedSamples);
-    }
-    
-    // Create the function from the expression
-    const fn = createFunctionFromExpression(formula.expression, formula.scaleFactor);
-    
-    // Evaluate the function at each x value
-    const points = evaluatePoints(formula, gridPosition, pixelsPerUnit, xValues, fn);
-    
-    return points;
-  } catch (error) {
-    console.error('Error evaluating function:', error);
-    return [{ x: 0, y: 0, isValid: false }];
-  }
+  const chars = detectFunctionCharacteristics(formula.expression);
+  const baseSamples = overrideSamples ?? formula.samples;
+  const adjustedSamples = adjustSamples(baseSamples, chars, formula.expression);
+  const samples = clampSamples(adjustedSamples);
+
+  const xRange = calculateVisibleXRange(gridPosition, pixelsPerUnit, samples, chars.isLogarithmic);
+  const xValues = chars.isLogarithmic
+    ? generateLogarithmicXValues(xRange, samples)
+    : chars.hasSingularity
+    ? generateSingularityXValues(xRange, samples)
+    : chars.isTangent
+    ? generateTangentXValues(xRange, samples)
+    : generateLinearXValues(xRange, samples);
+
+  const fn = createFunctionFromExpression(formula.expression, formula.scaleFactor, formula.parameters);
+  return evaluatePoints(formula, gridPosition, pixelsPerUnit, xValues, fn);
 };
 
 export const evaluateParametric = (

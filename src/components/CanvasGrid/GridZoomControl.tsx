@@ -1,13 +1,15 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ZoomIn, ZoomOut } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize2, Minimize2 } from 'lucide-react';
 import { useGridZoom } from '@/contexts/GridZoomContext/index';
 import { useTranslate } from '@/hooks/useTranslate';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useViewMode } from '@/contexts/ViewModeContext';
 
 const GridZoomControl: React.FC = () => {
   const _t = useTranslate();
   const { zoomFactor, setZoomFactor } = useGridZoom();
+  const { isFullscreen, setIsFullscreen } = useViewMode();
 
   const handleZoomIn = () => {
     const newZoom = Math.min(3, zoomFactor + 0.05);
@@ -22,6 +24,10 @@ const GridZoomControl: React.FC = () => {
   // Handle reset
   const handleReset = () => {
     setZoomFactor(1);
+  };
+
+  const handleToggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
   };
 
   return (
@@ -81,6 +87,27 @@ const GridZoomControl: React.FC = () => {
           </TooltipTrigger>
           <TooltipContent>
             <p>Zoom In (Ctrl +)</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleToggleFullscreen}
+              className="h-8 w-8"
+              data-testid="grid-fullscreen"
+            >
+              {isFullscreen ? (
+                <Minimize2 size={16} />
+              ) : (
+                <Maximize2 size={16} />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

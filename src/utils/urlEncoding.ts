@@ -277,9 +277,14 @@ export function decodeStringToFormulas(encodedString: string): Formula[] {
 }
 
 /**
- * Updates the URL with encoded shapes, formulas, and grid position without reloading the page
+ * Updates the URL with encoded shapes, formulas, grid position, and tool selection without reloading the page
  */
-export function updateUrlWithData(shapes: AnyShape[], formulas: Formula[], gridPosition?: Point | null): void {
+export function updateUrlWithData(
+  shapes: AnyShape[], 
+  formulas: Formula[], 
+  gridPosition?: Point | null,
+  tool?: string | null
+): void {
   const encodedShapes = encodeShapesToString(shapes);
   const encodedFormulas = encodeFormulasToString(formulas);
   
@@ -322,6 +327,15 @@ export function updateUrlWithData(shapes: AnyShape[], formulas: Formula[], gridP
     // Remove the grid parameter if gridPosition is null
     url.searchParams.delete('grid');
     console.log('Removing grid position from URL');
+  }
+
+  // Set or update the 'tool' query parameter if provided
+  if (tool) {
+    url.searchParams.set('tool', tool);
+    console.log('Updating tool in URL:', tool);
+  } else {
+    url.searchParams.delete('tool');
+    console.log('Removing tool from URL');
   }
   
   // Update the URL without reloading the page
@@ -378,4 +392,19 @@ export function getGridPositionFromUrl(): Point | null {
   const position = decodeGridPosition(encodedPosition);
   console.log('Decoded grid position from URL:', position);
   return position;
+}
+
+/**
+ * Gets the selected tool from the URL if it exists
+ */
+export function getToolFromUrl(): string | null {
+  const url = new URL(window.location.href);
+  const tool = url.searchParams.get('tool');
+  
+  console.log('Getting tool from URL, tool present:', !!tool);
+  if (tool) {
+    console.log('Tool from URL:', tool);
+  }
+  
+  return tool;
 } 

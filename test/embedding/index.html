@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Function Plotter Embedding Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f5f5f5;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .container {
+            width: 750px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <iframe 
+            src="http://localhost:8081/?grid=758.0%2C377.0&formulas=function%2Cformula-1743571190392-935%2Ca*x*x%2520%252B%2520b*x%2520%252B%2520c%2C%2523447091%2C2.0%2C-10000%2C10000%2C500%2C1.00%7Cfunction%2Cformula-1743594131091-95%2Ca%2520*%2520x%2520*%2520x%2C%25236de1e6%2C2.0%2C-10000%2C10000%2C500%2C1.00" 
+            title="Function Plotter"
+            allow="fullscreen"
+        ></iframe>
+    </div>
+</body>
+</html> 
