@@ -7,8 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Globe, Trash2, Terminal, Eye } from 'lucide-react';
+import { Globe, Trash2, Terminal, Eye, Share2, Copy } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { toast } from 'sonner';
+import { updateUrlWithData } from '@/utils/urlEncoding';
 
 const ConfigModal: React.FC = () => {
   const { 
@@ -21,7 +23,9 @@ const ConfigModal: React.FC = () => {
     loggingEnabled,
     setLoggingEnabled,
     isToolbarVisible,
-    setToolbarVisible
+    setToolbarVisible,
+    defaultTool,
+    setDefaultTool
   } = useGlobalConfig();
   
   const [apiKeyInput, setApiKeyInput] = useState(openaiApiKey || '');
@@ -56,6 +60,26 @@ const ConfigModal: React.FC = () => {
     setLanguage(value);
   };
   
+  // Function to generate and copy sharing URL with the default tool
+  const handleShareWithDefaultTool = () => {
+    // Create a URL object based on the current URL
+    const url = new URL(window.location.origin + window.location.pathname);
+    
+    // Only add the selected default tool parameter
+    if (defaultTool) {
+      url.searchParams.set('tool', defaultTool);
+    }
+    
+    // Copy the URL to clipboard
+    navigator.clipboard.writeText(url.toString())
+      .then(() => {
+        toast.success(t('configModal.sharing.urlCopiedSuccess'));
+      })
+      .catch(() => {
+        toast.error(t('configModal.sharing.urlCopiedError'));
+      });
+  };
+  
   return (
     <Dialog open={isGlobalConfigModalOpen} onOpenChange={setGlobalConfigModalOpen}>
       <DialogContent className="sm:max-w-[500px]">
@@ -67,10 +91,15 @@ const ConfigModal: React.FC = () => {
         </DialogHeader>
         
         <Tabs defaultValue="general" className="mt-2">
-          <TabsList className="grid w-full" style={{ gridTemplateColumns: isDevelopment ? '1fr 1fr 1fr 1fr' : '1fr 1fr 1fr' }}>
+          <TabsList className="grid w-full" style={{ 
+            gridTemplateColumns: isDevelopment 
+              ? '1fr 1fr 1fr 1fr 1fr' 
+              : '1fr 1fr 1fr 1fr' 
+          }}>
             <TabsTrigger value="general">{t('configModal.tabs.general')}</TabsTrigger>
             <TabsTrigger value="display">{t('configModal.tabs.display')}</TabsTrigger>
             <TabsTrigger value="openai">{t('configModal.tabs.openai')}</TabsTrigger>
+            <TabsTrigger value="sharing">{t('configModal.tabs.sharing')}</TabsTrigger>
             {isDevelopment && (
               <TabsTrigger value="developer">{t('configModal.tabs.developer')}</TabsTrigger>
             )}
@@ -161,6 +190,57 @@ const ConfigModal: React.FC = () => {
               <p className="text-xs text-muted-foreground">
                 {t('configModal.openai.apiKeyHint')}
               </p>
+            </div>
+          </TabsContent>
+          
+          {/* Sharing Tab */}
+          <TabsContent value="sharing" className="space-y-3 py-2">
+            <p className="text-sm text-muted-foreground">
+              {t('configModal.sharing.description')}
+            </p>
+            
+            <div className="space-y-4">
+              {/* Default Tool Dropdown - Only used for generating sharing URLs */}
+              <div className="space-y-2">
+                <Label htmlFor="default-tool" className="flex items-center gap-2">
+                  <Share2 className="h-4 w-4" />
+                  <span>{t('configModal.sharing.defaultToolLabel')}</span>
+                </Label>
+                <div className="flex items-end gap-2">
+                  <div className="flex-1">
+                    <Select value={defaultTool} onValueChange={setDefaultTool}>
+                      <SelectTrigger id="default-tool">
+                        <SelectValue placeholder={t('configModal.sharing.defaultToolPlaceholder')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="select">{t('configModal.sharing.tools.select')}</SelectItem>
+                        <SelectItem value="rectangle">{t('configModal.sharing.tools.rectangle')}</SelectItem>
+                        <SelectItem value="circle">{t('configModal.sharing.tools.circle')}</SelectItem>
+                        <SelectItem value="triangle">{t('configModal.sharing.tools.triangle')}</SelectItem>
+                        <SelectItem value="line">{t('configModal.sharing.tools.line')}</SelectItem>
+                        <SelectItem value="function">{t('configModal.sharing.tools.function')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {t('configModal.sharing.defaultToolDescription')}
+                </p>
+              </div>
+              
+              <div className="pt-2">
+                <Button 
+                  variant="default" 
+                  className="w-full"
+                  onClick={handleShareWithDefaultTool}
+                >
+                  <Share2 className="h-4 w-4 mr-2" />
+                  {t('configModal.sharing.generateAndCopyUrl')}
+                </Button>
+                <p className="text-xs text-muted-foreground pt-1">
+                  {t('configModal.sharing.sharingNote')}
+                </p>
+              </div>
             </div>
           </TabsContent>
           

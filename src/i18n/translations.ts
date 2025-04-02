@@ -74,7 +74,8 @@ export const translations = {
         general: "General",
         display: "Display",
         openai: "OpenAI API",
-        developer: "Developer"
+        developer: "Developer",
+        sharing: "Sharing"
       },
       general: {
         description: "General application settings",
@@ -85,6 +86,25 @@ export const translations = {
         description: "Configure how the application looks and behaves.",
         toolbarVisibilityLabel: "Show Toolbar",
         toolbarVisibilityDescription: "Toggle the visibility of the toolbar. When hidden, you can still use keyboard shortcuts."
+      },
+      sharing: {
+        description: "Configure settings for sharing URLs with others.",
+        defaultToolLabel: "Default Tool",
+        defaultToolPlaceholder: "Select default tool for shared URLs",
+        defaultToolDescription: "Choose which tool will be selected by default when someone opens your shared URL.",
+        generateShareUrl: "Copy URL with tool",
+        generateAndCopyUrl: "Generate & Copy Sharing URL",
+        urlCopiedSuccess: "URL with selected tool copied to clipboard!",
+        urlCopiedError: "Failed to copy URL to clipboard",
+        sharingNote: "This setting only affects generated sharing URLs and doesn't change your current workspace.",
+        tools: {
+          select: "Selection Tool",
+          rectangle: "Rectangle",
+          circle: "Circle",
+          triangle: "Triangle",
+          line: "Line",
+          function: "Function Plot"
+        }
       },
       openai: {
         description: "OpenAI API settings",
@@ -211,7 +231,8 @@ export const translations = {
         general: "General",
         display: "Visualización",
         openai: "API de OpenAI",
-        developer: "Desarrollador"
+        developer: "Desarrollador",
+        sharing: "Compartir"
       },
       general: {
         description: "Ajustes generales de la aplicación",
@@ -222,6 +243,25 @@ export const translations = {
         description: "Configure cómo se ve y comporta la aplicación.",
         toolbarVisibilityLabel: "Mostrar Barra de Herramientas",
         toolbarVisibilityDescription: "Activa o desactiva la visibilidad de la barra de herramientas. Cuando está oculta, puedes seguir usando atajos de teclado."
+      },
+      sharing: {
+        description: "Configura ajustes para compartir URLs con otros.",
+        defaultToolLabel: "Herramienta Predeterminada",
+        defaultToolPlaceholder: "Seleccionar herramienta para URLs compartidas",
+        defaultToolDescription: "Elige qué herramienta se seleccionará por defecto cuando alguien abra tu URL compartida.",
+        generateShareUrl: "Copiar URL con herramienta",
+        generateAndCopyUrl: "Generar y Copiar URL para Compartir",
+        urlCopiedSuccess: "¡URL con la herramienta seleccionada copiada al portapapeles!",
+        urlCopiedError: "Error al copiar la URL al portapapeles",
+        sharingNote: "Esta configuración solo afecta a las URLs de compartir generadas y no cambia tu espacio de trabajo actual.",
+        tools: {
+          select: "Herramienta de Selección",
+          rectangle: "Rectángulo",
+          circle: "Círculo",
+          triangle: "Triángulo",
+          line: "Línea",
+          function: "Trazador de Fórmulas"
+        }
       },
       openai: {
         description: "Configuración de la API de OpenAI",
@@ -342,7 +382,8 @@ export const translations = {
         general: "Général",
         display: "Affichage",
         openai: "OpenAI",
-        developer: "Développeur"
+        developer: "Développeur",
+        sharing: "Partage"
       },
       general: {
         description: "Paramètres généraux de l'application",
@@ -353,6 +394,25 @@ export const translations = {
         description: "Configurez l'apparence et le comportement de l'application.",
         toolbarVisibilityLabel: "Afficher la Barre d'Outils",
         toolbarVisibilityDescription: "Activez ou désactivez la visibilité de la barre d'outils. Lorsqu'elle est masquée, vous pouvez toujours utiliser les raccourcis clavier."
+      },
+      sharing: {
+        description: "Configurez les paramètres pour partager des URLs avec d'autres.",
+        defaultToolLabel: "Outil par Défaut",
+        defaultToolPlaceholder: "Sélectionner l'outil pour les URLs partagées",
+        defaultToolDescription: "Choisissez quel outil sera sélectionné par défaut lorsque quelqu'un ouvre votre URL partagée.",
+        generateShareUrl: "Copier l'URL avec l'outil",
+        generateAndCopyUrl: "Générer et Copier l'URL de Partage",
+        urlCopiedSuccess: "URL avec l'outil sélectionné copiée dans le presse-papiers !",
+        urlCopiedError: "Échec de la copie de l'URL dans le presse-papiers",
+        sharingNote: "Ce paramètre n'affecte que les URLs de partage générées et ne modifie pas votre espace de travail actuel.",
+        tools: {
+          select: "Outil de Sélection",
+          rectangle: "Rectangle",
+          circle: "Cercle",
+          triangle: "Triangle",
+          line: "Ligne",
+          function: "Traceur de Formules"
+        }
       },
       openai: {
         description: "Paramètres de l'API OpenAI",
@@ -487,7 +547,8 @@ export const translations = {
         general: "Allgemein",
         display: "Anzeige",
         openai: "OpenAI API",
-        developer: "Entwickler"
+        developer: "Entwickler",
+        sharing: "Teilen"
       },
       general: {
         description: "Allgemeine Anwendungseinstellungen",
@@ -498,6 +559,25 @@ export const translations = {
         description: "Konfigurieren Sie das Aussehen und Verhalten der Anwendung.",
         toolbarVisibilityLabel: "Werkzeugleiste anzeigen",
         toolbarVisibilityDescription: "Schalten Sie die Sichtbarkeit der Werkzeugleiste um. Bei Ausblendung können Sie weiterhin Tastaturkürzel verwenden."
+      },
+      sharing: {
+        description: "Konfigurieren Sie Einstellungen für das Teilen von URLs mit anderen.",
+        defaultToolLabel: "Standardwerkzeug",
+        defaultToolPlaceholder: "Standardwerkzeug für geteilte URLs auswählen",
+        defaultToolDescription: "Wählen Sie, welches Werkzeug standardmäßig ausgewählt wird, wenn jemand Ihre geteilte URL öffnet.",
+        generateShareUrl: "URL mit Werkzeug kopieren",
+        generateAndCopyUrl: "Teil-URL generieren und kopieren",
+        urlCopiedSuccess: "URL mit ausgewähltem Werkzeug in die Zwischenablage kopiert!",
+        urlCopiedError: "Fehler beim Kopieren der URL in die Zwischenablage",
+        sharingNote: "Diese Einstellung wirkt sich nur auf generierte Freigabe-URLs aus und ändert nicht Ihren aktuellen Arbeitsbereich.",
+        tools: {
+          select: "Auswahlwerkzeug",
+          rectangle: "Rechteck",
+          circle: "Kreis",
+          triangle: "Dreieck",
+          line: "Linie",
+          function: "Formelplotter"
+        }
       },
       openai: {
         description: "OpenAI API-Einstellungen",
