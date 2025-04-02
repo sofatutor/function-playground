@@ -71,11 +71,11 @@ This document outlines the implementation plan for enhancing the function input 
    - [x] Set default value of 1 for all detected parameters
 
 2. Dynamic Slider Creation
-   - [ ] Create reusable slider component
-   - [ ] Implement dynamic slider generation based on parameters
-   - [ ] Add proper styling and layout for sliders
-   - [ ] Ensure accessibility of dynamic controls
-   - [ ] Add tests for slider component and generation
+   - [x] Create reusable slider component
+   - [x] Implement dynamic slider generation based on parameters
+   - [x] Add proper styling and layout for sliders
+   - [x] Ensure accessibility of dynamic controls
+   - [x] Add tests for slider component and generation
 
 3. Live Formula Updates
    - [x] Implement parameter value state management
@@ -84,6 +84,29 @@ This document outlines the implementation plan for enhancing the function input 
    - [x] Optimize performance for frequent updates
    - [x] Add tests for live updates
 
+### Phase 2: Formula Management and Customization
+1. Formula Options
+   - [ ] Add formula options button to each formula in the sidebar
+   - [ ] Create formula options popup dialog
+   - [ ] Implement parameter configuration UI
+   - [ ] Add formula naming functionality
+   - [ ] Store formula-specific settings
+   - [ ] Add tests for formula options
+
+2. Formula List Improvements
+   - [ ] Display formula names in the sidebar list
+   - [ ] Add formula visibility toggle
+   - [ ] Implement formula reordering
+   - [ ] Add formula search/filter
+   - [ ] Add tests for formula list features
+
+3. Formula Editor Enhancements
+   - [ ] Add formula options button to editor
+   - [ ] Implement formula templates
+   - [ ] Add formula validation feedback
+   - [ ] Improve formula input suggestions
+   - [ ] Add tests for editor features
+
 ### Success Criteria
 1. Parameter Detection ✅
    - Correctly identifies parameters in formulas
@@ -91,7 +114,7 @@ This document outlines the implementation plan for enhancing the function input 
    - Handles complex expressions
    - Sets appropriate default values
 
-2. Dynamic Controls
+2. Dynamic Controls ✅
    - Sliders appear automatically for detected parameters
    - Controls are properly styled and accessible
    - Sliders have appropriate ranges and step sizes
@@ -102,6 +125,13 @@ This document outlines the implementation plan for enhancing the function input 
    - Performance remains smooth with multiple formulas
    - No visual glitches during updates
    - All changes are properly persisted
+
+4. Formula Management
+   - Users can name and customize their formulas
+   - Formula options are easily accessible
+   - Parameter settings are saved per formula
+   - Formula list is organized and searchable
+   - Editor provides helpful suggestions and feedback
 
 ### Technical Considerations
 1. Parameter Detection
@@ -196,7 +226,7 @@ interface Parameter {
 // Updated Formula type
 interface Formula {
   id: string;
-  name: string;
+  name: string;  // User-defined name for the formula
   expression: string;
   substitutedExpression?: string;
   parameters?: Parameter[];
@@ -205,38 +235,56 @@ interface Formula {
   visible: boolean;
   createdAt: Date;
   updatedAt: Date;
+  settings?: {
+    showParameters?: boolean;
+    parameterRanges?: Record<string, { min: number; max: number; step: number }>;
+    customSettings?: Record<string, any>;
+  };
 }
 ```
 
 ## Testing Plan
 
 ### Unit Tests
-- [ ] Function input parsing tests
-- [ ] Parameter detection tests
-- [ ] Input validation tests
-- [ ] Formula evaluation tests with parameters
+- [x] Function input parsing tests
+- [x] Parameter detection tests
+- [x] Input validation tests
+- [x] Formula evaluation tests with parameters
+- [ ] Formula options tests
+- [ ] Formula naming tests
 
 ### Integration Tests
-- [ ] Input component integration tests
-- [ ] Parameter UI integration tests
-- [ ] Real-time update tests
+- [x] Input component integration tests
+- [x] Parameter UI integration tests
+- [x] Real-time update tests
+- [ ] Formula options integration tests
+- [ ] Formula list integration tests
 
 ### E2E Tests
-- [ ] Complete function input workflow
-- [ ] Parameter adjustment workflow
-- [ ] Real-time graph update workflow
+- [x] Complete function input workflow
+- [x] Parameter adjustment workflow
+- [x] Real-time graph update workflow
+- [ ] Formula options workflow
+- [ ] Formula naming workflow
 
 ## Migration Plan
 
 1. Add new fields to existing formulas
-   - [ ] Add parameters array (empty by default)
-   - [ ] Add substitutedExpression field
+   - [x] Add parameters array (empty by default)
+   - [x] Add substitutedExpression field
+   - [ ] Add name field
+   - [ ] Add settings object
 
 2. Update formula validation
-   - [ ] Add parameter validation
-   - [ ] Add natural language input validation
+   - [x] Add parameter validation
+   - [x] Add natural language input validation
+   - [ ] Add name validation
+   - [ ] Add settings validation
 
 3. Update UI components
-   - [ ] Add enhanced formula input
-   - [ ] Add parameter controls
-   - [ ] Add input assistance features 
+   - [x] Add enhanced formula input
+   - [x] Add parameter controls
+   - [x] Add input assistance features
+   - [ ] Add formula options UI
+   - [ ] Add formula naming UI
+   - [ ] Add formula list improvements 

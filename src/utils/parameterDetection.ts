@@ -21,6 +21,9 @@ const PARAMETER_REGEX = /[a-wyzA-WYZ]/g;
 export interface DetectedParameter {
   name: string;
   defaultValue: number;
+  minValue: number;
+  maxValue: number;
+  step: number;
 }
 
 /**
@@ -57,7 +60,10 @@ export function detectParameters(formula: string): DetectedParameter[] {
   // Remove duplicates and create parameter objects
   const uniqueParameters = [...new Set(matches)].map(name => ({
     name: name.toLowerCase(), // Convert to lowercase for consistency
-    defaultValue: 1 // Set default value to 1 as specified
+    defaultValue: 1, // Set default value to 1 as specified
+    minValue: -10, // Default min value
+    maxValue: 10, // Default max value
+    step: 0.1 // Default step value
   }));
   
   return uniqueParameters;
