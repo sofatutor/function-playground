@@ -7,6 +7,8 @@ import { Plus, Trash2 } from 'lucide-react';
 import { Formula } from '@/types/formula';
 import FormulaEditor from '@/components/FormulaEditor';
 import { MeasurementUnit } from '@/types/shapes';
+import { ParameterSlider } from '@/components/Formula/ParameterSlider';
+import { detectParameters } from '@/utils/parameterDetection';
 
 interface FunctionSidebarProps {
   formulas: Formula[];
@@ -30,6 +32,19 @@ export default function FunctionSidebar({
   className,
 }: FunctionSidebarProps) {
   const { t } = useTranslation();
+
+  const handleParameterChange = (parameterName: string, value: number) => {
+    if (!selectedFormula) return;
+
+    const updatedParameters = {
+      ...selectedFormula.parameters,
+      [parameterName]: value,
+    };
+
+    onUpdateFormula(selectedFormula.id, {
+      parameters: updatedParameters,
+    });
+  };
 
   return (
     <div className={cn('flex flex-col h-full bg-background border-l', className)}>
@@ -80,7 +95,7 @@ export default function FunctionSidebar({
       </ScrollArea>
 
       {selectedFormula && (
-        <div className="border-t p-4">
+        <div className="border-t p-4 space-y-4">
           <FormulaEditor
             formulas={[selectedFormula]}
             onAddFormula={() => {}}
@@ -91,6 +106,20 @@ export default function FunctionSidebar({
             selectedFormulaId={selectedFormula.id}
             onSelectFormula={() => onSelectFormula(selectedFormula)}
           />
+
+          <Separator />
+
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium">{t('formula.parameters')}</h3>
+            {detectParameters(selectedFormula.expression).map((param) => (
+              <ParameterSlider
+                key={param.name}
+                parameterName={param.name}
+                value={selectedFormula.parameters?.[param.name] ?? param.defaultValue}
+                onChange={(value) => handleParameterChange(param.name, value)}
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>
