@@ -1,5 +1,6 @@
 import { Formula, FormulaPoint, FormulaExample, FormulaType } from "@/types/formula";
 import { Point } from "@/types/shapes";
+import { expressionConverter } from './expressionConverter';
 
 // Constants
 const MAX_SAMPLES = 100000;
@@ -63,19 +64,28 @@ const createFunctionFromExpression = (
     return () => NaN;
   }
 
-  if (expression === 'Math.exp(x)') {
+  // First try to convert from math notation to JS notation
+  let jsExpression = expression;
+  try {
+    jsExpression = expressionConverter.toJSNotation(expression);
+  } catch (e) {
+    // If conversion fails, assume it's already in JS notation
+    console.log('Math notation conversion failed, assuming JS notation:', e);
+  }
+
+  if (jsExpression === 'Math.exp(x)') {
     return (x: number) => Math.exp(x) * scaleFactor;
   }
-  if (expression === '1 / (1 + Math.exp(-x))') {
+  if (jsExpression === '1 / (1 + Math.exp(-x))') {
     return (x: number) => (1 / (1 + Math.exp(-x))) * scaleFactor;
   }
-  if (expression === 'Math.sqrt(Math.abs(x))') {
+  if (jsExpression === 'Math.sqrt(Math.abs(x))') {
     return (x: number) => Math.sqrt(Math.abs(x)) * scaleFactor;
   }
 
   try {
     // Only wrap x in parentheses if it's not part of another identifier (like Math.exp)
-    const scaledExpression = expression.replace(/(?<!\w)x(?!\w)/g, '(x)');
+    const scaledExpression = jsExpression.replace(/(?<!\w)x(?!\w)/g, '(x)');
     return new Function('x', `
       try {
         const {sin, cos, tan, exp, log, sqrt, abs, pow, PI, E} = Math;
@@ -382,14 +392,24 @@ const evaluatePoints = (
   fn: (x: number) => number
 ): FormulaPoint[] => {
   const points: FormulaPoint[] = [];
-  const chars = detectFunctionCharacteristics(formula.expression);
+  
+  // First try to convert from math notation to JS notation
+  let jsExpression = formula.expression;
+  try {
+    jsExpression = expressionConverter.toJSNotation(formula.expression);
+  } catch (e) {
+    // If conversion fails, assume it's already in JS notation
+    console.log('Math notation conversion failed, assuming JS notation:', e);
+  }
+  
+  const chars = detectFunctionCharacteristics(jsExpression);
   const { isLogarithmic, allowsNegativeX, hasPow } = chars;
   
   let prevY: number | null = null;
   let prevX: number | null = null;
   
   // Special case for complex formulas to detect and handle rapid changes
-  const isComplexFormula = formula.expression === 'Math.pow(x * 2, 2) + Math.pow((5 * Math.pow(x * 4, 2) - Math.sqrt(Math.abs(x))) * 2, 2) - 1';
+  const isComplexFormula = jsExpression === 'Math.pow(x * 2, 2) + Math.pow((5 * Math.pow(x * 4, 2) - Math.sqrt(Math.abs(x))) * 2, 2) - 1';
   
   for (const x of xValues) {
     let y: number;
@@ -400,8 +420,8 @@ const evaluatePoints = (
       if (isLogarithmic) {
         if (Math.abs(x) < 1e-10) {
           // Skip points too close to zero for log functions
-        y = NaN;
-        isValidDomain = false;
+          y = NaN;
+          isValidDomain = false;
         } else {
           y = fn(x);
           // Additional validation for logarithmic results
@@ -523,9 +543,18 @@ export const validateFormula = (formula: Formula): { isValid: boolean; error?: s
       return { isValid: false, error: 'Expression cannot be empty' };
     }
 
+    // First try to convert from math notation to JS notation
+    let jsExpression = formula.expression;
+    try {
+      jsExpression = expressionConverter.toJSNotation(formula.expression);
+    } catch (e) {
+      // If conversion fails, assume it's already in JS notation
+      console.log('Math notation conversion failed, assuming JS notation:', e);
+    }
+
     // Validate based on formula type
     if (formula.type === 'parametric') {
-      const [xExpr, yExpr] = formula.expression.split(';').map(expr => expr.trim());
+      const [xExpr, yExpr] = jsExpression.split(';').map(expr => expr.trim());
       if (!xExpr || !yExpr) {
         return { isValid: false, error: 'Parametric expression must be in format "x(t);y(t)"' };
       }
@@ -546,7 +575,7 @@ export const validateFormula = (formula: Formula): { isValid: boolean; error?: s
       // For function and polar types
       try {
         // Test if the expression can be compiled
-        const scaledExpression = formula.expression.replace(/(\W|^)x(\W|$)/g, '$1(x)$2');
+        const scaledExpression = jsExpression.replace(/(\W|^)x(\W|$)/g, '$1(x)$2');
         new Function('x', `
           const {sin, cos, tan, exp, log, sqrt, abs, pow, PI, E} = Math;
           return (${scaledExpression});

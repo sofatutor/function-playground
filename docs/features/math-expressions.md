@@ -14,13 +14,13 @@ This feature enhances the user experience by displaying mathematical expressions
 ## Implementation Checklist
 
 <details>
-<summary>[ ] Expression Parser Updates</summary>
+<summary>[✓] Expression Parser Updates</summary>
 
-- [ ] Create a bidirectional converter between JS and math notation
-- [ ] Handle basic operations (multiplication, division, exponents)
-- [ ] Support special functions (sqrt, sin, cos, tan, etc.)
-- [ ] Implement fraction notation conversion
-- [ ] Add validation for both notation formats
+- [✓] Create a bidirectional converter between JS and math notation
+- [✓] Handle basic operations (multiplication, division, exponents)
+- [✓] Support special functions (sqrt, sin, cos, tan, etc.)
+- [✓] Implement fraction notation conversion
+- [✓] Add validation for both notation formats
 </details>
 
 <details>
@@ -53,10 +53,10 @@ This feature enhances the user experience by displaying mathematical expressions
 </details>
 
 <details>
-<summary>[ ] Testing</summary>
+<summary>[-] Testing</summary>
 
-- [ ] Unit tests for notation conversion
-- [ ] Tests for special cases and edge cases
+- [✓] Unit tests for notation conversion
+- [✓] Tests for special cases and edge cases
 - [ ] Component tests for FormulaDisplay
 - [ ] Integration tests for FormulaEditor
 - [ ] E2E tests for formula input and display
