@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && node --no-addons ./node_modules/.bin/vite build",
+    "build": "tsc && vite build",
     "build:dev": "tsc && vite build --mode development",
     "lint": "eslint \"src/**/*.{ts,tsx}\" \"e2e/**/*.{ts,tsx}\" --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",

@@ -1,9 +1,0 @@
-{
-  "buildCommand": "npm run build",
-  "installCommand": "npm install --no-optional",
-  "framework": "vite",
-  "outputDirectory": "dist",
-  "env": {
-    "NODE_OPTIONS": "--no-warnings=ExperimentalWarning --no-addons"
-  }
-} 
