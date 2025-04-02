@@ -101,6 +101,7 @@ export default function FunctionSidebar({
               <ParameterSlider
                 key={param.name}
                 parameterName={param.name}
+                displayName={param.displayName}
                 value={selectedFormula.parameters?.[param.name] ?? param.defaultValue}
                 onChange={(value) => handleParameterChange(param.name, value)}
                 parameters={selectedFormula.parameters}

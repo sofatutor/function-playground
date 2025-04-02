@@ -128,6 +128,7 @@ export const translations = {
       step: "Step",
       parameterRange: "Parameter Range",
       quickAdjust: "Quick Adjust",
+      parameterName: "Display Name",
       tabs: {
         general: "General",
         parameters: "Parameters"
@@ -237,7 +238,7 @@ export const translations = {
       calibration: {
         title: "Calibración",
         description: "Calibra tu pantalla para mediciones precisas",
-        instructions: "Para calibrar, mide una distancia conocida en tu pantalla",
+        instructions: "Para calibrar, mide una distancia connida en tu pantalla",
         lengthLabel: "Longitud de referencia",
         startButton: "Iniciar calibración",
         placeRuler: "Coloca una regla en tu pantalla",
@@ -264,6 +265,7 @@ export const translations = {
       step: "Paso",
       parameterRange: "Rango de Parámetro",
       quickAdjust: "Ajustar Rápidamente",
+      parameterName: "Nombre de visualización",
       tabs: {
         general: "General",
         parameters: "Parámetros"
@@ -402,6 +404,7 @@ export const translations = {
       step: "Étape",
       parameterRange: "Plage de Paramètre",
       quickAdjust: "Régler Rapidement",
+      parameterName: "Nom d'affichage",
       tabs: {
         general: "Général",
         parameters: "Paramètres"
@@ -538,6 +541,7 @@ export const translations = {
       step: "Schritt",
       parameterRange: "Parameterbereich",
       quickAdjust: "Schnell einstellen",
+      parameterName: "Anzeigename",
       tabs: {
         general: "Allgemein",
         parameters: "Parameter"

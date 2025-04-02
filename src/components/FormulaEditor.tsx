@@ -413,7 +413,19 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
                     {detectParameters(findSelectedFormula()?.expression || '').map((param) => (
                       <div key={param.name} className="space-y-4 p-4 border rounded-lg">
                         <div className="flex items-center justify-between">
-                          <Label className="text-base">{param.name}</Label>
+                          <div className="space-y-1">
+                            <Label className="text-base">{param.name}</Label>
+                            <Input
+                              type="text"
+                              className="w-40"
+                              value={findSelectedFormula()?.parameters?.[`${param.name}_displayName`] ?? param.displayName}
+                              onChange={(e) => handleUpdateFormula('parameters', {
+                                ...(findSelectedFormula()?.parameters || {}),
+                                [`${param.name}_displayName`]: e.target.value
+                              } as Record<string, number>)}
+                              placeholder={t('formula.parameterName')}
+                            />
+                          </div>
                           <div className="flex items-center gap-2">
                             <Input
                               type="number"

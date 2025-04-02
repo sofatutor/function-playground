@@ -1,9 +1,16 @@
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ParameterSliderProps {
   parameterName: string;
+  displayName?: string;
   value: number;
   onChange: (value: number) => void;
   min?: number;
@@ -15,6 +22,7 @@ interface ParameterSliderProps {
 
 export function ParameterSlider({
   parameterName,
+  displayName,
   value,
   onChange,
   min = -3,
@@ -32,9 +40,18 @@ export function ParameterSlider({
   return (
     <div className={cn("space-y-2", className)}>
       <div className="flex items-center justify-between">
-        <Label htmlFor={parameterName} className="text-sm font-medium">
-          {parameterName}
-        </Label>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Label htmlFor={parameterName} className="text-sm font-medium cursor-help">
+                {displayName || parameterName}
+              </Label>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Parameter: {parameterName}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <span className="text-sm text-muted-foreground">{roundedValue.toFixed(1)}</span>
       </div>
       <Slider

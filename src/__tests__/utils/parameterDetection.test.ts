@@ -6,7 +6,7 @@ describe('parameterDetection', () => {
       const formula = 'ax^2';
       const result = detectParameters(formula);
       expect(result).toEqual([
-        { name: 'a', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 }
+        { name: 'a', displayName: 'a', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 }
       ]);
     });
 
@@ -14,9 +14,9 @@ describe('parameterDetection', () => {
       const formula = 'ax^2 + bx + c';
       const result = detectParameters(formula);
       expect(result).toEqual([
-        { name: 'a', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 },
-        { name: 'b', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 },
-        { name: 'c', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 }
+        { name: 'a', displayName: 'a', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 },
+        { name: 'b', displayName: 'b', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 },
+        { name: 'c', displayName: 'c', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 }
       ]);
     });
 
@@ -30,7 +30,7 @@ describe('parameterDetection', () => {
       const formula = 'sin(x) + a*cos(x)';
       const result = detectParameters(formula);
       expect(result).toEqual([
-        { name: 'a', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 }
+        { name: 'a', displayName: 'a', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 }
       ]);
     });
 
@@ -38,7 +38,7 @@ describe('parameterDetection', () => {
       const formula = 'Math.sin(x) + a*Math.cos(x)';
       const result = detectParameters(formula);
       expect(result).toEqual([
-        { name: 'a', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 }
+        { name: 'a', displayName: 'a', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 }
       ]);
     });
 
@@ -46,8 +46,8 @@ describe('parameterDetection', () => {
       const formula = 'a*sqrt(b*x^2)';
       const result = detectParameters(formula);
       expect(result).toEqual([
-        { name: 'a', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 },
-        { name: 'b', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 }
+        { name: 'a', displayName: 'a', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 },
+        { name: 'b', displayName: 'b', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 }
       ]);
     });
 
@@ -55,9 +55,9 @@ describe('parameterDetection', () => {
       const formula = 'a * x^2 + b * x + c';
       const result = detectParameters(formula);
       expect(result).toEqual([
-        { name: 'a', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 },
-        { name: 'b', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 },
-        { name: 'c', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 }
+        { name: 'a', displayName: 'a', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 },
+        { name: 'b', displayName: 'b', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 },
+        { name: 'c', displayName: 'c', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 }
       ]);
     });
 
@@ -65,9 +65,9 @@ describe('parameterDetection', () => {
       const formula = 'Ax^2 + Bx + C';
       const result = detectParameters(formula);
       expect(result).toEqual([
-        { name: 'a', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 },
-        { name: 'b', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 },
-        { name: 'c', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 }
+        { name: 'a', displayName: 'a', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 },
+        { name: 'b', displayName: 'b', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 },
+        { name: 'c', displayName: 'c', defaultValue: 1, minValue: -10, maxValue: 10, step: 0.1 }
       ]);
     });
   });
