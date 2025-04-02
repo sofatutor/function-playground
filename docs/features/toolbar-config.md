@@ -9,47 +9,68 @@ This feature allows users to hide the toolbar and default to a specific shape to
 1. As a user, I want to be able to hide the toolbar to maximize the canvas space for drawing.
 2. As a user, I want to configure a default tool (shape or function) to be selected when the application loads.
 3. As a user, I want these preferences to be persisted across sessions.
-4. As a user, I want to be able to share a URL with a pre-selected tool.
+4. [x] As a user, I want to be able to share a URL with a pre-selected tool.
 
 ## Implementation Checklist
 
-- [x] **Configuration Context Updates**
-  - [x] Add `isToolbarVisible` boolean setting (default: true)
-  - [ ] Add `defaultTool` string setting for tool selection
-  - [x] Add setter functions for both settings
-  - [x] Implement localStorage persistence
-  - [x] Update type definitions
+<details>
+<summary>[x] Configuration Context Updates</summary>
 
-- [x] **ConfigModal UI Updates**
-  - [x] Add "Display" tab to configuration modal
-  - [x] Add toolbar visibility toggle switch
-  - [ ] Add default tool dropdown selection
-  - [x] Create appropriate labeling and help text
+- [x] Add `isToolbarVisible` boolean setting (default: true)
+- [x] Add `defaultTool` string setting for tool selection
+- [x] Add setter functions for both settings
+- [x] Implement localStorage persistence
+- [x] Update type definitions
+</details>
 
-- [x] **Index Component Integration**
-  - [x] Conditionally render toolbar based on visibility setting
-  - [-] ~~Add toolbar toggle button when toolbar is hidden~~ (UI requires settings panel)
-  - [ ] Initialize with default tool on application load
-  - [ ] Support function tool default with auto-opening formula editor
-  - [ ] Add keyboard shortcut for toggling toolbar (optional)
+<details>
+<summary>[x] ConfigModal UI Updates</summary>
 
-- [ ] **URL Integration**
-  - [ ] Add tool selection parameter to URL encoding functions
-  - [ ] Parse tool parameter from URL on application load
-  - [ ] Apply tool selection from URL or fall back to user preference
-  - [ ] Update URL when tool selection changes
+- [x] Add "Display" tab to configuration modal
+- [x] Add toolbar visibility toggle switch
+- [x] Add default tool dropdown selection in "Sharing" tab
+- [x] Create appropriate labeling and help text
+- [x] Add share URL button that copies a URL with the selected default tool
+</details>
 
-- [x] **Translations**
-  - [x] Add translation keys for new UI elements
-  - [x] Update all supported language files
+<details>
+<summary>[-] Index Component Integration</summary>
 
-- [ ] **Testing**
-  - [ ] Unit tests for context functionality
-  - [ ] Component tests for ConfigModal UI
-  - [ ] Integration tests for toolbar visibility
-  - [ ] Test default tool selection behavior
-  - [ ] Test URL tool parameter functionality
-  - [ ] E2E tests for hidden toolbar workflow
+- [x] Conditionally render toolbar based on visibility setting
+- [-] ~~Add toolbar toggle button when toolbar is hidden~~ (UI requires settings panel)
+- [x] Initialize with default tool on application load
+- [x] Support function tool default with auto-opening formula editor
+- [ ] Add keyboard shortcut for toggling toolbar (optional)
+</details>
+
+<details>
+<summary>[x] URL Integration</summary>
+
+- [x] Add tool selection parameter to URL encoding functions
+- [x] Parse tool parameter from URL on application load
+- [x] Apply tool selection from URL or fall back to user preference
+- [x] Update URL when tool selection changes
+- [x] Add UI for generating share URLs with specific tool parameter
+- [x] Implement clipboard copy functionality for sharing URLs
+</details>
+
+<details>
+<summary>[x] Translations</summary>
+
+- [x] Add translation keys for new UI elements
+- [x] Update all supported language files
+</details>
+
+<details>
+<summary>[-] Testing</summary>
+
+- [x] Unit tests for context functionality (Partially done)
+- [x] Component tests for ConfigModal UI
+- [x] Integration tests for toolbar visibility (Partially done)
+- [x] Test default tool selection behavior (Partially done)
+- [x] Test URL tool parameter functionality
+- [ ] E2E tests for hidden toolbar workflow
+</details>
 
 ## Technical Details
 
@@ -94,6 +115,11 @@ The `tool` parameter can have the following values:
 - `triangle`
 - `line`
 - `function`
+
+Special handling notes:
+- The `select` tool value sets the application to selection mode
+- The `function` tool value opens the formula editor automatically
+- All shape tools (`rectangle`, `circle`, etc.) set the drawing mode with that shape type
 
 ### Key UX Considerations
 

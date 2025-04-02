@@ -11,7 +11,7 @@ import FunctionSidebar from '@/components/Formula/FunctionSidebar';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTranslate } from '@/utils/translate';
-import { Point } from '@/types/shapes';
+import { Point, ShapeType, OperationMode } from '@/types/shapes';
 import { Formula } from '@/types/formula';
 import { getStoredPixelsPerUnit } from '@/utils/geometry/common';
 import { createDefaultFormula } from '@/utils/formulaUtils';
@@ -20,7 +20,8 @@ import ComponentConfigModal from '@/components/ComponentConfigModal';
 import { Trash2, Wrench } from 'lucide-react';
 import { 
   updateUrlWithData, 
-  getFormulasFromUrl
+  getFormulasFromUrl,
+  getToolFromUrl
 } from '@/utils/urlEncoding';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -154,38 +155,50 @@ const Index = () => {
     }
   }, [isFullscreen, requestFullscreen, exitFullscreen]);
   
-  // Load formulas from URL when component mounts
+  // Load data from URL on initial mount
   useEffect(() => {
-    if (hasLoadedFromUrl.current) {
-      return;
+    // Get formulas from URL
+    const urlFormulas = getFormulasFromUrl();
+    if (urlFormulas) {
+      setFormulas(urlFormulas);
     }
 
-    // Load formulas from URL
-    const formulasFromUrl = getFormulasFromUrl();
-    if (formulasFromUrl && formulasFromUrl.length > 0) {
-      setFormulas(formulasFromUrl);
-      setSelectedFormulaId(formulasFromUrl[0].id);
-      setIsFormulaEditorOpen(true);
-      toast.success(`Loaded ${formulasFromUrl.length} formulas from URL`);
+    // Get tool from URL
+    const urlTool = getToolFromUrl();
+    if (urlTool) {
+      // Validate that the tool is a valid shape type
+      if (['select', 'rectangle', 'circle', 'triangle', 'line', 'function'].includes(urlTool)) {
+        // Handle select tool differently - it's a mode, not a shape type
+        if (urlTool === 'select') {
+          setActiveMode('select');
+        } else {
+          setActiveShapeType(urlTool as ShapeType);
+          setActiveMode(urlTool === 'function' ? 'function' as OperationMode : 'draw' as OperationMode);
+        }
+      }
     }
 
-    // Mark as loaded from URL
+    // Mark that we've loaded from URL
     hasLoadedFromUrl.current = true;
   }, []);
-  
-  // Update URL whenever shapes, formulas, or grid position change, but only after initial load
+
+  // Update URL whenever shapes, formulas, grid position, or tool changes
   useEffect(() => {
     if (!hasLoadedFromUrl.current) {
       return;
     }
 
-    if (shapes.length > 0 || formulas.length > 0 || gridPosition) {
+    if (shapes.length > 0 || formulas.length > 0 || gridPosition || activeShapeType) {
       if (urlUpdateTimeoutRef.current) {
         clearTimeout(urlUpdateTimeoutRef.current);
       }
 
       urlUpdateTimeoutRef.current = setTimeout(() => {
-        updateUrlWithData(shapes, formulas, gridPosition);
+        // For select and line tools, we need to handle them differently
+        // For select mode, pass 'select' as the tool parameter
+        // For all other tools, pass the activeShapeType
+        const toolForUrl = activeMode === 'select' ? 'select' : activeShapeType;
+        updateUrlWithData(shapes, formulas, gridPosition, toolForUrl);
         urlUpdateTimeoutRef.current = null;
       }, 300);
     }
@@ -195,7 +208,7 @@ const Index = () => {
         clearTimeout(urlUpdateTimeoutRef.current);
       }
     };
-  }, [shapes, formulas, gridPosition]);
+  }, [shapes, formulas, gridPosition, activeShapeType, activeMode]);
 
   // Handle formula operations
   const handleAddFormula = useCallback((formula: Formula) => {
@@ -309,6 +322,38 @@ const Index = () => {
     console.log('Index: Grid position changed:', newPosition);
     updateGridPosition(newPosition);
   }, [updateGridPosition]);
+
+  // Set initial tool based on defaultTool from ConfigContext
+  useEffect(() => {
+    // Only set initial tool based on URL or default when first loading
+    // This prevents the defaultTool setting from changing the current tool
+    if (!hasLoadedFromUrl.current) {
+      const urlTool = getToolFromUrl();
+      
+      if (urlTool) {
+        // Use tool from URL if available
+        if (['select', 'rectangle', 'circle', 'triangle', 'line', 'function'].includes(urlTool)) {
+          if (urlTool === 'select') {
+            setActiveMode('select');
+          } else {
+            setActiveShapeType(urlTool as ShapeType);
+            setActiveMode(urlTool === 'function' ? 'function' as OperationMode : 'create' as OperationMode);
+          }
+        }
+      } else if (defaultTool) {
+        // Fall back to defaultTool if no URL parameter
+        if (defaultTool === 'select') {
+          setActiveMode('select');
+        } else if (defaultTool === 'function') {
+          setActiveMode('create');
+          setIsFormulaEditorOpen(true);
+        } else {
+          setActiveMode('create');
+          setActiveShapeType(defaultTool);
+        }
+      }
+    }
+  }, []);
 
   return (
     <div className="flex flex-col h-screen">
