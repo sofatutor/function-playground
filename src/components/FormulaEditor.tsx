@@ -20,6 +20,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import 'katex/dist/katex.min.css';
 import { InlineMath } from 'react-katex';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { detectParameters } from '@/utils/parameterDetection';
 
 interface FormulaEditorProps {
   formulas: Formula[];
@@ -95,7 +96,7 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
   }, []);
 
   // Update the formula being edited
-  const handleUpdateFormula = (key: keyof Formula, value: string | number | boolean | [number, number]) => {
+  const handleUpdateFormula = (key: keyof Formula, value: string | number | boolean | [number, number] | Record<string, number>) => {
     if (!selectedFormulaId) return;
     
     // Update the formula
@@ -387,14 +388,14 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
                 </DialogDescription>
               </DialogHeader>
               
-              <Tabs defaultValue="general" className="mt-2">
+              <Tabs defaultValue="general" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="general">{t('formula.tabs.general')}</TabsTrigger>
                   <TabsTrigger value="parameters">{t('formula.tabs.parameters')}</TabsTrigger>
                 </TabsList>
                 
                 {/* General Tab */}
-                <TabsContent value="general" className="space-y-3 py-2">
+                <TabsContent value="general" className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="formula-name">{t('formula.name')}</Label>
                     <Input
@@ -407,11 +408,100 @@ const FormulaEditor: React.FC<FormulaEditorProps> = ({
                 </TabsContent>
                 
                 {/* Parameters Tab */}
-                <TabsContent value="parameters" className="space-y-3 py-2">
-                  <p className="text-sm text-muted-foreground">
-                    {t('formula.parametersDescription')}
-                  </p>
-                  {/* We'll add parameter configuration here later */}
+                <TabsContent value="parameters" className="space-y-4">
+                  <div className="space-y-4">
+                    {detectParameters(findSelectedFormula()?.expression || '').map((param) => (
+                      <div key={param.name} className="space-y-4 p-4 border rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-base">{param.name}</Label>
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              className="w-20"
+                              value={findSelectedFormula()?.parameters?.[param.name] ?? param.defaultValue}
+                              onChange={(e) => handleUpdateFormula('parameters', {
+                                ...(findSelectedFormula()?.parameters || {}),
+                                [param.name]: e.target.value ? parseFloat(e.target.value) : param.defaultValue
+                              } as Record<string, number>)}
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>{t('formula.parameterRange')}</Label>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-1">
+                              <Label className="text-xs">{t('formula.minValue')}</Label>
+                              <Input
+                                type="number"
+                                value={param.minValue}
+                                onChange={(e) => {
+                                  const newMinValue = e.target.value ? parseFloat(e.target.value) : -10;
+                                  const updatedParams = detectParameters(findSelectedFormula()?.expression || '')
+                                    .map(p => p.name === param.name 
+                                      ? { ...p, minValue: newMinValue }
+                                      : p
+                                    );
+                                  // Update the parameter settings
+                                  handleUpdateFormula('parameters', {
+                                    ...(findSelectedFormula()?.parameters || {}),
+                                    [param.name]: Math.max(newMinValue, findSelectedFormula()?.parameters?.[param.name] ?? param.defaultValue)
+                                  } as Record<string, number>);
+                                }}
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">{t('formula.maxValue')}</Label>
+                              <Input
+                                type="number"
+                                value={param.maxValue}
+                                onChange={(e) => {
+                                  const newMaxValue = e.target.value ? parseFloat(e.target.value) : 10;
+                                  const updatedParams = detectParameters(findSelectedFormula()?.expression || '')
+                                    .map(p => p.name === param.name 
+                                      ? { ...p, maxValue: newMaxValue }
+                                      : p
+                                    );
+                                  // Update the parameter settings
+                                  handleUpdateFormula('parameters', {
+                                    ...(findSelectedFormula()?.parameters || {}),
+                                    [param.name]: Math.min(newMaxValue, findSelectedFormula()?.parameters?.[param.name] ?? param.defaultValue)
+                                  } as Record<string, number>);
+                                }}
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">{t('formula.step')}</Label>
+                            <Input
+                              type="number"
+                              value={param.step}
+                              onChange={(e) => {
+                                const newStep = e.target.value ? parseFloat(e.target.value) : 0.1;
+                                const updatedParams = detectParameters(findSelectedFormula()?.expression || '')
+                                  .map(p => p.name === param.name 
+                                    ? { ...p, step: newStep }
+                                    : p
+                                  );
+                              }}
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>{t('formula.quickAdjust')}</Label>
+                          <Slider
+                            value={[findSelectedFormula()?.parameters?.[param.name] ?? param.defaultValue]}
+                            min={param.minValue}
+                            max={param.maxValue}
+                            step={param.step}
+                            onValueChange={(value) => handleUpdateFormula('parameters', {
+                              ...(findSelectedFormula()?.parameters || {}),
+                              [param.name]: value[0]
+                            } as Record<string, number>)}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </TabsContent>
               </Tabs>
             </DialogContent>

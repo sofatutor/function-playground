@@ -122,7 +122,12 @@ export const translations = {
       options: "Formula Options",
       optionsTooltip: "Configure formula settings",
       description: "Configure formula settings and parameters",
-      name: "Formula Name",
+      name: "Name",
+      minValue: "Min Value",
+      maxValue: "Max Value",
+      step: "Step",
+      parameterRange: "Parameter Range",
+      quickAdjust: "Quick Adjust",
       tabs: {
         general: "General",
         parameters: "Parameters"
@@ -254,6 +259,11 @@ export const translations = {
       optionsTooltip: "Configurar ajustes de fórmula",
       description: "Configurar ajustes y parámetros de la fórmula",
       name: "Nombre de la fórmula",
+      minValue: "Valor Mínimo",
+      maxValue: "Valor Máximo",
+      step: "Paso",
+      parameterRange: "Rango de Parámetro",
+      quickAdjust: "Ajustar Rápidamente",
       tabs: {
         general: "General",
         parameters: "Parámetros"
@@ -387,6 +397,11 @@ export const translations = {
       optionsTooltip: "Configurer les paramètres de la formule",
       description: "Configurer les paramètres et options de la formule",
       name: "Nom de la formule",
+      minValue: "Valeur Minimale",
+      maxValue: "Valeur Maximale",
+      step: "Étape",
+      parameterRange: "Plage de Paramètre",
+      quickAdjust: "Régler Rapidement",
       tabs: {
         general: "Général",
         parameters: "Paramètres"
@@ -518,6 +533,11 @@ export const translations = {
       optionsTooltip: "Formeleinstellungen konfigurieren",
       description: "Formeleinstellungen und Parameter konfigurieren",
       name: "Formelname",
+      minValue: "Minimalwert",
+      maxValue: "Maximalwert",
+      step: "Schritt",
+      parameterRange: "Parameterbereich",
+      quickAdjust: "Schnell einstellen",
       tabs: {
         general: "Allgemein",
         parameters: "Parameter"

@@ -9,11 +9,13 @@ export interface Formula {
   expression: string;
   color: string;
   strokeWidth: number;
-  xRange: [number, number]; // For function and parametric
-  tRange?: [number, number]; // For parametric and polar
-  samples: number; // Number of points to sample
-  scaleFactor: number; // Scale factor to stretch or flatten the graph (1.0 is normal)
-  parameters?: Record<string, number>; // Map of parameter names to their current values
+  xRange: [number, number]; // The range of x values to plot
+  tRange?: [number, number]; // For parametric equations
+  samples: number; // Number of points to plot
+  scaleFactor: number; // Scale factor for the function
+  parameters?: Record<string, number>; // Parameters for the function
+  minValue?: number; // Minimum value for the function
+  maxValue?: number; // Maximum value for the function
 }
 
 export interface FormulaPoint {
