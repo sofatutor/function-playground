@@ -1,0 +1,25 @@
+---
+alwaysApply: true
+---
+## Working Agreement & Process (adapted for this repo)
+
+### Core Workflow Rules
+- Keep [README.md](mdc:README.md) and docs in `docs/` accurate when changing features or flows.
+- Small, focused edits. Follow SRP/DRY/KISS; keep TypeScript types explicit.
+- UI changes use Shadcn components; ensure accessibility.
+
+### TDD & Quality
+- Write or update tests alongside code.
+- Prefer table-driven/component-focused tests with React Testing Library.
+- Maintain or improve coverage on changed areas; avoid adding tests for unused code.
+
+### Git conventions
+- Atomic commits with prefixes: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`.
+- No WIP/TODO/FIXME comments in committed code.
+- Group related changes; avoid unrelated formatting churn.
+
+### Pre-push checklist
+- `npm run lint` is clean.
+- `npm run test` green; run `npm run test:coverage` for core logic changes.
+- For flows touched by UI/state changes, run E2E: `npm run e2e`.
+- No secrets or large artifacts added.

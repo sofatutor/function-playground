@@ -1,0 +1,16 @@
+---
+alwaysApply: true
+---
+## Commands
+
+- **Dev server**: `npm run dev`
+- **Build (prod)**: `npm run build`
+- **Build (dev mode)**: `npm run build:dev`
+- **Lint**: `npm run lint`
+- **Unit tests**: `npm run test` | CI: `npm run test:ci`
+- **Coverage (unit)**: `npm run test:coverage` → outputs to `coverage/unit`
+- **E2E tests (local)**: `npm run e2e`
+- **E2E tests (CI)**: `npm run e2e:ci`
+- **E2E coverage**: `npm run e2e:coverage` → outputs to `coverage/e2e`
+
+See [package.json](mdc:package.json) for all scripts.

@@ -1,0 +1,40 @@
+---
+alwaysApply: true
+description: Testing, coverage, lint, and pre-push quality rules for this TypeScript/React repository
+---
+## Testing, Coverage, and Lint Rules (TypeScript / Jest / Playwright)
+
+### Unit tests (Jest)
+- Fast run: `npm run test`
+- CI run with coverage: `npm run test:coverage` (sets `COLLECT_COVERAGE=true`)
+- Config: [jest.config.ts](mdc:jest.config.ts)
+  - Test pattern: `**/__tests__/**/*.test.ts?(x)`
+  - jsdom environment, `ts-jest` transform via `tsconfig.test.json`
+  - Coverage output: `./coverage/unit` (lcov, json, html, text)
+
+### E2E tests (Playwright)
+- Local: `npm run e2e`
+- CI: `npm run e2e:ci` (reporters list + GitHub)
+- Coverage: `npm run e2e:coverage` (uses `vite-plugin-istanbul` and nyc; reports in `./coverage/e2e`)
+- Config: [playwright.config.ts](mdc:playwright.config.ts) (starts dev server on `:8080`)
+
+### Linters and formatting
+- ESLint: `npm run lint` (errors on warnings > 0 due to `--max-warnings 0`).
+- ESLint config: [eslint.config.js](mdc:eslint.config.js)
+  - TypeScript + React Hooks rules, React Refresh checks
+  - Warn on TODO/FIXME/WIP comments; avoid committing WIP
+
+### CI workflow (GitHub Actions)
+- Workflow: [.github/workflows/test.yml](mdc:.github/workflows/test.yml)
+  - Node 20, caches npm and Playwright binaries
+  - Jobs: Unit tests with coverage upload to Coveralls; E2E tests with coverage + artifacts
+
+### Success criteria (local before push)
+- Unit tests passing: `npm run test` (and `npm run test:coverage` if changing logic)
+- E2E tests pass for affected flows: `npm run e2e`
+- Linters clean: `npm run lint` returns 0 issues
+- No stray WIP/TODO comments left
+
+### Coverage targets
+- The repo currently enforces low thresholds in config. Aim for 80%+ on changed areas and raise thresholds over time.
+- Prefer removing dead/unused code over writing tests for it.

@@ -1,0 +1,11 @@
+---
+globs: e2e/**/*.ts
+description: Playwright E2E guidelines tailored to this repo
+---
+## E2E Guidelines (Playwright)
+
+- The dev server runs automatically (see `webServer` in [playwright.config.ts](mdc:playwright.config.ts)). Do not start another server in tests.
+- Prefer waiting on selectors/state over arbitrary timeouts; keep global timeouts as configured.
+- Use stable selectors; avoid brittle text-only selectors when structure is available.
+- Capture failures with built-in trace/screenshots; artifacts output to `test-results/`.
+- Keep tests independent; do not rely on execution order; prefer `test.step` for clarity.

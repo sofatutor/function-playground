@@ -1,0 +1,13 @@
+---
+globs: src/**/*.ts,src/**/*.tsx
+description: i18n and UI conventions for React/Shadcn components
+---
+## UI & i18n Conventions
+
+- Use Shadcn UI primitives from `src/components/ui` for consistency.
+- Ensure accessibility: proper roles/labels, keyboard navigation, focus management.
+- Any user-facing text must be translatable. Update:
+  - Dictionaries in [src/locales](mdc:src/locales)
+  - Translation utilities in [src/i18n](mdc:src/i18n)
+- Keep UI logic lean; push business/geometry logic into services or utils.
+- Memoize heavy computations; avoid excessive event handlers; debounce where appropriate.

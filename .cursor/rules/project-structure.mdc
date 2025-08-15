@@ -1,0 +1,38 @@
+---
+alwaysApply: true
+---
+## Project Structure Guide (TypeScript + React + Vite)
+
+- **App entry**: [src/main.tsx](mdc:src/main.tsx) bootstraps React and mounts [src/App.tsx](mdc:src/App.tsx).
+- **Routing/pages**: [src/pages](mdc:src/pages) with `Index.tsx` and `NotFound.tsx`.
+- **Components**: [src/components](mdc:src/components), Shadcn UI primitives in [src/components/ui](mdc:src/components/ui).
+- **State & Context**: [src/contexts](mdc:src/contexts) and [src/context](mdc:src/context) for global state (e.g., grid zoom provider).
+- **Services**: Shape services in [src/services](mdc:src/services) with implementations under `implementations/`.
+- **Utils**: Geometry/math utilities in [src/utils](mdc:src/utils) and subfolders.
+- **Types**: Shared types in [src/types](mdc:src/types).
+- **Tests**:
+  - Unit tests: [src/__tests__](mdc:src/__tests__) (Jest) and component tests colocated under component folders.
+  - E2E tests: [e2e](mdc:e2e) (Playwright). Global setup at [e2e/global-setup.ts](mdc:e2e/global-setup.ts).
+
+## Tooling
+
+- **Package management & scripts**: [package.json](mdc:package.json)
+- **Jest config**: [jest.config.ts](mdc:jest.config.ts)
+- **Playwright config**: [playwright.config.ts](mdc:playwright.config.ts) (starts dev server via `npm run dev` on `http://localhost:8080`).
+- **ESLint config**: [eslint.config.js](mdc:eslint.config.js)
+- **Vite config**: [vite.config.ts](mdc:vite.config.ts)
+- **Tailwind**: [tailwind.config.ts](mdc:tailwind.config.ts), CSS at [src/index.css](mdc:src/index.css) and [src/App.css](mdc:src/App.css)
+- **CI**: GitHub Actions workflow at [.github/workflows/test.yml](mdc:.github/workflows/test.yml)
+
+## Conventions
+
+- TypeScript-first; keep files small and focused (SRP, DRY, KISS).
+- Use Shadcn components for UI primitives and ensure accessibility.
+- Update translations in [src/locales](mdc:src/locales) and i18n helpers in [src/i18n](mdc:src/i18n) when changing user-facing copy.
+
+## Quickstart
+
+- Dev: `npm run dev`
+- Lint: `npm run lint`
+- Unit tests: `npm run test` (coverage: `npm run test:coverage`)
+- E2E tests: `npm run e2e` (CI/reporters: `npm run e2e:ci`)

@@ -1,0 +1,36 @@
+---
+alwaysApply: true
+---
+## Geo-Playground Guidelines
+
+### Code
+- TypeScript with proper typing; keep files small and focused (KISS/DRY/SRP).
+- Use Shadcn UI components; ensure accessibility.
+- Update translations when changing user-facing text (`src/locales/*`, `src/i18n/*`).
+
+### Commands
+- Dev: `npm run dev`
+- Lint: `npm run lint`
+- Build (prod): `npm run build`
+- Build (dev): `npm run build:dev`
+- Unit tests: `npm run test` (`npm run test:coverage`)
+- E2E tests: `npm run e2e:ci` (server auto-starts via Playwright config)
+
+### Git
+- Atomic commits with prefixes: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`.
+- Group related changes logically; do not commit WIP or redundant comments.
+
+### State
+- React Context for global state; React Query for server state; local state when possible.
+
+### Testing
+- Jest for unit tests; React Testing Library for components.
+- Playwright for E2E; avoid arbitrary timeouts—prefer waiting selectors/state.
+- Pattern: "should [expected behavior] when [condition]".
+- Run relevant tests after changes; headless mode in CI.
+- Prefer removing unused code over covering it.
+
+### Perf/Security
+- Memoize heavy calculations; lazy load when appropriate.
+- Validate inputs; sanitize outputs; avoid exposing sensitive data.
+- Avoid excessive event handlers.

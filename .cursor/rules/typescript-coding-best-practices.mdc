@@ -1,0 +1,20 @@
+---
+globs: src/**/*.ts,src/**/*.tsx
+alwaysApply: false
+description: General coding best practices for this TypeScript/React repository
+---
+# General Coding Best Practices (TypeScript/React)
+
+1. **DRY (Don't Repeat Yourself):** Extract reusable logic into well-named functions, hooks, or utilities.
+2. **SRP (Single Responsibility Principle):** Components/hooks/services should have clear, focused responsibilities.
+3. **KISS:** Prefer simple, readable solutions over clever ones.
+4. **TypeScript Style:**
+   - Use explicit types for exported APIs and complex objects.
+   - Prefer discriminated unions and enums over stringly-typed code.
+   - Avoid `any`; use generics or precise interfaces/types.
+5. **Error Handling:** Surface user-meaningful errors in UI; fail fast in services/utils with typed errors when appropriate.
+6. **Documentation:** Keep props and exported functions self-explanatory via naming; add concise JSDoc where non-obvious.
+7. **Testing:**
+   - Unit test services/utils and non-trivial component logic (RTL).
+   - Cover edge cases and state transitions.
+8. **Performance:** Memoize expensive computations; avoid unnecessary re-renders; lazy-load where appropriate.
