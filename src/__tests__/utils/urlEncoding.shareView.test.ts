@@ -180,7 +180,7 @@ describe('ShareViewOptions URL encoding/decoding', () => {
   });
 
   describe('applyShareViewOptionsPrecedence', () => {
-    it('should return options unchanged for default layout', () => {
+    it('should return options unchanged for default layout when funcOnly is false', () => {
       const options: ShareViewOptions = {
         layout: 'default',
         funcOnly: true,
@@ -191,13 +191,11 @@ describe('ShareViewOptions URL encoding/decoding', () => {
         lang: 'en',
       };
 
-      const result = applyShareViewOptionsPrecedence(options);
-      expect(result).toEqual(options);
+      const result = applyShareViewOptionsPrecedence({ ...options, funcOnly: false });
+      expect(result).toEqual({ ...options, funcOnly: false });
     });
 
-    it('should return options unchanged for noninteractive layout', () => {
-      // Note: The precedence function documents rules but doesn't modify values
-      // The actual precedence is applied in UI rendering logic
+    it('should hide all UI controls when layout is noninteractive', () => {
       const options: ShareViewOptions = {
         layout: 'noninteractive',
         funcOnly: true,
@@ -209,7 +207,31 @@ describe('ShareViewOptions URL encoding/decoding', () => {
       };
 
       const result = applyShareViewOptionsPrecedence(options);
-      expect(result).toEqual(options);
+      expect(result).toEqual({
+        ...options,
+        tools: false,
+        zoom: false,
+        unitCtl: false,
+        fullscreen: false,
+      });
+    });
+
+    it('should hide tools when funcOnly is true and layout is default', () => {
+      const options: ShareViewOptions = {
+        layout: 'default',
+        funcOnly: true,
+        fullscreen: true,
+        tools: true,
+        zoom: true,
+        unitCtl: true,
+        lang: 'en',
+      };
+
+      const result = applyShareViewOptionsPrecedence(options);
+      expect(result).toEqual({
+        ...options,
+        tools: false,
+      });
     });
   });
 

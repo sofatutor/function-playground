@@ -545,17 +545,27 @@ export function serializeShareViewOptionsToQuery(options: ShareViewOptions): str
  */
 export function applyShareViewOptionsPrecedence(options: ShareViewOptions): ShareViewOptions {
   const result = { ...options };
-  
-  // If layout is noninteractive, hide all UI controls
+
+  // Highest precedence: noninteractive hides all UI controls regardless of individual toggles
   if (result.layout === 'noninteractive') {
-    // Note: We don't modify the actual boolean values here since they represent
-    // user preferences. The precedence is applied in the UI rendering logic.
-    // This function documents the precedence rules and can be used for validation.
-    return result;
+    return {
+      ...result,
+      tools: false,
+      zoom: false,
+      unitCtl: false,
+      fullscreen: false,
+    };
   }
-  
-  // If funcOnly is true, certain UI elements should be hidden
-  // Again, the actual application of these rules happens in the UI components
+
+  // Next precedence: funcOnly hides geometry/tools UI (but keeps other UI as configured)
+  if (result.funcOnly) {
+    return {
+      ...result,
+      tools: false,
+    };
+  }
+
+  // Otherwise respect individual toggles as-is
   return result;
 }
 
