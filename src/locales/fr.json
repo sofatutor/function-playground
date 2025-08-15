@@ -251,7 +251,9 @@
       "zoom": "Contrôles de Zoom",
       "zoomDescription": "Afficher les contrôles de zoom avant/arrière",
       "unitCtl": "Sélecteur d'Unités",
-      "unitCtlDescription": "Afficher le sélecteur d'unités de mesure"
+      "unitCtlDescription": "Afficher le sélecteur d'unités de mesure",
+      "header": "En-tête",
+      "headerDescription": "Afficher l'en-tête avec le titre et la description de l'app"
     },
     "language": {
       "title": "Langue",

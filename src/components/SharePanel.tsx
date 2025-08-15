@@ -226,6 +226,23 @@ export const SharePanel: React.FC<SharePanelProps> = ({ open, onOpenChange }) =>
                   disabled={shareViewOptions.layout === 'noninteractive'}
                 />
               </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="header" className="text-sm font-medium">
+                    {t('sharePanel.options.header')}
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    {t('sharePanel.options.headerDescription')}
+                  </p>
+                </div>
+                <Switch
+                  id="header"
+                  checked={shareViewOptions.header}
+                  onCheckedChange={(checked) => updateShareViewOption('header', checked)}
+                  disabled={shareViewOptions.layout === 'noninteractive'}
+                />
+              </div>
             </div>
           </div>
 

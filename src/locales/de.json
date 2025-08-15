@@ -253,7 +253,9 @@
       "zoom": "Zoom-Steuerung",
       "zoomDescription": "Vergrößern/Verkleinern-Steuerung anzeigen",
       "unitCtl": "Einheiten-Selektor",
-      "unitCtlDescription": "Messeinheiten-Selektor anzeigen"
+      "unitCtlDescription": "Messeinheiten-Selektor anzeigen",
+      "header": "Kopfzeile",
+      "headerDescription": "App-Titel und Beschreibungs-Header anzeigen"
     },
     "language": {
       "title": "Sprache",

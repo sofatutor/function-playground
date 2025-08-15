@@ -251,7 +251,9 @@
       "zoom": "Controles de Zoom",
       "zoomDescription": "Mostrar controles de acercar/alejar",
       "unitCtl": "Selector de Unidades",
-      "unitCtlDescription": "Mostrar selector de unidades de medida"
+      "unitCtlDescription": "Mostrar selector de unidades de medida",
+      "header": "Encabezado",
+      "headerDescription": "Mostrar encabezado con título y descripción de la app"
     },
     "language": {
       "title": "Idioma",

@@ -254,7 +254,9 @@
       "zoom": "Zoom Controls",
       "zoomDescription": "Show zoom in/out controls",
       "unitCtl": "Unit Selector",
-      "unitCtlDescription": "Show measurement unit selector"
+      "unitCtlDescription": "Show measurement unit selector",
+      "header": "Header",
+      "headerDescription": "Show app title and description header"
     },
     "language": {
       "title": "Language",
