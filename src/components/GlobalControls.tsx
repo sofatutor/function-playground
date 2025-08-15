@@ -92,13 +92,11 @@ const GlobalControls: React.FC<GlobalControlsProps> = ({
         </TooltipProvider>
       </div>
       
-      {/* SharePanel - only render if admin controls are enabled */}
-      {showAdminControls && (
-        <SharePanel 
-          open={isSharePanelOpen} 
-          onOpenChange={setIsSharePanelOpen} 
-        />
-      )}
+      {/* SharePanel - always render to prevent unmounting when admin controls are toggled */}
+      <SharePanel 
+        open={isSharePanelOpen} 
+        onOpenChange={setIsSharePanelOpen} 
+      />
     </>
   );
 };
