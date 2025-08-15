@@ -32,6 +32,8 @@ interface FormulaCanvasProps extends GeometryCanvasProps {
   pixelsPerUnit?: number;
   serviceFactory?: ShapeServiceFactory;
   canvasTools?: React.ReactNode; // Add canvasTools prop
+  isNonInteractive?: boolean; // Add isNonInteractive prop
+  showZoomControls?: boolean; // Add showZoomControls prop
 }
 
 interface GeometryCanvasProps {
@@ -85,7 +87,9 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
   serviceFactory,
   onMeasurementUpdate,
   onFormulaSelect,
-  canvasTools
+  canvasTools,
+  isNonInteractive = false,
+  showZoomControls = true
 }) => {
   const { zoomFactor, setZoomFactor } = useGridZoom();
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -1519,16 +1523,17 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
         ref={canvasRef}
         className="canvas-container relative w-full h-full overflow-hidden"
         style={{ 
-          cursor: activeMode === 'move' ? 'move' : 'default'
+          cursor: activeMode === 'move' ? 'move' : 'default',
+          pointerEvents: isNonInteractive ? 'none' : 'auto'
         }}
         tabIndex={0}
-        onKeyDown={handleKeyDown}
-        onKeyUp={handleKeyUp}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={customMouseUpHandler}
-        onMouseLeave={customMouseUpHandler}
-        onClick={(e) => {
+        onKeyDown={isNonInteractive ? undefined : handleKeyDown}
+        onKeyUp={isNonInteractive ? undefined : handleKeyUp}
+        onMouseDown={isNonInteractive ? undefined : handleMouseDown}
+        onMouseMove={isNonInteractive ? undefined : handleMouseMove}
+        onMouseUp={isNonInteractive ? undefined : customMouseUpHandler}
+        onMouseLeave={isNonInteractive ? undefined : customMouseUpHandler}
+        onClick={isNonInteractive ? undefined : (e) => {
           // Focus the canvas container when clicking on it
           focusCanvas();
           
@@ -1562,10 +1567,12 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
           onMoveAllShapes={handleMoveAllShapes}
           initialPosition={gridPosition}
           onPositionChange={handleGridPositionChange}
+          showZoomControls={showZoomControls}
+          isNonInteractive={isNonInteractive}
         />
         
-        {/* Render shapes with scaled values */}
-        {scaledShapes.map(shape => (
+        {/* Render shapes with scaled values - hidden in noninteractive mode */}
+        {!isNonInteractive && scaledShapes.map(shape => (
           <div 
             key={shape.id}
             onClick={() => handleShapeSelect(shape.id)}
@@ -1603,30 +1610,34 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
           </div>
         ))}
         
-        {/* Preview shape while drawing */}
-        <PreviewShape
-          isDrawing={isDrawing}
-          drawStart={drawStart}
-          drawCurrent={drawCurrent}
-          activeShapeType={activeShapeType}
-          snapToGrid={isShiftPressed && !isAltPressed}
-          pixelsPerSmallUnit={zoomedPixelsPerSmallUnit}
-          zoomFactor={zoomFactor}
-        />
+        {/* Preview shape while drawing - hidden in noninteractive mode */}
+        {!isNonInteractive && (
+          <PreviewShape
+            isDrawing={isDrawing}
+            drawStart={drawStart}
+            drawCurrent={drawCurrent}
+            activeShapeType={activeShapeType}
+            snapToGrid={isShiftPressed && !isAltPressed}
+            pixelsPerSmallUnit={zoomedPixelsPerSmallUnit}
+            zoomFactor={zoomFactor}
+          />
+        )}
         
-        {/* Dedicated formula layer with its own SVG */}
-        <div className="absolute inset-0" style={{ zIndex: 15, pointerEvents: 'none' }}>
-          <svg 
-            width="100%" 
-            height="100%" 
-            style={{ pointerEvents: 'none' }}
-          >
-            {renderFormulas()}
-          </svg>
-        </div>
+        {/* Dedicated formula layer with its own SVG - hidden in noninteractive mode */}
+        {!isNonInteractive && (
+          <div className="absolute inset-0" style={{ zIndex: 15, pointerEvents: 'none' }}>
+            <svg 
+              width="100%" 
+              height="100%" 
+              style={{ pointerEvents: 'none' }}
+            >
+              {renderFormulas()}
+            </svg>
+          </div>
+        )}
         
-        {/* Display unified info panel */}
-        {(selectedPoint || selectedShapeId) && (
+        {/* Display unified info panel - hidden in noninteractive mode */}
+        {!isNonInteractive && (selectedPoint || selectedShapeId) && (
           <div 
             className={`absolute w-80 unified-info-panel-container bottom-4 z-40 transition-all duration-200 ease-in-out ${
               showCalibration ? 'right-[calc(20rem+1rem)]' : 'right-4'

@@ -9,11 +9,15 @@ import { SharePanel } from '@/components/SharePanel';
 interface GlobalControlsProps {
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
+  showFullscreenButton?: boolean;
+  showZoomControls?: boolean;
 }
 
 const GlobalControls: React.FC<GlobalControlsProps> = ({
   isFullscreen,
-  onToggleFullscreen
+  onToggleFullscreen,
+  showFullscreenButton = true,
+  showZoomControls = true
 }) => {
   const t = useTranslate();
   const { setGlobalConfigModalOpen } = useGlobalConfig();
@@ -57,26 +61,28 @@ const GlobalControls: React.FC<GlobalControlsProps> = ({
             </TooltipContent>
           </Tooltip>
 
-          {/* Fullscreen Button */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={onToggleFullscreen}
-                className="h-9 w-9"
-              >
-                {isFullscreen ? (
-                  <Minimize2 className="h-4 w-4" />
-                ) : (
-                  <Maximize2 className="h-4 w-4" />
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{isFullscreen ? t('exitFullscreen') : t('enterFullscreen')}</p>
-            </TooltipContent>
-          </Tooltip>
+          {/* Fullscreen Button - only show if enabled */}
+          {showFullscreenButton && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={onToggleFullscreen}
+                  className="h-9 w-9"
+                >
+                  {isFullscreen ? (
+                    <Minimize2 className="h-4 w-4" />
+                  ) : (
+                    <Maximize2 className="h-4 w-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{isFullscreen ? t('exitFullscreen') : t('enterFullscreen')}</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
         </TooltipProvider>
       </div>
       
