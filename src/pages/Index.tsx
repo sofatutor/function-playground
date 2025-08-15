@@ -338,7 +338,6 @@ const Index = () => {
                 <GlobalControls 
                   isFullscreen={isFullscreen} 
                   onToggleFullscreen={toggleFullscreen}
-                  onShare={shareCanvasUrl}
                 />
               </div>
               

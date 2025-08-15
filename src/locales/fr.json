@@ -227,5 +227,56 @@
   "scaleMin": "0,001x",
   "scaleDefault": "1,0x",
   "previousFormula": "Formule Précédente",
-  "nextFormula": "Formule Suivante"
+  "nextFormula": "Formule Suivante",
+  "sharePanel": {
+    "title": "Partager",
+    "description": "Configurer la mise en page et les options de partage",
+    "layout": {
+      "title": "Mise en Page",
+      "description": "Choisissez comment votre toile sera affichée lors du partage",
+      "default": "Par Défaut",
+      "defaultDescription": "Toile interactive complète avec tous les contrôles",
+      "noninteractive": "Non Interactif",
+      "noninteractiveDescription": "Affichage de grille uniquement pour visualisation passive"
+    },
+    "options": {
+      "title": "Options",
+      "description": "Configurer quels éléments de l'interface sont visibles",
+      "funcOnly": "Fonctions Seulement",
+      "funcOnlyDescription": "Masquer les outils de géométrie, afficher seulement le traceur de fonctions",
+      "fullscreen": "Bouton Plein Écran",
+      "fullscreenDescription": "Afficher le bouton de basculement plein écran",
+      "tools": "Outils de Toile",
+      "toolsDescription": "Afficher les outils de dessin et d'édition",
+      "zoom": "Contrôles de Zoom",
+      "zoomDescription": "Afficher les contrôles de zoom avant/arrière",
+      "unitCtl": "Sélecteur d'Unités",
+      "unitCtlDescription": "Afficher le sélecteur d'unités de mesure"
+    },
+    "language": {
+      "title": "Langue",
+      "description": "Sélectionner la langue d'affichage",
+      "placeholder": "Sélectionner une langue"
+    },
+    "url": {
+      "title": "Lien de Partage",
+      "description": "Copiez cette URL pour partager votre toile",
+      "copyButton": "Copier le Lien",
+      "copiedSuccess": "Lien copié dans le presse-papiers !",
+      "copyError": "Erreur lors de la copie du lien",
+      "resetButton": "Rétablir par Défaut"
+    },
+    "embed": {
+      "title": "Code d'Intégration",
+      "description": "Utilisez ce code HTML pour intégrer la toile dans votre site web",
+      "widthLabel": "Largeur",
+      "heightLabel": "Hauteur",
+      "widthPlaceholder": "800",
+      "heightPlaceholder": "600",
+      "codeLabel": "Code HTML",
+      "copyButton": "Copier le Code",
+      "copiedSuccess": "Code d'intégration copié dans le presse-papiers !",
+      "copyError": "Erreur lors de la copie du code d'intégration"
+    }
+  }
 } 
