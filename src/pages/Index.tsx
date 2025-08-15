@@ -377,6 +377,7 @@ const Index = () => {
                     onToggleFullscreen={toggleFullscreen}
                     showFullscreenButton={appliedOptions.fullscreen}
                     showZoomControls={appliedOptions.zoom}
+                    showAdminControls={appliedOptions.admin}
                   />
                 </div>
               )}

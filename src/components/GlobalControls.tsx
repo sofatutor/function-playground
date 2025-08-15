@@ -11,13 +11,15 @@ interface GlobalControlsProps {
   onToggleFullscreen: () => void;
   showFullscreenButton?: boolean;
   showZoomControls?: boolean;
+  showAdminControls?: boolean;
 }
 
 const GlobalControls: React.FC<GlobalControlsProps> = ({
   isFullscreen,
   onToggleFullscreen,
   showFullscreenButton = true,
-  showZoomControls = true
+  showZoomControls = true,
+  showAdminControls = true
 }) => {
   const t = useTranslate();
   const { setGlobalConfigModalOpen } = useGlobalConfig();
@@ -27,39 +29,43 @@ const GlobalControls: React.FC<GlobalControlsProps> = ({
     <>
       <div className="flex items-center space-x-1">
         <TooltipProvider>
-          {/* Share Button */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setIsSharePanelOpen(true)}
-                className="h-9 w-9"
-              >
-                <Share2 className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{t('shareCanvas')}</p>
-            </TooltipContent>
-          </Tooltip>
+          {/* Share Button - only show if admin controls are enabled */}
+          {showAdminControls && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setIsSharePanelOpen(true)}
+                  className="h-9 w-9"
+                >
+                  <Share2 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{t('shareCanvas')}</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
 
-          {/* Global Settings Button */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setGlobalConfigModalOpen(true)}
-                className="h-9 w-9"
-              >
-                <Settings className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{t('configModal.title')}</p>
-            </TooltipContent>
-          </Tooltip>
+          {/* Global Settings Button - only show if admin controls are enabled */}
+          {showAdminControls && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setGlobalConfigModalOpen(true)}
+                  className="h-9 w-9"
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{t('configModal.title')}</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
 
           {/* Fullscreen Button - only show if enabled */}
           {showFullscreenButton && (
@@ -86,10 +92,13 @@ const GlobalControls: React.FC<GlobalControlsProps> = ({
         </TooltipProvider>
       </div>
       
-      <SharePanel 
-        open={isSharePanelOpen} 
-        onOpenChange={setIsSharePanelOpen} 
-      />
+      {/* SharePanel - only render if admin controls are enabled */}
+      {showAdminControls && (
+        <SharePanel 
+          open={isSharePanelOpen} 
+          onOpenChange={setIsSharePanelOpen} 
+        />
+      )}
     </>
   );
 };
