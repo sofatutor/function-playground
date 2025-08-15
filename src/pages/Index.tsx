@@ -60,7 +60,7 @@ const Index = () => {
     getShapeMeasurements,
     getSelectedShape,
     updateMeasurement
-  } = useShapeOperations();
+  } = useShapeOperations({ showToasts: appliedOptions.layout !== 'noninteractive' });
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [formulas, setFormulas] = useState<Formula[]>([]);
@@ -197,7 +197,9 @@ const Index = () => {
       setFormulas(formulasFromUrl);
       setSelectedFormulaId(formulasFromUrl[0].id);
       setIsFormulaEditorOpen(true);
-      toast.success(`Loaded ${formulasFromUrl.length} formulas from URL`);
+      if (appliedOptions.layout !== 'noninteractive') {
+        toast.success(`Loaded ${formulasFromUrl.length} formulas from URL`);
+      }
     }
 
     // Mark as loaded from URL

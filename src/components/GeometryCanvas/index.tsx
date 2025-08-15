@@ -1571,21 +1571,21 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
           isNonInteractive={isNonInteractive}
         />
         
-        {/* Render shapes with scaled values - hidden in noninteractive mode */}
-        {!isNonInteractive && scaledShapes.map(shape => (
+        {/* Render shapes with scaled values */}
+        {scaledShapes.map(shape => (
           <div 
             key={shape.id}
-            onClick={() => handleShapeSelect(shape.id)}
-            style={{ cursor: activeMode === 'select' ? 'pointer' : 'default' }}
+            onClick={isNonInteractive ? undefined : () => handleShapeSelect(shape.id)}
+            style={{ cursor: isNonInteractive ? 'default' : (activeMode === 'select' ? 'pointer' : 'default') }}
           >
             <ShapeRenderer
               shape={shape} 
-              isSelected={shape.id === selectedShapeId}
+              isSelected={!isNonInteractive && shape.id === selectedShapeId}
               activeMode={activeMode}
             />
             
-            {/* Add rotate handlers for selected shapes only when in rotate mode */}
-            {shape.id === selectedShapeId && activeMode === 'rotate' && (
+            {/* Add rotate handlers for selected shapes only when in rotate mode - hidden in noninteractive mode */}
+            {!isNonInteractive && shape.id === selectedShapeId && activeMode === 'rotate' && (
               <>
                 {/* Rotate handle */}
                 <div 
@@ -1623,18 +1623,16 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
           />
         )}
         
-        {/* Dedicated formula layer with its own SVG - hidden in noninteractive mode */}
-        {!isNonInteractive && (
-          <div className="absolute inset-0" style={{ zIndex: 15, pointerEvents: 'none' }}>
-            <svg 
-              width="100%" 
-              height="100%" 
-              style={{ pointerEvents: 'none' }}
-            >
-              {renderFormulas()}
-            </svg>
-          </div>
-        )}
+        {/* Dedicated formula layer with its own SVG */}
+        <div className="absolute inset-0" style={{ zIndex: 15, pointerEvents: isNonInteractive ? 'none' : 'auto' }}>
+          <svg 
+            width="100%" 
+            height="100%" 
+            style={{ pointerEvents: isNonInteractive ? 'none' : 'auto' }}
+          >
+            {renderFormulas()}
+          </svg>
+        </div>
         
         {/* Display unified info panel - hidden in noninteractive mode */}
         {!isNonInteractive && (selectedPoint || selectedShapeId) && (
