@@ -229,5 +229,56 @@
   "scaleFactor": "Skalierungsfaktor",
   "scaleFactorHint": "Passen Sie den Skalierungsfaktor an, um den Graphen vertikal zu strecken oder zu komprimieren",
   "scaleMin": "0,001x",
-  "scaleDefault": "1,0x"
+  "scaleDefault": "1,0x",
+  "sharePanel": {
+    "title": "Teilen",
+    "description": "Layout und Optionen für das Teilen konfigurieren",
+    "layout": {
+      "title": "Layout",
+      "description": "Wählen Sie aus, wie Ihre Leinwand beim Teilen angezeigt wird",
+      "default": "Standard",
+      "defaultDescription": "Vollständige interaktive Leinwand mit allen Steuerelementen",
+      "noninteractive": "Nicht interaktiv",
+      "noninteractiveDescription": "Nur-Raster-Anzeige für passive Betrachtung"
+    },
+    "options": {
+      "title": "Optionen",
+      "description": "Konfigurieren Sie, welche UI-Elemente sichtbar sind",
+      "funcOnly": "Nur Funktionen",
+      "funcOnlyDescription": "Geometrie-Tools ausblenden, nur Funktionsplotter anzeigen",
+      "fullscreen": "Vollbild-Schaltfläche",
+      "fullscreenDescription": "Vollbild-Umschalt-Schaltfläche anzeigen",
+      "tools": "Leinwand-Tools",
+      "toolsDescription": "Zeichen- und Bearbeitungstools anzeigen",
+      "zoom": "Zoom-Steuerung",
+      "zoomDescription": "Vergrößern/Verkleinern-Steuerung anzeigen",
+      "unitCtl": "Einheiten-Selektor",
+      "unitCtlDescription": "Messeinheiten-Selektor anzeigen"
+    },
+    "language": {
+      "title": "Sprache",
+      "description": "Anzeigesprache auswählen",
+      "placeholder": "Sprache auswählen"
+    },
+    "url": {
+      "title": "Link teilen",
+      "description": "Kopieren Sie diese URL, um Ihre Leinwand zu teilen",
+      "copyButton": "Link kopieren",
+      "copiedSuccess": "Link in Zwischenablage kopiert!",
+      "copyError": "Fehler beim Kopieren des Links",
+      "resetButton": "Auf Standard zurücksetzen"
+    },
+    "embed": {
+      "title": "Einbettungscode",
+      "description": "Verwenden Sie diesen HTML-Code, um die Leinwand in Ihre Website einzubetten",
+      "widthLabel": "Breite",
+      "heightLabel": "Höhe",
+      "widthPlaceholder": "800",
+      "heightPlaceholder": "600",
+      "codeLabel": "HTML-Code",
+      "copyButton": "Code kopieren",
+      "copiedSuccess": "Einbettungscode in Zwischenablage kopiert!",
+      "copyError": "Fehler beim Kopieren des Einbettungscodes"
+    }
+  }
 }

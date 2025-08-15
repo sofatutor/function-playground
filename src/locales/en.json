@@ -230,5 +230,56 @@
   "enterFullscreen": "Enter Fullscreen",
   "exitFullscreen": "Exit Fullscreen",
   "previousFormula": "Previous Formula",
-  "nextFormula": "Next Formula"
+  "nextFormula": "Next Formula",
+  "sharePanel": {
+    "title": "Share",
+    "description": "Configure layout and options for sharing",
+    "layout": {
+      "title": "Layout",
+      "description": "Choose how your canvas will be displayed when shared",
+      "default": "Default",
+      "defaultDescription": "Full interactive canvas with all controls",
+      "noninteractive": "Non-interactive",
+      "noninteractiveDescription": "Grid-only display for passive viewing"
+    },
+    "options": {
+      "title": "Options",
+      "description": "Configure which UI elements are visible",
+      "funcOnly": "Functions Only",
+      "funcOnlyDescription": "Hide geometry tools, show only function plotting",
+      "fullscreen": "Fullscreen Button",
+      "fullscreenDescription": "Show fullscreen toggle button",
+      "tools": "Canvas Tools",
+      "toolsDescription": "Show drawing and editing tools",
+      "zoom": "Zoom Controls",
+      "zoomDescription": "Show zoom in/out controls",
+      "unitCtl": "Unit Selector",
+      "unitCtlDescription": "Show measurement unit selector"
+    },
+    "language": {
+      "title": "Language",
+      "description": "Select display language",
+      "placeholder": "Select language"
+    },
+    "url": {
+      "title": "Share Link",
+      "description": "Copy this URL to share your canvas",
+      "copyButton": "Copy Link",
+      "copiedSuccess": "Link copied to clipboard!",
+      "copyError": "Failed to copy link",
+      "resetButton": "Reset to Defaults"
+    },
+    "embed": {
+      "title": "Embed Code",
+      "description": "Use this HTML code to embed the canvas in your website",
+      "widthLabel": "Width",
+      "heightLabel": "Height",
+      "widthPlaceholder": "800",
+      "heightPlaceholder": "600",
+      "codeLabel": "HTML Code",
+      "copyButton": "Copy Code",
+      "copiedSuccess": "Embed code copied to clipboard!",
+      "copyError": "Failed to copy embed code"
+    }
+  }
 }

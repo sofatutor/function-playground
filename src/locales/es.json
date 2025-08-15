@@ -227,5 +227,56 @@
   "scaleFactor": "Factor de Escala",
   "scaleFactorHint": "Ajusta el factor de escala para estirar o comprimir el gráfico verticalmente",
   "scaleMin": "0,001x",
-  "scaleDefault": "1,0x"
+  "scaleDefault": "1,0x",
+  "sharePanel": {
+    "title": "Compartir",
+    "description": "Configurar diseño y opciones para compartir",
+    "layout": {
+      "title": "Diseño",
+      "description": "Elige cómo se mostrará tu lienzo al compartirlo",
+      "default": "Predeterminado",
+      "defaultDescription": "Lienzo interactivo completo con todos los controles",
+      "noninteractive": "No interactivo",
+      "noninteractiveDescription": "Pantalla solo de cuadrícula para visualización pasiva"
+    },
+    "options": {
+      "title": "Opciones",
+      "description": "Configurar qué elementos de la interfaz son visibles",
+      "funcOnly": "Solo Funciones",
+      "funcOnlyDescription": "Ocultar herramientas de geometría, mostrar solo trazador de funciones",
+      "fullscreen": "Botón de Pantalla Completa",
+      "fullscreenDescription": "Mostrar botón de alternar pantalla completa",
+      "tools": "Herramientas del Lienzo",
+      "toolsDescription": "Mostrar herramientas de dibujo y edición",
+      "zoom": "Controles de Zoom",
+      "zoomDescription": "Mostrar controles de acercar/alejar",
+      "unitCtl": "Selector de Unidades",
+      "unitCtlDescription": "Mostrar selector de unidades de medida"
+    },
+    "language": {
+      "title": "Idioma",
+      "description": "Seleccionar idioma de visualización",
+      "placeholder": "Seleccionar idioma"
+    },
+    "url": {
+      "title": "Enlace para Compartir",
+      "description": "Copia esta URL para compartir tu lienzo",
+      "copyButton": "Copiar Enlace",
+      "copiedSuccess": "¡Enlace copiado al portapapeles!",
+      "copyError": "Error al copiar enlace",
+      "resetButton": "Restablecer a Predeterminados"
+    },
+    "embed": {
+      "title": "Código de Inserción",
+      "description": "Usa este código HTML para insertar el lienzo en tu sitio web",
+      "widthLabel": "Ancho",
+      "heightLabel": "Altura",
+      "widthPlaceholder": "800",
+      "heightPlaceholder": "600",
+      "codeLabel": "Código HTML",
+      "copyButton": "Copiar Código",
+      "copiedSuccess": "¡Código de inserción copiado al portapapeles!",
+      "copyError": "Error al copiar código de inserción"
+    }
+  }
 } 

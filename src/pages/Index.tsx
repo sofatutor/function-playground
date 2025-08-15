@@ -52,8 +52,7 @@ const Index = () => {
     setActiveShapeType,
     getShapeMeasurements,
     getSelectedShape,
-    updateMeasurement,
-    shareCanvasUrl
+    updateMeasurement
   } = useShapeOperations();
 
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -338,7 +337,6 @@ const Index = () => {
                 <GlobalControls 
                   isFullscreen={isFullscreen} 
                   onToggleFullscreen={toggleFullscreen}
-                  onShare={shareCanvasUrl}
                 />
               </div>
               
