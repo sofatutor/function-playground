@@ -334,7 +334,10 @@ const Index = () => {
   return (
     <div className={`min-h-screen bg-gray-50 ${isFullscreen || isMobile ? 'p-0' : ''}`}>
       <div className={`${isFullscreen || isMobile ? 'max-w-full p-0' : 'container py-0 sm:py-2 md:py-4 lg:py-8 px-0 sm:px-2 md:px-4'} transition-all duration-200 h-[calc(100vh-0rem)] sm:h-[calc(100vh-0.5rem)]`}>
-        <GeometryHeader isFullscreen={isFullscreen} />
+        {/* Header - hidden if header option is false */}
+        {appliedOptions.header && (
+          <GeometryHeader isFullscreen={isFullscreen} />
+        )}
         
         {/* Include both modals - hidden in noninteractive mode */}
         {appliedOptions.layout !== 'noninteractive' && (

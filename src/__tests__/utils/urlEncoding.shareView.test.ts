@@ -31,12 +31,13 @@ describe('ShareViewOptions URL encoding/decoding', () => {
     });
 
     it('should parse boolean parameters correctly', () => {
-      const result = parseShareViewOptionsFromUrl('?funcOnly=1&fullscreen=0&tools=1&zoom=0&unitCtl=1');
+      const result = parseShareViewOptionsFromUrl('?funcOnly=1&fullscreen=0&tools=1&zoom=0&unitCtl=1&header=0');
       expect(result.funcOnly).toBe(true);
       expect(result.fullscreen).toBe(false);
       expect(result.tools).toBe(true);
       expect(result.zoom).toBe(false);
       expect(result.unitCtl).toBe(true);
+      expect(result.header).toBe(false);
     });
 
     it('should fall back to defaults for invalid boolean values', () => {
@@ -66,7 +67,7 @@ describe('ShareViewOptions URL encoding/decoding', () => {
 
     it('should parse complex parameter combinations', () => {
       const result = parseShareViewOptionsFromUrl(
-        '?layout=noninteractive&funcOnly=1&fullscreen=1&tools=0&zoom=0&unitCtl=0&lang=de'
+        '?layout=noninteractive&funcOnly=1&fullscreen=1&tools=0&zoom=0&unitCtl=0&header=0&lang=de'
       );
       expect(result).toEqual({
         layout: 'noninteractive',
@@ -75,6 +76,7 @@ describe('ShareViewOptions URL encoding/decoding', () => {
         tools: false,
         zoom: false,
         unitCtl: false,
+        header: false,
         lang: 'de',
       });
     });
@@ -100,9 +102,10 @@ describe('ShareViewOptions URL encoding/decoding', () => {
         ...defaultShareViewOptions,
         funcOnly: true,
         tools: false,
+        header: false,
       };
       const result = serializeShareViewOptionsToQuery(options);
-      expect(result).toBe('funcOnly=1&tools=0');
+      expect(result).toBe('funcOnly=1&tools=0&header=0');
     });
 
     it('should serialize language parameter', () => {
@@ -122,10 +125,11 @@ describe('ShareViewOptions URL encoding/decoding', () => {
         tools: false,
         zoom: false,
         unitCtl: false,
+        header: false,
         lang: 'de',
       };
       const result = serializeShareViewOptionsToQuery(options);
-      expect(result).toBe('layout=noninteractive&funcOnly=1&fullscreen=1&tools=0&zoom=0&unitCtl=0&lang=de');
+      expect(result).toBe('layout=noninteractive&funcOnly=1&fullscreen=1&tools=0&zoom=0&unitCtl=0&header=0&lang=de');
     });
 
     it('should omit parameters that match defaults', () => {
@@ -149,6 +153,7 @@ describe('ShareViewOptions URL encoding/decoding', () => {
         tools: false,
         zoom: true,
         unitCtl: false,
+        header: false,
         lang: 'de',
       };
 
@@ -169,6 +174,7 @@ describe('ShareViewOptions URL encoding/decoding', () => {
       const partialOptions: ShareViewOptions = {
         ...defaultShareViewOptions,
         layout: 'noninteractive',
+        header: false,
         lang: 'fr',
       };
 
@@ -188,6 +194,7 @@ describe('ShareViewOptions URL encoding/decoding', () => {
         tools: true,
         zoom: true,
         unitCtl: true,
+        header: true,
         lang: 'en',
       };
 
@@ -203,6 +210,7 @@ describe('ShareViewOptions URL encoding/decoding', () => {
         tools: true,
         zoom: true,
         unitCtl: true,
+        header: true,
         lang: 'en',
       };
 
@@ -213,6 +221,7 @@ describe('ShareViewOptions URL encoding/decoding', () => {
         zoom: false,
         unitCtl: false,
         fullscreen: false,
+        header: false,
       });
     });
 
@@ -224,6 +233,7 @@ describe('ShareViewOptions URL encoding/decoding', () => {
         tools: true,
         zoom: true,
         unitCtl: true,
+        header: true,
         lang: 'en',
       };
 
@@ -244,6 +254,7 @@ describe('ShareViewOptions URL encoding/decoding', () => {
         tools: false,
         zoom: false,
         unitCtl: false,
+        header: false,
         lang: 'de',
       };
 
@@ -259,6 +270,7 @@ describe('ShareViewOptions URL encoding/decoding', () => {
         tools: true,
         zoom: true,
         unitCtl: true,
+        header: true,
         lang: 'en',
       };
 
@@ -271,6 +283,7 @@ describe('ShareViewOptions URL encoding/decoding', () => {
         tools: true, // preserved
         zoom: true, // preserved
         unitCtl: true, // preserved
+        header: true, // preserved
         lang: 'de', // overridden
       });
     });
@@ -283,6 +296,7 @@ describe('ShareViewOptions URL encoding/decoding', () => {
         tools: false,
         zoom: false,
         unitCtl: false,
+        header: false,
         lang: 'de',
       };
 
@@ -295,6 +309,7 @@ describe('ShareViewOptions URL encoding/decoding', () => {
         tools: true, // overridden
         zoom: false, // preserved
         unitCtl: false, // preserved
+        header: false, // preserved
         lang: 'de', // preserved
       });
     });

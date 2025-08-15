@@ -19,6 +19,8 @@ export interface ShareViewOptions {
   zoom: boolean;
   /** When true, show unit selector control */
   unitCtl: boolean;
+  /** When true, show header with app title and description */
+  header: boolean;
   /** Language code (BCP-47 format, e.g. 'en', 'de', 'fr') */
   lang: string;
 }
@@ -34,6 +36,7 @@ export const defaultShareViewOptions: ShareViewOptions = {
   tools: true,
   zoom: true,
   unitCtl: true,
+  header: true,
   lang: 'en', // Default language - could be made configurable
 };
 
@@ -457,6 +460,7 @@ export function parseShareViewOptionsFromUrl(search: string): ShareViewOptions {
     tools: parseBooleanParam('tools', defaultShareViewOptions.tools),
     zoom: parseBooleanParam('zoom', defaultShareViewOptions.zoom),
     unitCtl: parseBooleanParam('unitCtl', defaultShareViewOptions.unitCtl),
+    header: parseBooleanParam('header', defaultShareViewOptions.header),
     lang: validLang,
   };
 }
@@ -514,6 +518,10 @@ export function serializeShareViewOptionsToQuery(options: ShareViewOptions): str
     params.set('unitCtl', options.unitCtl ? '1' : '0');
   }
   
+  if (options.header !== defaults.header) {
+    params.set('header', options.header ? '1' : '0');
+  }
+  
   if (options.lang !== defaults.lang) {
     params.set('lang', options.lang);
   }
@@ -554,6 +562,7 @@ export function applyShareViewOptionsPrecedence(options: ShareViewOptions): Shar
       zoom: false,
       unitCtl: false,
       fullscreen: false,
+      header: false,
     };
   }
 
@@ -594,6 +603,7 @@ export function mergeShareViewOptionsFromUrl(
   if (params.has('tools')) result.tools = urlOptions.tools;
   if (params.has('zoom')) result.zoom = urlOptions.zoom;
   if (params.has('unitCtl')) result.unitCtl = urlOptions.unitCtl;
+  if (params.has('header')) result.header = urlOptions.header;
   if (params.has('lang')) result.lang = urlOptions.lang;
   
   return result;
