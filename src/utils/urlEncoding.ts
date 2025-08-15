@@ -3,6 +3,41 @@ import { Formula, FormulaType } from '@/types/formula';
 import { generateFormulaId } from '@/utils/formulaUtils';
 
 /**
+ * Configuration options for the Share view functionality.
+ * These options control the layout, UI visibility, and behavior of the shared view.
+ */
+export interface ShareViewOptions {
+  /** Layout mode: 'default' for full interactive mode, 'noninteractive' for grid-only display */
+  layout: 'default' | 'noninteractive';
+  /** When true, hide geometry toolbar and preselect function tool */
+  funcOnly: boolean;
+  /** When true, show fullscreen toggle button (does not auto-enter fullscreen) */
+  fullscreen: boolean;
+  /** When true, show canvas tools UI */
+  tools: boolean;
+  /** When true, show zoom UI controls */
+  zoom: boolean;
+  /** When true, show unit selector control */
+  unitCtl: boolean;
+  /** Language code (BCP-47 format, e.g. 'en', 'de', 'fr') */
+  lang: string;
+}
+
+/**
+ * Default Share view options.
+ * These are used as fallbacks when URL parameters are missing or invalid.
+ */
+export const defaultShareViewOptions: ShareViewOptions = {
+  layout: 'default',
+  funcOnly: false,
+  fullscreen: false,
+  tools: true,
+  zoom: true,
+  unitCtl: true,
+  lang: 'en', // Default language - could be made configurable
+};
+
+/**
  * Encodes an array of shapes into a URL-friendly string
  * Format: shape1|shape2|shape3
  * Where each shape is encoded as: type,id,x,y,rotation,fill,stroke,strokeWidth,{type-specific-properties}
@@ -378,4 +413,178 @@ export function getGridPositionFromUrl(): Point | null {
   const position = decodeGridPosition(encodedPosition);
   console.log('Decoded grid position from URL:', position);
   return position;
+}
+
+/**
+ * Parses Share view options from a URL search string.
+ * Missing parameters default to values from defaultShareViewOptions.
+ * Invalid language codes fall back to the default language.
+ * 
+ * @param search - URL search string (e.g., "?layout=noninteractive&funcOnly=1")
+ * @returns ShareViewOptions object with parsed values
+ * 
+ * @example
+ * ```typescript
+ * const options = parseShareViewOptionsFromUrl("?layout=noninteractive&funcOnly=1&lang=de");
+ * // Result: { layout: 'noninteractive', funcOnly: true, fullscreen: false, tools: true, zoom: true, unitCtl: true, lang: 'de' }
+ * ```
+ */
+export function parseShareViewOptionsFromUrl(search: string): ShareViewOptions {
+  const params = new URLSearchParams(search);
+  
+  // Helper function to parse boolean from URL parameter (0|1)
+  const parseBooleanParam = (paramName: string, defaultValue: boolean): boolean => {
+    const value = params.get(paramName);
+    if (value === '1') return true;
+    if (value === '0') return false;
+    return defaultValue;
+  };
+  
+  // Parse layout with validation
+  const layout = params.get('layout');
+  const validLayout = layout === 'noninteractive' ? 'noninteractive' : 
+                     layout === 'default' ? 'default' : 
+                     defaultShareViewOptions.layout;
+  
+  // Parse language with validation (basic check for reasonable language codes)
+  const lang = params.get('lang');
+  const validLang = lang && /^[a-z]{2}(-[A-Z]{2})?$/.test(lang) ? lang : defaultShareViewOptions.lang;
+  
+  return {
+    layout: validLayout,
+    funcOnly: parseBooleanParam('funcOnly', defaultShareViewOptions.funcOnly),
+    fullscreen: parseBooleanParam('fullscreen', defaultShareViewOptions.fullscreen),
+    tools: parseBooleanParam('tools', defaultShareViewOptions.tools),
+    zoom: parseBooleanParam('zoom', defaultShareViewOptions.zoom),
+    unitCtl: parseBooleanParam('unitCtl', defaultShareViewOptions.unitCtl),
+    lang: validLang,
+  };
+}
+
+/**
+ * Serializes Share view options to a URL query string.
+ * Omits parameters that match default values to keep URLs concise.
+ * Parameters are ordered consistently for deterministic output.
+ * 
+ * @param options - ShareViewOptions object to serialize
+ * @returns Query string (without leading '?')
+ * 
+ * @example
+ * ```typescript
+ * const query = serializeShareViewOptionsToQuery({
+ *   layout: 'noninteractive',
+ *   funcOnly: true,
+ *   fullscreen: false,
+ *   tools: true,
+ *   zoom: true,
+ *   unitCtl: true,
+ *   lang: 'de'
+ * });
+ * // Result: "layout=noninteractive&funcOnly=1&lang=de"
+ * ```
+ */
+export function serializeShareViewOptionsToQuery(options: ShareViewOptions): string {
+  const params = new URLSearchParams();
+  
+  // Add parameters only if they differ from defaults
+  // Order matters for deterministic output
+  const defaults = defaultShareViewOptions;
+  
+  if (options.layout !== defaults.layout) {
+    params.set('layout', options.layout);
+  }
+  
+  if (options.funcOnly !== defaults.funcOnly) {
+    params.set('funcOnly', options.funcOnly ? '1' : '0');
+  }
+  
+  if (options.fullscreen !== defaults.fullscreen) {
+    params.set('fullscreen', options.fullscreen ? '1' : '0');
+  }
+  
+  if (options.tools !== defaults.tools) {
+    params.set('tools', options.tools ? '1' : '0');
+  }
+  
+  if (options.zoom !== defaults.zoom) {
+    params.set('zoom', options.zoom ? '1' : '0');
+  }
+  
+  if (options.unitCtl !== defaults.unitCtl) {
+    params.set('unitCtl', options.unitCtl ? '1' : '0');
+  }
+  
+  if (options.lang !== defaults.lang) {
+    params.set('lang', options.lang);
+  }
+  
+  return params.toString();
+}
+
+/**
+ * Applies precedence rules to Share view options.
+ * Precedence: noninteractive > funcOnly > individual toggles
+ * 
+ * When layout is 'noninteractive':
+ * - All UI controls are hidden regardless of individual settings
+ * - Canvas interactions are disabled
+ * 
+ * When funcOnly is true (and layout is not 'noninteractive'):
+ * - Geometry toolbar is hidden
+ * - Function tool is preselected
+ * 
+ * @param options - Input ShareViewOptions
+ * @returns ShareViewOptions with precedence rules applied
+ * 
+ * @example
+ * ```typescript
+ * const input = { layout: 'noninteractive', tools: true, zoom: true, ... };
+ * const result = applyShareViewOptionsPrecedence(input);
+ * // tools and zoom will be effectively hidden due to noninteractive layout
+ * ```
+ */
+export function applyShareViewOptionsPrecedence(options: ShareViewOptions): ShareViewOptions {
+  const result = { ...options };
+  
+  // If layout is noninteractive, hide all UI controls
+  if (result.layout === 'noninteractive') {
+    // Note: We don't modify the actual boolean values here since they represent
+    // user preferences. The precedence is applied in the UI rendering logic.
+    // This function documents the precedence rules and can be used for validation.
+    return result;
+  }
+  
+  // If funcOnly is true, certain UI elements should be hidden
+  // Again, the actual application of these rules happens in the UI components
+  return result;
+}
+
+/**
+ * Merges Share view options from URL search parameters with existing options.
+ * URL parameters take precedence over existing options.
+ * Missing URL parameters preserve existing values.
+ * 
+ * @param existingOptions - Current ShareViewOptions
+ * @param search - URL search string
+ * @returns Merged ShareViewOptions
+ */
+export function mergeShareViewOptionsFromUrl(
+  existingOptions: ShareViewOptions,
+  search: string
+): ShareViewOptions {
+  const urlOptions = parseShareViewOptionsFromUrl(search);
+  const params = new URLSearchParams(search);
+  
+  // Only override values that are explicitly set in the URL
+  const result = { ...existingOptions };
+  
+  if (params.has('layout')) result.layout = urlOptions.layout;
+  if (params.has('funcOnly')) result.funcOnly = urlOptions.funcOnly;
+  if (params.has('fullscreen')) result.fullscreen = urlOptions.fullscreen;
+  if (params.has('tools')) result.tools = urlOptions.tools;
+  if (params.has('zoom')) result.zoom = urlOptions.zoom;
+  if (params.has('unitCtl')) result.unitCtl = urlOptions.unitCtl;
+  if (params.has('lang')) result.lang = urlOptions.lang;
+  
+  return result;
 } 
