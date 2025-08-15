@@ -8,7 +8,7 @@ These instructions give Copilot repo-specific context so suggestions align with 
 
 ## Environment and commands
 - Node: use the version in `.nvmrc` (currently 24.1.0).
-- Install deps: `npm install`
+- IMPORTANT: ALWAYS install dependencies with `npm ci` before running any command (do not use `npm install`).
 - Dev server: `npm run dev` (Vite, served at `http://localhost:8080`)
 - Build (prod): `npm run build`
 - Build (dev mode): `npm run build:dev`
@@ -20,6 +20,8 @@ These instructions give Copilot repo-specific context so suggestions align with 
 Notes for E2E:
 - Do not start a second server; Playwright starts the dev server via `playwright.config.ts` `webServer` using `npm run dev` and `baseURL: http://localhost:8080`.
 - Prefer waiting on selectors/state over arbitrary timeouts. Keep global timeouts as configured.
+
+Reminder: Before executing any of the commands above, run `npm ci` to ensure a clean, reproducible dependency tree.
 
 ## Repository structure (high level)
 - App entry: `src/main.tsx` mounts `src/App.tsx`.

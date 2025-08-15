@@ -4,6 +4,8 @@ applyTo: "src/**/*.{ts,tsx}"
 
 # Copilot source code instructions
 
+- IMPORTANT: ALWAYS run `npm ci` before running any npm scripts to ensure reproducible installs.
+
 - Follow TypeScript best practices: explicit types for exported APIs and complex objects; avoid `any`; prefer discriminated unions/generics where appropriate.
 - Keep code simple (KISS), DRY, and single-responsibility. Extract reusable logic into hooks/utils/services.
 - UI and accessibility:
@@ -16,5 +18,7 @@ applyTo: "src/**/*.{ts,tsx}"
   - Add/update unit tests for non-trivial logic (services/utils/components).
   - Commands: `npm run test` (CI `npm run test:ci`, coverage `npm run test:coverage`).
 - Performance: memoize expensive computations; avoid excessive event handlers; debounce where appropriate.
+
+Reminder: run `npm ci` before any of the above commands.
 
 
