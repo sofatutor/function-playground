@@ -247,6 +247,8 @@
       "description": "Configure which UI elements are visible",
       "funcOnly": "Functions Only",
       "funcOnlyDescription": "Hide geometry tools, show only function plotting",
+      "funcControls": "Function Controls",
+      "funcControlsDescription": "Show function plotting controls and formula editor",
       "fullscreen": "Fullscreen Button",
       "fullscreenDescription": "Show fullscreen toggle button",
       "tools": "Canvas Tools",
@@ -256,7 +258,9 @@
       "unitCtl": "Unit Selector",
       "unitCtlDescription": "Show measurement unit selector",
       "header": "Header",
-      "headerDescription": "Show app title and description header"
+      "headerDescription": "Show app title and description header",
+      "admin": "Admin Mode",
+      "adminDescription": "Enable advanced features and administrative controls"
     },
     "language": {
       "title": "Language",

@@ -11,6 +11,8 @@ export interface ShareViewOptions {
   layout: 'default' | 'noninteractive';
   /** When true, hide geometry toolbar and preselect function tool */
   funcOnly: boolean;
+  /** When true, show function controls (formula editor, function tools) */
+  funcControls: boolean;
   /** When true, show fullscreen toggle button (does not auto-enter fullscreen) */
   fullscreen: boolean;
   /** When true, show canvas tools UI */
@@ -23,6 +25,8 @@ export interface ShareViewOptions {
   header: boolean;
   /** Language code (BCP-47 format, e.g. 'en', 'de', 'fr') */
   lang: string;
+  /** Admin mode - enables additional features and controls */
+  admin: boolean;
 }
 
 /**
@@ -32,12 +36,14 @@ export interface ShareViewOptions {
 export const defaultShareViewOptions: ShareViewOptions = {
   layout: 'default',
   funcOnly: false,
+  funcControls: true,
   fullscreen: false,
   tools: true,
   zoom: true,
   unitCtl: true,
   header: true,
   lang: 'en', // Default language - could be made configurable
+  admin: true, // Will be overridden by environment variable in browser context
 };
 
 /**
@@ -456,11 +462,13 @@ export function parseShareViewOptionsFromUrl(search: string): ShareViewOptions {
   return {
     layout: validLayout,
     funcOnly: parseBooleanParam('funcOnly', defaultShareViewOptions.funcOnly),
+    funcControls: parseBooleanParam('funcControls', defaultShareViewOptions.funcControls),
     fullscreen: parseBooleanParam('fullscreen', defaultShareViewOptions.fullscreen),
     tools: parseBooleanParam('tools', defaultShareViewOptions.tools),
     zoom: parseBooleanParam('zoom', defaultShareViewOptions.zoom),
     unitCtl: parseBooleanParam('unitCtl', defaultShareViewOptions.unitCtl),
     header: parseBooleanParam('header', defaultShareViewOptions.header),
+    admin: parseBooleanParam('admin', defaultShareViewOptions.admin),
     lang: validLang,
   };
 }
@@ -502,6 +510,10 @@ export function serializeShareViewOptionsToQuery(options: ShareViewOptions): str
     params.set('funcOnly', options.funcOnly ? '1' : '0');
   }
   
+  if (options.funcControls !== defaults.funcControls) {
+    params.set('funcControls', options.funcControls ? '1' : '0');
+  }
+  
   if (options.fullscreen !== defaults.fullscreen) {
     params.set('fullscreen', options.fullscreen ? '1' : '0');
   }
@@ -520,6 +532,10 @@ export function serializeShareViewOptionsToQuery(options: ShareViewOptions): str
   
   if (options.header !== defaults.header) {
     params.set('header', options.header ? '1' : '0');
+  }
+  
+  if (options.admin !== defaults.admin) {
+    params.set('admin', options.admin ? '1' : '0');
   }
   
   if (options.lang !== defaults.lang) {
@@ -563,6 +579,7 @@ export function applyShareViewOptionsPrecedence(options: ShareViewOptions): Shar
       unitCtl: false,
       fullscreen: false,
       header: false,
+      funcControls: false,
     };
   }
 
@@ -576,6 +593,27 @@ export function applyShareViewOptionsPrecedence(options: ShareViewOptions): Shar
 
   // Otherwise respect individual toggles as-is
   return result;
+}
+
+/**
+ * Applies precedence rules to Share view options with SharePanel awareness.
+ * When SharePanel is open, noninteractive mode is ignored to allow configuration.
+ * 
+ * @param options - Input ShareViewOptions  
+ * @param isSharePanelOpen - Whether the SharePanel is currently open
+ * @returns ShareViewOptions with precedence rules applied
+ */
+export function applyShareViewOptionsWithPanelState(
+  options: ShareViewOptions, 
+  isSharePanelOpen: boolean
+): ShareViewOptions {
+  // If SharePanel is open, ignore noninteractive mode for configuration
+  if (isSharePanelOpen && options.layout === 'noninteractive') {
+    const tempOptions = { ...options, layout: 'default' as const };
+    return applyShareViewOptionsPrecedence(tempOptions);
+  }
+  
+  return applyShareViewOptionsPrecedence(options);
 }
 
 /**
@@ -599,11 +637,13 @@ export function mergeShareViewOptionsFromUrl(
   
   if (params.has('layout')) result.layout = urlOptions.layout;
   if (params.has('funcOnly')) result.funcOnly = urlOptions.funcOnly;
+  if (params.has('funcControls')) result.funcControls = urlOptions.funcControls;
   if (params.has('fullscreen')) result.fullscreen = urlOptions.fullscreen;
   if (params.has('tools')) result.tools = urlOptions.tools;
   if (params.has('zoom')) result.zoom = urlOptions.zoom;
   if (params.has('unitCtl')) result.unitCtl = urlOptions.unitCtl;
   if (params.has('header')) result.header = urlOptions.header;
+  if (params.has('admin')) result.admin = urlOptions.admin;
   if (params.has('lang')) result.lang = urlOptions.lang;
   
   return result;

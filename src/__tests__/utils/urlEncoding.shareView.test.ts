@@ -72,11 +72,13 @@ describe('ShareViewOptions URL encoding/decoding', () => {
       expect(result).toEqual({
         layout: 'noninteractive',
         funcOnly: true,
+        funcControls: true, // default value since not specified in URL
         fullscreen: true,
         tools: false,
         zoom: false,
         unitCtl: false,
         header: false,
+        admin: true, // default value since not specified in URL
         lang: 'de',
       });
     });
@@ -121,11 +123,13 @@ describe('ShareViewOptions URL encoding/decoding', () => {
       const options: ShareViewOptions = {
         layout: 'noninteractive',
         funcOnly: true,
+        funcControls: true,
         fullscreen: true,
         tools: false,
         zoom: false,
         unitCtl: false,
         header: false,
+        admin: true,
         lang: 'de',
       };
       const result = serializeShareViewOptionsToQuery(options);
@@ -149,11 +153,13 @@ describe('ShareViewOptions URL encoding/decoding', () => {
       const originalOptions: ShareViewOptions = {
         layout: 'noninteractive',
         funcOnly: true,
+        funcControls: true,
         fullscreen: false,
         tools: false,
         zoom: true,
         unitCtl: false,
         header: false,
+        admin: true,
         lang: 'de',
       };
 
@@ -190,11 +196,13 @@ describe('ShareViewOptions URL encoding/decoding', () => {
       const options: ShareViewOptions = {
         layout: 'default',
         funcOnly: true,
+        funcControls: true,
         fullscreen: true,
         tools: true,
         zoom: true,
         unitCtl: true,
         header: true,
+        admin: true,
         lang: 'en',
       };
 
@@ -206,11 +214,13 @@ describe('ShareViewOptions URL encoding/decoding', () => {
       const options: ShareViewOptions = {
         layout: 'noninteractive',
         funcOnly: true,
+        funcControls: true,
         fullscreen: true,
         tools: true,
         zoom: true,
         unitCtl: true,
         header: true,
+        admin: true,
         lang: 'en',
       };
 
@@ -222,6 +232,7 @@ describe('ShareViewOptions URL encoding/decoding', () => {
         unitCtl: false,
         fullscreen: false,
         header: false,
+        funcControls: false,
       });
     });
 
@@ -229,11 +240,13 @@ describe('ShareViewOptions URL encoding/decoding', () => {
       const options: ShareViewOptions = {
         layout: 'default',
         funcOnly: true,
+        funcControls: true,
         fullscreen: true,
         tools: true,
         zoom: true,
         unitCtl: true,
         header: true,
+        admin: true,
         lang: 'en',
       };
 
@@ -250,11 +263,13 @@ describe('ShareViewOptions URL encoding/decoding', () => {
       const existingOptions: ShareViewOptions = {
         layout: 'noninteractive',
         funcOnly: true,
+        funcControls: true,
         fullscreen: true,
         tools: false,
         zoom: false,
         unitCtl: false,
         header: false,
+        admin: true,
         lang: 'de',
       };
 
@@ -266,11 +281,13 @@ describe('ShareViewOptions URL encoding/decoding', () => {
       const existingOptions: ShareViewOptions = {
         layout: 'default',
         funcOnly: false,
+        funcControls: true,
         fullscreen: false,
         tools: true,
         zoom: true,
         unitCtl: true,
         header: true,
+        admin: true,
         lang: 'en',
       };
 
@@ -279,11 +296,13 @@ describe('ShareViewOptions URL encoding/decoding', () => {
       expect(result).toEqual({
         layout: 'noninteractive', // overridden
         funcOnly: false, // preserved
+        funcControls: true, // preserved
         fullscreen: false, // preserved
         tools: true, // preserved
         zoom: true, // preserved
         unitCtl: true, // preserved
         header: true, // preserved
+        admin: true, // preserved
         lang: 'de', // overridden
       });
     });
@@ -292,11 +311,13 @@ describe('ShareViewOptions URL encoding/decoding', () => {
       const existingOptions: ShareViewOptions = {
         layout: 'default',
         funcOnly: true,
+        funcControls: true,
         fullscreen: true,
         tools: false,
         zoom: false,
         unitCtl: false,
         header: false,
+        admin: true,
         lang: 'de',
       };
 
@@ -305,11 +326,13 @@ describe('ShareViewOptions URL encoding/decoding', () => {
       expect(result).toEqual({
         layout: 'default', // preserved
         funcOnly: false, // overridden
+        funcControls: true, // preserved
         fullscreen: true, // preserved
         tools: true, // overridden
         zoom: false, // preserved
         unitCtl: false, // preserved
         header: false, // preserved
+        admin: true, // preserved
         lang: 'de', // preserved
       });
     });

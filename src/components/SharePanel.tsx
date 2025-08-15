@@ -40,7 +40,8 @@ export const SharePanel: React.FC<SharePanelProps> = ({ open, onOpenChange }) =>
     updateShareViewOption, 
     resetToDefaults, 
     generateShareUrl, 
-    generateEmbedCode 
+    generateEmbedCode,
+    setIsSharePanelOpen
   } = useShareViewOptions();
 
   const [embedWidth, setEmbedWidth] = useState('800');
@@ -74,6 +75,9 @@ export const SharePanel: React.FC<SharePanelProps> = ({ open, onOpenChange }) =>
   };
 
   const handleOpenChange = (newOpen: boolean) => {
+    // Update SharePanel state
+    setIsSharePanelOpen(newOpen);
+    
     if (!newOpen) {
       // When closing the panel, reset to defaults
       resetToDefaults();
@@ -85,7 +89,10 @@ export const SharePanel: React.FC<SharePanelProps> = ({ open, onOpenChange }) =>
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent 
+        className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto"
+        onOpenAutoFocus={() => setIsSharePanelOpen(true)}
+      >
         <DialogHeader className="pb-4">
           <DialogTitle>{t('sharePanel.title')}</DialogTitle>
           <DialogDescription>
@@ -155,6 +162,23 @@ export const SharePanel: React.FC<SharePanelProps> = ({ open, onOpenChange }) =>
                   id="funcOnly"
                   checked={shareViewOptions.funcOnly}
                   onCheckedChange={(checked) => updateShareViewOption('funcOnly', checked)}
+                  disabled={shareViewOptions.layout === 'noninteractive'}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="funcControls" className="text-sm font-medium">
+                    {t('sharePanel.options.funcControls')}
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    {t('sharePanel.options.funcControlsDescription')}
+                  </p>
+                </div>
+                <Switch
+                  id="funcControls"
+                  checked={shareViewOptions.funcControls}
+                  onCheckedChange={(checked) => updateShareViewOption('funcControls', checked)}
                   disabled={shareViewOptions.layout === 'noninteractive'}
                 />
               </div>
@@ -240,6 +264,23 @@ export const SharePanel: React.FC<SharePanelProps> = ({ open, onOpenChange }) =>
                   id="header"
                   checked={shareViewOptions.header}
                   onCheckedChange={(checked) => updateShareViewOption('header', checked)}
+                  disabled={shareViewOptions.layout === 'noninteractive'}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="admin" className="text-sm font-medium">
+                    {t('sharePanel.options.admin')}
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    {t('sharePanel.options.adminDescription')}
+                  </p>
+                </div>
+                <Switch
+                  id="admin"
+                  checked={shareViewOptions.admin}
+                  onCheckedChange={(checked) => updateShareViewOption('admin', checked)}
                   disabled={shareViewOptions.layout === 'noninteractive'}
                 />
               </div>

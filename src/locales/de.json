@@ -246,6 +246,8 @@
       "description": "Konfigurieren Sie, welche UI-Elemente sichtbar sind",
       "funcOnly": "Nur Funktionen",
       "funcOnlyDescription": "Geometrie-Tools ausblenden, nur Funktionsplotter anzeigen",
+      "funcControls": "Funktions-Steuerung",
+      "funcControlsDescription": "Funktionsplotter-Steuerung und Formeleditor anzeigen",
       "fullscreen": "Vollbild-Schaltfläche",
       "fullscreenDescription": "Vollbild-Umschalt-Schaltfläche anzeigen",
       "tools": "Leinwand-Tools",
@@ -255,7 +257,9 @@
       "unitCtl": "Einheiten-Selektor",
       "unitCtlDescription": "Messeinheiten-Selektor anzeigen",
       "header": "Kopfzeile",
-      "headerDescription": "App-Titel und Beschreibungs-Header anzeigen"
+      "headerDescription": "App-Titel und Beschreibungs-Header anzeigen",
+      "admin": "Admin-Modus",
+      "adminDescription": "Erweiterte Funktionen und administrative Steuerungen aktivieren"
     },
     "language": {
       "title": "Sprache",

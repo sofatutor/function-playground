@@ -21,7 +21,7 @@ import { Trash2, Wrench } from 'lucide-react';
 import { 
   updateUrlWithData, 
   getFormulasFromUrl,
-  applyShareViewOptionsPrecedence
+  applyShareViewOptionsWithPanelState
 } from '@/utils/urlEncoding';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -36,8 +36,8 @@ const Index = () => {
   const isMobile = useIsMobile();
   
   // Get ShareViewOptions with applied precedence
-  const { shareViewOptions } = useShareViewOptions();
-  const appliedOptions = applyShareViewOptionsPrecedence(shareViewOptions);
+  const { shareViewOptions, isSharePanelOpen } = useShareViewOptions();
+  const appliedOptions = applyShareViewOptionsWithPanelState(shareViewOptions, isSharePanelOpen);
   
   const {
     shapes,
@@ -367,6 +367,7 @@ const Index = () => {
                         _canDelete={!!selectedShapeId}
                         onToggleFormulaEditor={toggleFormulaEditor}
                         isFormulaEditorOpen={isFormulaEditorOpen}
+                        showFunctionControls={appliedOptions.funcControls}
                       />
                     )}
                   </div>
@@ -380,8 +381,8 @@ const Index = () => {
                 </div>
               )}
               
-              {/* Formula editor - hidden in noninteractive mode */}
-              {appliedOptions.layout !== 'noninteractive' && isFormulaEditorOpen && (
+              {/* Formula editor - hidden in noninteractive mode or when funcControls is disabled */}
+              {appliedOptions.layout !== 'noninteractive' && appliedOptions.funcControls && isFormulaEditorOpen && (
                 <div className="w-full mb-1 sm:mb-2 md:mb-3">
                   <FormulaEditor
                     formulas={formulas}

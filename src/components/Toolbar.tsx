@@ -22,6 +22,7 @@ interface ToolbarProps {
   _canDelete: boolean;
   onToggleFormulaEditor?: () => void;
   isFormulaEditorOpen?: boolean;
+  showFunctionControls?: boolean;
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
@@ -34,7 +35,8 @@ const Toolbar: React.FC<ToolbarProps> = ({
   hasSelectedShape,
   _canDelete,
   onToggleFormulaEditor,
-  isFormulaEditorOpen = false
+  isFormulaEditorOpen = false,
+  showFunctionControls = true
 }) => {
   const t = useTranslate();
   const { language } = useConfig();
@@ -122,7 +124,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
 
       <Separator orientation="vertical" className="h-6 sm:h-8 mx-0.5 sm:mx-1" />
 
-      {onToggleFormulaEditor && (
+      {onToggleFormulaEditor && showFunctionControls && (
         <>
           <ToolButton 
             id="plot-formula-button"

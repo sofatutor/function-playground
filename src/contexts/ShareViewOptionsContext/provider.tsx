@@ -13,10 +13,28 @@ interface ShareViewOptionsProviderProps {
 }
 
 export const ShareViewOptionsProvider: React.FC<ShareViewOptionsProviderProps> = ({ children }) => {
+  // Track SharePanel open state
+  const [isSharePanelOpen, setIsSharePanelOpen] = useState(false);
+  
   // Initialize from URL parameters or defaults
   const [shareViewOptions, setShareViewOptionsState] = useState<ShareViewOptions>(() => {
     if (typeof window !== 'undefined') {
-      return parseShareViewOptionsFromUrl(window.location.search);
+      const urlOptions = parseShareViewOptionsFromUrl(window.location.search);
+      // Override admin default with environment variable if not explicitly set in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      if (!urlParams.has('admin')) {
+        try {
+          // @ts-expect-error - import.meta may not be available in some contexts
+          if (typeof import.meta !== 'undefined' && import.meta.env) {
+            // @ts-expect-error - import.meta may not be available in some contexts
+            const envAdminMode = import.meta.env.VITE_ADMIN_MODE;
+            urlOptions.admin = envAdminMode === 'true' || envAdminMode === '1';
+          }
+        } catch {
+          // Fallback to default if import.meta is not available
+        }
+      }
+      return urlOptions;
     }
     return defaultShareViewOptions;
   });
@@ -34,7 +52,7 @@ export const ShareViewOptionsProvider: React.FC<ShareViewOptionsProviderProps> =
       const params = new URLSearchParams(query);
       
       // Clear existing share-related params
-      ['layout', 'funcOnly', 'fullscreen', 'tools', 'zoom', 'unitCtl', 'header', 'lang'].forEach(key => {
+      ['layout', 'funcOnly', 'funcControls', 'fullscreen', 'tools', 'zoom', 'unitCtl', 'header', 'admin', 'lang'].forEach(key => {
         url.searchParams.delete(key);
       });
       
@@ -96,6 +114,8 @@ export const ShareViewOptionsProvider: React.FC<ShareViewOptionsProviderProps> =
     resetToDefaults,
     generateShareUrl,
     generateEmbedCode,
+    isSharePanelOpen,
+    setIsSharePanelOpen,
   };
 
   return (

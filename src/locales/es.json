@@ -244,6 +244,8 @@
       "description": "Configurar qué elementos de la interfaz son visibles",
       "funcOnly": "Solo Funciones",
       "funcOnlyDescription": "Ocultar herramientas de geometría, mostrar solo trazador de funciones",
+      "funcControls": "Controles de Funciones",
+      "funcControlsDescription": "Mostrar controles de trazador de funciones y editor de fórmulas",
       "fullscreen": "Botón de Pantalla Completa",
       "fullscreenDescription": "Mostrar botón de alternar pantalla completa",
       "tools": "Herramientas del Lienzo",
@@ -253,7 +255,9 @@
       "unitCtl": "Selector de Unidades",
       "unitCtlDescription": "Mostrar selector de unidades de medida",
       "header": "Encabezado",
-      "headerDescription": "Mostrar encabezado con título y descripción de la app"
+      "headerDescription": "Mostrar encabezado con título y descripción de la app",
+      "admin": "Modo Administrador",
+      "adminDescription": "Habilitar funciones avanzadas y controles administrativos"
     },
     "language": {
       "title": "Idioma",

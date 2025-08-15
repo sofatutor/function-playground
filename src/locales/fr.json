@@ -244,6 +244,8 @@
       "description": "Configurer quels éléments de l'interface sont visibles",
       "funcOnly": "Fonctions Seulement",
       "funcOnlyDescription": "Masquer les outils de géométrie, afficher seulement le traceur de fonctions",
+      "funcControls": "Contrôles de Fonctions",
+      "funcControlsDescription": "Afficher les contrôles de traceur de fonctions et l'éditeur de formules",
       "fullscreen": "Bouton Plein Écran",
       "fullscreenDescription": "Afficher le bouton de basculement plein écran",
       "tools": "Outils de Toile",
@@ -253,7 +255,9 @@
       "unitCtl": "Sélecteur d'Unités",
       "unitCtlDescription": "Afficher le sélecteur d'unités de mesure",
       "header": "En-tête",
-      "headerDescription": "Afficher l'en-tête avec le titre et la description de l'app"
+      "headerDescription": "Afficher l'en-tête avec le titre et la description de l'app",
+      "admin": "Mode Administrateur",
+      "adminDescription": "Activer les fonctionnalités avancées et les contrôles administratifs"
     },
     "language": {
       "title": "Langue",
