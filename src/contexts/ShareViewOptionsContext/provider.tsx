@@ -34,7 +34,7 @@ export const ShareViewOptionsProvider: React.FC<ShareViewOptionsProviderProps> =
       const params = new URLSearchParams(query);
       
       // Clear existing share-related params
-      ['layout', 'funcOnly', 'fullscreen', 'tools', 'zoom', 'unitCtl', 'lang'].forEach(key => {
+      ['layout', 'funcOnly', 'fullscreen', 'tools', 'zoom', 'unitCtl', 'header', 'lang'].forEach(key => {
         url.searchParams.delete(key);
       });
       

@@ -73,8 +73,18 @@ export const SharePanel: React.FC<SharePanelProps> = ({ open, onOpenChange }) =>
     setEmbedHeight('600');
   };
 
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      // When closing the panel, reset to defaults
+      resetToDefaults();
+      setEmbedWidth('800');
+      setEmbedHeight('600');
+    }
+    onOpenChange(newOpen);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-4">
           <DialogTitle>{t('sharePanel.title')}</DialogTitle>
