@@ -52,8 +52,7 @@ const Index = () => {
     setActiveShapeType,
     getShapeMeasurements,
     getSelectedShape,
-    updateMeasurement,
-    shareCanvasUrl
+    updateMeasurement
   } = useShapeOperations();
 
   const [isFullscreen, setIsFullscreen] = useState(false);
