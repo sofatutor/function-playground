@@ -315,6 +315,10 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
   
   // Effect to update internal grid position when external grid position changes
   useEffect(() => {
+    // Ignore external updates while user is actively dragging to avoid jump-backs
+    if (isGridDragging.value) {
+      return;
+    }
     console.log('GeometryCanvas: External grid position changed:', externalGridPosition);
     
     // Skip if the positions are the same (using more precise comparison)
@@ -726,25 +730,9 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
   }, []);
 
   // Add a ref to track if we're already updating the grid position
-  const isUpdatingGridPositionRef = useRef(false);
+  const _isUpdatingGridPositionRef = useRef(false);
 
-  // Add a useEffect to log when gridPosition changes
-  useEffect(() => {
-    console.log('GeometryCanvas: gridPosition changed:', gridPosition);
-    
-    // Force a re-render of formulas when grid position changes
-    // This ensures formulas update smoothly during grid dragging
-    if (gridPosition && formulas && formulas.length > 0 && !isUpdatingGridPositionRef.current) {
-      // Set the flag to prevent infinite loops
-      isUpdatingGridPositionRef.current = true;
-      
-      // Using requestAnimationFrame to batch updates
-      requestAnimationFrame(() => {
-        // Clear the flag after the frame is rendered
-        isUpdatingGridPositionRef.current = false;
-      });
-    }
-  }, [gridPosition, formulas]);
+  // Removed verbose logging and unnecessary batching on grid move to improve drag performance
   
   // Clear selected points when a shape is selected
   useEffect(() => {
@@ -1089,12 +1077,9 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
       return null;
     }
     
-    // Create a grid position key to force re-renders when grid moves
-    const gridKey = `${gridPosition.x.toFixed(1)}-${gridPosition.y.toFixed(1)}`;
-    
     return formulas.map(formula => (
       <FormulaGraph
-        key={`${formula.id}-${gridKey}`}
+        key={formula.id}
         formula={formula}
         gridPosition={gridPosition}
         pixelsPerUnit={zoomedPixelsPerUnit}
@@ -1623,12 +1608,12 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
           />
         )}
         
-        {/* Dedicated formula layer with its own SVG */}
-        <div className="absolute inset-0" style={{ zIndex: 15, pointerEvents: isNonInteractive ? 'none' : 'auto' }}>
+        {/* Dedicated formula layer with its own SVG (do not intercept pointer events) */}
+        <div className="absolute inset-0" style={{ zIndex: 15, pointerEvents: 'none' }}>
           <svg 
             width="100%" 
             height="100%" 
-            style={{ pointerEvents: isNonInteractive ? 'none' : 'auto' }}
+            style={{ pointerEvents: 'none' }}
           >
             {renderFormulas()}
           </svg>
