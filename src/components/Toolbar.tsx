@@ -43,7 +43,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
   const _isMobile = useIsMobile();
   
   return (
-    <div id="geometry-toolbar" className="flex items-center space-x-1 p-1 bg-white rounded-lg shadow-sm border border-gray-200 animate-fade-in">
+    <div id="geometry-toolbar" className="flex items-center space-x-1 p-1 bg-white rounded-lg shadow-sm animate-fade-in">
       <ToolButton 
         id="select-tool"
         active={activeMode === 'select'}

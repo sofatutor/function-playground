@@ -365,14 +365,14 @@ const Index = () => {
                   
                   {/* Admin controls and fullscreen button grouped together on the right */}
                   <div className="flex items-center space-x-1">
-                    {/* Settings button */}
-                    {appliedOptions.admin && (
+                    {/* Settings button - always visible when SharePanel is open or when admin is enabled */}
+                    {(isSharePanelOpen || appliedOptions.admin) && (
                       <GlobalControls 
                         isFullscreen={isFullscreen} 
                         onToggleFullscreen={toggleFullscreen}
                         showFullscreenButton={false}
                         showZoomControls={appliedOptions.zoom}
-                        showAdminControls={appliedOptions.admin}
+                        showAdminControls={isSharePanelOpen || appliedOptions.admin}
                       />
                     )}
                     
