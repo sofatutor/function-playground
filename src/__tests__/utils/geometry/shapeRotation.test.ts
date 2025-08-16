@@ -1,6 +1,5 @@
 import { rotateShape } from '@/utils/geometry/shapeOperations';
-import { createTestCircle, createTestRectangle, createTestTriangle, createTestLine, pointsAreEqual } from '../testUtils';
-import { Point } from '@/types/shapes';
+import { createTestCircle, createTestRectangle, createTestTriangle, createTestLine } from '../testUtils';
 
 describe('Shape Operations - Rotation', () => {
   describe('rotateShape', () => {

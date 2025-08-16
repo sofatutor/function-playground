@@ -123,7 +123,7 @@ export const getFormula = (shapeType: ShapeType, measurementKey: string, languag
  */
 export const getFormulaExplanation = (shapeType: ShapeType, measurementKey: string, language: string = 'en'): string => {
   // Try to get the explanation from the locale files
-  const translationKey = `formulaExplanations.${shapeType}.${measurementKey}`;
+  const _translationKey = `formulaExplanations.${shapeType}.${measurementKey}`;
   const localeExplanation = translations[language]?.formulaExplanations?.[shapeType]?.[measurementKey];
   
   // If we have a translation, return it

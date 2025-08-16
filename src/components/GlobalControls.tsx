@@ -18,7 +18,7 @@ const GlobalControls: React.FC<GlobalControlsProps> = ({
   isFullscreen,
   onToggleFullscreen,
   showFullscreenButton = true,
-  showZoomControls = true,
+  showZoomControls: _showZoomControls = true,
   showAdminControls = true
 }) => {
   const t = useTranslate();

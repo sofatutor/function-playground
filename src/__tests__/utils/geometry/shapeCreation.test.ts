@@ -4,9 +4,6 @@ import * as commonUtils from '@/utils/geometry/common';
 import { distanceBetweenPoints } from '@/utils/geometry/common';
 
 describe('Shape Operations - Creation', () => {
-  // Helper function to generate a unique ID for testing
-  const originalGenerateId = jest.requireActual('@/utils/geometry/common').generateId;
-  
   beforeEach(() => {
     // Mock the generateId function to return a predictable ID for testing
     jest.spyOn(commonUtils, 'generateId').mockImplementation(() => 'test-id');

@@ -1,5 +1,5 @@
 import { ShapeType, Point, AnyShape, Circle, Rectangle, Triangle, Line } from '@/types/shapes';
-import { generateId, distanceBetweenPoints, DEFAULT_STROKE, DEFAULT_STROKE_WIDTH, getNextShapeColor } from './common';
+import { generateId, distanceBetweenPoints, DEFAULT_STROKE, getNextShapeColor } from './common';
 
 /**
  * Validates that the input points are valid (not null/undefined and have numeric x,y values)

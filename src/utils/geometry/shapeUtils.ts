@@ -1,4 +1,4 @@
-import { AnyShape, Circle, Rectangle, Triangle, Line, Point, ShapeType } from '@/types/shapes';
+import { AnyShape, Circle, Rectangle, Triangle, Line, Point } from '@/types/shapes';
 import { distanceBetweenPoints } from './pointOperations';
 
 /**

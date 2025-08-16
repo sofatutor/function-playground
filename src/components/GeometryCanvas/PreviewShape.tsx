@@ -18,7 +18,7 @@ const PreviewShape: React.FC<PreviewShapeProps> = ({
   activeShapeType,
   snapToGrid = false,
   pixelsPerSmallUnit,
-  zoomFactor = 1
+  zoomFactor: _zoomFactor = 1
 }) => {
   if (!isDrawing || !drawStart || !drawCurrent) return null;
   
@@ -255,7 +255,7 @@ const renderLinePreview = (
   isDownward: boolean,
   borderStyle: string, 
   borderColor: string, 
-  fillColor: string
+  _fillColor: string
 ) => {
   // Calculate end point based on normalized dimensions and direction
   const end = {

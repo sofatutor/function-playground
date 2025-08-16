@@ -1,6 +1,5 @@
 import { resizeShape } from '@/utils/geometry/shapeOperations';
 import { createTestCircle, createTestRectangle, createTestTriangle, createTestLine, pointsAreEqual } from '../testUtils';
-import { Point } from '@/types/shapes';
 
 describe('Shape Operations - Resizing', () => {
   describe('resizeShape', () => {
