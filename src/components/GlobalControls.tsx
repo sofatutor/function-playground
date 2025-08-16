@@ -41,7 +41,7 @@ const GlobalControls: React.FC<GlobalControlsProps> = ({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Settings</p>
+                <p>{t('settingsTooltip')}</p>
               </TooltipContent>
             </Tooltip>
           )}

@@ -197,6 +197,30 @@
       "loggingDescription": "Activar o desactivar el registro en consola con marcas de tiempo"
     }
   },
+  "unifiedSettingsModal": {
+    "title": "Configuración",
+    "description": "Gestionar configuraciones de aplicación, opciones de vista y preferencias de compartir",
+    "tabs": {
+      "general": "General",
+      "view": "Vista",
+      "share": "Compartir"
+    },
+    "general": {
+      "languageTitle": "Idioma",
+      "languageDescription": "Elija su idioma preferido para la interfaz",
+      "openaiTitle": "API de OpenAI",
+      "developerTitle": "Ajustes de Desarrollador",
+      "developerDescription": "Ajustes avanzados para desarrollo y depuración"
+    },
+    "view": {
+      "resetButton": "Restablecer Opciones de Vista a Predeterminadas"
+    },
+    "share": {
+      "adminToggleLabel": "Mostrar controles de administrador en vista compartida",
+      "adminToggleDescription": "Cuando está habilitado, los botones de compartir y configuración serán visibles en la URL compartida",
+      "languageDescription": "Seleccione el idioma para la vista compartida (solo afecta URLs compartidas, no la sesión actual)"
+    }
+  },
   "componentConfigModal": {
     "title": "Ajustes del Lienzo",
     "description": "Configurar ajustes específicos del lienzo y calibración",
@@ -212,6 +236,7 @@
   },
   "enterFullscreen": "Entrar en Pantalla Completa",
   "exitFullscreen": "Salir de Pantalla Completa",
+  "settingsTooltip": "Configuración",
   "formulaDefault": "Nueva Función",
   "formulaPlaceholder": "Introduce una expresión de función",
   "enterFormula": "Introduce una expresión de función",

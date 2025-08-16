@@ -197,6 +197,30 @@
       "loggingDescription": "Aktivieren oder deaktivieren Sie die Konsolenprotokollierung mit Zeitstempeln"
     }
   },
+  "unifiedSettingsModal": {
+    "title": "Einstellungen",
+    "description": "Anwendungseinstellungen, Ansichtsoptionen und Freigabeeinstellungen verwalten",
+    "tabs": {
+      "general": "Allgemein",
+      "view": "Ansicht",
+      "share": "Teilen"
+    },
+    "general": {
+      "languageTitle": "Sprache",
+      "languageDescription": "Wählen Sie Ihre bevorzugte Sprache für die Benutzeroberfläche",
+      "openaiTitle": "OpenAI API",
+      "developerTitle": "Entwicklereinstellungen",
+      "developerDescription": "Erweiterte Einstellungen für Entwicklung und Debugging"
+    },
+    "view": {
+      "resetButton": "Ansichtsoptionen auf Standard zurücksetzen"
+    },
+    "share": {
+      "adminToggleLabel": "Admin-Steuerelemente in geteilter Ansicht anzeigen",
+      "adminToggleDescription": "Wenn aktiviert, sind Teilen- und Einstellungsschaltflächen in der geteilten URL sichtbar",
+      "languageDescription": "Wählen Sie die Sprache für die geteilte Ansicht (betrifft nur geteilte URLs, nicht die aktuelle Sitzung)"
+    }
+  },
   "componentConfigModal": {
     "title": "Leinwand-Einstellungen",
     "description": "Leinwand-spezifische Einstellungen und Kalibrierung konfigurieren",
@@ -214,6 +238,7 @@
   "exitFullscreen": "Vollbild beenden",
   "previousFormula": "Vorherige Formel",
   "nextFormula": "Nächste Formel",
+  "settingsTooltip": "Einstellungen",
   "formulaDefault": "Neue Funktion",
   "formulaPlaceholder": "Geben Sie einen Funktionsausdruck ein",
   "enterFormula": "Geben Sie einen Funktionsausdruck ein",

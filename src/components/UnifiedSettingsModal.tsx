@@ -126,17 +126,17 @@ const UnifiedSettingsModal: React.FC<UnifiedSettingsModalProps> = ({ open, onOpe
         onOpenAutoFocus={() => setIsSharePanelOpen(true)}
       >
         <DialogHeader className="pb-4">
-          <DialogTitle>Settings</DialogTitle>
+          <DialogTitle>{t('unifiedSettingsModal.title')}</DialogTitle>
           <DialogDescription>
-            Manage application settings, view options, and sharing preferences
+            {t('unifiedSettingsModal.description')}
           </DialogDescription>
         </DialogHeader>
         
         <Tabs defaultValue="general" className="mt-2">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="general">General</TabsTrigger>
-            <TabsTrigger value="view">View</TabsTrigger>
-            <TabsTrigger value="share">Share</TabsTrigger>
+            <TabsTrigger value="general">{t('unifiedSettingsModal.tabs.general')}</TabsTrigger>
+            <TabsTrigger value="view">{t('unifiedSettingsModal.tabs.view')}</TabsTrigger>
+            <TabsTrigger value="share">{t('unifiedSettingsModal.tabs.share')}</TabsTrigger>
           </TabsList>
           
           {/* General Tab */}
@@ -144,9 +144,9 @@ const UnifiedSettingsModal: React.FC<UnifiedSettingsModalProps> = ({ open, onOpe
             {/* Language Selection */}
             <div className="space-y-3">
               <div>
-                <h3 className="text-sm font-medium">Language</h3>
+                <h3 className="text-sm font-medium">{t('unifiedSettingsModal.general.languageTitle')}</h3>
                 <p className="text-xs text-muted-foreground">
-                  Choose your preferred language for the interface
+                  {t('unifiedSettingsModal.general.languageDescription')}
                 </p>
               </div>
               <div className="space-y-2">
@@ -173,7 +173,7 @@ const UnifiedSettingsModal: React.FC<UnifiedSettingsModalProps> = ({ open, onOpe
             {/* OpenAI API Settings */}
             <div className="space-y-3">
               <div>
-                <h3 className="text-sm font-medium">OpenAI API</h3>
+                <h3 className="text-sm font-medium">{t('unifiedSettingsModal.general.openaiTitle')}</h3>
                 <p className="text-xs text-muted-foreground">
                   {t('configModal.openai.description')}
                 </p>
@@ -214,9 +214,9 @@ const UnifiedSettingsModal: React.FC<UnifiedSettingsModalProps> = ({ open, onOpe
                 <Separator />
                 <div className="space-y-3">
                   <div>
-                    <h3 className="text-sm font-medium">Developer Settings</h3>
+                    <h3 className="text-sm font-medium">{t('unifiedSettingsModal.general.developerTitle')}</h3>
                     <p className="text-xs text-muted-foreground">
-                      {t('configModal.developer.description')}
+                      {t('unifiedSettingsModal.general.developerDescription')}
                     </p>
                   </div>
                   <div className="flex items-center justify-between">
@@ -400,7 +400,7 @@ const UnifiedSettingsModal: React.FC<UnifiedSettingsModalProps> = ({ open, onOpe
             <div className="space-y-3">
               <Button onClick={handleResetViewOptions} size="sm" variant="ghost" className="w-full">
                 <RefreshCw className="h-4 w-4 mr-1" />
-                Reset View Options to Defaults
+                {t('unifiedSettingsModal.view.resetButton')}
               </Button>
             </div>
           </TabsContent>
@@ -418,10 +418,10 @@ const UnifiedSettingsModal: React.FC<UnifiedSettingsModalProps> = ({ open, onOpe
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label htmlFor="admin-share" className="text-sm font-medium">
-                    Show admin controls in shared view
+                    {t('unifiedSettingsModal.share.adminToggleLabel')}
                   </Label>
                   <p className="text-xs text-muted-foreground">
-                    When enabled, share and settings buttons will be visible in the shared URL
+                    {t('unifiedSettingsModal.share.adminToggleDescription')}
                   </p>
                 </div>
                 <Switch
@@ -440,7 +440,7 @@ const UnifiedSettingsModal: React.FC<UnifiedSettingsModalProps> = ({ open, onOpe
               <div>
                 <h3 className="text-sm font-medium">{t('sharePanel.language.title')}</h3>
                 <p className="text-xs text-muted-foreground">
-                  Select the language for the shared view (only affects shared URLs, not current session)
+                  {t('unifiedSettingsModal.share.languageDescription')}
                 </p>
               </div>
               <Select
