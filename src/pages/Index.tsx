@@ -359,6 +359,7 @@ const Index = () => {
                         onToggleFormulaEditor={toggleFormulaEditor}
                         isFormulaEditorOpen={isFormulaEditorOpen}
                         showFunctionControls={appliedOptions.funcControls}
+                        showGeometricTools={appliedOptions.tools}
                       />
                     )}
                   </div>
