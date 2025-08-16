@@ -285,14 +285,6 @@ const Index = () => {
     }
   }, [selectedFormulaId, isFormulaEditorOpen]);
 
-  // Auto-open formula editor when tools are disabled but function controls are enabled
-  useEffect(() => {
-    const shouldAutoOpen = !appliedOptions.tools && appliedOptions.funcControls;
-    if (shouldAutoOpen && !isFormulaEditorOpen) {
-      setIsFormulaEditorOpen(true);
-    }
-  }, [appliedOptions.tools, appliedOptions.funcControls, isFormulaEditorOpen]);
-
   const selectedShape = getSelectedShape();
   
   // Convert measurements from numbers to strings with proper formatting
@@ -353,8 +345,8 @@ const Index = () => {
               {appliedOptions.layout !== 'noninteractive' && (
                 <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between ${isFullscreen || isMobile ? 'space-y-1 sm:space-y-0 sm:space-x-1 px-1' : 'space-y-1 sm:space-y-0 sm:space-x-2 px-1 sm:px-2'} ${isMobile ? 'mb-0' : 'mb-1 sm:mb-2'}`}>
                   <div className="flex flex-row items-center space-x-1 sm:space-x-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 no-scrollbar">
-                    {/* Show Toolbar only when tools are enabled (geometric or function controls with tools) */}
-                    {appliedOptions.tools && (
+                    {/* Show Toolbar if tools OR function controls are enabled */}
+                    {(appliedOptions.tools || appliedOptions.funcControls) && (
                       <Toolbar
                         activeMode={activeMode}
                         activeShapeType={activeShapeType}
