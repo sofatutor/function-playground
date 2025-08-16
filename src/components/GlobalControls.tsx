@@ -2,9 +2,8 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTranslate } from '@/utils/translate';
-import { Maximize2, Minimize2, Share2, Settings } from 'lucide-react';
-import { useGlobalConfig } from '@/context/ConfigContext';
-import { SharePanel } from '@/components/SharePanel';
+import { Maximize2, Minimize2, Settings } from 'lucide-react';
+import UnifiedSettingsModal from '@/components/UnifiedSettingsModal';
 
 interface GlobalControlsProps {
   isFullscreen: boolean;
@@ -22,47 +21,27 @@ const GlobalControls: React.FC<GlobalControlsProps> = ({
   showAdminControls = true
 }) => {
   const t = useTranslate();
-  const { setGlobalConfigModalOpen } = useGlobalConfig();
-  const [isSharePanelOpen, setIsSharePanelOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   return (
     <>
       <div className="flex items-center space-x-1">
         <TooltipProvider>
-          {/* Share Button - only show if admin controls are enabled */}
+          {/* Unified Settings Button - only show if admin controls are enabled */}
           {showAdminControls && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setIsSharePanelOpen(true)}
-                  className="h-9 w-9"
-                >
-                  <Share2 className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{t('shareCanvas')}</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
-
-          {/* Global Settings Button - only show if admin controls are enabled */}
-          {showAdminControls && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setGlobalConfigModalOpen(true)}
+                  onClick={() => setIsSettingsModalOpen(true)}
                   className="h-9 w-9"
                 >
                   <Settings className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>{t('configModal.title')}</p>
+                <p>Settings</p>
               </TooltipContent>
             </Tooltip>
           )}
@@ -92,10 +71,10 @@ const GlobalControls: React.FC<GlobalControlsProps> = ({
         </TooltipProvider>
       </div>
       
-      {/* SharePanel - always render to prevent unmounting when admin controls are toggled */}
-      <SharePanel 
-        open={isSharePanelOpen} 
-        onOpenChange={setIsSharePanelOpen} 
+      {/* Unified Settings Modal - always render to prevent unmounting when admin controls are toggled */}
+      <UnifiedSettingsModal 
+        open={isSettingsModalOpen} 
+        onOpenChange={setIsSettingsModalOpen} 
       />
     </>
   );

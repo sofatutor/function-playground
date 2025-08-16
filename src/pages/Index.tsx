@@ -17,7 +17,7 @@ import { getStoredPixelsPerUnit } from '@/utils/geometry/common';
 import { createDefaultFormula } from '@/utils/formulaUtils';
 import ConfigModal from '@/components/ConfigModal';
 import ComponentConfigModal from '@/components/ComponentConfigModal';
-import { Trash2, Wrench } from 'lucide-react';
+import { Trash2, Wrench, Maximize2, Minimize2 } from 'lucide-react';
 import { 
   updateUrlWithData, 
   getFormulasFromUrl,
@@ -361,15 +361,45 @@ const Index = () => {
                         showFunctionControls={appliedOptions.funcControls}
                       />
                     )}
+                    
+                    {/* Settings button - positioned directly next to toolbar */}
+                    {appliedOptions.admin && (
+                      <GlobalControls 
+                        isFullscreen={isFullscreen} 
+                        onToggleFullscreen={toggleFullscreen}
+                        showFullscreenButton={false}
+                        showZoomControls={appliedOptions.zoom}
+                        showAdminControls={appliedOptions.admin}
+                      />
+                    )}
                   </div>
                   
-                  <GlobalControls 
-                    isFullscreen={isFullscreen} 
-                    onToggleFullscreen={toggleFullscreen}
-                    showFullscreenButton={appliedOptions.fullscreen}
-                    showZoomControls={appliedOptions.zoom}
-                    showAdminControls={appliedOptions.admin}
-                  />
+                  {/* Fullscreen button - keep in the right area */}
+                  {appliedOptions.fullscreen && (
+                    <div className="flex items-center">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={toggleFullscreen}
+                              className="h-9 w-9"
+                            >
+                              {isFullscreen ? (
+                                <Minimize2 className="h-4 w-4" />
+                              ) : (
+                                <Maximize2 className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{isFullscreen ? t('exitFullscreen') : t('enterFullscreen')}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  )}
                 </div>
               )}
               
