@@ -180,17 +180,6 @@ const Index = () => {
       return;
     }
 
-    // Apply funcOnly mode: preselect function tool and open formula editor
-    if (appliedOptions.funcOnly && appliedOptions.layout !== 'noninteractive') {
-      setIsFormulaEditorOpen(true);
-      if (formulas.length === 0) {
-        const newFormula = createDefaultFormula('function');
-        newFormula.expression = "x*x";
-        setFormulas([newFormula]);
-        setSelectedFormulaId(newFormula.id);
-      }
-    }
-
     // Load formulas from URL
     const formulasFromUrl = getFormulasFromUrl();
     if (formulasFromUrl && formulasFromUrl.length > 0) {
@@ -204,7 +193,7 @@ const Index = () => {
 
     // Mark as loaded from URL
     hasLoadedFromUrl.current = true;
-  }, [appliedOptions.funcOnly, appliedOptions.layout, formulas.length]);
+  }, [appliedOptions.layout, formulas.length]);
   
   // Update URL whenever shapes, formulas, or grid position change, but only after initial load
   useEffect(() => {

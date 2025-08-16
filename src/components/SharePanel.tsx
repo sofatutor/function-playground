@@ -39,6 +39,7 @@ export const SharePanel: React.FC<SharePanelProps> = ({ open, onOpenChange }) =>
     shareViewOptions, 
     updateShareViewOption, 
     resetToDefaults, 
+    applyPendingChanges,
     generateShareUrl, 
     generateEmbedCode,
     setIsSharePanelOpen
@@ -79,7 +80,9 @@ export const SharePanel: React.FC<SharePanelProps> = ({ open, onOpenChange }) =>
     setIsSharePanelOpen(newOpen);
     
     if (!newOpen) {
-      // When closing the panel, reset to defaults
+      // When closing the panel, apply any pending admin/layout changes
+      applyPendingChanges();
+      // Then reset to defaults
       resetToDefaults();
       setEmbedWidth('800');
       setEmbedHeight('600');
@@ -151,23 +154,6 @@ export const SharePanel: React.FC<SharePanelProps> = ({ open, onOpenChange }) =>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="funcOnly" className="text-sm font-medium">
-                    {t('sharePanel.options.funcOnly')}
-                  </Label>
-                  <p className="text-xs text-muted-foreground">
-                    {t('sharePanel.options.funcOnlyDescription')}
-                  </p>
-                </div>
-                <Switch
-                  id="funcOnly"
-                  checked={shareViewOptions.funcOnly}
-                  onCheckedChange={(checked) => updateShareViewOption('funcOnly', checked)}
-                  disabled={shareViewOptions.layout === 'noninteractive'}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
                   <Label htmlFor="funcControls" className="text-sm font-medium">
                     {t('sharePanel.options.funcControls')}
                   </Label>
@@ -213,7 +199,7 @@ export const SharePanel: React.FC<SharePanelProps> = ({ open, onOpenChange }) =>
                   id="tools"
                   checked={shareViewOptions.tools}
                   onCheckedChange={(checked) => updateShareViewOption('tools', checked)}
-                  disabled={shareViewOptions.layout === 'noninteractive' || shareViewOptions.funcOnly}
+                  disabled={shareViewOptions.layout === 'noninteractive'}
                 />
               </div>
 

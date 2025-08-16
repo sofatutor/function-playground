@@ -9,13 +9,11 @@ import { generateFormulaId } from '@/utils/formulaUtils';
 export interface ShareViewOptions {
   /** Layout mode: 'default' for full interactive mode, 'noninteractive' for grid-only display */
   layout: 'default' | 'noninteractive';
-  /** When true, hide geometry toolbar and preselect function tool */
-  funcOnly: boolean;
   /** When true, show function controls (formula editor, function tools) */
   funcControls: boolean;
   /** When true, show fullscreen toggle button (does not auto-enter fullscreen) */
   fullscreen: boolean;
-  /** When true, show canvas tools UI */
+  /** When true, show canvas tools UI (geometry shapes, etc.) */
   tools: boolean;
   /** When true, show zoom UI controls */
   zoom: boolean;
@@ -35,7 +33,6 @@ export interface ShareViewOptions {
  */
 export const defaultShareViewOptions: ShareViewOptions = {
   layout: 'default',
-  funcOnly: false,
   funcControls: true,
   fullscreen: false,
   tools: true,
@@ -459,12 +456,15 @@ export function parseShareViewOptionsFromUrl(search: string): ShareViewOptions {
   const lang = params.get('lang');
   const validLang = lang && /^[a-z]{2}(-[A-Z]{2})?$/.test(lang) ? lang : defaultShareViewOptions.lang;
   
+  // Handle legacy funcOnly parameter by converting it to tools=false
+  const funcOnly = parseBooleanParam('funcOnly', false);
+  const tools = funcOnly ? false : parseBooleanParam('tools', defaultShareViewOptions.tools);
+  
   return {
     layout: validLayout,
-    funcOnly: parseBooleanParam('funcOnly', defaultShareViewOptions.funcOnly),
     funcControls: parseBooleanParam('funcControls', defaultShareViewOptions.funcControls),
     fullscreen: parseBooleanParam('fullscreen', defaultShareViewOptions.fullscreen),
-    tools: parseBooleanParam('tools', defaultShareViewOptions.tools),
+    tools,
     zoom: parseBooleanParam('zoom', defaultShareViewOptions.zoom),
     unitCtl: parseBooleanParam('unitCtl', defaultShareViewOptions.unitCtl),
     header: parseBooleanParam('header', defaultShareViewOptions.header),
@@ -506,10 +506,6 @@ export function serializeShareViewOptionsToQuery(options: ShareViewOptions): str
     params.set('layout', options.layout);
   }
   
-  if (options.funcOnly !== defaults.funcOnly) {
-    params.set('funcOnly', options.funcOnly ? '1' : '0');
-  }
-  
   if (options.funcControls !== defaults.funcControls) {
     params.set('funcControls', options.funcControls ? '1' : '0');
   }
@@ -547,15 +543,11 @@ export function serializeShareViewOptionsToQuery(options: ShareViewOptions): str
 
 /**
  * Applies precedence rules to Share view options.
- * Precedence: noninteractive > funcOnly > individual toggles
+ * Precedence: noninteractive > individual toggles
  * 
  * When layout is 'noninteractive':
  * - All UI controls are hidden regardless of individual settings
  * - Canvas interactions are disabled
- * 
- * When funcOnly is true (and layout is not 'noninteractive'):
- * - Geometry toolbar is hidden
- * - Function tool is preselected
  * 
  * @param options - Input ShareViewOptions
  * @returns ShareViewOptions with precedence rules applied
@@ -580,14 +572,6 @@ export function applyShareViewOptionsPrecedence(options: ShareViewOptions): Shar
       fullscreen: false,
       header: false,
       funcControls: false,
-    };
-  }
-
-  // Next precedence: funcOnly hides geometry/tools UI (but keeps other UI as configured)
-  if (result.funcOnly) {
-    return {
-      ...result,
-      tools: false,
     };
   }
 
@@ -636,7 +620,6 @@ export function mergeShareViewOptionsFromUrl(
   const result = { ...existingOptions };
   
   if (params.has('layout')) result.layout = urlOptions.layout;
-  if (params.has('funcOnly')) result.funcOnly = urlOptions.funcOnly;
   if (params.has('funcControls')) result.funcControls = urlOptions.funcControls;
   if (params.has('fullscreen')) result.fullscreen = urlOptions.fullscreen;
   if (params.has('tools')) result.tools = urlOptions.tools;
@@ -645,6 +628,11 @@ export function mergeShareViewOptionsFromUrl(
   if (params.has('header')) result.header = urlOptions.header;
   if (params.has('admin')) result.admin = urlOptions.admin;
   if (params.has('lang')) result.lang = urlOptions.lang;
+  
+  // Handle legacy funcOnly parameter
+  if (params.has('funcOnly')) {
+    result.tools = urlOptions.tools; // This will be false if funcOnly was true
+  }
   
   return result;
 } 

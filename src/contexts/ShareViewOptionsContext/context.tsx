@@ -6,6 +6,7 @@ export interface ShareViewOptionsContextType {
   setShareViewOptions: (options: ShareViewOptions) => void;
   updateShareViewOption: <K extends keyof ShareViewOptions>(key: K, value: ShareViewOptions[K]) => void;
   resetToDefaults: () => void;
+  applyPendingChanges: () => void;
   generateShareUrl: () => string;
   generateEmbedCode: (width: number, height: number) => string;
   isSharePanelOpen: boolean;
@@ -21,6 +22,9 @@ export const ShareViewOptionsContext = createContext<ShareViewOptionsContextType
     // Default implementation - will be overridden by provider
   },
   resetToDefaults: () => {
+    // Default implementation - will be overridden by provider
+  },
+  applyPendingChanges: () => {
     // Default implementation - will be overridden by provider
   },
   generateShareUrl: () => '',

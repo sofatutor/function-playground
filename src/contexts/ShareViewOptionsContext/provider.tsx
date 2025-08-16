@@ -77,12 +77,28 @@ export const ShareViewOptionsProvider: React.FC<ShareViewOptionsProviderProps> =
     value: ShareViewOptions[K]
   ) => {
     const newOptions = { ...shareViewOptions, [key]: value };
+    
+    // For admin and layout changes, only update state without immediate URL update
+    // They will be applied when SharePanel is closed or URL is manually loaded
+    if (key === 'admin' || key === 'layout') {
+      setShareViewOptionsState(newOptions);
+      return;
+    }
+    
+    // For all other options, apply immediately with live effects
     setShareViewOptions(newOptions);
   }, [shareViewOptions, setShareViewOptions]);
 
   const resetToDefaults = useCallback(() => {
     setShareViewOptions(defaultShareViewOptions);
   }, [setShareViewOptions]);
+
+  const applyPendingChanges = useCallback(() => {
+    // Apply admin and layout changes that were pending
+    const applied = applyShareViewOptionsPrecedence(shareViewOptions);
+    setShareViewOptionsState(applied);
+    updateUrl(applied);
+  }, [shareViewOptions, updateUrl]);
 
   const generateShareUrl = useCallback(() => {
     if (typeof window !== 'undefined') {
@@ -112,6 +128,7 @@ export const ShareViewOptionsProvider: React.FC<ShareViewOptionsProviderProps> =
     setShareViewOptions,
     updateShareViewOption,
     resetToDefaults,
+    applyPendingChanges,
     generateShareUrl,
     generateEmbedCode,
     isSharePanelOpen,
