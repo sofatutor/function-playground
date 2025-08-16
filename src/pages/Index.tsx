@@ -361,8 +361,11 @@ const Index = () => {
                         showFunctionControls={appliedOptions.funcControls}
                       />
                     )}
-                    
-                    {/* Settings button - positioned directly next to toolbar */}
+                  </div>
+                  
+                  {/* Admin controls and fullscreen button grouped together on the right */}
+                  <div className="flex items-center space-x-1">
+                    {/* Settings button */}
                     {appliedOptions.admin && (
                       <GlobalControls 
                         isFullscreen={isFullscreen} 
@@ -372,11 +375,9 @@ const Index = () => {
                         showAdminControls={appliedOptions.admin}
                       />
                     )}
-                  </div>
-                  
-                  {/* Fullscreen button - keep in the right area */}
-                  {appliedOptions.fullscreen && (
-                    <div className="flex items-center">
+                    
+                    {/* Fullscreen button */}
+                    {appliedOptions.fullscreen && (
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -398,8 +399,8 @@ const Index = () => {
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               )}
               

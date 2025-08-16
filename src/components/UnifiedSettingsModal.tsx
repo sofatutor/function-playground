@@ -33,7 +33,6 @@ const UnifiedSettingsModal: React.FC<UnifiedSettingsModalProps> = ({ open, onOpe
   const { 
     shareViewOptions, 
     updateShareViewOption, 
-    resetToDefaults, 
     applyPendingChanges,
     generateShareUrl, 
     generateEmbedCode,
@@ -96,7 +95,7 @@ const UnifiedSettingsModal: React.FC<UnifiedSettingsModalProps> = ({ open, onOpe
   };
 
   const handleReset = () => {
-    resetToDefaults();
+    // Only reset Share tab specific options (embed dimensions), not View tab options
     setEmbedWidth('800');
     setEmbedHeight('600');
   };
@@ -108,8 +107,7 @@ const UnifiedSettingsModal: React.FC<UnifiedSettingsModalProps> = ({ open, onOpe
     if (!newOpen) {
       // When closing the modal, apply any pending admin/layout changes
       applyPendingChanges();
-      // Then reset to defaults
-      resetToDefaults();
+      // Only reset Share tab specific options (embed dimensions), not View tab options
       setEmbedWidth('800');
       setEmbedHeight('600');
     }
@@ -389,22 +387,7 @@ const UnifiedSettingsModal: React.FC<UnifiedSettingsModalProps> = ({ open, onOpe
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="admin" className="text-sm font-medium">
-                      {t('sharePanel.options.admin')}
-                    </Label>
-                    <p className="text-xs text-muted-foreground">
-                      {t('sharePanel.options.adminDescription')}
-                    </p>
-                  </div>
-                  <Switch
-                    id="admin"
-                    checked={shareViewOptions.admin}
-                    onCheckedChange={(checked) => updateShareViewOption('admin', checked)}
-                    disabled={shareViewOptions.layout === 'noninteractive'}
-                  />
-                </div>
+
               </div>
             </div>
 
@@ -438,6 +421,34 @@ const UnifiedSettingsModal: React.FC<UnifiedSettingsModalProps> = ({ open, onOpe
 
           {/* Share Tab */}
           <TabsContent value="share" className="space-y-6 py-4">
+            {/* Admin Controls Toggle */}
+            <div className="space-y-3">
+              <div>
+                <h3 className="text-sm font-medium">{t('sharePanel.options.admin')}</h3>
+                <p className="text-xs text-muted-foreground">
+                  {t('sharePanel.options.adminDescription')}
+                </p>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="admin-share" className="text-sm font-medium">
+                    Show admin controls in shared view
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    When enabled, share and settings buttons will be visible in the shared URL
+                  </p>
+                </div>
+                <Switch
+                  id="admin-share"
+                  checked={shareViewOptions.admin}
+                  onCheckedChange={(checked) => updateShareViewOption('admin', checked)}
+                  disabled={shareViewOptions.layout === 'noninteractive'}
+                />
+              </div>
+            </div>
+
+            <Separator />
+
             {/* Share URL */}
             <div className="space-y-3">
               <div>
