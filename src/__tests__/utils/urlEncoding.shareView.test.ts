@@ -46,11 +46,6 @@ describe('ShareViewOptions URL encoding/decoding', () => {
       expect(result.tools).toBe(defaultShareViewOptions.tools);
     });
 
-    it('should handle legacy funcOnly parameter by setting tools=false', () => {
-      const result = parseShareViewOptionsFromUrl('?funcOnly=1');
-      expect(result.tools).toBe(false);
-    });
-
     it('should parse valid language codes', () => {
       const result1 = parseShareViewOptionsFromUrl('?lang=de');
       expect(result1.lang).toBe('de');
@@ -308,34 +303,6 @@ describe('ShareViewOptions URL encoding/decoding', () => {
         header: false, // preserved
         admin: true, // preserved
         lang: 'de', // preserved
-      });
-    });
-
-    it('should handle legacy funcOnly parameter', () => {
-      const existingOptions: ShareViewOptions = {
-        layout: 'default',
-        funcControls: true,
-        fullscreen: true,
-        tools: true,
-        zoom: true,
-        unitCtl: true,
-        header: true,
-        admin: true,
-        lang: 'en',
-      };
-
-      const result = mergeShareViewOptionsFromUrl(existingOptions, '?funcOnly=1');
-      
-      expect(result).toEqual({
-        layout: 'default', // preserved
-        funcControls: true, // preserved
-        fullscreen: true, // preserved
-        tools: false, // set to false due to legacy funcOnly=1
-        zoom: true, // preserved
-        unitCtl: true, // preserved
-        header: true, // preserved
-        admin: true, // preserved
-        lang: 'en', // preserved
       });
     });
   });

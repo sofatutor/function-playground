@@ -426,13 +426,13 @@ export function getGridPositionFromUrl(): Point | null {
  * Missing parameters default to values from defaultShareViewOptions.
  * Invalid language codes fall back to the default language.
  * 
- * @param search - URL search string (e.g., "?layout=noninteractive&funcOnly=1")
+ * @param search - URL search string (e.g., "?layout=noninteractive&tools=0")
  * @returns ShareViewOptions object with parsed values
  * 
  * @example
  * ```typescript
- * const options = parseShareViewOptionsFromUrl("?layout=noninteractive&funcOnly=1&lang=de");
- * // Result: { layout: 'noninteractive', funcOnly: true, fullscreen: false, tools: true, zoom: true, unitCtl: true, lang: 'de' }
+ * const options = parseShareViewOptionsFromUrl("?layout=noninteractive&tools=0&lang=de");
+ * // Result: { layout: 'noninteractive', tools: false, fullscreen: false, zoom: true, unitCtl: true, lang: 'de' }
  * ```
  */
 export function parseShareViewOptionsFromUrl(search: string): ShareViewOptions {
@@ -456,15 +456,11 @@ export function parseShareViewOptionsFromUrl(search: string): ShareViewOptions {
   const lang = params.get('lang');
   const validLang = lang && /^[a-z]{2}(-[A-Z]{2})?$/.test(lang) ? lang : defaultShareViewOptions.lang;
   
-  // Handle legacy funcOnly parameter by converting it to tools=false
-  const funcOnly = parseBooleanParam('funcOnly', false);
-  const tools = funcOnly ? false : parseBooleanParam('tools', defaultShareViewOptions.tools);
-  
   return {
     layout: validLayout,
     funcControls: parseBooleanParam('funcControls', defaultShareViewOptions.funcControls),
     fullscreen: parseBooleanParam('fullscreen', defaultShareViewOptions.fullscreen),
-    tools,
+    tools: parseBooleanParam('tools', defaultShareViewOptions.tools),
     zoom: parseBooleanParam('zoom', defaultShareViewOptions.zoom),
     unitCtl: parseBooleanParam('unitCtl', defaultShareViewOptions.unitCtl),
     header: parseBooleanParam('header', defaultShareViewOptions.header),
@@ -485,14 +481,13 @@ export function parseShareViewOptionsFromUrl(search: string): ShareViewOptions {
  * ```typescript
  * const query = serializeShareViewOptionsToQuery({
  *   layout: 'noninteractive',
- *   funcOnly: true,
+ *   tools: false,
  *   fullscreen: false,
- *   tools: true,
  *   zoom: true,
  *   unitCtl: true,
  *   lang: 'de'
  * });
- * // Result: "layout=noninteractive&funcOnly=1&lang=de"
+ * // Result: "layout=noninteractive&tools=0&lang=de"
  * ```
  */
 export function serializeShareViewOptionsToQuery(options: ShareViewOptions): string {
@@ -628,11 +623,6 @@ export function mergeShareViewOptionsFromUrl(
   if (params.has('header')) result.header = urlOptions.header;
   if (params.has('admin')) result.admin = urlOptions.admin;
   if (params.has('lang')) result.lang = urlOptions.lang;
-  
-  // Handle legacy funcOnly parameter
-  if (params.has('funcOnly')) {
-    result.tools = urlOptions.tools; // This will be false if funcOnly was true
-  }
   
   return result;
 } 
