@@ -94,10 +94,15 @@ const UnifiedSettingsModal: React.FC<UnifiedSettingsModalProps> = ({ open, onOpe
     }
   };
 
-  const handleReset = () => {
-    // Only reset Share tab specific options (embed dimensions), not View tab options
-    setEmbedWidth('800');
-    setEmbedHeight('600');
+  const handleResetViewOptions = () => {
+    // Reset all view-related ShareViewOptions to defaults but preserve the admin and lang settings
+    updateShareViewOption('layout', 'default');
+    updateShareViewOption('funcControls', true);
+    updateShareViewOption('fullscreen', false);
+    updateShareViewOption('tools', true);
+    updateShareViewOption('zoom', true);
+    updateShareViewOption('unitCtl', true);
+    updateShareViewOption('header', true);
   };
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -386,36 +391,17 @@ const UnifiedSettingsModal: React.FC<UnifiedSettingsModalProps> = ({ open, onOpe
                     disabled={shareViewOptions.layout === 'noninteractive'}
                   />
                 </div>
-
-
               </div>
             </div>
 
             <Separator />
 
-            {/* Language for Share View */}
+            {/* Reset to Defaults */}
             <div className="space-y-3">
-              <div>
-                <h3 className="text-sm font-medium">{t('sharePanel.language.title')}</h3>
-                <p className="text-xs text-muted-foreground">
-                  {t('sharePanel.language.description')}
-                </p>
-              </div>
-              <Select
-                value={shareViewOptions.lang}
-                onValueChange={(value) => updateShareViewOption('lang', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t('sharePanel.language.placeholder')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableLanguages.map((lang) => (
-                    <SelectItem key={lang} value={lang}>
-                      {languageNames[lang as keyof typeof languageNames]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Button onClick={handleResetViewOptions} size="sm" variant="ghost" className="w-full">
+                <RefreshCw className="h-4 w-4 mr-1" />
+                Reset View Options to Defaults
+              </Button>
             </div>
           </TabsContent>
 
@@ -449,6 +435,33 @@ const UnifiedSettingsModal: React.FC<UnifiedSettingsModalProps> = ({ open, onOpe
 
             <Separator />
 
+            {/* Language Selection for Shared View */}
+            <div className="space-y-3">
+              <div>
+                <h3 className="text-sm font-medium">{t('sharePanel.language.title')}</h3>
+                <p className="text-xs text-muted-foreground">
+                  Select the language for the shared view (only affects shared URLs, not current session)
+                </p>
+              </div>
+              <Select
+                value={shareViewOptions.lang}
+                onValueChange={(value) => updateShareViewOption('lang', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t('sharePanel.language.placeholder')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableLanguages.map((lang) => (
+                    <SelectItem key={lang} value={lang}>
+                      {languageNames[lang as keyof typeof languageNames]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Separator />
+
             {/* Share URL */}
             <div className="space-y-3">
               <div>
@@ -468,10 +481,6 @@ const UnifiedSettingsModal: React.FC<UnifiedSettingsModalProps> = ({ open, onOpe
                   {t('sharePanel.url.copyButton')}
                 </Button>
               </div>
-              <Button onClick={handleReset} size="sm" variant="ghost" className="w-full">
-                <RefreshCw className="h-4 w-4 mr-1" />
-                {t('sharePanel.url.resetButton')}
-              </Button>
             </div>
 
             <Separator />

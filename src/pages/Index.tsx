@@ -73,12 +73,12 @@ const Index = () => {
   // Add a ref for the URL update timeout
   const urlUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Effect to apply language from ShareViewOptions
+  // Effect to apply language from ShareViewOptions (only when not configuring in SharePanel)
   useEffect(() => {
-    if (appliedOptions.lang && appliedOptions.lang !== 'en') {
+    if (!isSharePanelOpen && appliedOptions.lang && appliedOptions.lang !== 'en') {
       setLanguage(appliedOptions.lang);
     }
-  }, [appliedOptions.lang, setLanguage]);
+  }, [appliedOptions.lang, setLanguage, isSharePanelOpen]);
 
   // Effect to update pixelsPerUnit when measurement unit changes
   useEffect(() => {
