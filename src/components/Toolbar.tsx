@@ -45,7 +45,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
   const _isMobile = useIsMobile();
   
   return (
-    <div id="geometry-toolbar" className="flex items-center space-x-1 p-1 bg-white rounded-lg shadow-sm animate-fade-in">
+    <div id="geometry-toolbar" className="flex items-center space-x-1 animate-fade-in">
       {showGeometricTools && (
         <>
           <ToolButton 
@@ -132,7 +132,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
         <Separator orientation="vertical" className="h-6 sm:h-8 mx-0.5 sm:mx-1" />
       )}
 
-      {onToggleFormulaEditor && showFunctionControls && (
+      {onToggleFormulaEditor && showFunctionControls && showGeometricTools && (
         <>
           <ToolButton 
             id="plot-formula-button"
