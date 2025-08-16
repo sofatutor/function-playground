@@ -1,7 +1,7 @@
 ## PRD — Share Panel: Layouts and UI Toggles with Live Effects
 
 ### 1) Overview
-Add a Share panel opened from the existing Share button. The panel lets users configure a shareable view by selecting a layout and toggling visibility of specific UI controls. The panel generates a URL with query parameters that preset the app on load. Non‑interactive layout provides a grid‑only view for passive display that shows actual canvas content. Most toggles provide live visual feedback while the SharePanel is open, with admin mode and layout changes applied only when the panel closes or URL loads.
+Open a Unified Settings modal from the Settings button. The modal includes tabs (General / View / Share) to configure a shareable view by selecting a layout and toggling visibility of specific UI controls. The configuration generates a URL with query parameters that preset the app on load. Non‑interactive layout provides a grid‑only view for passive display that shows actual canvas content. Most toggles provide live visual feedback while the Settings modal is open, with admin mode and layout changes applied only when the modal closes or when loading from URL.
 
 ### 2) Goals
 - Provide layout presets selectable in a Share panel and encode them in URL params
@@ -23,10 +23,10 @@ Add a Share panel opened from the existing Share button. The panel lets users co
 
 ### 4) Functional requirements
 
-#### 4.1 Share panel UI
-- Accessible modal opened from the current Share button
-- Contains: Layout picker, Toggles section, Language dropdown, live URL preview (read‑only), actions: Copy Link, Reset to defaults, Copy Embed Code
-- SharePanel remains open during all control toggles for seamless configuration
+#### 4.1 Settings modal UI
+- Accessible Unified Settings modal opened from the Settings button
+- Contains tabs: General, View, and Share (layout picker, toggles, language dropdown, live URL preview, actions: Copy Link, Reset to defaults, Copy Embed Code)
+- Settings modal remains open during all control toggles for seamless configuration
 - Reset to defaults only occurs after applying pending changes
 
 #### 4.2 Layouts (encoded via URL `layout`)
@@ -34,7 +34,7 @@ Add a Share panel opened from the existing Share button. The panel lets users co
 - `layout=noninteractive`: grid‑only display that shows canvas content (shapes, formulas) but disables all interactions; hides all UI controls regardless of individual toggles
 
 #### 4.3 Live vs Non-Live Toggle Behavior
-**Live toggles** (immediate visual feedback while SharePanel is open):
+**Live toggles** (immediate visual feedback while the Settings modal is open):
 - `funcControls`: Show/hide function plotting controls and formula editor
 - `tools`: Show/hide canvas geometry tools UI
 - `zoom`: Show/hide zoom UI controls
@@ -42,7 +42,7 @@ Add a Share panel opened from the existing Share button. The panel lets users co
 - `header`: Show/hide header with app title
 - `fullscreen`: Show/hide fullscreen toggle button
 
-**Non-live toggles** (applied only when SharePanel closes or URL loads):
+**Non-live toggles** (applied only when the Settings modal closes or when loading from URL):
 - `admin`: Enable/disable admin mode (shows/hides admin controls)
 - `layout`: Switch between default and noninteractive modes
 
@@ -58,9 +58,8 @@ Add a Share panel opened from the existing Share button. The panel lets users co
 
 #### 4.5 URL behavior
 - Use simple query params with backwards compatibility
-- Live toggles update URL immediately when changed in SharePanel
-- Admin/layout changes update URL only when SharePanel closes or URL loads
-- Legacy `funcOnly` parameter automatically converted to `tools=false`
+- Live toggles update URL immediately when changed in the Settings modal
+- Admin/layout changes update URL only when the Settings modal closes or when loading from URL
 - generateShareUrl() includes shapes, formulas, grid position, and ShareViewOptions
 
 #### 4.6 Environment Configuration
@@ -69,7 +68,7 @@ Add a Share panel opened from the existing Share button. The panel lets users co
 - URL parameter `admin=0` can override environment default
 
 #### 4.7 Embed
-- SharePanel provides iframe snippet reflecting current options
+- Settings modal provides iframe snippet reflecting current options
 - Width/height inputs with sensible defaults (800×600)
 - Values only affect the snippet, not the app
 
@@ -116,11 +115,9 @@ Example URLs:
    - Disables all canvas interactions
    - Shows grid/axes and canvas content (shapes, formulas)
 
-2. **SharePanel state awareness**: When SharePanel is open, noninteractive mode is ignored for configuration purposes
+2. **Settings modal state awareness**: When the Settings modal is open, noninteractive mode is ignored for configuration purposes
 
-3. **Legacy compatibility**: `funcOnly=1` automatically converts to `tools=0`
-
-4. **Environment defaults**: `VITE_ADMIN_MODE` sets admin mode default, URL can override
+3. **Environment defaults**: `VITE_ADMIN_MODE` sets admin mode default, URL can override
 
 ### 8) Design considerations
 - SharePanel as modal matching current Shadcn UI style
@@ -145,11 +142,12 @@ Example URLs:
 
 #### 9.3 Live Updates
 - Live toggles call `updateShareViewOption()` immediately
-- Admin/layout changes stored locally until panel closes
+- Admin/layout changes stored locally until the modal closes
 - URL updates coordinated with existing URL management
 
 ### 10) Affected areas
 - `src/components/SharePanel.tsx` - Main configuration UI
+- `src/components/UnifiedSettingsModal.tsx` - Consolidated settings modal (General/View/Share tabs)
 - `src/contexts/ShareViewOptionsContext/` - State management
 - `src/utils/urlEncoding.ts` - URL parsing and serialization
 - `src/pages/Index.tsx` - Initial URL parsing and application
@@ -158,10 +156,9 @@ Example URLs:
 
 ### 11) Acceptance criteria
 
-#### AC1: SharePanel Live Behavior
-- Opening SharePanel shows current layout and toggle states
+- Opening the Settings modal shows current layout and toggle states
 - Live toggles (funcControls, tools, zoom, unitCtl, header, fullscreen) update UI immediately
-- Admin and layout changes are previewed but not applied until panel closes
+- Admin and layout changes are previewed but not applied until the modal closes
 - URL updates immediately for live toggles
 
 #### AC2: URL Loading and Application  
@@ -182,7 +179,7 @@ Example URLs:
 
 #### AC5: Content and URL Management
 - generateShareUrl() includes shapes, formulas, grid position, and all ShareViewOptions
-- SharePanel stays open during all control toggles
+- Settings modal stays open during all control toggles
 - Reset to defaults occurs after applying pending changes
 
 #### AC6: Accessibility and Localization

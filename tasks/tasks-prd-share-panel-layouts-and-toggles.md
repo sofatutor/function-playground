@@ -2,6 +2,7 @@
 
 ### Core Implementation Files
 - `src/components/SharePanel.tsx` - Main SharePanel UI with layout picker, live toggles, and configuration controls
+- `src/components/UnifiedSettingsModal.tsx` - Unified Settings modal (General/View/Share)
 - `src/contexts/ShareViewOptionsContext/` - Context provider for ShareViewOptions state management
   - `context.tsx` - Context definition and types
   - `provider.tsx` - Provider implementation with live/non-live update handling
@@ -11,7 +12,7 @@
 
 ### UI Integration Files  
 - `src/components/GeometryHeader.tsx` - Header area with Share button and conditional rendering based on `header` option
-- `src/components/GlobalControls.tsx` - App-level controls conditionally hidden by `admin` option
+- `src/components/GlobalControls.tsx` - App-level controls conditionally hidden by `admin` option; opens Unified Settings modal
 - `src/components/GeometryControls.tsx` - Geometry toolbar conditionally hidden by `tools` option
 - `src/components/Toolbar.tsx` - Shared toolbar UI components affected by toggles
 - `src/components/FormulaEditor.tsx` - Function plotting editor conditionally hidden by `funcControls` option
@@ -99,12 +100,12 @@
 
 ### Live Toggle System
 - **Live toggles**: `funcControls`, `tools`, `zoom`, `unitCtl`, `header`, `fullscreen` - update immediately
-- **Non-live toggles**: `admin`, `layout` - update only when SharePanel closes or URL loads
-- SharePanel stays open during all configuration changes for seamless UX
+- **Non-live toggles**: `admin`, `layout` - update only when the Unified Settings modal closes or URL loads
+- Unified Settings modal stays open during all configuration changes for seamless UX
 
 ### Unified Control Architecture  
 - Combined `funcOnly` and `tools` toggles - `tools=false` replaces `funcOnly=true` behavior
-- Backward compatibility maintained - legacy `funcOnly` URLs automatically converted
+- Legacy `funcOnly` links are not auto-converted; prefer the new schema
 - Consistent parameter naming and behavior across all controls
 
 ### Enhanced Non-Interactive Mode
