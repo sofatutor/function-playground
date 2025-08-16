@@ -19,7 +19,8 @@ import { snapToGrid, isSignificantGridChange, getGridModifiers } from '@/utils/g
 // Import service factory
 import { useServiceFactory } from '@/providers/ServiceProvider';
 
-export function useShapeOperations() {
+export function useShapeOperations(options?: { showToasts?: boolean }) {
+  const showToasts = options?.showToasts ?? true;
   const [shapes, setShapes] = useState<AnyShape[]>([]);
   const [selectedShapeId, setSelectedShapeId] = useState<string | null>(null);
   const [activeMode, setActiveMode] = useState<OperationMode>('select');
@@ -56,7 +57,9 @@ export function useShapeOperations() {
     const shapesFromUrl = getShapesFromUrl();
     if (shapesFromUrl && shapesFromUrl.length > 0) {
       setShapes(shapesFromUrl);
-      toast.success(`Loaded ${shapesFromUrl.length} shapes from URL`);
+      if (showToasts) {
+        toast.success(`Loaded ${shapesFromUrl.length} shapes from URL`);
+      }
     }
 
     // Load grid position from URL
@@ -70,7 +73,7 @@ export function useShapeOperations() {
 
     // Mark as loaded from URL
     hasLoadedFromUrl.current = true;
-  }, []);
+  }, [showToasts]);
   
   // Update URL whenever shapes or grid position change, but only after initial load
   useEffect(() => {

@@ -22,7 +22,7 @@ describe('ShareViewOptions URL encoding/decoding', () => {
     it('should parse layout parameter correctly', () => {
       const result = parseShareViewOptionsFromUrl('?layout=noninteractive');
       expect(result.layout).toBe('noninteractive');
-      expect(result.funcOnly).toBe(defaultShareViewOptions.funcOnly);
+      expect(result.funcControls).toBe(defaultShareViewOptions.funcControls);
     });
 
     it('should fall back to default layout for invalid values', () => {
@@ -31,17 +31,18 @@ describe('ShareViewOptions URL encoding/decoding', () => {
     });
 
     it('should parse boolean parameters correctly', () => {
-      const result = parseShareViewOptionsFromUrl('?funcOnly=1&fullscreen=0&tools=1&zoom=0&unitCtl=1');
-      expect(result.funcOnly).toBe(true);
+      const result = parseShareViewOptionsFromUrl('?funcControls=1&fullscreen=0&tools=1&zoom=0&unitCtl=1&header=0');
+      expect(result.funcControls).toBe(true);
       expect(result.fullscreen).toBe(false);
       expect(result.tools).toBe(true);
       expect(result.zoom).toBe(false);
       expect(result.unitCtl).toBe(true);
+      expect(result.header).toBe(false);
     });
 
     it('should fall back to defaults for invalid boolean values', () => {
-      const result = parseShareViewOptionsFromUrl('?funcOnly=invalid&tools=maybe');
-      expect(result.funcOnly).toBe(defaultShareViewOptions.funcOnly);
+      const result = parseShareViewOptionsFromUrl('?funcControls=invalid&tools=maybe');
+      expect(result.funcControls).toBe(defaultShareViewOptions.funcControls);
       expect(result.tools).toBe(defaultShareViewOptions.tools);
     });
 
@@ -66,15 +67,17 @@ describe('ShareViewOptions URL encoding/decoding', () => {
 
     it('should parse complex parameter combinations', () => {
       const result = parseShareViewOptionsFromUrl(
-        '?layout=noninteractive&funcOnly=1&fullscreen=1&tools=0&zoom=0&unitCtl=0&lang=de'
+        '?layout=noninteractive&funcControls=1&fullscreen=1&tools=0&zoom=0&unitCtl=0&header=0&lang=de'
       );
       expect(result).toEqual({
         layout: 'noninteractive',
-        funcOnly: true,
+        funcControls: true,
         fullscreen: true,
         tools: false,
         zoom: false,
         unitCtl: false,
+        header: false,
+        admin: true, // default value since not specified in URL
         lang: 'de',
       });
     });
@@ -98,11 +101,12 @@ describe('ShareViewOptions URL encoding/decoding', () => {
     it('should serialize boolean parameters as 0 or 1', () => {
       const options: ShareViewOptions = {
         ...defaultShareViewOptions,
-        funcOnly: true,
+        funcControls: false,
         tools: false,
+        header: false,
       };
       const result = serializeShareViewOptionsToQuery(options);
-      expect(result).toBe('funcOnly=1&tools=0');
+      expect(result).toBe('funcControls=0&tools=0&header=0');
     });
 
     it('should serialize language parameter', () => {
@@ -117,26 +121,28 @@ describe('ShareViewOptions URL encoding/decoding', () => {
     it('should maintain consistent parameter ordering', () => {
       const options: ShareViewOptions = {
         layout: 'noninteractive',
-        funcOnly: true,
+        funcControls: true,
         fullscreen: true,
         tools: false,
         zoom: false,
         unitCtl: false,
+        header: false,
+        admin: true,
         lang: 'de',
       };
       const result = serializeShareViewOptionsToQuery(options);
-      expect(result).toBe('layout=noninteractive&funcOnly=1&fullscreen=1&tools=0&zoom=0&unitCtl=0&lang=de');
+      expect(result).toBe('layout=noninteractive&fullscreen=1&tools=0&zoom=0&unitCtl=0&header=0&lang=de');
     });
 
     it('should omit parameters that match defaults', () => {
       const options: ShareViewOptions = {
         ...defaultShareViewOptions,
-        funcOnly: true, // non-default
+        funcControls: false, // non-default
         tools: true, // default, should be omitted
         lang: 'de', // non-default
       };
       const result = serializeShareViewOptionsToQuery(options);
-      expect(result).toBe('funcOnly=1&lang=de');
+      expect(result).toBe('funcControls=0&lang=de');
     });
   });
 
@@ -144,11 +150,13 @@ describe('ShareViewOptions URL encoding/decoding', () => {
     it('should maintain data integrity through parse/serialize cycle', () => {
       const originalOptions: ShareViewOptions = {
         layout: 'noninteractive',
-        funcOnly: true,
+        funcControls: true,
         fullscreen: false,
         tools: false,
         zoom: true,
         unitCtl: false,
+        header: false,
+        admin: true,
         lang: 'de',
       };
 
@@ -169,6 +177,7 @@ describe('ShareViewOptions URL encoding/decoding', () => {
       const partialOptions: ShareViewOptions = {
         ...defaultShareViewOptions,
         layout: 'noninteractive',
+        header: false,
         lang: 'fr',
       };
 
@@ -180,29 +189,33 @@ describe('ShareViewOptions URL encoding/decoding', () => {
   });
 
   describe('applyShareViewOptionsPrecedence', () => {
-    it('should return options unchanged for default layout when funcOnly is false', () => {
+    it('should return options unchanged for default layout', () => {
       const options: ShareViewOptions = {
         layout: 'default',
-        funcOnly: true,
+        funcControls: true,
         fullscreen: true,
         tools: true,
         zoom: true,
         unitCtl: true,
+        header: true,
+        admin: true,
         lang: 'en',
       };
 
-      const result = applyShareViewOptionsPrecedence({ ...options, funcOnly: false });
-      expect(result).toEqual({ ...options, funcOnly: false });
+      const result = applyShareViewOptionsPrecedence(options);
+      expect(result).toEqual(options);
     });
 
     it('should hide all UI controls when layout is noninteractive', () => {
       const options: ShareViewOptions = {
         layout: 'noninteractive',
-        funcOnly: true,
+        funcControls: true,
         fullscreen: true,
         tools: true,
         zoom: true,
         unitCtl: true,
+        header: true,
+        admin: true,
         lang: 'en',
       };
 
@@ -213,24 +226,8 @@ describe('ShareViewOptions URL encoding/decoding', () => {
         zoom: false,
         unitCtl: false,
         fullscreen: false,
-      });
-    });
-
-    it('should hide tools when funcOnly is true and layout is default', () => {
-      const options: ShareViewOptions = {
-        layout: 'default',
-        funcOnly: true,
-        fullscreen: true,
-        tools: true,
-        zoom: true,
-        unitCtl: true,
-        lang: 'en',
-      };
-
-      const result = applyShareViewOptionsPrecedence(options);
-      expect(result).toEqual({
-        ...options,
-        tools: false,
+        header: false,
+        funcControls: false,
       });
     });
   });
@@ -239,11 +236,13 @@ describe('ShareViewOptions URL encoding/decoding', () => {
     it('should preserve existing options when no URL parameters are provided', () => {
       const existingOptions: ShareViewOptions = {
         layout: 'noninteractive',
-        funcOnly: true,
+        funcControls: true,
         fullscreen: true,
         tools: false,
         zoom: false,
         unitCtl: false,
+        header: false,
+        admin: true,
         lang: 'de',
       };
 
@@ -254,11 +253,13 @@ describe('ShareViewOptions URL encoding/decoding', () => {
     it('should override only parameters present in URL', () => {
       const existingOptions: ShareViewOptions = {
         layout: 'default',
-        funcOnly: false,
+        funcControls: true,
         fullscreen: false,
         tools: true,
         zoom: true,
         unitCtl: true,
+        header: true,
+        admin: true,
         lang: 'en',
       };
 
@@ -266,11 +267,13 @@ describe('ShareViewOptions URL encoding/decoding', () => {
       
       expect(result).toEqual({
         layout: 'noninteractive', // overridden
-        funcOnly: false, // preserved
+        funcControls: true, // preserved
         fullscreen: false, // preserved
         tools: true, // preserved
         zoom: true, // preserved
         unitCtl: true, // preserved
+        header: true, // preserved
+        admin: true, // preserved
         lang: 'de', // overridden
       });
     });
@@ -278,23 +281,27 @@ describe('ShareViewOptions URL encoding/decoding', () => {
     it('should handle partial boolean overrides', () => {
       const existingOptions: ShareViewOptions = {
         layout: 'default',
-        funcOnly: true,
+        funcControls: true,
         fullscreen: true,
         tools: false,
         zoom: false,
         unitCtl: false,
+        header: false,
+        admin: true,
         lang: 'de',
       };
 
-      const result = mergeShareViewOptionsFromUrl(existingOptions, '?funcOnly=0&tools=1');
+      const result = mergeShareViewOptionsFromUrl(existingOptions, '?funcControls=0&tools=1');
       
       expect(result).toEqual({
         layout: 'default', // preserved
-        funcOnly: false, // overridden
+        funcControls: false, // overridden
         fullscreen: true, // preserved
         tools: true, // overridden
         zoom: false, // preserved
         unitCtl: false, // preserved
+        header: false, // preserved
+        admin: true, // preserved
         lang: 'de', // preserved
       });
     });

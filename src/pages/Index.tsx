@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useShapeOperations } from '@/hooks/useShapeOperations';
 import { useServiceFactory } from '@/providers/ServiceProvider';
-import { useComponentConfig } from '@/context/ConfigContext';
+import { useComponentConfig, useConfig } from '@/context/ConfigContext';
+import { useShareViewOptions } from '@/contexts/ShareViewOptionsContext';
 import GeometryHeader from '@/components/GeometryHeader';
 import GeometryCanvas from '@/components/GeometryCanvas';
 import Toolbar from '@/components/Toolbar';
@@ -16,10 +17,11 @@ import { getStoredPixelsPerUnit } from '@/utils/geometry/common';
 import { createDefaultFormula } from '@/utils/formulaUtils';
 import ConfigModal from '@/components/ConfigModal';
 import ComponentConfigModal from '@/components/ComponentConfigModal';
-import { Trash2, Wrench } from 'lucide-react';
+import { Trash2, Wrench, Maximize2, Minimize2 } from 'lucide-react';
 import { 
   updateUrlWithData, 
-  getFormulasFromUrl
+  getFormulasFromUrl,
+  applyShareViewOptionsWithPanelState
 } from '@/utils/urlEncoding';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -30,7 +32,12 @@ const Index = () => {
   // Get the service factory
   const serviceFactory = useServiceFactory();
   const { setComponentConfigModalOpen } = useComponentConfig();
+  const { setLanguage } = useConfig();
   const isMobile = useIsMobile();
+  
+  // Get ShareViewOptions with applied precedence
+  const { shareViewOptions, isSharePanelOpen } = useShareViewOptions();
+  const appliedOptions = applyShareViewOptionsWithPanelState(shareViewOptions, isSharePanelOpen);
   
   const {
     shapes,
@@ -53,7 +60,7 @@ const Index = () => {
     getShapeMeasurements,
     getSelectedShape,
     updateMeasurement
-  } = useShapeOperations();
+  } = useShapeOperations({ showToasts: appliedOptions.layout !== 'noninteractive' });
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [formulas, setFormulas] = useState<Formula[]>([]);
@@ -65,6 +72,13 @@ const Index = () => {
   const hasLoadedFromUrl = useRef(false);
   // Add a ref for the URL update timeout
   const urlUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Effect to apply language from ShareViewOptions (only when not configuring in SharePanel)
+  useEffect(() => {
+    if (!isSharePanelOpen && appliedOptions.lang && appliedOptions.lang !== 'en') {
+      setLanguage(appliedOptions.lang);
+    }
+  }, [appliedOptions.lang, setLanguage, isSharePanelOpen]);
 
   // Effect to update pixelsPerUnit when measurement unit changes
   useEffect(() => {
@@ -172,12 +186,14 @@ const Index = () => {
       setFormulas(formulasFromUrl);
       setSelectedFormulaId(formulasFromUrl[0].id);
       setIsFormulaEditorOpen(true);
-      toast.success(`Loaded ${formulasFromUrl.length} formulas from URL`);
+      if (appliedOptions.layout !== 'noninteractive') {
+        toast.success(`Loaded ${formulasFromUrl.length} formulas from URL`);
+      }
     }
 
     // Mark as loaded from URL
     hasLoadedFromUrl.current = true;
-  }, []);
+  }, [appliedOptions.layout, formulas.length]);
   
   // Update URL whenever shapes, formulas, or grid position change, but only after initial load
   useEffect(() => {
@@ -309,38 +325,86 @@ const Index = () => {
   return (
     <div className={`min-h-screen bg-gray-50 ${isFullscreen || isMobile ? 'p-0' : ''}`}>
       <div className={`${isFullscreen || isMobile ? 'max-w-full p-0' : 'container py-0 sm:py-2 md:py-4 lg:py-8 px-0 sm:px-2 md:px-4'} transition-all duration-200 h-[calc(100vh-0rem)] sm:h-[calc(100vh-0.5rem)]`}>
-        <GeometryHeader isFullscreen={isFullscreen} />
+        {/* Header - hidden if header option is false */}
+        {appliedOptions.header && (
+          <GeometryHeader isFullscreen={isFullscreen} />
+        )}
         
-        {/* Include both modals */}
-        <ConfigModal />
-        <ComponentConfigModal />
+        {/* Include both modals - hidden in noninteractive mode */}
+        {appliedOptions.layout !== 'noninteractive' && (
+          <>
+            <ConfigModal />
+            <ComponentConfigModal />
+          </>
+        )}
         
         <div className={`${isMobile || isFullscreen ? 'h-full' : 'h-[calc(100%-3rem)] sm:h-[calc(100%-4rem)]'}`}>
           <div className="h-full">
             <div className="flex flex-col h-full">
-              <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between ${isFullscreen || isMobile ? 'space-y-1 sm:space-y-0 sm:space-x-1 px-1' : 'space-y-1 sm:space-y-0 sm:space-x-2 px-1 sm:px-2'} ${isMobile ? 'mb-0' : 'mb-1 sm:mb-2'}`}>
-                <div className="flex flex-row items-center space-x-1 sm:space-x-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 no-scrollbar">
-                  <Toolbar
-                    activeMode={activeMode}
-                    activeShapeType={activeShapeType}
-                    onModeChange={setActiveMode}
-                    onShapeTypeChange={setActiveShapeType}
-                    _onClear={deleteAllShapes}
-                    _onDelete={() => selectedShapeId && deleteShape(selectedShapeId)}
-                    hasSelectedShape={!!selectedShapeId}
-                    _canDelete={!!selectedShapeId}
-                    onToggleFormulaEditor={toggleFormulaEditor}
-                    isFormulaEditorOpen={isFormulaEditorOpen}
-                  />
+              {/* Toolbar and controls - hidden in noninteractive mode */}
+              {appliedOptions.layout !== 'noninteractive' && (
+                <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between ${isFullscreen || isMobile ? 'space-y-1 sm:space-y-0 sm:space-x-1 px-1' : 'space-y-1 sm:space-y-0 sm:space-x-2 px-1 sm:px-2'} ${isMobile ? 'mb-0' : 'mb-1 sm:mb-2'}`}>
+                  <div className="flex flex-row items-center space-x-1 sm:space-x-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 no-scrollbar">
+                    {/* Show Toolbar if tools OR function controls are enabled */}
+                    {(appliedOptions.tools || appliedOptions.funcControls) && (
+                      <Toolbar
+                        activeMode={activeMode}
+                        activeShapeType={activeShapeType}
+                        onModeChange={setActiveMode}
+                        onShapeTypeChange={setActiveShapeType}
+                        _onClear={deleteAllShapes}
+                        _onDelete={() => selectedShapeId && deleteShape(selectedShapeId)}
+                        hasSelectedShape={!!selectedShapeId}
+                        _canDelete={!!selectedShapeId}
+                        onToggleFormulaEditor={toggleFormulaEditor}
+                        isFormulaEditorOpen={isFormulaEditorOpen}
+                        showFunctionControls={appliedOptions.funcControls}
+                        showGeometricTools={appliedOptions.tools}
+                      />
+                    )}
+                  </div>
+                  
+                  {/* Admin controls and fullscreen button grouped together on the right */}
+                  <div className="flex items-center space-x-1">
+                    {/* Admin controls - always visible in current session, admin toggle only affects shared URLs */}
+                    <GlobalControls 
+                      isFullscreen={isFullscreen} 
+                      onToggleFullscreen={toggleFullscreen}
+                      showFullscreenButton={false}
+                      showZoomControls={appliedOptions.zoom}
+                      showAdminControls={true}
+                    />
+                    
+                    {/* Fullscreen button */}
+                    {appliedOptions.fullscreen && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={toggleFullscreen}
+                              className="h-9 w-9"
+                            >
+                              {isFullscreen ? (
+                                <Minimize2 className="h-4 w-4" />
+                              ) : (
+                                <Maximize2 className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{isFullscreen ? t('exitFullscreen') : t('enterFullscreen')}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
                 </div>
-                
-                <GlobalControls 
-                  isFullscreen={isFullscreen} 
-                  onToggleFullscreen={toggleFullscreen}
-                />
-              </div>
+              )}
               
-              {isFormulaEditorOpen && (
+              {/* Formula editor - hidden in noninteractive mode or when funcControls is disabled */}
+              {appliedOptions.layout !== 'noninteractive' && appliedOptions.funcControls && isFormulaEditorOpen && (
                 <div className="w-full mb-1 sm:mb-2 md:mb-3">
                   <FormulaEditor
                     formulas={formulas}
@@ -381,51 +445,64 @@ const Index = () => {
                 serviceFactory={serviceFactory}
                 onMeasurementUpdate={updateMeasurement}
                 onFormulaSelect={setSelectedFormulaId}
+                isNonInteractive={appliedOptions.layout === 'noninteractive'}
+                showZoomControls={appliedOptions.zoom}
                 canvasTools={
-                  <div className="absolute top-2 right-2 z-10 flex space-x-1">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button 
-                            variant="outline"
-                            size="icon"
-                            className="h-7 w-7 sm:h-8 sm:w-8 bg-white/80 backdrop-blur-sm"
-                            onClick={deleteAllShapes}
-                          >
-                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{t('clearCanvas')}</p>
-                        </TooltipContent>
-                      </Tooltip>
+                  // Hide canvas tools in noninteractive mode
+                  appliedOptions.layout !== 'noninteractive' ? (
+                    <div className="absolute top-2 right-2 z-10 flex space-x-1">
+                      <TooltipProvider>
+                        {/* Clear button - hide if tools are disabled */}
+                        {appliedOptions.tools && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="outline"
+                                size="icon"
+                                className="h-7 w-7 sm:h-8 sm:w-8 bg-white/80 backdrop-blur-sm"
+                                onClick={deleteAllShapes}
+                              >
+                                <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{t('clearCanvas')}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                        
+                        {/* Config button - hide if tools are disabled */}
+                        {appliedOptions.tools && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="outline"
+                                size="icon"
+                                className="h-7 w-7 sm:h-8 sm:w-8 bg-white/80 backdrop-blur-sm"
+                                onClick={() => setComponentConfigModalOpen(true)}
+                              >
+                                <Wrench className="h-3 w-3 sm:h-4 sm:w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{t('componentConfigModal.openButton')}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </TooltipProvider>
                       
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button 
-                            variant="outline"
-                            size="icon"
-                            className="h-7 w-7 sm:h-8 sm:w-8 bg-white/80 backdrop-blur-sm"
-                            onClick={() => setComponentConfigModalOpen(true)}
-                          >
-                            <Wrench className="h-3 w-3 sm:h-4 sm:w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{t('componentConfigModal.openButton')}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    
-                    {/* Add UnitSelector here */}
-                    <div className="bg-white/80 backdrop-blur-sm rounded-md">
-                      <UnitSelector
-                        value={measurementUnit}
-                        onChange={setMeasurementUnit}
-                        compact={true}
-                      />
+                      {/* UnitSelector - show only if unitCtl is enabled */}
+                      {appliedOptions.unitCtl && (
+                        <div className="bg-white/80 backdrop-blur-sm rounded-md">
+                          <UnitSelector
+                            value={measurementUnit}
+                            onChange={setMeasurementUnit}
+                            compact={true}
+                          />
+                        </div>
+                      )}
                     </div>
-                  </div>
+                  ) : null
                 }
               />
             </div>

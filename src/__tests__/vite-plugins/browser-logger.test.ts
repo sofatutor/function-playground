@@ -223,7 +223,7 @@ describe('Browser Logger Plugin', () => {
     
     // Extract first connection ID
     const responseData1 = JSON.parse(handshakeRes1.responseData);
-    const connectionId1 = responseData1.connectionId;
+    const _connectionId1 = responseData1.connectionId;
     
     // Verify first connection is active
     expect(responseData1.status).toBe('active');
@@ -399,7 +399,7 @@ describe('Browser Logger Plugin', () => {
     
     // Extract first connection ID
     const responseData1 = JSON.parse(handshakeRes1.responseData);
-    const connectionId1 = responseData1.connectionId;
+    const _connectionId1 = responseData1.connectionId;
     
     // Verify first connection is active
     expect(responseData1.status).toBe('active');

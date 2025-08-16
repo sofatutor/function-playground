@@ -32,6 +32,8 @@ interface FormulaCanvasProps extends GeometryCanvasProps {
   pixelsPerUnit?: number;
   serviceFactory?: ShapeServiceFactory;
   canvasTools?: React.ReactNode; // Add canvasTools prop
+  isNonInteractive?: boolean; // Add isNonInteractive prop
+  showZoomControls?: boolean; // Add showZoomControls prop
 }
 
 interface GeometryCanvasProps {
@@ -85,7 +87,9 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
   serviceFactory,
   onMeasurementUpdate,
   onFormulaSelect,
-  canvasTools
+  canvasTools,
+  isNonInteractive = false,
+  showZoomControls = true
 }) => {
   const { zoomFactor, setZoomFactor } = useGridZoom();
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -130,7 +134,7 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
   } | null>(null);
   
   // Add state to track the current point index and all points for the selected formula
-  const [currentPointInfo, setCurrentPointInfo] = useState<{
+  const [_currentPointInfo, setCurrentPointInfo] = useState<{
     formulaId: string;
     pointIndex: number;
     allPoints: FormulaPoint[];
@@ -307,7 +311,7 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
     } catch (error) {
       console.error('Error evaluating formula:', error);
     }
-  }, [selectedPoint, gridPosition, pixelsPerUnit, isShiftPressed, zoomFactor]);
+  }, [selectedPoint, gridPosition, pixelsPerUnit, zoomFactor]);
   
   // Effect to update internal grid position when external grid position changes
   useEffect(() => {
@@ -331,7 +335,7 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
       console.log('GeometryCanvas: Updating internal grid position from external');
       setGridPosition(externalGridPosition);
     }
-  }, [externalGridPosition]);  // Remove gridPosition from dependencies
+  }, [externalGridPosition, gridPosition]);
   
   // Add a ref to track if this is the first load
   const isFirstLoad = useRef(true);
@@ -433,7 +437,7 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
   }, [onShapeSelect, focusCanvas]);
   
   // Handle calibration completion
-  const handleCalibrationComplete = (newPixelsPerUnit: number) => {
+  const _handleCalibrationComplete = (newPixelsPerUnit: number) => {
     console.log('Calibration completed with new value:', newPixelsPerUnit);
     
     // Store the calibrated value in localStorage
@@ -566,7 +570,7 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
       }
       canvasSizeTimeoutRef.current = null;
     }, 100);
-  }, [measurementUnit, pixelsPerUnit]);
+  }, [measurementUnit, pixelsPerUnit, onShapeResize, shapes]);
 
   // Clean up any ongoing operations when the active mode changes
   useEffect(() => {
@@ -837,7 +841,7 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
     serviceFactory
   });
 
-  const handleResizeStart = createHandleResizeStart({
+  const _handleResizeStart = createHandleResizeStart({
     canvasRef,
     shapes,
     activeMode,
@@ -922,7 +926,7 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
   });
 
   // Toggle calibration tool
-  const toggleCalibration = () => {
+  const _toggleCalibration = () => {
     setShowCalibration(!showCalibration);
   };
 
@@ -1101,7 +1105,7 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
   };
 
   // Helper functions to get shape dimensions
-  const getShapeWidth = (shape: AnyShape): number => {
+  const _getShapeWidth = (shape: AnyShape): number => {
     let xValues: number[] = [];
     
     switch (shape.type) {
@@ -1121,7 +1125,7 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
     }
   };
 
-  const getShapeHeight = (shape: AnyShape): number => {
+  const _getShapeHeight = (shape: AnyShape): number => {
     let yValues: number[] = [];
     
     switch (shape.type) {
@@ -1199,7 +1203,7 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
   }, [selectedPoint]);
 
   // Get measurements for the selected shape
-  const getMeasurementsForSelectedShape = (): Record<string, string> => {
+  const getMeasurementsForSelectedShape = useCallback((): Record<string, string> => {
     if (!selectedShapeId) return {};
     
     const selectedShape = shapes.find(s => s.id === selectedShapeId);
@@ -1220,7 +1224,7 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
     });
     
     return measurementsAsStrings;
-  };
+  }, [selectedShapeId, shapes, externalPixelsPerUnit, pixelsPerUnit]);
   
   // Use a ref to store the current measurements
   const measurementsRef = useRef<Record<string, string>>({});
@@ -1238,7 +1242,7 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
       measurementsRef.current = {};
       setCurrentPanelMeasurements({});
     }
-  }, [shapes, selectedShapeId]);
+  }, [shapes, selectedShapeId, getMeasurementsForSelectedShape]);
 
   // Handle measurement updates
   const handleMeasurementUpdate = (key: string, value: string): void => {
@@ -1507,7 +1511,7 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
   });
 
   // Scale formulas according to zoom factor
-  const scaledFormulas = formulas.map(formula => ({
+  const _scaledFormulas = formulas.map(formula => ({
     ...formula,
     scaleFactor: (formula.scaleFactor || 1) * zoomFactor
   }));
@@ -1519,16 +1523,17 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
         ref={canvasRef}
         className="canvas-container relative w-full h-full overflow-hidden"
         style={{ 
-          cursor: activeMode === 'move' ? 'move' : 'default'
+          cursor: activeMode === 'move' ? 'move' : 'default',
+          pointerEvents: isNonInteractive ? 'none' : 'auto'
         }}
         tabIndex={0}
-        onKeyDown={handleKeyDown}
-        onKeyUp={handleKeyUp}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={customMouseUpHandler}
-        onMouseLeave={customMouseUpHandler}
-        onClick={(e) => {
+        onKeyDown={isNonInteractive ? undefined : handleKeyDown}
+        onKeyUp={isNonInteractive ? undefined : handleKeyUp}
+        onMouseDown={isNonInteractive ? undefined : handleMouseDown}
+        onMouseMove={isNonInteractive ? undefined : handleMouseMove}
+        onMouseUp={isNonInteractive ? undefined : customMouseUpHandler}
+        onMouseLeave={isNonInteractive ? undefined : customMouseUpHandler}
+        onClick={isNonInteractive ? undefined : (e) => {
           // Focus the canvas container when clicking on it
           focusCanvas();
           
@@ -1562,23 +1567,25 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
           onMoveAllShapes={handleMoveAllShapes}
           initialPosition={gridPosition}
           onPositionChange={handleGridPositionChange}
+          showZoomControls={showZoomControls}
+          isNonInteractive={isNonInteractive}
         />
         
         {/* Render shapes with scaled values */}
         {scaledShapes.map(shape => (
           <div 
             key={shape.id}
-            onClick={() => handleShapeSelect(shape.id)}
-            style={{ cursor: activeMode === 'select' ? 'pointer' : 'default' }}
+            onClick={isNonInteractive ? undefined : () => handleShapeSelect(shape.id)}
+            style={{ cursor: isNonInteractive ? 'default' : (activeMode === 'select' ? 'pointer' : 'default') }}
           >
             <ShapeRenderer
               shape={shape} 
-              isSelected={shape.id === selectedShapeId}
+              isSelected={!isNonInteractive && shape.id === selectedShapeId}
               activeMode={activeMode}
             />
             
-            {/* Add rotate handlers for selected shapes only when in rotate mode */}
-            {shape.id === selectedShapeId && activeMode === 'rotate' && (
+            {/* Add rotate handlers for selected shapes only when in rotate mode - hidden in noninteractive mode */}
+            {!isNonInteractive && shape.id === selectedShapeId && activeMode === 'rotate' && (
               <>
                 {/* Rotate handle */}
                 <div 
@@ -1603,30 +1610,32 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
           </div>
         ))}
         
-        {/* Preview shape while drawing */}
-        <PreviewShape
-          isDrawing={isDrawing}
-          drawStart={drawStart}
-          drawCurrent={drawCurrent}
-          activeShapeType={activeShapeType}
-          snapToGrid={isShiftPressed && !isAltPressed}
-          pixelsPerSmallUnit={zoomedPixelsPerSmallUnit}
-          zoomFactor={zoomFactor}
-        />
+        {/* Preview shape while drawing - hidden in noninteractive mode */}
+        {!isNonInteractive && (
+          <PreviewShape
+            isDrawing={isDrawing}
+            drawStart={drawStart}
+            drawCurrent={drawCurrent}
+            activeShapeType={activeShapeType}
+            snapToGrid={isShiftPressed && !isAltPressed}
+            pixelsPerSmallUnit={zoomedPixelsPerSmallUnit}
+            zoomFactor={zoomFactor}
+          />
+        )}
         
         {/* Dedicated formula layer with its own SVG */}
-        <div className="absolute inset-0" style={{ zIndex: 15, pointerEvents: 'none' }}>
+        <div className="absolute inset-0" style={{ zIndex: 15, pointerEvents: isNonInteractive ? 'none' : 'auto' }}>
           <svg 
             width="100%" 
             height="100%" 
-            style={{ pointerEvents: 'none' }}
+            style={{ pointerEvents: isNonInteractive ? 'none' : 'auto' }}
           >
             {renderFormulas()}
           </svg>
         </div>
         
-        {/* Display unified info panel */}
-        {(selectedPoint || selectedShapeId) && (
+        {/* Display unified info panel - hidden in noninteractive mode */}
+        {!isNonInteractive && (selectedPoint || selectedShapeId) && (
           <div 
             className={`absolute w-80 unified-info-panel-container bottom-4 z-40 transition-all duration-200 ease-in-out ${
               showCalibration ? 'right-[calc(20rem+1rem)]' : 'right-4'
@@ -1641,7 +1650,7 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
               } : null}
               _gridPosition={gridPosition}
               _pixelsPerUnit={zoomedPixelsPerUnit}
-              onNavigatePoint={(direction, stepSize) => {
+              onNavigatePoint={(direction, _stepSize) => {
                 // Convert the direction format from 'prev'/'next' to 'previous'/'next'
                 const directionMapping: Record<string, 'previous' | 'next'> = {
                   'prev': 'previous',
