@@ -345,8 +345,8 @@ const Index = () => {
               {appliedOptions.layout !== 'noninteractive' && (
                 <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between ${isFullscreen || isMobile ? 'space-y-1 sm:space-y-0 sm:space-x-1 px-1' : 'space-y-1 sm:space-y-0 sm:space-x-2 px-1 sm:px-2'} ${isMobile ? 'mb-0' : 'mb-1 sm:mb-2'}`}>
                   <div className="flex flex-row items-center space-x-1 sm:space-x-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 no-scrollbar">
-                    {/* Show Toolbar only if tools are enabled */}
-                    {appliedOptions.tools && (
+                    {/* Show Toolbar if tools OR function controls are enabled */}
+                    {(appliedOptions.tools || appliedOptions.funcControls) && (
                       <Toolbar
                         activeMode={activeMode}
                         activeShapeType={activeShapeType}
@@ -365,16 +365,14 @@ const Index = () => {
                   
                   {/* Admin controls and fullscreen button grouped together on the right */}
                   <div className="flex items-center space-x-1">
-                    {/* Settings button - always visible when SharePanel is open or when admin is enabled */}
-                    {(isSharePanelOpen || appliedOptions.admin) && (
-                      <GlobalControls 
-                        isFullscreen={isFullscreen} 
-                        onToggleFullscreen={toggleFullscreen}
-                        showFullscreenButton={false}
-                        showZoomControls={appliedOptions.zoom}
-                        showAdminControls={isSharePanelOpen || appliedOptions.admin}
-                      />
-                    )}
+                    {/* Admin controls - always visible in current session, admin toggle only affects shared URLs */}
+                    <GlobalControls 
+                      isFullscreen={isFullscreen} 
+                      onToggleFullscreen={toggleFullscreen}
+                      showFullscreenButton={false}
+                      showZoomControls={appliedOptions.zoom}
+                      showAdminControls={true}
+                    />
                     
                     {/* Fullscreen button */}
                     {appliedOptions.fullscreen && (
