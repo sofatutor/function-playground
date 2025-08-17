@@ -6,7 +6,6 @@
 import { MeasurementUnit } from '@/types/shapes';
 import { 
   DEFAULT_PIXELS_PER_CM, 
-  DEFAULT_PIXELS_PER_MM, 
   DEFAULT_PIXELS_PER_INCH 
 } from '@/components/GeometryCanvas/CanvasUtils';
 import { logger } from '@/utils/logging';

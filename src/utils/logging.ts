@@ -22,8 +22,8 @@ const getLoggingConfig = (): LoggingConfig => {
     try {
       // Check for Vite environment variables
       if (typeof globalThis !== 'undefined' && 'VITE_LOGGING_ENABLED' in globalThis) {
-        const loggingEnabled = (globalThis as any).VITE_LOGGING_ENABLED;
-        const envMode = (globalThis as any).MODE || 'production';
+        const loggingEnabled = (globalThis as {[key: string]: unknown}).VITE_LOGGING_ENABLED;
+        const envMode = (globalThis as {[key: string]: unknown}).MODE || 'production';
         
         return {
           enabled: loggingEnabled === 'true' || envMode === 'development',

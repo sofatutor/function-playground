@@ -1,9 +1,15 @@
 import { logger, isVerboseLoggingEnabled } from '@/utils/logging';
 
 // Mock console methods
-const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation(() => {});
-const mockConsoleWarn = jest.spyOn(console, 'warn').mockImplementation(() => {});
-const mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation(() => {
+  // Default implementation - will be overridden by provider
+});
+const mockConsoleWarn = jest.spyOn(console, 'warn').mockImplementation(() => {
+  // Default implementation - will be overridden by provider
+});
+const mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => {
+  // Default implementation - will be overridden by provider
+});
 
 describe('logging utility', () => {
   beforeEach(() => {

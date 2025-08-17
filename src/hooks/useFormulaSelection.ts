@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { Formula, FormulaPoint } from '@/types/formula';
+import { OperationMode } from '@/types/shapes';
 import { FORMULA_NAVIGATION_STEP_SIZE } from '@/utils/constants';
 import { logger } from '@/utils/logging';
 
