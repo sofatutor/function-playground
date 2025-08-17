@@ -43,7 +43,7 @@ interface GeometryCanvasProps {
   onModeChange?: (mode: OperationMode) => void;
   onMoveAllShapes?: (dx: number, dy: number) => void;
   onGridPositionChange?: (newPosition: Point) => void;
-  onMeasurementUpdate?: (id: string, key: string, value: number) => void;
+  onMeasurementUpdate?: (key: string, value: string) => void;
   onFormulaSelect?: (formulaId: string) => void;
 }
 
@@ -110,23 +110,17 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
     selectedPoint,
     clearAllSelectedPoints,
     handleFormulaPointSelect,
+    navigateFormulaPoint,
   } = useFormulaSelection({ onFormulaSelect, onModeChange });
   
-  const { selectedShape, selectedShapeMeasurements, handleMeasurementUpdate: rawHandleMeasurementUpdate } = useMeasurementsPanel({
+  const { selectedShape, selectedShapeMeasurements, handleMeasurementUpdate } = useMeasurementsPanel({
     shapes,
     selectedShapeId,
     measurementUnit,
     pixelsPerUnit: externalPixelsPerUnit || getStoredCalibrationValue(measurementUnit),
     onMeasurementUpdate,
   });
-  
-  // Convert the measurement update handler to handle string values as expected by UnifiedInfoPanel
-  const handleMeasurementUpdate = useCallback((key: string, value: string) => {
-    const numericValue = parseFloat(value);
-    if (!isNaN(numericValue)) {
-      rawHandleMeasurementUpdate(key, numericValue);
-    }
-  }, [rawHandleMeasurementUpdate]);
+
   
   // Memoized calculations
   const pixelsPerUnit = useMemo(() => {
@@ -194,7 +188,7 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
     };
   }, []);
   
-  // Track Shift key state
+  // Track Shift key state and handle arrow navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Shift') {
@@ -216,6 +210,19 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
       window.removeEventListener('keyup', handleKeyUp);
     };
   }, []);
+  
+  // Handle keyboard navigation for formula points
+  const handleCanvasKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (selectedPoint && !isNonInteractive) {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        navigateFormulaPoint('previous', e.shiftKey);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        navigateFormulaPoint('next', e.shiftKey);
+      }
+    }
+  }, [selectedPoint, isNonInteractive, navigateFormulaPoint]);
   
   // Clean up any ongoing operations when the active mode changes
   useEffect(() => {
@@ -362,6 +369,7 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
           pointerEvents: isNonInteractive ? 'none' : 'auto'
         }}
         tabIndex={0}
+        onKeyDown={isNonInteractive ? undefined : handleCanvasKeyDown}
         onMouseDown={isNonInteractive ? undefined : handleMouseDown}
         onMouseMove={isNonInteractive ? undefined : handleMouseMove}
         onMouseUp={isNonInteractive ? undefined : handleMouseUp}
@@ -430,8 +438,12 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
               _gridPosition={gridPosition}
               _pixelsPerUnit={zoomedPixelsPerUnit}
               onNavigatePoint={(direction) => {
-                // Navigation would be implemented here with the new hooks
-                logger.debug('Navigate point:', direction);
+                // Convert the direction format from 'prev'/'next' to 'previous'/'next'
+                const directionMapping: Record<string, 'previous' | 'next'> = {
+                  'prev': 'previous',
+                  'next': 'next'
+                };
+                navigateFormulaPoint(directionMapping[direction], false);
               }}
               
               // Shape info props

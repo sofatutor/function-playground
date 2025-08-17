@@ -11,9 +11,9 @@ export const ORIGIN_UPDATE_DEBOUNCE_MS = 50;
 export const Z_INDEX = {
   GRID_LINES: 1,
   SHAPES: 2,
-  FORMULAS: 3,
   PREVIEW_SHAPE: 4,
-  UI_CONTROLS: 5,
+  FORMULAS: 15,
+  UI_CONTROLS: 40,
   ZOOM_CONTROLS: 10,
   MODALS: 1000,
 } as const;

@@ -94,11 +94,89 @@ export const useFormulaSelection = ({ onFormulaSelect, onModeChange }: UseFormul
     }
   }, [clearAllSelectedPoints, onFormulaSelect, onModeChange]);
 
+  // Navigate to next/previous point in the formula
+  const navigateFormulaPoint = useCallback((direction: 'next' | 'previous', isShiftPressed = false) => {
+    logger.debug('navigateFormulaPoint called with direction:', direction, 'shift:', isShiftPressed);
+    
+    if (!selectedPoint || !currentPointInfo) {
+      logger.debug('No selectedPoint or currentPointInfo, returning');
+      return;
+    }
+    
+    // Get the current point's mathematical X coordinate
+    const currentMathX = selectedPoint.mathX;
+    
+    // Round to 4 decimal places to handle floating point precision issues
+    const roundedMathX = Math.round(currentMathX * 10000) / 10000;
+    
+    // Calculate the step size for navigation
+    const stepSize = isShiftPressed ? 1.0 : (selectedPoint.navigationStepSize || FORMULA_NAVIGATION_STEP_SIZE);
+    
+    // Calculate the next/previous X coordinate
+    const nextMathX = direction === 'next' ? 
+      Math.round((roundedMathX + stepSize) * 10000) / 10000 :
+      Math.round((roundedMathX - stepSize) * 10000) / 10000;
+    
+    logger.debug(`Navigating from ${roundedMathX} to ${nextMathX} with step ${stepSize}`);
+    
+    // Find the closest point in the formula's allPoints array
+    const { allPoints } = currentPointInfo;
+    if (!allPoints || allPoints.length === 0) {
+      logger.debug('No allPoints available for navigation');
+      return;
+    }
+    
+    // Find the point with the closest math X coordinate to our target
+    let closestPoint = null;
+    let closestDistance = Infinity;
+    let closestIndex = -1;
+    
+    for (let i = 0; i < allPoints.length; i++) {
+      const point = allPoints[i];
+      const distance = Math.abs(point.mathX - nextMathX);
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestPoint = point;
+        closestIndex = i;
+      }
+    }
+    
+    if (closestPoint) {
+      logger.debug(`Found closest point at index ${closestIndex} with mathX ${closestPoint.mathX}`);
+      
+      // Create the new selected point with all required properties
+      const newSelectedPoint: SelectedPoint = {
+        x: closestPoint.x,
+        y: closestPoint.y,
+        mathX: closestPoint.mathX,
+        mathY: closestPoint.mathY,
+        formula: selectedPoint.formula,
+        pointIndex: closestIndex,
+        allPoints: allPoints,
+        navigationStepSize: stepSize,
+        isValid: true
+      };
+      
+      // Update the selected point
+      setSelectedPoint(newSelectedPoint);
+      
+      // Update current point info
+      setCurrentPointInfo({
+        formulaId: selectedPoint.formula.id,
+        pointIndex: closestIndex,
+        allPoints: allPoints
+      });
+    } else {
+      logger.debug('No point found for navigation');
+    }
+  }, [selectedPoint, currentPointInfo]);
+
   return {
     selectedPoint,
     currentPointInfo,
     clearAllSelectedPoints,
     handleFormulaPointSelect,
+    navigateFormulaPoint,
     clickedOnPathRef,
   };
 };

@@ -7,7 +7,7 @@ interface UseMeasurementsPanelOptions {
   selectedShapeId: string | null;
   measurementUnit: MeasurementUnit;
   pixelsPerUnit: number;
-  onMeasurementUpdate?: (id: string, key: string, value: number) => void;
+  onMeasurementUpdate?: (key: string, value: string) => void;
 }
 
 /**
@@ -48,10 +48,10 @@ export const useMeasurementsPanel = ({
   }, [shapes, selectedShapeId, measurementUnit, pixelsPerUnit]);
 
   // Handle measurement updates
-  const handleMeasurementUpdate = useCallback((key: string, value: number) => {
+  const handleMeasurementUpdate = useCallback((key: string, value: string) => {
     if (!selectedShapeId || !onMeasurementUpdate) return;
     
-    onMeasurementUpdate(selectedShapeId, key, value);
+    onMeasurementUpdate(key, value);
   }, [selectedShapeId, onMeasurementUpdate]);
 
   // Get the currently selected shape

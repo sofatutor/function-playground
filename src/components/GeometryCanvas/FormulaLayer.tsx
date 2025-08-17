@@ -48,17 +48,23 @@ const FormulaLayer: React.FC<FormulaLayerProps> = React.memo(({
   }
   
   return (
-    <div style={{ zIndex: Z_INDEX.FORMULAS }}>
-      {formulas.map(formula => (
-        <FormulaGraph
-          key={formula.id}
-          formula={formula}
-          gridPosition={gridPosition}
-          pixelsPerUnit={zoomedPixelsPerUnit}
-          onPointSelect={onPointSelect}
-          globalSelectedPoint={selectedPoint}
-        />
-      ))}
+    <div className="absolute inset-0" style={{ zIndex: Z_INDEX.FORMULAS, pointerEvents: 'none' }}>
+      <svg 
+        width="100%" 
+        height="100%" 
+        style={{ pointerEvents: 'none' }}
+      >
+        {formulas.map(formula => (
+          <FormulaGraph
+            key={formula.id}
+            formula={formula}
+            gridPosition={gridPosition}
+            pixelsPerUnit={zoomedPixelsPerUnit}
+            onPointSelect={onPointSelect}
+            globalSelectedPoint={selectedPoint}
+          />
+        ))}
+      </svg>
     </div>
   );
 });
