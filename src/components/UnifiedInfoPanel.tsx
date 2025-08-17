@@ -297,7 +297,7 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
                   <div className="flex-1 text-center whitespace-nowrap overflow-visible">
                     <div className="flex justify-center items-center">
                       <span className="mr-1">Step:</span>
-                      <InlineMath math={formatNumber(point.navigationStepSize || 1.00)} />
+                      <span>{formatNumber(point.navigationStepSize || 1.00)}</span>
                     </div>
                   </div>
                   <button 
