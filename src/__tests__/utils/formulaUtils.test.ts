@@ -1,4 +1,4 @@
-import { Formula, FormulaPoint } from '@/types/formula';
+import { Formula } from '@/types/formula';
 import { Point } from '@/types/shapes';
 import { 
   evaluateFunction, 

@@ -214,6 +214,30 @@
       "loggingDescription": "Enable or disable console logging with timestamps"
     }
   },
+  "unifiedSettingsModal": {
+    "title": "Settings",
+    "description": "Manage application settings, view options, and sharing preferences",
+    "tabs": {
+      "general": "General",
+      "view": "View",
+      "share": "Share"
+    },
+    "general": {
+      "languageTitle": "Language",
+      "languageDescription": "Choose your preferred language for the interface",
+      "openaiTitle": "OpenAI API",
+      "developerTitle": "Developer Settings",
+      "developerDescription": "Advanced settings for development and debugging"
+    },
+    "view": {
+      "resetButton": "Reset View Options to Defaults"
+    },
+    "share": {
+      "adminToggleLabel": "Show admin controls in shared view",
+      "adminToggleDescription": "When enabled, share and settings buttons will be visible in the shared URL",
+      "languageDescription": "Select the language for the shared view (only affects shared URLs, not current session)"
+    }
+  },
   "componentConfigModal": {
     "title": "Canvas Settings",
     "description": "Configure canvas-specific settings and calibration",
@@ -231,6 +255,7 @@
   "exitFullscreen": "Exit Fullscreen",
   "previousFormula": "Previous Formula",
   "nextFormula": "Next Formula",
+  "settingsTooltip": "Settings",
   "sharePanel": {
     "title": "Share",
     "description": "Configure layout and options for sharing",
@@ -247,6 +272,8 @@
       "description": "Configure which UI elements are visible",
       "funcOnly": "Functions Only",
       "funcOnlyDescription": "Hide geometry tools, show only function plotting",
+      "funcControls": "Function Controls",
+      "funcControlsDescription": "Show function plotting controls and formula editor",
       "fullscreen": "Fullscreen Button",
       "fullscreenDescription": "Show fullscreen toggle button",
       "tools": "Canvas Tools",
@@ -254,7 +281,11 @@
       "zoom": "Zoom Controls",
       "zoomDescription": "Show zoom in/out controls",
       "unitCtl": "Unit Selector",
-      "unitCtlDescription": "Show measurement unit selector"
+      "unitCtlDescription": "Show measurement unit selector",
+      "header": "Header",
+      "headerDescription": "Show app title and description header",
+      "admin": "Admin Mode",
+      "adminDescription": "Enable advanced features and administrative controls"
     },
     "language": {
       "title": "Language",

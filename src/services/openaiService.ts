@@ -63,7 +63,7 @@ export const convertNaturalLanguageToExpression = async (
             expression: parsedContent.expression,
             explanation: parsedContent.explanation
           };
-        } catch (parseError) {
+        } catch (_parseError) {
           // If parsing fails, try to extract the expression using regex
           const expressionMatch = content.match(/expression["\s:]+([^"]+)/i);
           const explanationMatch = content.match(/explanation["\s:]+([^"]+)/i);

@@ -47,12 +47,12 @@ jobs:
     - name: Run Jest tests with coverage
       run: npm run test:coverage
     
-    - name: Upload coverage to Coveralls
-      uses: coverallsapp/github-action@v2
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: ./coverage/unit/lcov.info
-        flag-name: unit-tests
+    # - name: Upload coverage to Coveralls
+    #   uses: coverallsapp/github-action@v2
+    #   with:
+    #     github-token: ${{ secrets.GITHUB_TOKEN }}
+    #     path-to-lcov: ./coverage/unit/lcov.info
+    #     flag-name: unit-tests
         
   e2e-test:
     name: E2E Tests
@@ -118,9 +118,9 @@ jobs:
             test-results/
           retention-days: 30
       
-      - name: Upload coverage to Coveralls
-        uses: coverallsapp/github-action@v2
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: ./coverage/e2e/lcov.info
-          flag-name: e2e-tests
+      # - name: Upload coverage to Coveralls
+      #   uses: coverallsapp/github-action@v2
+      #   with:
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+      #     path-to-lcov: ./coverage/e2e/lcov.info
+      #     flag-name: e2e-tests

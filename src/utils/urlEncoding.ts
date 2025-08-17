@@ -9,18 +9,22 @@ import { generateFormulaId } from '@/utils/formulaUtils';
 export interface ShareViewOptions {
   /** Layout mode: 'default' for full interactive mode, 'noninteractive' for grid-only display */
   layout: 'default' | 'noninteractive';
-  /** When true, hide geometry toolbar and preselect function tool */
-  funcOnly: boolean;
+  /** When true, show function controls (formula editor, function tools) */
+  funcControls: boolean;
   /** When true, show fullscreen toggle button (does not auto-enter fullscreen) */
   fullscreen: boolean;
-  /** When true, show canvas tools UI */
+  /** When true, show canvas tools UI (geometry shapes, etc.) */
   tools: boolean;
   /** When true, show zoom UI controls */
   zoom: boolean;
   /** When true, show unit selector control */
   unitCtl: boolean;
+  /** When true, show header with app title and description */
+  header: boolean;
   /** Language code (BCP-47 format, e.g. 'en', 'de', 'fr') */
   lang: string;
+  /** Admin mode - enables additional features and controls */
+  admin: boolean;
 }
 
 /**
@@ -29,12 +33,14 @@ export interface ShareViewOptions {
  */
 export const defaultShareViewOptions: ShareViewOptions = {
   layout: 'default',
-  funcOnly: false,
+  funcControls: true,
   fullscreen: false,
   tools: true,
   zoom: true,
   unitCtl: true,
+  header: true,
   lang: 'en', // Default language - could be made configurable
+  admin: true, // Will be overridden by environment variable in browser context
 };
 
 /**
@@ -420,13 +426,13 @@ export function getGridPositionFromUrl(): Point | null {
  * Missing parameters default to values from defaultShareViewOptions.
  * Invalid language codes fall back to the default language.
  * 
- * @param search - URL search string (e.g., "?layout=noninteractive&funcOnly=1")
+ * @param search - URL search string (e.g., "?layout=noninteractive&tools=0")
  * @returns ShareViewOptions object with parsed values
  * 
  * @example
  * ```typescript
- * const options = parseShareViewOptionsFromUrl("?layout=noninteractive&funcOnly=1&lang=de");
- * // Result: { layout: 'noninteractive', funcOnly: true, fullscreen: false, tools: true, zoom: true, unitCtl: true, lang: 'de' }
+ * const options = parseShareViewOptionsFromUrl("?layout=noninteractive&tools=0&lang=de");
+ * // Result: { layout: 'noninteractive', tools: false, fullscreen: false, zoom: true, unitCtl: true, lang: 'de' }
  * ```
  */
 export function parseShareViewOptionsFromUrl(search: string): ShareViewOptions {
@@ -452,11 +458,13 @@ export function parseShareViewOptionsFromUrl(search: string): ShareViewOptions {
   
   return {
     layout: validLayout,
-    funcOnly: parseBooleanParam('funcOnly', defaultShareViewOptions.funcOnly),
+    funcControls: parseBooleanParam('funcControls', defaultShareViewOptions.funcControls),
     fullscreen: parseBooleanParam('fullscreen', defaultShareViewOptions.fullscreen),
     tools: parseBooleanParam('tools', defaultShareViewOptions.tools),
     zoom: parseBooleanParam('zoom', defaultShareViewOptions.zoom),
     unitCtl: parseBooleanParam('unitCtl', defaultShareViewOptions.unitCtl),
+    header: parseBooleanParam('header', defaultShareViewOptions.header),
+    admin: parseBooleanParam('admin', defaultShareViewOptions.admin),
     lang: validLang,
   };
 }
@@ -473,14 +481,13 @@ export function parseShareViewOptionsFromUrl(search: string): ShareViewOptions {
  * ```typescript
  * const query = serializeShareViewOptionsToQuery({
  *   layout: 'noninteractive',
- *   funcOnly: true,
+ *   tools: false,
  *   fullscreen: false,
- *   tools: true,
  *   zoom: true,
  *   unitCtl: true,
  *   lang: 'de'
  * });
- * // Result: "layout=noninteractive&funcOnly=1&lang=de"
+ * // Result: "layout=noninteractive&tools=0&lang=de"
  * ```
  */
 export function serializeShareViewOptionsToQuery(options: ShareViewOptions): string {
@@ -494,8 +501,8 @@ export function serializeShareViewOptionsToQuery(options: ShareViewOptions): str
     params.set('layout', options.layout);
   }
   
-  if (options.funcOnly !== defaults.funcOnly) {
-    params.set('funcOnly', options.funcOnly ? '1' : '0');
+  if (options.funcControls !== defaults.funcControls) {
+    params.set('funcControls', options.funcControls ? '1' : '0');
   }
   
   if (options.fullscreen !== defaults.fullscreen) {
@@ -514,6 +521,14 @@ export function serializeShareViewOptionsToQuery(options: ShareViewOptions): str
     params.set('unitCtl', options.unitCtl ? '1' : '0');
   }
   
+  if (options.header !== defaults.header) {
+    params.set('header', options.header ? '1' : '0');
+  }
+  
+  if (options.admin !== defaults.admin) {
+    params.set('admin', options.admin ? '1' : '0');
+  }
+  
   if (options.lang !== defaults.lang) {
     params.set('lang', options.lang);
   }
@@ -523,15 +538,11 @@ export function serializeShareViewOptionsToQuery(options: ShareViewOptions): str
 
 /**
  * Applies precedence rules to Share view options.
- * Precedence: noninteractive > funcOnly > individual toggles
+ * Precedence: noninteractive > individual toggles
  * 
  * When layout is 'noninteractive':
  * - All UI controls are hidden regardless of individual settings
  * - Canvas interactions are disabled
- * 
- * When funcOnly is true (and layout is not 'noninteractive'):
- * - Geometry toolbar is hidden
- * - Function tool is preselected
  * 
  * @param options - Input ShareViewOptions
  * @returns ShareViewOptions with precedence rules applied
@@ -554,19 +565,34 @@ export function applyShareViewOptionsPrecedence(options: ShareViewOptions): Shar
       zoom: false,
       unitCtl: false,
       fullscreen: false,
-    };
-  }
-
-  // Next precedence: funcOnly hides geometry/tools UI (but keeps other UI as configured)
-  if (result.funcOnly) {
-    return {
-      ...result,
-      tools: false,
+      header: false,
+      funcControls: false,
     };
   }
 
   // Otherwise respect individual toggles as-is
   return result;
+}
+
+/**
+ * Applies precedence rules to Share view options with SharePanel awareness.
+ * When SharePanel is open, noninteractive mode is ignored to allow configuration.
+ * 
+ * @param options - Input ShareViewOptions  
+ * @param isSharePanelOpen - Whether the SharePanel is currently open
+ * @returns ShareViewOptions with precedence rules applied
+ */
+export function applyShareViewOptionsWithPanelState(
+  options: ShareViewOptions, 
+  isSharePanelOpen: boolean
+): ShareViewOptions {
+  // If SharePanel is open, ignore noninteractive mode for configuration
+  if (isSharePanelOpen && options.layout === 'noninteractive') {
+    const tempOptions = { ...options, layout: 'default' as const };
+    return applyShareViewOptionsPrecedence(tempOptions);
+  }
+  
+  return applyShareViewOptionsPrecedence(options);
 }
 
 /**
@@ -589,11 +615,13 @@ export function mergeShareViewOptionsFromUrl(
   const result = { ...existingOptions };
   
   if (params.has('layout')) result.layout = urlOptions.layout;
-  if (params.has('funcOnly')) result.funcOnly = urlOptions.funcOnly;
+  if (params.has('funcControls')) result.funcControls = urlOptions.funcControls;
   if (params.has('fullscreen')) result.fullscreen = urlOptions.fullscreen;
   if (params.has('tools')) result.tools = urlOptions.tools;
   if (params.has('zoom')) result.zoom = urlOptions.zoom;
   if (params.has('unitCtl')) result.unitCtl = urlOptions.unitCtl;
+  if (params.has('header')) result.header = urlOptions.header;
+  if (params.has('admin')) result.admin = urlOptions.admin;
   if (params.has('lang')) result.lang = urlOptions.lang;
   
   return result;

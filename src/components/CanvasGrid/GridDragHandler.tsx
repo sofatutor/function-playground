@@ -37,10 +37,11 @@ export const isGridDragging = new DragStateHandler();
 
 interface GridDragHandlerProps {
   origin: Point;
-  onOriginChange: (newOrigin: Point) => void;
+  onOriginChange?: (newOrigin: Point) => void;
   onMoveAllShapes?: (dx: number, dy: number) => void;
   pixelsPerSmallUnit?: number;
   children: React.ReactNode;
+  isNonInteractive?: boolean;
 }
 
 export const GridDragHandler: React.FC<GridDragHandlerProps> = ({ 
@@ -48,7 +49,8 @@ export const GridDragHandler: React.FC<GridDragHandlerProps> = ({
   onOriginChange,
   onMoveAllShapes,
   pixelsPerSmallUnit,
-  children 
+  children,
+  isNonInteractive = false
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const isDraggingRef = useRef(false);
@@ -228,12 +230,12 @@ export const GridDragHandler: React.FC<GridDragHandlerProps> = ({
     <svg
       width="100%"
       height="100%"
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
+      onMouseDown={isNonInteractive ? undefined : handleMouseDown}
+      onMouseMove={isNonInteractive ? undefined : handleMouseMove}
+      onMouseUp={isNonInteractive ? undefined : handleMouseUp}
       style={{ 
-        cursor: isDragging ? (isMovingAll ? 'move' : 'grabbing') : 'default',
-        pointerEvents: 'auto',
+        cursor: isNonInteractive ? 'default' : (isDragging ? (isMovingAll ? 'move' : 'grabbing') : 'default'),
+        pointerEvents: isNonInteractive ? 'none' : 'auto',
         zIndex: 10,
         position: 'relative'
       }}

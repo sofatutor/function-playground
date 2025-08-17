@@ -38,5 +38,12 @@ export default tseslint.config(
       "no-unused-expressions": "warn",
       "no-warning-comments": ["warn", { terms: ["TODO", "FIXME", "WIP", "EXPERIMENTAL"], location: "anywhere" }],
     },
+  },
+  // Disable react-refresh warnings for UI components and context files
+  {
+    files: ["src/components/ui/**/*.tsx", "src/context/**/*.tsx", "src/contexts/**/*.tsx", "src/providers/**/*.tsx", "src/components/CanvasGrid/GridDragHandler.tsx"],
+    rules: {
+      "react-refresh/only-export-components": "off"
+    }
   }
 );

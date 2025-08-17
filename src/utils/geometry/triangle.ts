@@ -131,7 +131,7 @@ export const updateTriangleFromAngle = (
   // Calculate the current angle between the vectors
   // Using the dot product formula: cos(θ) = (v1·v2) / (|v1|·|v2|)
   const dotProduct = vector1.x * vector2.x + vector1.y * vector2.y;
-  const currentAngle = Math.acos(Math.max(-1, Math.min(1, dotProduct / (length1 * length2))));
+  const _currentAngle = Math.acos(Math.max(-1, Math.min(1, dotProduct / (length1 * length2))));
   
   // Convert the target angle to radians
   const targetAngle = newAngleDegrees * (Math.PI / 180);
@@ -224,7 +224,7 @@ export const updateTriangleFromAngle = (
     // Maintain the proportion between the other two angles
     const originalOtherSum = currentAngles[otherIndices[0]] + currentAngles[otherIndices[1]];
     const ratio0 = currentAngles[otherIndices[0]] / originalOtherSum;
-    const ratio1 = currentAngles[otherIndices[1]] / originalOtherSum;
+    const _ratio1 = currentAngles[otherIndices[1]] / originalOtherSum;
     
     newAnglesArray[otherIndices[0]] = Math.max(1, Math.min(178, remainingAngleSum * ratio0));
     newAnglesArray[otherIndices[1]] = 180 - newAngleDegrees - newAnglesArray[otherIndices[0]];

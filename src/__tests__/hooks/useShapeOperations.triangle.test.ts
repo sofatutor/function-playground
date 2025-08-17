@@ -279,7 +279,7 @@ describe('useShapeOperations - Triangle Side Updates', () => {
   // Test that shape changes update the URL
   it('should update the URL when a triangle shape is modified', () => {
     // Arrange
-    const { result } = renderHook(() => useShapeOperations());
+    const { result: _result } = renderHook(() => useShapeOperations());
     const _updateUrlSpy = jest.spyOn(urlEncoding, 'updateUrlWithData');
     
     // Act and Assert - create and modify shapes

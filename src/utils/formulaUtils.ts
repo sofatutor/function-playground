@@ -309,7 +309,7 @@ const generateSingularityXValues = (
   
   // Add points to the left of zero with increasing density toward zero
   if (range[0] < 0) {
-    const negativeRange = -range[0];
+    const _negativeRange = -range[0];
     const negSamples = Math.floor(samples * zeroPosition * 0.8); // 80% of proportional samples
     
     // Add more points very close to zero (negative side)
@@ -330,7 +330,7 @@ const generateSingularityXValues = (
   
   // Add points to the right of zero with increasing density toward zero
   if (range[1] > 0) {
-    const positiveRange = range[1];
+    const _positiveRange = range[1];
     const posSamples = Math.floor(samples * (1 - zeroPosition) * 0.8); // 80% of proportional samples
     
     // Add more points very close to zero (positive side)
@@ -383,7 +383,7 @@ const evaluatePoints = (
 ): FormulaPoint[] => {
   const points: FormulaPoint[] = [];
   const chars = detectFunctionCharacteristics(formula.expression);
-  const { isLogarithmic, allowsNegativeX, hasPow } = chars;
+  const { isLogarithmic } = chars;
   
   let prevY: number | null = null;
   let prevX: number | null = null;
@@ -445,7 +445,7 @@ const evaluatePoints = (
     const isValidPoint = isBasicValid;
     
     if (isBasicValid && prevY !== null && prevX !== null) {
-      const MAX_DELTA_Y = isComplexFormula ? 200 : 100; // Allow larger jumps for complex formulas
+      const _MAX_DELTA_Y = isComplexFormula ? 200 : 100; // Allow larger jumps for complex formulas
       const deltaY = Math.abs(canvasY - prevY);
       const deltaX = Math.abs(canvasX - prevX);
       
@@ -774,7 +774,7 @@ export const evaluateParametric = (
       try {
         x = evalX(t);
         y = evalY(t);
-      } catch (e) {
+      } catch (_e) {
         x = NaN;
         y = NaN;
       }
@@ -818,7 +818,7 @@ export const evaluatePolar = (
       
       try {
         r = evalR(theta);
-      } catch (e) {
+      } catch (_e) {
         r = NaN;
       }
       

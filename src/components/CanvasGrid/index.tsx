@@ -17,6 +17,8 @@ interface CanvasGridProps {
   onMoveAllShapes?: (dx: number, dy: number) => void;
   initialPosition?: Point | null;
   onPositionChange?: (position: Point) => void;
+  showZoomControls?: boolean;
+  isNonInteractive?: boolean;
 }
 
 const CanvasGrid: React.FC<CanvasGridProps> = ({
@@ -26,7 +28,9 @@ const CanvasGrid: React.FC<CanvasGridProps> = ({
   measurementUnit = 'cm',
   onMoveAllShapes,
   initialPosition,
-  onPositionChange
+  onPositionChange,
+  showZoomControls = true,
+  isNonInteractive = false
 }) => {
   const { zoomFactor: _zoomFactor } = useGridZoom();
   const hasInitialized = useRef(false);
@@ -131,7 +135,7 @@ const CanvasGrid: React.FC<CanvasGridProps> = ({
     >
       <GridDragHandler
         origin={origin}
-        onOriginChange={(newOrigin) => {
+        onOriginChange={isNonInteractive ? undefined : (newOrigin) => {
           if (isHandlingExternalUpdate.current) return;
           
           hasOriginMoved.current = true;
@@ -141,8 +145,9 @@ const CanvasGrid: React.FC<CanvasGridProps> = ({
             onPositionChange(newOrigin);
           }
         }}
-        onMoveAllShapes={onMoveAllShapes}
+        onMoveAllShapes={isNonInteractive ? undefined : onMoveAllShapes}
         pixelsPerSmallUnit={pixelsPerMm}
+        isNonInteractive={isNonInteractive}
       >
         <GridLines
           canvasSize={canvasSize}
@@ -156,9 +161,11 @@ const CanvasGrid: React.FC<CanvasGridProps> = ({
           canvasSize={canvasSize}
         />
       </GridDragHandler>
-      <div style={{ position: 'relative', zIndex: 50 }}>
-        <GridZoomControl />
-      </div>
+      {showZoomControls && (
+        <div style={{ position: 'relative', zIndex: 50 }}>
+          <GridZoomControl />
+        </div>
+      )}
     </div>
   );
 };

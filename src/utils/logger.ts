@@ -101,7 +101,7 @@ const getCallerInfo = () => {
       // This regex tries to handle Chrome, Firefox, and Safari formats
       const match = callerLine.match(/(?:at\s+|@)(?:.*?)\(?([^:]+):(\d+):(\d+)/);
       if (match) {
-        const [, filePath, line, column] = match;
+        const [, filePath, line, _column] = match;
         
         // Remove any query parameters (like ?t=1741345674326)
         const cleanPath = filePath.split('?')[0];
@@ -124,7 +124,7 @@ const getCallerInfo = () => {
     }
     
     return '[unknown source]';
-  } catch (e) {
+  } catch (_e) {
     return '[error getting source]';
   }
 };

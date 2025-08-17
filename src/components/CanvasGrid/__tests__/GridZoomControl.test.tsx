@@ -11,7 +11,7 @@ jest.mock('@/hooks/useTranslate', () => ({
 // Mock tooltips
 jest.mock('@/components/ui/tooltip', () => ({
   Tooltip: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  TooltipTrigger: ({ asChild, children }: { asChild: boolean, children: React.ReactNode }) => <>{children}</>,
+  TooltipTrigger: ({ children }: { asChild?: boolean, children: React.ReactNode }) => <>{children}</>,
   TooltipContent: ({ children }: { children: React.ReactNode }) => <div data-testid="tooltip-content">{children}</div>,
   TooltipProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));

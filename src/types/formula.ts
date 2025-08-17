@@ -1,5 +1,3 @@
-import { Point } from "./shapes";
-
 export type FormulaType = 'function' | 'parametric' | 'polar';
 
 export interface Formula {

@@ -1,4 +1,3 @@
-import { Point } from '@/types/shapes';
 import { distanceBetweenPoints } from './pointOperations';
 
 // Helper functions for shape calculations

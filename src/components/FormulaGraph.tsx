@@ -120,8 +120,8 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
 
   // Calculate points for the formula
   const points = useMemo(() => {
-    // Always evaluate the formula, but with potentially lower quality during dragging
-    return evaluateFormula(formula, gridPosition, pixelsPerUnit, isDraggingRef.current);
+    // Evaluate with full quality to avoid incomplete plots persisting
+    return evaluateFormula(formula, gridPosition, pixelsPerUnit, false);
   }, [formula, pixelsPerUnit, gridPosition]);
 
   // Handle point evaluation and updates

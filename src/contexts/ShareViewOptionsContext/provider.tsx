@@ -13,10 +13,28 @@ interface ShareViewOptionsProviderProps {
 }
 
 export const ShareViewOptionsProvider: React.FC<ShareViewOptionsProviderProps> = ({ children }) => {
+  // Track SharePanel open state
+  const [isSharePanelOpen, setIsSharePanelOpen] = useState(false);
+  
   // Initialize from URL parameters or defaults
   const [shareViewOptions, setShareViewOptionsState] = useState<ShareViewOptions>(() => {
     if (typeof window !== 'undefined') {
-      return parseShareViewOptionsFromUrl(window.location.search);
+      const urlOptions = parseShareViewOptionsFromUrl(window.location.search);
+      // Override admin default with environment variable if not explicitly set in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      if (!urlParams.has('admin')) {
+        try {
+          // @ts-expect-error - import.meta may not be available in some contexts
+          if (typeof import.meta !== 'undefined' && import.meta.env) {
+            // @ts-expect-error - import.meta may not be available in some contexts
+            const envAdminMode = import.meta.env.VITE_ADMIN_MODE;
+            urlOptions.admin = envAdminMode === 'true' || envAdminMode === '1';
+          }
+        } catch {
+          // Fallback to default if import.meta is not available
+        }
+      }
+      return urlOptions;
     }
     return defaultShareViewOptions;
   });
@@ -34,7 +52,7 @@ export const ShareViewOptionsProvider: React.FC<ShareViewOptionsProviderProps> =
       const params = new URLSearchParams(query);
       
       // Clear existing share-related params
-      ['layout', 'funcOnly', 'fullscreen', 'tools', 'zoom', 'unitCtl', 'lang'].forEach(key => {
+      ['layout', 'funcControls', 'fullscreen', 'tools', 'zoom', 'unitCtl', 'header', 'admin', 'lang'].forEach(key => {
         url.searchParams.delete(key);
       });
       
@@ -59,6 +77,15 @@ export const ShareViewOptionsProvider: React.FC<ShareViewOptionsProviderProps> =
     value: ShareViewOptions[K]
   ) => {
     const newOptions = { ...shareViewOptions, [key]: value };
+    
+    // For admin, layout, and lang changes, only update state without immediate URL update
+    // They will be applied when SharePanel is closed or URL is manually loaded
+    if (key === 'admin' || key === 'layout' || key === 'lang') {
+      setShareViewOptionsState(newOptions);
+      return;
+    }
+    
+    // For all other options, apply immediately with live effects
     setShareViewOptions(newOptions);
   }, [shareViewOptions, setShareViewOptions]);
 
@@ -66,12 +93,39 @@ export const ShareViewOptionsProvider: React.FC<ShareViewOptionsProviderProps> =
     setShareViewOptions(defaultShareViewOptions);
   }, [setShareViewOptions]);
 
+  const applyPendingChanges = useCallback(() => {
+    // Apply admin and layout changes that were pending
+    const applied = applyShareViewOptionsPrecedence(shareViewOptions);
+    setShareViewOptionsState(applied);
+    updateUrl(applied);
+  }, [shareViewOptions, updateUrl]);
+
   const generateShareUrl = useCallback(() => {
     if (typeof window !== 'undefined') {
-      return window.location.href;
+      // Get current URL without ShareViewOptions params
+      const url = new URL(window.location.href);
+      
+      // Clear existing share-related params
+      ['layout', 'funcControls', 'fullscreen', 'tools', 'zoom', 'unitCtl', 'header', 'admin', 'lang'].forEach(key => {
+        url.searchParams.delete(key);
+      });
+      
+      // Apply current ShareViewOptions state to generate the share URL
+      const applied = applyShareViewOptionsPrecedence(shareViewOptions);
+      const query = serializeShareViewOptionsToQuery(applied);
+      
+      // Add new params from current state
+      if (query) {
+        const params = new URLSearchParams(query);
+        params.forEach((value, key) => {
+          url.searchParams.set(key, value);
+        });
+      }
+      
+      return url.toString();
     }
     return '';
-  }, []);
+  }, [shareViewOptions]);
 
   const generateEmbedCode = useCallback((width: number, height: number) => {
     const url = generateShareUrl();
@@ -94,8 +148,11 @@ export const ShareViewOptionsProvider: React.FC<ShareViewOptionsProviderProps> =
     setShareViewOptions,
     updateShareViewOption,
     resetToDefaults,
+    applyPendingChanges,
     generateShareUrl,
     generateEmbedCode,
+    isSharePanelOpen,
+    setIsSharePanelOpen,
   };
 
   return (

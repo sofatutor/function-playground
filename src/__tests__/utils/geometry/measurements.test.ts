@@ -9,7 +9,6 @@ import {
   createTestTriangle, 
   createTestLine 
 } from '../testUtils';
-import { MeasurementUnit } from '@/types/shapes';
 
 describe('Measurement Utilities', () => {
   // Constants for testing

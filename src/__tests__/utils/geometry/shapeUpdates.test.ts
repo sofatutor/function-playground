@@ -1,5 +1,5 @@
 import { updateShapeFromMeasurement } from '@/utils/geometry/shapeUpdates';
-import { createTestCircle, createTestRectangle, createTestTriangle, createTestLine, pointsAreEqual } from '../testUtils';
+import { createTestCircle, createTestRectangle, createTestTriangle, createTestLine } from '../testUtils';
 import { AnyShape, Circle, Rectangle, Triangle, Line } from '@/types/shapes';
 
 describe('Shape Updates', () => {
@@ -118,7 +118,7 @@ describe('Shape Updates', () => {
         // Arrange
         const rectangle = createTestRectangle({ width: 100, height: 80 });
         const aspectRatio = rectangle.width / rectangle.height;
-        const originalPerimeter = 2 * (rectangle.width + rectangle.height); // 2 * (100 + 80) = 360
+        const _originalPerimeter = 2 * (rectangle.width + rectangle.height); // 2 * (100 + 80) = 360
         const newPerimeterValue = 720; // 2x the original perimeter
         
         // Act

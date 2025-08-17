@@ -179,7 +179,7 @@ const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   };
   
   // Combined context value for backward compatibility
-  const combinedContextValue: ConfigContextType = {
+  const _combinedContextValue: ConfigContextType = {
     ...globalContextValue,
     ...componentContextValue,
     // For backward compatibility

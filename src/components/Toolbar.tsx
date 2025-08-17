@@ -22,6 +22,8 @@ interface ToolbarProps {
   _canDelete: boolean;
   onToggleFormulaEditor?: () => void;
   isFormulaEditorOpen?: boolean;
+  showFunctionControls?: boolean;
+  showGeometricTools?: boolean;
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
@@ -34,95 +36,103 @@ const Toolbar: React.FC<ToolbarProps> = ({
   hasSelectedShape,
   _canDelete,
   onToggleFormulaEditor,
-  isFormulaEditorOpen = false
+  isFormulaEditorOpen = false,
+  showFunctionControls = true,
+  showGeometricTools = true
 }) => {
   const t = useTranslate();
   const { language } = useConfig();
   const _isMobile = useIsMobile();
   
   return (
-    <div id="geometry-toolbar" className="flex items-center space-x-1 p-1 bg-white rounded-lg shadow-sm border border-gray-200 animate-fade-in">
-      <ToolButton 
-        id="select-tool"
-        active={activeMode === 'select'}
-        onClick={() => onModeChange('select')}
-        tooltip={t('tooltips.select')}
-        formulaExplanation={t('tooltips.moveDescription')}
-      >
-        <MousePointer className="h-3 w-3 sm:h-4 sm:w-4" />
-      </ToolButton>
-      
-      <Separator orientation="vertical" className="h-6 sm:h-8 mx-0.5 sm:mx-1" />
-      
-      <ToolButton 
-        id="rectangle-tool"
-        active={activeMode === 'create' && activeShapeType === 'rectangle'}
-        onClick={() => {
-          onModeChange('create');
-          onShapeTypeChange('rectangle');
-        }}
-        tooltip={t('shapeNames.rectangle')}
-        formula={getFormula('rectangle', 'area', language)}
-        formulaExplanation={t('formulaExplanations.rectangle.area')}
-      >
-        <Square className="h-3 w-3 sm:h-4 sm:w-4" />
-      </ToolButton>
-      
-      <ToolButton 
-        id="circle-tool"
-        active={activeMode === 'create' && activeShapeType === 'circle'}
-        onClick={() => {
-          onModeChange('create');
-          onShapeTypeChange('circle');
-        }}
-        tooltip={t('shapeNames.circle')}
-        formula={getFormula('circle', 'area', language)}
-        formulaExplanation={t('formulaExplanations.circle.area')}
-      >
-        <Circle className="h-3 w-3 sm:h-4 sm:w-4" />
-      </ToolButton>
-      
-      <ToolButton 
-        id="triangle-tool"
-        active={activeMode === 'create' && activeShapeType === 'triangle'}
-        onClick={() => {
-          onModeChange('create');
-          onShapeTypeChange('triangle');
-        }}
-        tooltip={t('shapeNames.triangle')}
-        formula={getFormula('triangle', 'area', language)}
-        formulaExplanation={t('formulaExplanations.triangle.area')}
-      >
-        <Triangle className="h-3 w-3 sm:h-4 sm:w-4" />
-      </ToolButton>
-      
-      <ToolButton 
-        id="line-tool"
-        active={activeMode === 'create' && activeShapeType === 'line'}
-        onClick={() => {
-          onModeChange('create');
-          onShapeTypeChange('line');
-        }}
-        tooltip={t('shapeNames.line')}
-        formula="d = \\sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}"
-        formulaExplanation={t('formulaExplanations.line.length')}
-      >
-        <Ruler className="h-3 w-3 sm:h-4 sm:w-4" />
-      </ToolButton>
-      
-      <ToolButton 
-        active={activeMode === 'rotate'}
-        onClick={() => onModeChange('rotate')}
-        disabled={!hasSelectedShape}
-        tooltip={t('tooltips.rotate')}
-        formulaExplanation={t('tooltips.rotateDescription')}
-      >
-        <RotateCw className="h-3 w-3 sm:h-4 sm:w-4" />
-      </ToolButton>
+    <div id="geometry-toolbar" className="flex items-center space-x-1 p-1 bg-white rounded-lg shadow-sm animate-fade-in">
+      {showGeometricTools && (
+        <>
+          <ToolButton 
+            id="select-tool"
+            active={activeMode === 'select'}
+            onClick={() => onModeChange('select')}
+            tooltip={t('tooltips.select')}
+            formulaExplanation={t('tooltips.moveDescription')}
+          >
+            <MousePointer className="h-3 w-3 sm:h-4 sm:w-4" />
+          </ToolButton>
+          
+          <Separator orientation="vertical" className="h-6 sm:h-8 mx-0.5 sm:mx-1" />
+          
+          <ToolButton 
+            id="rectangle-tool"
+            active={activeMode === 'create' && activeShapeType === 'rectangle'}
+            onClick={() => {
+              onModeChange('create');
+              onShapeTypeChange('rectangle');
+            }}
+            tooltip={t('shapeNames.rectangle')}
+            formula={getFormula('rectangle', 'area', language)}
+            formulaExplanation={t('formulaExplanations.rectangle.area')}
+          >
+            <Square className="h-3 w-3 sm:h-4 sm:w-4" />
+          </ToolButton>
+          
+          <ToolButton 
+            id="circle-tool"
+            active={activeMode === 'create' && activeShapeType === 'circle'}
+            onClick={() => {
+              onModeChange('create');
+              onShapeTypeChange('circle');
+            }}
+            tooltip={t('shapeNames.circle')}
+            formula={getFormula('circle', 'area', language)}
+            formulaExplanation={t('formulaExplanations.circle.area')}
+          >
+            <Circle className="h-3 w-3 sm:h-4 sm:w-4" />
+          </ToolButton>
+          
+          <ToolButton 
+            id="triangle-tool"
+            active={activeMode === 'create' && activeShapeType === 'triangle'}
+            onClick={() => {
+              onModeChange('create');
+              onShapeTypeChange('triangle');
+            }}
+            tooltip={t('shapeNames.triangle')}
+            formula={getFormula('triangle', 'area', language)}
+            formulaExplanation={t('formulaExplanations.triangle.area')}
+          >
+            <Triangle className="h-3 w-3 sm:h-4 sm:w-4" />
+          </ToolButton>
+          
+          <ToolButton 
+            id="line-tool"
+            active={activeMode === 'create' && activeShapeType === 'line'}
+            onClick={() => {
+              onModeChange('create');
+              onShapeTypeChange('line');
+            }}
+            tooltip={t('shapeNames.line')}
+            formula="d = \\sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}"
+            formulaExplanation={t('formulaExplanations.line.length')}
+          >
+            <Ruler className="h-3 w-3 sm:h-4 sm:w-4" />
+          </ToolButton>
+          
+          <ToolButton 
+            active={activeMode === 'rotate'}
+            onClick={() => onModeChange('rotate')}
+            disabled={!hasSelectedShape}
+            tooltip={t('tooltips.rotate')}
+            formulaExplanation={t('tooltips.rotateDescription')}
+          >
+            <RotateCw className="h-3 w-3 sm:h-4 sm:w-4" />
+          </ToolButton>
+        </>
+      )}
 
-      <Separator orientation="vertical" className="h-6 sm:h-8 mx-0.5 sm:mx-1" />
+      {showGeometricTools && showFunctionControls && (
+        <Separator orientation="vertical" className="h-6 sm:h-8 mx-0.5 sm:mx-1" />
+      )}
 
-      {onToggleFormulaEditor && (
+      {onToggleFormulaEditor && showFunctionControls && (
         <>
           <ToolButton 
             id="plot-formula-button"

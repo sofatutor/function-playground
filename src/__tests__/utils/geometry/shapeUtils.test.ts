@@ -4,7 +4,7 @@ import {
   calculateShapePerimeter, 
   isPointInShape 
 } from '@/utils/geometry/shapeUtils';
-import { Circle, Rectangle, Triangle, Line, Point } from '@/types/shapes';
+import { Circle, Rectangle, Triangle, Line } from '@/types/shapes';
 
 describe('Shape Utilities', () => {
   describe('getShapeCenter', () => {
