@@ -31,15 +31,37 @@ async function setupGraphAndSelectTool(page) {
 }
 
 // Click the plotted path at a fraction along its length (0..1)
+// Be robust to multi-segment paths by probing nearby fractions until the click hits the path.
 async function clickFormulaGraphAtFraction(page, fraction: number) {
   const point = await page.evaluate((f) => {
     const path = document.querySelector('path.formula-graph') as SVGPathElement | null;
     if (!path || !path.ownerSVGElement) return null;
+    const svg = path.ownerSVGElement;
+    const rect = svg.getBoundingClientRect();
     const len = path.getTotalLength();
-    const clamped = Math.max(0, Math.min(1, f));
-    const p = path.getPointAtLength(len * clamped);
-    const rect = path.ownerSVGElement.getBoundingClientRect();
-    return { x: rect.left + p.x, y: rect.top + p.y };
+    const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+
+    // Build candidate fractions: requested, small offsets around it, and a safe fallback (0.5)
+    const candidates: number[] = [];
+    const base = clamp01(f);
+    const offsets = [0, 0.02, -0.02, 0.05, -0.05, 0.1, -0.1];
+    for (const o of offsets) candidates.push(clamp01(base + o));
+    // Also try gravitating toward the middle
+    candidates.push(0.5);
+
+    for (const c of candidates) {
+      const p = path.getPointAtLength(len * c);
+      const clientX = rect.left + p.x;
+      const clientY = rect.top + p.y;
+      const el = document.elementFromPoint(clientX, clientY);
+      if (el === path) {
+        return { x: clientX, y: clientY };
+      }
+    }
+
+    // Last resort: return midpoint even if elementFromPoint check failed
+    const mid = path.getPointAtLength(len * 0.5);
+    return { x: rect.left + mid.x, y: rect.top + mid.y };
   }, fraction);
   if (!point) throw new Error('formula-graph path not found');
   await page.mouse.click(point.x, point.y);
