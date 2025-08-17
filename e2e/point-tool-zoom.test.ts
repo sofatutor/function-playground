@@ -30,17 +30,17 @@ async function setupGraphAndSelectTool(page) {
     // First try the exact ID
     await page.locator('#select-tool').click();
     await page.waitForTimeout(500); // Give time for mode change
-  } catch (error1) {
+  } catch (_error1) {
     try {
       // Try by test ID
       await page.getByTestId('select-tool').click();
       await page.waitForTimeout(500);
-    } catch (error2) {
+    } catch (_error2) {
       try {
         // Try keyboard shortcut
         await page.keyboard.press('v');
         await page.waitForTimeout(500);
-      } catch (error3) {
+      } catch (_error3) {
         // If all fails, continue anyway - maybe the mode is already correct
         Logger.warn('Could not switch to select tool, continuing anyway');
       }
@@ -64,7 +64,7 @@ test('should convert screen coordinates to correct math coordinates at different
       await page.waitForSelector('text=X Coordinate', { timeout: 3000 });
       coordinatesFound = true;
       break;
-    } catch (error) {
+    } catch (_error) {
       Logger.debug(`Attempt ${attempt}: Coordinate display not found, retrying...`);
       if (attempt < maxAttempts) {
         // Try clicking the formula graph again
@@ -104,7 +104,7 @@ test('should convert screen coordinates to correct math coordinates at different
   // Wait for coordinates to be displayed with retry logic
   try {
     await page.waitForSelector('text=X Coordinate', { timeout: 5000 });
-  } catch (error) {
+  } catch (_error) {
     Logger.warn('Coordinate display not found after zoom, taking screenshot and continuing');
     await page.screenshot({ path: 'test-results/coordinate-display-zoom-debug.png' });
     // Don't fail the test, just return early
@@ -143,7 +143,7 @@ test('should maintain consistent step size with arrow navigation at different zo
   // Wait for coordinates to be displayed with retry logic
   try {
     await page.waitForSelector('text=X Coordinate', { timeout: 5000 });
-  } catch (error) {
+  } catch (_error) {
     Logger.warn('Coordinate display not found in second test, skipping');
     await page.screenshot({ path: 'test-results/coordinate-display-test2-debug.png' });
     return;
@@ -188,7 +188,7 @@ test('should maintain consistent step size with arrow navigation at different zo
   // Wait for coordinates with retry
   try {
     await page.waitForSelector('text=X Coordinate', { timeout: 5000 });
-  } catch (error) {
+  } catch (_error) {
     Logger.warn('Coordinate display not found at zoomed level, skipping');
     await page.screenshot({ path: 'test-results/coordinate-display-zoom2-debug.png' });
     return;
