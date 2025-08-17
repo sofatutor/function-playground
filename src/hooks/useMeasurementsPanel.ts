@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { AnyShape, MeasurementUnit } from '@/types/shapes';
-import { getShapeMeasurements, convertFromPixels } from '@/utils/geometry/measurements';
+import { getShapeMeasurements } from '@/utils/geometry/measurements';
 
 interface UseMeasurementsPanelOptions {
   shapes: AnyShape[];

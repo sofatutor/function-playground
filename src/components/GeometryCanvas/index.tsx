@@ -12,6 +12,11 @@ import { GridZoomProvider, useGridZoom } from '@/contexts/GridZoomContext';
 import { useGridSync } from '@/hooks/useGridSync';
 import { useFormulaSelection } from '@/hooks/useFormulaSelection';
 import { useMeasurementsPanel } from '@/hooks/useMeasurementsPanel';
+import {
+  createHandleMouseDown,
+  createHandleMouseMove,
+  createHandleMouseUp,
+} from './CanvasEventHandlers';
 
 interface FormulaCanvasProps extends GeometryCanvasProps {
   formulas?: Formula[];
@@ -78,10 +83,16 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
   const { zoomFactor } = useGridZoom();
   const canvasRef = useRef<HTMLDivElement>(null);
   
-  // Drawing state
+  // Drawing state - RESTORED from original implementation
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawStart, setDrawStart] = useState<Point | null>(null);
   const [drawCurrent, setDrawCurrent] = useState<Point | null>(null);
+  const [dragStart, setDragStart] = useState<Point | null>(null);
+  const [originalPosition, setOriginalPosition] = useState<Point | null>(null);
+  const [resizeStart, setResizeStart] = useState<Point | null>(null);
+  const [originalSize, setOriginalSize] = useState<number>(1);
+  const [rotateStart, setRotateStart] = useState<Point | null>(null);
+  const [originalRotation, setOriginalRotation] = useState<number>(0);
   
   // Canvas size state
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
@@ -126,6 +137,10 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
     return pixelsPerUnit * zoomFactor;
   }, [pixelsPerUnit, zoomFactor]);
   
+  const pixelsPerSmallUnit = useMemo(() => {
+    return zoomedPixelsPerUnit / 10; // for backward compatibility with original event handlers
+  }, [zoomedPixelsPerUnit]);
+
   const scaledShapes = useMemo(() => {
     return shapes.map(shape => ({
       ...shape,
@@ -222,6 +237,119 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
     // Clear any selected formula point when selecting a shape
     clearAllSelectedPoints();
   }, [onShapeSelect, clearAllSelectedPoints]);
+
+  // Create mouse event handlers - RESTORED from original implementation
+  const handleMouseDown = createHandleMouseDown({
+    canvasRef,
+    shapes,
+    activeMode,
+    activeShapeType,
+    selectedShapeId,
+    isDrawing,
+    drawStart,
+    drawCurrent,
+    dragStart,
+    originalPosition,
+    resizeStart,
+    originalSize,
+    rotateStart,
+    originalRotation,
+    pixelsPerUnit,
+    pixelsPerSmallUnit,
+    measurementUnit,
+    gridPosition,
+    setIsDrawing,
+    setDrawStart,
+    setDrawCurrent,
+    setDragStart,
+    setOriginalPosition,
+    setResizeStart,
+    setOriginalSize,
+    setRotateStart,
+    setOriginalRotation,
+    onShapeSelect: handleShapeSelect,
+    onShapeCreate: _onShapeCreate,
+    onShapeMove: _onShapeMove,
+    onShapeResize: _onShapeResize,
+    onShapeRotate: _onShapeRotate,
+    onModeChange,
+    serviceFactory: undefined // not passed from props
+  });
+
+  const handleMouseMove = createHandleMouseMove({
+    canvasRef,
+    shapes,
+    activeMode,
+    activeShapeType,
+    selectedShapeId,
+    isDrawing,
+    drawStart,
+    drawCurrent,
+    dragStart,
+    originalPosition,
+    resizeStart,
+    originalSize,
+    rotateStart,
+    originalRotation,
+    pixelsPerUnit,
+    pixelsPerSmallUnit,
+    measurementUnit,
+    gridPosition,
+    setIsDrawing,
+    setDrawStart,
+    setDrawCurrent,
+    setDragStart,
+    setOriginalPosition,
+    setResizeStart,
+    setOriginalSize,
+    setRotateStart,
+    setOriginalRotation,
+    onShapeSelect: handleShapeSelect,
+    onShapeCreate: _onShapeCreate,
+    onShapeMove: _onShapeMove,
+    onShapeResize: _onShapeResize,
+    onShapeRotate: _onShapeRotate,
+    onModeChange,
+    serviceFactory: undefined
+  });
+
+  const handleMouseUp = createHandleMouseUp({
+    canvasRef,
+    shapes,
+    activeMode,
+    activeShapeType,
+    selectedShapeId,
+    isDrawing,
+    drawStart,
+    drawCurrent,
+    dragStart,
+    originalPosition,
+    resizeStart,
+    originalSize,
+    rotateStart,
+    originalRotation,
+    pixelsPerUnit,
+    pixelsPerSmallUnit,
+    measurementUnit,
+    gridPosition,
+    zoomFactor,
+    setIsDrawing,
+    setDrawStart,
+    setDrawCurrent,
+    setDragStart,
+    setOriginalPosition,
+    setResizeStart,
+    setOriginalSize,
+    setRotateStart,
+    setOriginalRotation,
+    onShapeSelect: handleShapeSelect,
+    onShapeCreate: _onShapeCreate,
+    onShapeMove: _onShapeMove,
+    onShapeResize: _onShapeResize,
+    onShapeRotate: _onShapeRotate,
+    onModeChange,
+    serviceFactory: undefined
+  });
   
   return (
     <div className="relative w-full h-full">
@@ -234,6 +362,9 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
           pointerEvents: isNonInteractive ? 'none' : 'auto'
         }}
         tabIndex={0}
+        onMouseDown={isNonInteractive ? undefined : handleMouseDown}
+        onMouseMove={isNonInteractive ? undefined : handleMouseMove}
+        onMouseUp={isNonInteractive ? undefined : handleMouseUp}
         onClick={isNonInteractive ? undefined : (e) => {
           // If the click is on a path (part of the formula graph), don't dismiss
           if ((e.target as Element).tagName === 'path') {
