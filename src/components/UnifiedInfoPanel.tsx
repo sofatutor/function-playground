@@ -143,10 +143,13 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
     e.stopPropagation();
     e.preventDefault();
     
+    console.log('UnifiedInfoPanel: handleNavigatePoint called with:', direction, 'onNavigatePoint:', !!onNavigatePoint, 'point:', !!point);
+    
     if (onNavigatePoint && point) {
+      console.log('UnifiedInfoPanel: Calling onNavigatePoint with stepSize:', point.navigationStepSize || 0.1);
       onNavigatePoint(direction, point.navigationStepSize || 0.1);
     } else {
-      console.log(`Navigate ${direction} point`);
+      console.log(`Navigate ${direction} point - no handler or point available`);
     }
   };
 
@@ -236,6 +239,7 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
     
     // If a point is selected, show point info
     if (point) {
+      console.log('UnifiedInfoPanel: Rendering point info for:', point.formula.expression, 'navigationStepSize:', point.navigationStepSize, 'onNavigatePoint:', !!onNavigatePoint);
       return (
         <>
           <CardHeader className="p-2 sm:p-3 pb-0 sm:pb-1">
@@ -247,7 +251,7 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
                     className="w-3 h-3 rounded-full mr-2" 
                     style={{ backgroundColor: point.formula.color }}
                   />
-                  <InlineMath math={convertToLatex(point.formula.expression)} />
+                  <span className="font-mono text-sm">{point.formula.expression}</span>
                 </div>
               ) : (
                 t('pointInfoTitle')
@@ -275,7 +279,7 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
               <div>
                 <div className="text-xs font-medium mb-1">Calculation</div>
                 <div className="text-sm bg-muted p-1 rounded break-all">
-                  <InlineMath math={calculateY()} />
+                  <span className="font-mono">{calculateY()}</span>
                 </div>
               </div>
               
@@ -285,7 +289,10 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
                 <div className="flex items-center text-xs">
                   <button 
                     className="p-1 hover:bg-muted rounded point-nav-button"
-                    onClick={(e) => handleNavigatePoint('prev', e)}
+                    onClick={(e) => {
+                      console.log('UnifiedInfoPanel: Previous button clicked');
+                      handleNavigatePoint('prev', e);
+                    }}
                     aria-label="Previous Point"
                     data-nav-button="prev"
                   >
@@ -302,7 +309,10 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
                   </div>
                   <button 
                     className="p-1 hover:bg-muted rounded point-nav-button"
-                    onClick={(e) => handleNavigatePoint('next', e)}
+                    onClick={(e) => {
+                      console.log('UnifiedInfoPanel: Next button clicked');
+                      handleNavigatePoint('next', e);
+                    }}
                     aria-label="Next Point"
                     data-nav-button="next"
                   >
