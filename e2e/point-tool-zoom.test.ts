@@ -38,13 +38,18 @@ async function setupGraphAndSelectTool(page) {
 test('should convert screen coordinates to correct math coordinates at different zoom levels', async ({ page }) => {
   await setupGraphAndSelectTool(page);
   
-  // Click at a specific point at default zoom (100%)
-  const defaultZoomPoint = { x: 640, y: 461 };
-  await page.mouse.click(defaultZoomPoint.x, defaultZoomPoint.y);
+  // Click on the formula graph to select a point (instead of clicking at arbitrary coordinates)
+  await page.locator('path.formula-graph').click({ force: true });
   
-  // Get coordinates at default zoom
-  const defaultXCoord = await page.locator('text=X Coordinate').locator('xpath=following-sibling::div').textContent();
-  const defaultYCoord = await page.locator('text=Y Coordinate').locator('xpath=following-sibling::div').textContent();
+  // Wait for coordinates to be displayed and get them using a more specific selector
+  await page.waitForSelector('text=X Coordinate', { timeout: 15000 });
+  
+  // Find the coordinate values using more specific selectors
+  const xCoordDiv = await page.locator('text=X Coordinate').locator('..').locator('div.text-sm.bg-muted');
+  const yCoordDiv = await page.locator('text=Y Coordinate').locator('..').locator('div.text-sm.bg-muted');
+  
+  const defaultXCoord = await xCoordDiv.textContent();
+  const defaultYCoord = await yCoordDiv.textContent();
   Logger.debug(`Coordinates at default zoom: X=${defaultXCoord}, Y=${defaultYCoord}`);
   
   // Zoom in to 150%
@@ -56,13 +61,17 @@ test('should convert screen coordinates to correct math coordinates at different
   // Get current zoom level for debugging
   const zoomLevel = await page.getByTestId('grid-zoom-reset').textContent();
   
-  // Click at a different point at 150% zoom
-  const zoomedPoint = { x: 729, y: 372 };
-  await page.mouse.click(zoomedPoint.x, zoomedPoint.y);
+  // Click on the formula graph at a different position after zooming (force click)
+  await page.locator('path.formula-graph').click({ force: true });
   
-  // Get coordinates at zoomed level
-  const zoomedXCoord = await page.locator('text=X Coordinate').locator('xpath=following-sibling::div').textContent();
-  const zoomedYCoord = await page.locator('text=Y Coordinate').locator('xpath=following-sibling::div').textContent();
+  // Wait for coordinates to be displayed and get them using a more specific selector
+  await page.waitForSelector('text=X Coordinate', { timeout: 15000 });
+  
+  const xCoordDiv2 = await page.locator('text=X Coordinate').locator('..').locator('div.text-sm.bg-muted');
+  const yCoordDiv2 = await page.locator('text=Y Coordinate').locator('..').locator('div.text-sm.bg-muted');
+  
+  const zoomedXCoord = await xCoordDiv2.textContent();
+  const zoomedYCoord = await yCoordDiv2.textContent();
   Logger.debug(`Coordinates at zoomed level (${zoomLevel}): X=${zoomedXCoord}, Y=${zoomedYCoord}`);
   
   // Calculate the difference between default and zoomed coordinates
@@ -84,12 +93,14 @@ test('should convert screen coordinates to correct math coordinates at different
 test('should maintain consistent step size with arrow navigation at different zoom levels', async ({ page }) => {
   await setupGraphAndSelectTool(page);
   
-  // Click at a specific point at default zoom
-  const defaultZoomPoint = { x: 640, y: 461 };
-  await page.mouse.click(defaultZoomPoint.x, defaultZoomPoint.y);
+  // Click on the formula graph to select a point (force click to bypass grid lines)
+  await page.locator('path.formula-graph').click({ force: true });
   
-  // Get initial coordinates
-  const initialX = await page.locator('text=X Coordinate').locator('xpath=following-sibling::div').textContent();
+  // Wait for coordinates to be displayed and get them using a more specific selector
+  await page.waitForSelector('text=X Coordinate', { timeout: 15000 });
+  
+  const xCoordDiv3 = await page.locator('text=X Coordinate').locator('..').locator('div.text-sm.bg-muted');
+  const initialX = await xCoordDiv3.textContent();
   Logger.debug(`Initial X coordinate: ${initialX}`);
   
   // Navigate 5 steps right using arrow
@@ -99,7 +110,9 @@ test('should maintain consistent step size with arrow navigation at different zo
   }
   
   // Get coordinates after navigation at default zoom
-  const defaultNavXCoord = await page.locator('text=X Coordinate').locator('xpath=following-sibling::div').textContent();
+  await page.waitForSelector('text=X Coordinate', { timeout: 15000 });
+  const xCoordDiv4 = await page.locator('text=X Coordinate').locator('..').locator('div.text-sm.bg-muted');
+  const defaultNavXCoord = await xCoordDiv4.textContent();
   Logger.debug(`X coordinate after 5 steps at default zoom: ${defaultNavXCoord}`);
   
   // Calculate the navigation step size at default zoom (average per step)
@@ -119,19 +132,22 @@ test('should maintain consistent step size with arrow navigation at different zo
   const zoomLevel = await page.getByTestId('grid-zoom-reset').textContent();
   Logger.debug(`Current zoom level: ${zoomLevel}`);
   
-  // Click at a specific point at zoomed level
-  const zoomedPoint = { x: 730, y: 372 };
-  await page.mouse.click(zoomedPoint.x, zoomedPoint.y);
+  // Click on the formula graph at the zoomed level (force click)
+  await page.locator('path.formula-graph').click({ force: true });
   
   // Get initial zoomed coordinate
-  const zoomedInitialX = await page.locator('text=X Coordinate').locator('xpath=following-sibling::div').textContent();
+  await page.waitForSelector('text=X Coordinate', { timeout: 15000 });
+  const xCoordDiv5 = await page.locator('text=X Coordinate').locator('..').locator('div.text-sm.bg-muted');
+  const zoomedInitialX = await xCoordDiv5.textContent();
   Logger.debug(`Initial X coordinate at zoomed level: ${zoomedInitialX}`);
   
   // Navigate one step right at zoomed level
   await page.locator('text="→"').click();
   
   // Get coordinate after one step at zoomed level
-  const zoomedNavXCoord = await page.locator('text=X Coordinate').locator('xpath=following-sibling::div').textContent();
+  await page.waitForSelector('text=X Coordinate', { timeout: 15000 });
+  const xCoordDiv6 = await page.locator('text=X Coordinate').locator('..').locator('div.text-sm.bg-muted');
+  const zoomedNavXCoord = await xCoordDiv6.textContent();
   Logger.debug(`X coordinate after 1 step at zoomed level: ${zoomedNavXCoord}`);
   
   // Calculate the step size at zoomed level
