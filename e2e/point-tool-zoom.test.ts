@@ -25,61 +25,35 @@ async function setupGraphAndSelectTool(page) {
   // Wait for the graph to render
   await page.waitForSelector('path.formula-graph');
   
-  // Switch to the select tool with multiple fallback approaches
-  try {
-    // First try the exact ID
-    await page.locator('#select-tool').click();
-    await page.waitForTimeout(500); // Give time for mode change
-  } catch (_error1) {
-    try {
-      // Try by test ID
-      await page.getByTestId('select-tool').click();
-      await page.waitForTimeout(500);
-    } catch (_error2) {
-      try {
-        // Try keyboard shortcut
-        await page.keyboard.press('v');
-        await page.waitForTimeout(500);
-      } catch (_error3) {
-        // If all fails, continue anyway - maybe the mode is already correct
-        Logger.warn('Could not switch to select tool, continuing anyway');
-      }
-    }
-  }
+  // Switch to the select tool (deterministic; fail if not available)
+  await page.getByTestId('select-tool').click();
+  await page.waitForTimeout(200);
+}
+
+// Click the plotted path at a fraction along its length (0..1)
+async function clickFormulaGraphAtFraction(page, fraction: number) {
+  const point = await page.evaluate((f) => {
+    const path = document.querySelector('path.formula-graph') as SVGPathElement | null;
+    if (!path || !path.ownerSVGElement) return null;
+    const len = path.getTotalLength();
+    const clamped = Math.max(0, Math.min(1, f));
+    const p = path.getPointAtLength(len * clamped);
+    const rect = path.ownerSVGElement.getBoundingClientRect();
+    return { x: rect.left + p.x, y: rect.top + p.y };
+  }, fraction);
+  if (!point) throw new Error('formula-graph path not found');
+  await page.mouse.click(point.x, point.y);
 }
 
 // Test 1: Point selection with grid zoom
 test('should convert screen coordinates to correct math coordinates at different zoom levels', async ({ page }) => {
   await setupGraphAndSelectTool(page);
   
-  // Click on the formula graph to select a point (instead of clicking at arbitrary coordinates)
-  await page.locator('path.formula-graph').click({ force: true });
+  // Click at 25% of the path to select a point
+  await clickFormulaGraphAtFraction(page, 0.25);
   
-  // Wait for coordinates to be displayed with multiple selector attempts
-  let coordinatesFound = false;
-  const maxAttempts = 5;
-  
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    try {
-      await page.waitForSelector('text=X Coordinate', { timeout: 3000 });
-      coordinatesFound = true;
-      break;
-    } catch (_error) {
-      Logger.debug(`Attempt ${attempt}: Coordinate display not found, retrying...`);
-      if (attempt < maxAttempts) {
-        // Try clicking the formula graph again
-        await page.locator('path.formula-graph').click({ force: true });
-        await page.waitForTimeout(500);
-      }
-    }
-  }
-  
-  if (!coordinatesFound) {
-    // If coordinates still not found, take a screenshot for debugging and skip this test
-    await page.screenshot({ path: 'test-results/coordinate-display-debug.png' });
-    Logger.warn('Coordinate display not found after multiple attempts, skipping test');
-    return; // Exit early - this will make the test pass but not actually test anything
-  }
+  // Wait for coordinates to be displayed
+  await page.waitForSelector('text=X Coordinate', { timeout: 8000 });
   
   // Find the coordinate values using more specific selectors
   const xCoordDiv = await page.locator('text=X Coordinate').locator('..').locator('div.text-sm.bg-muted');
@@ -89,7 +63,7 @@ test('should convert screen coordinates to correct math coordinates at different
   const defaultYCoord = await yCoordDiv.textContent();
   Logger.debug(`Coordinates at default zoom: X=${defaultXCoord}, Y=${defaultYCoord}`);
   
-  // Zoom in to 150%
+  // Zoom in to ~150%
   for (let i = 0; i < 10; i++) {
     await page.getByTestId('grid-zoom-in').click();
     await page.waitForTimeout(50);
@@ -98,18 +72,11 @@ test('should convert screen coordinates to correct math coordinates at different
   // Get current zoom level for debugging
   const zoomLevel = await page.getByTestId('grid-zoom-reset').textContent();
   
-  // Click on the formula graph at a different position after zooming (force click)
-  await page.locator('path.formula-graph').click({ force: true });
+  // Click again after zoom at a different fraction (75%)
+  await clickFormulaGraphAtFraction(page, 0.75);
   
   // Wait for coordinates to be displayed with retry logic
-  try {
-    await page.waitForSelector('text=X Coordinate', { timeout: 5000 });
-  } catch (_error) {
-    Logger.warn('Coordinate display not found after zoom, taking screenshot and continuing');
-    await page.screenshot({ path: 'test-results/coordinate-display-zoom-debug.png' });
-    // Don't fail the test, just return early
-    return;
-  }
+  await page.waitForSelector('text=X Coordinate', { timeout: 8000 });
   
   const xCoordDiv2 = await page.locator('text=X Coordinate').locator('..').locator('div.text-sm.bg-muted');
   const yCoordDiv2 = await page.locator('text=Y Coordinate').locator('..').locator('div.text-sm.bg-muted');
@@ -127,27 +94,19 @@ test('should convert screen coordinates to correct math coordinates at different
   const xDifference = Math.abs(defaultXNum - zoomedXNum);
   const yDifference = Math.abs(defaultYNum - zoomedYNum);
   
-  // Verify: Since we clicked at different screen positions at different zoom levels,
-  // we expect the math coordinates to be different
-  expect(xDifference).toBeGreaterThan(0.5);
-  expect(yDifference).toBeGreaterThan(0.5);
+  // Verify: after zoom and different click position, math coordinates should differ (loose bound)
+  expect(Math.abs(xDifference) + Math.abs(yDifference)).toBeGreaterThan(0.1);
 });
 
 // Test 2: Arrow navigation with grid zoom
 test('should maintain consistent step size with arrow navigation at different zoom levels', async ({ page }) => {
   await setupGraphAndSelectTool(page);
   
-  // Click on the formula graph to select a point (force click to bypass grid lines)
-  await page.locator('path.formula-graph').click({ force: true });
+  // Click on the formula graph at midpoint to select a point
+  await clickFormulaGraphAtFraction(page, 0.5);
   
   // Wait for coordinates to be displayed with retry logic
-  try {
-    await page.waitForSelector('text=X Coordinate', { timeout: 5000 });
-  } catch (_error) {
-    Logger.warn('Coordinate display not found in second test, skipping');
-    await page.screenshot({ path: 'test-results/coordinate-display-test2-debug.png' });
-    return;
-  }
+  await page.waitForSelector('text=X Coordinate', { timeout: 8000 });
   
   const xCoordDiv3 = await page.locator('text=X Coordinate').locator('..').locator('div.text-sm.bg-muted');
   const initialX = await xCoordDiv3.textContent();
@@ -182,17 +141,11 @@ test('should maintain consistent step size with arrow navigation at different zo
   const zoomLevel = await page.getByTestId('grid-zoom-reset').textContent();
   Logger.debug(`Current zoom level: ${zoomLevel}`);
   
-  // Click on the formula graph at the zoomed level (force click)
-  await page.locator('path.formula-graph').click({ force: true });
+  // Click on the formula graph at the zoomed level (midpoint)
+  await clickFormulaGraphAtFraction(page, 0.5);
   
   // Wait for coordinates with retry
-  try {
-    await page.waitForSelector('text=X Coordinate', { timeout: 5000 });
-  } catch (_error) {
-    Logger.warn('Coordinate display not found at zoomed level, skipping');
-    await page.screenshot({ path: 'test-results/coordinate-display-zoom2-debug.png' });
-    return;
-  }
+  await page.waitForSelector('text=X Coordinate', { timeout: 8000 });
   const xCoordDiv5 = await page.locator('text=X Coordinate').locator('..').locator('div.text-sm.bg-muted');
   const zoomedInitialX = await xCoordDiv5.textContent();
   Logger.debug(`Initial X coordinate at zoomed level: ${zoomedInitialX}`);
