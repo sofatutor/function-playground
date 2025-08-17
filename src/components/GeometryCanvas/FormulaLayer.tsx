@@ -28,6 +28,8 @@ interface FormulaLayerProps {
     pointIndex?: number;
     allPoints?: FormulaPoint[];
     navigationStepSize?: number;
+    gridPosition?: { x: number; y: number };
+    pixelsPerUnit?: number;
     isValid: boolean;
   } | null) => void;
 }

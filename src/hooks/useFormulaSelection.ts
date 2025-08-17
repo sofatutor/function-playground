@@ -14,6 +14,9 @@ interface SelectedPoint {
   allPoints?: FormulaPoint[];
   navigationStepSize?: number;
   isValid: boolean;
+  // Add conversion parameters for navigation
+  gridPosition?: { x: number; y: number };
+  pixelsPerUnit?: number;
 }
 
 interface CurrentPointInfo {
@@ -133,7 +136,16 @@ export const useFormulaSelection = ({ onFormulaSelect, onModeChange }: UseFormul
     
     for (let i = 0; i < allPoints.length; i++) {
       const point = allPoints[i];
-      const distance = Math.abs(point.mathX - nextMathX);
+      // Convert screen coordinates to math coordinates for comparison
+      let pointMathX;
+      if (selectedPoint.gridPosition && selectedPoint.pixelsPerUnit) {
+        pointMathX = (point.x - selectedPoint.gridPosition.x) / selectedPoint.pixelsPerUnit;
+      } else {
+        // Fallback: try to access mathX property if it exists (should be converted)
+        pointMathX = (point as any).mathX || 0;
+      }
+      
+      const distance = Math.abs(pointMathX - nextMathX);
       if (distance < closestDistance) {
         closestDistance = distance;
         closestPoint = point;
@@ -142,19 +154,32 @@ export const useFormulaSelection = ({ onFormulaSelect, onModeChange }: UseFormul
     }
     
     if (closestPoint) {
-      logger.debug(`Found closest point at index ${closestIndex} with mathX ${closestPoint.mathX}`);
+      // Calculate math coordinates for the closest point
+      let closestPointMathX, closestPointMathY;
+      if (selectedPoint.gridPosition && selectedPoint.pixelsPerUnit) {
+        closestPointMathX = (closestPoint.x - selectedPoint.gridPosition.x) / selectedPoint.pixelsPerUnit;
+        closestPointMathY = -(closestPoint.y - selectedPoint.gridPosition.y) / selectedPoint.pixelsPerUnit;
+      } else {
+        // Fallback: try to access mathX/mathY properties if they exist
+        closestPointMathX = (closestPoint as any).mathX || 0;
+        closestPointMathY = (closestPoint as any).mathY || 0;
+      }
+      
+      logger.debug(`Found closest point at index ${closestIndex} with mathX ${closestPointMathX}`);
       
       // Create the new selected point with all required properties
       const newSelectedPoint: SelectedPoint = {
         x: closestPoint.x,
         y: closestPoint.y,
-        mathX: closestPoint.mathX,
-        mathY: closestPoint.mathY,
+        mathX: closestPointMathX,
+        mathY: closestPointMathY,
         formula: selectedPoint.formula,
         pointIndex: closestIndex,
         allPoints: allPoints,
         navigationStepSize: stepSize,
-        isValid: true
+        isValid: true,
+        gridPosition: selectedPoint.gridPosition,
+        pixelsPerUnit: selectedPoint.pixelsPerUnit
       };
       
       // Update the selected point

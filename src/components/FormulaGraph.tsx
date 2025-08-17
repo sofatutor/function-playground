@@ -15,6 +15,8 @@ interface FormulaGraphProps {
     pointIndex?: number;
     allPoints?: FormulaPoint[];
     navigationStepSize?: number;
+    gridPosition?: { x: number; y: number };
+    pixelsPerUnit?: number;
   } | null) => void;
   globalSelectedPoint?: (FormulaPoint & {
     mathX: number;
@@ -505,7 +507,9 @@ const FormulaGraph: React.FC<FormulaGraphProps> = ({
         mathY,
         formula,
         pointIndex: closestPointIndex,
-        allPoints: points
+        allPoints: points,
+        gridPosition,
+        pixelsPerUnit
       });
     } else {
       // If no point is close enough, clear the selection
