@@ -38,6 +38,8 @@ const Index = () => {
   // Get ShareViewOptions with applied precedence
   const { shareViewOptions, isSharePanelOpen } = useShareViewOptions();
   const appliedOptions = applyShareViewOptionsWithPanelState(shareViewOptions, isSharePanelOpen);
+  // Determine admin controls visibility only on initial load (URL/env), not affected by later toggles
+  const [showAdminControlsOnLoad] = useState<boolean>(() => shareViewOptions.admin);
   
   const {
     shapes,
@@ -372,7 +374,7 @@ const Index = () => {
                       onToggleFullscreen={toggleFullscreen}
                       showFullscreenButton={false}
                       showZoomControls={appliedOptions.zoom}
-                      showAdminControls={true}
+                      showAdminControls={showAdminControlsOnLoad}
                     />
                     
                     {/* Fullscreen button */}

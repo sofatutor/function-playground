@@ -14,7 +14,8 @@ Geo-Playground is an interactive web application for creating and manipulating g
 6. [Measuring Shapes](#measuring-shapes)
 7. [Keyboard Shortcuts](#keyboard-shortcuts)
 8. [Tips and Tricks](#tips-and-tricks)
-9. [Troubleshooting](#troubleshooting)
+9. [Unified Settings](#unified-settings)
+10. [Troubleshooting](#troubleshooting)
 
 ## Getting Started
 
@@ -239,6 +240,144 @@ Geo-Playground supports the following keyboard shortcuts:
 - For complex drawings with many shapes, consider grouping shapes that don't need individual manipulation
 - Use layers to organize your drawing and hide/show different parts as needed
 - Save your work regularly using the export feature
+
+## Unified Settings
+
+The Unified Settings modal provides comprehensive control over the application's behavior, appearance, and sharing options. Access it by clicking the settings (gear) icon in the top-right corner of the interface.
+
+### Overview
+
+The settings modal contains three main tabs:
+
+- **General**: Language, API configuration, and developer settings
+- **View**: Layout options and UI toggle controls with live preview
+- **Share**: Sharing preferences, URL generation, and embed code creation
+
+### General Tab
+
+#### Language Settings
+Choose your preferred language for the interface. Available languages include English, German, French, and Spanish.
+
+#### OpenAI API Configuration
+Configure your OpenAI API key for natural language processing features. Your API key is stored locally and encrypted—it's never sent to our servers.
+
+#### Developer Settings
+Advanced options for development and debugging, including console logging controls.
+
+### View Tab
+
+The View tab controls the application's layout and user interface elements. Changes here affect both the current session and shared URLs.
+
+#### Layout Options
+
+**Default Layout**
+- Shows all UI controls and enables full interaction
+- Suitable for editing and creating content
+
+**Non-Interactive Layout**
+- Hides all UI controls (toolbar, zoom, header, admin controls)
+- Disables user interactions with shapes and canvas
+- Content remains visible (shapes, formulas, grid)
+- Ideal for presentations or embedding where editing isn't needed
+
+#### Live UI Toggles
+
+These options update immediately while the modal is open:
+
+- **Function Controls**: Show/hide formula editor and plotting tools
+- **Geometric Tools**: Show/hide shape creation and manipulation tools  
+- **Header**: Show/hide the application title and description
+- **Zoom Controls**: Show/hide zoom in/out/reset buttons
+- **Unit Controls**: Show/hide unit selector (when disabled, units are locked)
+- **Fullscreen Button**: Show/hide the fullscreen toggle button
+
+### Share Tab
+
+The Share tab manages sharing preferences and generates URLs and embed codes for your content.
+
+#### Admin Controls Toggle
+Controls whether admin buttons (settings, share) appear in shared URLs. When disabled, shared links will hide administrative controls while keeping the content accessible.
+
+#### Language for Shared Content
+Set the language that will be applied when others visit your shared URLs. This is separate from your current session language.
+
+#### Share URL Generation
+Displays a read-only URL that includes your current content (shapes, formulas, grid position) and all active settings. Copy this URL to share your work with others.
+
+#### Embed Code Generation
+Creates an HTML iframe snippet for embedding your content in websites or presentations:
+
+1. Set your desired width and height (defaults to 800×600)
+2. Copy the generated `<iframe>` code
+3. Paste it into your HTML document
+
+### URL Parameters
+
+The application supports various URL parameters for customizing behavior:
+
+| Parameter | Values | Description |
+|-----------|--------|-------------|
+| `layout` | `default`, `noninteractive` | Overall layout mode |
+| `funcControls` | `0`, `1` | Show/hide function controls |
+| `tools` | `0`, `1` | Show/hide geometric tools |
+| `header` | `0`, `1` | Show/hide header |
+| `zoom` | `0`, `1` | Show/hide zoom controls |
+| `unitCtl` | `0`, `1` | Show/hide unit selector |
+| `fullscreen` | `0`, `1` | Show/hide fullscreen button |
+| `admin` | `0`, `1` | Show/hide admin controls |
+| `lang` | `en`, `de`, `fr`, `es` | Interface language |
+
+#### Example URLs
+
+**Basic sharing:**
+```
+https://yourdomain.com/?shapes=<encoded>&formulas=<encoded>
+```
+
+**Non-interactive presentation:**
+```
+https://yourdomain.com/?layout=noninteractive&shapes=<encoded>
+```
+
+**Custom UI configuration:**
+```
+https://yourdomain.com/?funcControls=0&tools=1&zoom=0&header=0
+```
+
+**Localized sharing:**
+```
+https://yourdomain.com/?lang=de&admin=0&shapes=<encoded>
+```
+
+### Embed Code Examples
+
+**Basic embed:**
+```html
+<iframe src="https://yourdomain.com/?shapes=<encoded>" 
+        width="800" height="600" frameborder="0">
+</iframe>
+```
+
+**Non-interactive embed for presentations:**
+```html
+<iframe src="https://yourdomain.com/?layout=noninteractive&shapes=<encoded>" 
+        width="1024" height="768" frameborder="0">
+</iframe>
+```
+
+### Behavior Notes
+
+#### Live vs. Deferred Changes
+- **Live changes** (funcControls, tools, header, zoom, unitCtl, fullscreen): Applied immediately while the modal is open
+- **Deferred changes** (layout, admin, language): Applied only when the modal is closed
+
+#### Parameter Precedence
+When `layout=noninteractive` is set, it overrides individual UI toggles, hiding all interface elements regardless of their individual settings.
+
+#### Legacy Compatibility
+The application maintains compatibility with legacy URL parameters while generating clean, modern URLs for new shares.
+
+For detailed technical specifications, see the [PRD documentation](tasks/prd-share-panel-layouts-and-toggles.md).
 
 ## Troubleshooting
 

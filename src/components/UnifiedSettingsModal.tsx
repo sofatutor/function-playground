@@ -36,6 +36,7 @@ const UnifiedSettingsModal: React.FC<UnifiedSettingsModalProps> = ({ open, onOpe
     applyPendingChanges,
     generateShareUrl, 
     generateEmbedCode,
+    setShareViewOptions,
     setIsSharePanelOpen
   } = useShareViewOptions();
   
@@ -95,14 +96,18 @@ const UnifiedSettingsModal: React.FC<UnifiedSettingsModalProps> = ({ open, onOpe
   };
 
   const handleResetViewOptions = () => {
-    // Reset all view-related ShareViewOptions to defaults but preserve the admin and lang settings
-    updateShareViewOption('layout', 'default');
-    updateShareViewOption('funcControls', true);
-    updateShareViewOption('fullscreen', false);
-    updateShareViewOption('tools', true);
-    updateShareViewOption('zoom', true);
-    updateShareViewOption('unitCtl', true);
-    updateShareViewOption('header', true);
+    // Reset all view-related options in a single batch to avoid race conditions with deferred layout updates
+    // Preserve admin and lang values from current state
+    setShareViewOptions({
+      ...shareViewOptions,
+      layout: 'default',
+      funcControls: true,
+      fullscreen: false,
+      tools: true,
+      zoom: true,
+      unitCtl: true,
+      header: true,
+    });
   };
 
   const handleOpenChange = (newOpen: boolean) => {
