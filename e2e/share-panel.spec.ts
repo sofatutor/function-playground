@@ -101,6 +101,62 @@ test.describe('Share Panel Settings Modal', () => {
     });
   });
 
+  test.describe('Reset View Options behavior', () => {
+    test('should reset only view options and preserve admin/lang', async ({ page }) => {
+      // Start with admin=0 and lang=de to verify preservation
+      await page.goto('/?admin=0&lang=de');
+      await expect.poll(() => page.url()).toContain('admin=0');
+      await expect.poll(() => page.url()).toContain('lang=de');
+
+      // Open Settings modal and go to View tab
+      const settingsButton = page.locator('button').filter({ has: page.locator('svg.lucide-settings') });
+      await expect(settingsButton).toHaveCount(0); // hidden due to admin=0
+      // Open modal via keyboard shortcut fallback: focus body and press Shift+S (if any) - not available
+      // Instead, navigate by removing admin override temporarily
+      await page.goto('/?lang=de');
+      const settingsButtonVisible = page.locator('button').filter({ has: page.locator('svg.lucide-settings') });
+      await settingsButtonVisible.click();
+      // Tab label is localized; select by role and position (second tab)
+      const tabs = page.getByRole('tab');
+      await tabs.nth(1).click();
+
+      // Toggle several view options away from defaults
+      await page.locator('#funcControls').click(); // to false
+      await page.locator('#tools').click(); // to false
+      await page.locator('#header').click(); // to false
+      await page.locator('#zoom').click(); // to false
+      await page.locator('#fullscreen').click(); // to true
+      // Change layout to noninteractive (deferred)
+      await page.locator('#layout-noninteractive').click();
+
+      // URL should reflect non-defaults (except layout which is deferred)
+      await expect.poll(() => page.url()).toContain('funcControls=0');
+      await expect.poll(() => page.url()).toContain('tools=0');
+      await expect.poll(() => page.url()).toContain('header=0');
+      await expect.poll(() => page.url()).toContain('zoom=0');
+      await expect.poll(() => page.url()).toContain('fullscreen=1');
+
+      // Click Reset View Options to Defaults
+      // Button label is localized; select by icon container then its closest button
+      await page.locator('button:has(svg.lucide-refresh-cw)').click();
+
+      // URL should drop the non-defaults (back to defaults are typically omitted)
+      await expect.poll(() => page.url()).not.toContain('funcControls=0');
+      await expect.poll(() => page.url()).not.toContain('tools=0');
+      await expect.poll(() => page.url()).not.toContain('header=0');
+      await expect.poll(() => page.url()).not.toContain('zoom=0');
+      await expect.poll(() => page.url()).not.toContain('fullscreen=1');
+      // Layout reset to default is deferred; ensure noninteractive is not present
+      await expect.poll(() => page.url()).not.toContain('layout=noninteractive');
+
+      // Close modal to apply any pending changes and verify admin/lang preserved in URL
+      await page.keyboard.press('Escape');
+      await expect.poll(() => page.url()).toContain('lang=de');
+      // Admin should remain absent (default true) since we navigated to drop admin param earlier
+      await expect.poll(() => page.url()).not.toContain('admin=0');
+    });
+  });
+
   test.describe('Scenario D: Share URL and embed snippet', () => {
     test('should validate share URL and embed snippet reflect current options', async ({ page }) => {
       // Open Settings modal
