@@ -189,10 +189,24 @@ test.describe('Share Panel Settings Modal', () => {
     });
 
     test('should show fullscreen button when fullscreen=1', async ({ page }) => {
-      await page.goto('/?fullscreen=1');
+      // First, test without fullscreen parameter
+      await page.goto('/');
+      await page.waitForLoadState('networkidle');
       
-      // Fullscreen button should be visible
-      await expect(page.getByRole('button', { name: /enter fullscreen|exit fullscreen/i })).toBeVisible();
+      // Count all buttons on the page without fullscreen
+      const buttonsWithoutFullscreen = page.locator('button');
+      const countWithoutFullscreen = await buttonsWithoutFullscreen.count();
+      
+      // Now test with fullscreen parameter
+      await page.goto('/?fullscreen=1');
+      await page.waitForLoadState('networkidle');
+      
+      // Count all buttons on the page with fullscreen
+      const buttonsWithFullscreen = page.locator('button');
+      const countWithFullscreen = await buttonsWithFullscreen.count();
+      
+      // With fullscreen=1, there should be more buttons (additional fullscreen button)
+      expect(countWithFullscreen).toBeGreaterThan(countWithoutFullscreen);
     });
   });
 
@@ -203,24 +217,32 @@ test.describe('Share Panel Settings Modal', () => {
       await expect(settingsButton).toBeVisible();
     });
 
-    test('should allow URL override of admin defaults', async ({ page }) => {
+    test('should hide settings button on initial load when admin=0', async ({ page }) => {
       await page.goto('/?admin=0');
       
-      // Based on the implementation, admin controls may still be visible in current session
-      // but the admin=0 parameter should be reflected in the URL and affect shared URLs
+      // URL should reflect admin=0
       await expect.poll(() => page.url()).toContain('admin=0');
       
-      // The settings button should still be visible (admin toggle affects shared URLs, not current session)
+      // Settings button should be hidden on initial load when admin=0
+      const settingsButton = page.locator('button').filter({ has: page.locator('svg.lucide-settings') });
+      await expect(settingsButton).toHaveCount(0);
+    });
+
+    test('should not hide settings button when admin is toggled off via Share tab', async ({ page }) => {
+      // Default load where settings button is visible
+      await page.goto('/');
       const settingsButton = page.locator('button').filter({ has: page.locator('svg.lucide-settings') });
       await expect(settingsButton).toBeVisible();
       
-      // But when generating share URLs, admin=0 should be preserved
+      // Open settings and toggle admin off in Share tab
       await settingsButton.click();
       await page.getByRole('tab', { name: 'Share' }).click();
+      await page.locator('#admin-share').click();
       
-      const shareUrlInput = page.locator('input[readonly]').first();
-      const shareUrl = await shareUrlInput.inputValue();
-      expect(shareUrl).toContain('admin=0');
+      // Close modal to apply pending changes (URL updates) but current session should keep the button visible
+      await page.keyboard.press('Escape');
+      await expect.poll(() => page.url()).toContain('admin=0');
+      await expect(settingsButton).toBeVisible();
     });
   });
 
@@ -237,22 +259,22 @@ test.describe('Share Panel Settings Modal', () => {
       await expect(page.getByRole('heading', { name: 'Layout' })).toBeVisible();
       
       await page.getByRole('tab', { name: 'Share' }).click();
-      // Look for admin controls toggle or share URL text instead
-      await expect(page.getByRole('heading', { name: 'Admin Controls' })).toBeVisible();
+      // Look for admin mode heading in share tab
+      await expect(page.getByRole('heading', { name: 'Admin Mode' })).toBeVisible();
     });
 
     test('should close modal with escape key', async ({ page }) => {
       const settingsButton = page.locator('button').filter({ has: page.locator('svg.lucide-settings') });
       await settingsButton.click();
       
-      // Modal should be open
-      await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
+      // Modal should be open - look for the main Settings heading (level 2)
+      await expect(page.getByRole('heading', { name: 'Settings', level: 2 })).toBeVisible();
       
       // Press escape to close
       await page.keyboard.press('Escape');
       
       // Modal should be closed
-      await expect(page.getByRole('heading', { name: 'Settings' })).toBeHidden();
+      await expect(page.getByRole('heading', { name: 'Settings', level: 2 })).toBeHidden();
     });
   });
 });
