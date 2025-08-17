@@ -168,3 +168,24 @@
 - ✅ Proper handling of structural changes (admin/layout) vs cosmetic changes
 
 This implementation provides a robust, user-friendly SharePanel system with comprehensive toggle controls, live preview capabilities, and proper state management for both immediate and deferred updates.
+
+## Next Steps (start after E2E passes)
+
+- GeometryCanvas refactors
+  - Extract `useGridSync`, `useFormulaSelection`, `useMeasurementsPanel`
+  - Split into `ShapeLayers` and `FormulaLayer`; memoize heavy paths, wrap `FormulaGraph`/`ShapeRenderer` with `React.memo`
+  - Replace magic numbers/timeouts with named constants; centralize calibration/localStorage access
+- CanvasGrid
+  - Debounce origin updates via util; extract z-index constants; verify passive listeners where safe
+- ShareViewOptions context
+  - Split `isSharePanelOpen` into a tiny context; memoize value; `updateShareViewOption` with `useCallback`
+- URL
+  - Consolidate boolean parsing; tests for admin env default and param ordering
+- UnifiedSettingsModal / SharePanel
+  - ARIA labels for icon buttons; lazy mount tab content; extract reusable `ToggleRow`
+- GlobalControls / Toolbar
+  - Accessible names for buttons; unify `IconButton`; memoize handlers
+- Logging/ESLint
+  - Gate verbose logs behind `loggingEnabled`/NODE_ENV; narrow react-refresh overrides
+- Tests
+  - Drag smoothness regression test (no remounts on drag); tests for `applyPendingChanges` deferred semantics

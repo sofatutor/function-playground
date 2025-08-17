@@ -267,3 +267,33 @@ End‑to‑end tests under `e2e/share-panel/*.test.ts`:
   referrerpolicy="no-referrer"
 ></iframe>
 ```
+
+### 15) Post‑E2E Refactoring Plan (to start after E2E coverage is green)
+
+- GeometryCanvas
+  - Extract hooks: `useGridSync` (external↔internal grid sync + drag guards), `useFormulaSelection` (point selection/navigation), `useMeasurementsPanel` (read/update measurements)
+  - Split render into `ShapeLayers` and `FormulaLayer` components
+  - Memoize heavy computations (`scaledShapes`, derived values) with correct deps; wrap `FormulaGraph`/`ShapeRenderer` in `React.memo`
+  - Stabilize handlers with `useCallback` (or `useEvent`) to reduce re-renders
+  - Replace magic numbers/timeouts with named constants (e.g., `GRID_POSITION_DEBOUNCE_MS`)
+  - Centralize calibration/localStorage through a small helper (SSR-safe, testable)
+- CanvasGrid
+  - Debounce origin updates via a tiny util (instead of inline `setTimeout`), avoid layout thrash while dragging
+  - Extract z-index values into constants to prevent layering regressions
+- ShareViewOptions context
+  - Split `isSharePanelOpen` into a tiny separate context to avoid unrelated re-renders
+  - Memoize context value; ensure `updateShareViewOption` identity stability (`useCallback`)
+  - Remove any leftover legacy `funcOnly` handling paths
+- URL encoding
+  - Consolidate boolean parsing helpers and keep deterministic param ordering; add unit tests for env‑overridden defaults (admin)
+- UnifiedSettingsModal / SharePanel
+  - Add explicit ARIA labels to icon buttons; lazy render tab content to reduce initial work
+  - Factor small presentational rows (e.g., `ToggleRow`) to reduce repetition
+- GlobalControls / Toolbar
+  - Ensure accessible names for all buttons; consider a small `IconButton` abstraction
+  - Memoize prop sets/handlers to avoid churn
+- Logging / ESLint
+  - Gate verbose logs behind `loggingEnabled`/NODE_ENV; narrow react‑refresh rule overrides to the minimal file set
+- Tests (follow‑ups)
+  - Regression: grid drag should not remount `FormulaGraph` (stable keys), no snap‑back during drag
+  - `applyPendingChanges` semantics for admin/layout deferred application
