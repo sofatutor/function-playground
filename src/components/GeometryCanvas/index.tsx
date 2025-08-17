@@ -3,7 +3,7 @@ import CanvasGrid from '../CanvasGrid/index';
 import ShapeLayers from './ShapeLayers';
 import FormulaLayer from './FormulaLayer';
 import UnifiedInfoPanel from '../UnifiedInfoPanel';
-import { AnyShape, Point, OperationMode, ShapeType, MeasurementUnit } from '@/types/shapes';
+import { AnyShape, Point, OperationMode, ShapeType, MeasurementUnit, Triangle } from '@/types/shapes';
 import { Formula } from '@/types/formula';
 import { getStoredCalibrationValue } from '@/utils/calibrationHelper';
 import { CANVAS_SIZE_DEBOUNCE_MS, Z_INDEX } from '@/utils/constants';
@@ -136,13 +136,159 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
   }, [zoomedPixelsPerUnit]);
 
   const scaledShapes = useMemo(() => {
-    return shapes.map(shape => ({
-      ...shape,
-      position: {
-        x: shape.position.x * zoomFactor,
-        y: shape.position.y * zoomFactor
+    return shapes.map(shape => {
+      logger.debug(`Scaling shape: ${shape.type} (${shape.id})`);
+      logger.debug('Original position:', shape.position);
+      
+      // Base shape with unmodified position
+      const baseShape = {
+        ...shape,
+        position: shape.position // Keep original position
+      };
+
+      let scaledShape;
+      
+      // If this is the first time scaling this shape, store original dimensions
+      if (!shape.originalDimensions) {
+        switch (shape.type) {
+          case 'circle':
+            shape.originalDimensions = { radius: shape.radius };
+            break;
+          case 'rectangle':
+            shape.originalDimensions = { width: shape.width, height: shape.height };
+            break;
+          case 'triangle':
+            shape.originalDimensions = { points: [...shape.points] };
+            break;
+          case 'line':
+            shape.originalDimensions = { 
+              dx: shape.endPoint.x - shape.position.x,
+              dy: shape.endPoint.y - shape.position.y
+            };
+            break;
+        }
       }
-    }));
+
+      // Handle specific shape types
+      switch (shape.type) {
+        case 'circle':
+          logger.debug('Circle - Before scaling:', {
+            position: shape.position,
+            radius: shape.radius,
+            originalRadius: shape.originalDimensions?.radius
+          });
+          
+          // Get original radius
+          const originalRadius = shape.originalDimensions?.radius || shape.radius;
+          scaledShape = {
+            ...baseShape,
+            radius: originalRadius * zoomFactor,
+            scaleFactor: zoomFactor,
+            originalDimensions: shape.originalDimensions || { radius: shape.radius }
+          };
+          logger.debug('Circle - After scaling:', {
+            position: scaledShape.position,
+            radius: scaledShape.radius
+          });
+          break;
+
+        case 'rectangle':
+          logger.debug('Rectangle - Before scaling:', {
+            position: shape.position,
+            width: shape.width,
+            height: shape.height,
+            originalWidth: shape.originalDimensions?.width,
+            originalHeight: shape.originalDimensions?.height
+          });
+          
+          // Get original dimensions
+          const originalWidth = shape.originalDimensions?.width || shape.width;
+          const originalHeight = shape.originalDimensions?.height || shape.height;
+          scaledShape = {
+            ...baseShape,
+            width: originalWidth * zoomFactor,
+            height: originalHeight * zoomFactor,
+            scaleFactor: zoomFactor,
+            originalDimensions: shape.originalDimensions || { width: shape.width, height: shape.height }
+          };
+          logger.debug('Rectangle - After scaling:', {
+            position: scaledShape.position,
+            width: scaledShape.width,
+            height: scaledShape.height
+          });
+          break;
+
+        case 'triangle':
+          logger.debug('Triangle - Before scaling:', {
+            position: shape.position,
+            points: shape.points,
+            originalPoints: shape.originalDimensions?.points
+          });
+          
+          // Get original points
+          const triangleShape = shape as any; // Cast to access triangle-specific properties
+          const originalPoints = shape.originalDimensions?.points || triangleShape.points;
+          
+          // Calculate center from original points
+          const center = {
+            x: (originalPoints[0].x + originalPoints[1].x + originalPoints[2].x) / 3,
+            y: (originalPoints[0].y + originalPoints[1].y + originalPoints[2].y) / 3
+          };
+          logger.debug('Triangle center:', center);
+          
+          // Scale points from original positions
+          const scaledPoints = originalPoints.map(point => ({
+            x: center.x + (point.x - center.x) * zoomFactor,
+            y: center.y + (point.y - center.y) * zoomFactor
+          }));
+          
+          scaledShape = {
+            ...baseShape,
+            points: scaledPoints as [Point, Point, Point],
+            scaleFactor: zoomFactor,
+            originalDimensions: shape.originalDimensions || { points: [...triangleShape.points] }
+          };
+          logger.debug('Triangle - After scaling:', {
+            position: scaledShape.position,
+            points: scaledShape.points
+          });
+          break;
+
+        case 'line':
+          logger.debug('Line - Before scaling:', {
+            position: shape.position,
+            endPoint: shape.endPoint,
+            originalDx: shape.originalDimensions?.dx,
+            originalDy: shape.originalDimensions?.dy
+          });
+          
+          // Get original dimensions
+          const originalDx = shape.originalDimensions?.dx || (shape.endPoint.x - shape.position.x);
+          const originalDy = shape.originalDimensions?.dy || (shape.endPoint.y - shape.position.y);
+          scaledShape = {
+            ...baseShape,
+            endPoint: {
+              x: shape.position.x + originalDx * zoomFactor,
+              y: shape.position.y + originalDy * zoomFactor
+            },
+            scaleFactor: zoomFactor,
+            originalDimensions: shape.originalDimensions || { 
+              dx: shape.endPoint.x - shape.position.x,
+              dy: shape.endPoint.y - shape.position.y
+            }
+          };
+          logger.debug('Line - After scaling:', {
+            startPoint: scaledShape.position,
+            endPoint: scaledShape.endPoint
+          });
+          break;
+
+        default:
+          scaledShape = baseShape;
+      }
+
+      return scaledShape;
+    });
   }, [shapes, zoomFactor]);
   
   // Effect to log when formulas change
