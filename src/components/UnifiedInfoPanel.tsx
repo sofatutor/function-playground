@@ -75,25 +75,7 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
     }
   }, [measurements, editingKey]);
   
-  // Add keyboard event listener for arrow keys
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!point) return;
-      
-      if (e.key === 'ArrowLeft') {
-        console.log('Navigate to previous point');
-        // In a real implementation, this would call a function to navigate
-      } else if (e.key === 'ArrowRight') {
-        console.log('Navigate to next point');
-        // In a real implementation, this would call a function to navigate
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [point]);
+  // Removed debug-only keyboard listener; navigation is handled by the canvas
   
   // Function to handle starting edit mode
   const handleStartEdit = (key: string, value: string) => {
@@ -142,11 +124,9 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
     // Prevent the event from propagating to the canvas
     e.stopPropagation();
     e.preventDefault();
-    
+
     if (onNavigatePoint && point) {
       onNavigatePoint(direction, point.navigationStepSize || 0.1);
-    } else {
-      console.log(`Navigate ${direction} point`);
     }
   };
 
@@ -297,7 +277,7 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
                   <div className="flex-1 text-center whitespace-nowrap overflow-visible">
                     <div className="flex justify-center items-center">
                       <span className="mr-1">Step:</span>
-                      <InlineMath math={formatNumber(point.navigationStepSize || 1.00)} />
+                      <span>{formatNumber(point.navigationStepSize || 1.00)}</span>
                     </div>
                   </div>
                   <button 
