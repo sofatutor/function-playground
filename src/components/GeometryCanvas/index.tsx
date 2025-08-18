@@ -171,13 +171,12 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
 
       // Handle specific shape types
       switch (shape.type) {
-        case 'circle':
+        case 'circle': {
           logger.debug('Circle - Before scaling:', {
             position: shape.position,
             radius: shape.radius,
             originalRadius: shape.originalDimensions?.radius
           });
-          
           // Get original radius
           const originalRadius = shape.originalDimensions?.radius || shape.radius;
           scaledShape = {
@@ -191,8 +190,8 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
             radius: scaledShape.radius
           });
           break;
-
-        case 'rectangle':
+        }
+        case 'rectangle': {
           logger.debug('Rectangle - Before scaling:', {
             position: shape.position,
             width: shape.width,
@@ -200,7 +199,6 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
             originalWidth: shape.originalDimensions?.width,
             originalHeight: shape.originalDimensions?.height
           });
-          
           // Get original dimensions
           const originalWidth = shape.originalDimensions?.width || shape.width;
           const originalHeight = shape.originalDimensions?.height || shape.height;
@@ -217,31 +215,27 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
             height: scaledShape.height
           });
           break;
-
-        case 'triangle':
+        }
+        case 'triangle': {
           logger.debug('Triangle - Before scaling:', {
             position: shape.position,
             points: shape.points,
             originalPoints: shape.originalDimensions?.points
           });
-          
           // Get original points
-          const triangleShape = shape as any; // Cast to access triangle-specific properties
+          const triangleShape = shape as Triangle; // Cast to access triangle-specific properties
           const originalPoints = shape.originalDimensions?.points || triangleShape.points;
-          
           // Calculate center from original points
           const center = {
             x: (originalPoints[0].x + originalPoints[1].x + originalPoints[2].x) / 3,
             y: (originalPoints[0].y + originalPoints[1].y + originalPoints[2].y) / 3
           };
           logger.debug('Triangle center:', center);
-          
           // Scale points from original positions
           const scaledPoints = originalPoints.map(point => ({
             x: center.x + (point.x - center.x) * zoomFactor,
             y: center.y + (point.y - center.y) * zoomFactor
           }));
-          
           scaledShape = {
             ...baseShape,
             points: scaledPoints as [Point, Point, Point],
@@ -253,15 +247,14 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
             points: scaledShape.points
           });
           break;
-
-        case 'line':
+        }
+        case 'line': {
           logger.debug('Line - Before scaling:', {
             position: shape.position,
             endPoint: shape.endPoint,
             originalDx: shape.originalDimensions?.dx,
             originalDy: shape.originalDimensions?.dy
           });
-          
           // Get original dimensions
           const originalDx = shape.originalDimensions?.dx || (shape.endPoint.x - shape.position.x);
           const originalDy = shape.originalDimensions?.dy || (shape.endPoint.y - shape.position.y);
@@ -282,9 +275,10 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
             endPoint: scaledShape.endPoint
           });
           break;
-
-        default:
+        }
+        default: {
           scaledShape = baseShape;
+        }
       }
 
       return scaledShape;
@@ -369,6 +363,13 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
       }
     }
   }, [selectedPoint, isNonInteractive, navigateFormulaPoint]);
+
+  // Ensure canvas has focus when a formula point is selected so keyboard works
+  useEffect(() => {
+    if (selectedPoint && canvasRef.current) {
+      canvasRef.current.focus();
+    }
+  }, [selectedPoint]);
   
   // Clean up any ongoing operations when the active mode changes
   useEffect(() => {
@@ -573,6 +574,7 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
           <div 
             className="absolute w-80 unified-info-panel-container bottom-4 right-4 z-40 transition-all duration-200 ease-in-out"
             style={{ zIndex: Z_INDEX.UI_CONTROLS }}
+            onClick={(e) => e.stopPropagation()}
           >
             <UnifiedInfoPanel 
               // Point info props

@@ -75,25 +75,7 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
     }
   }, [measurements, editingKey]);
   
-  // Add keyboard event listener for arrow keys
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!point) return;
-      
-      if (e.key === 'ArrowLeft') {
-        console.log('Navigate to previous point');
-        // In a real implementation, this would call a function to navigate
-      } else if (e.key === 'ArrowRight') {
-        console.log('Navigate to next point');
-        // In a real implementation, this would call a function to navigate
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [point]);
+  // Removed debug-only keyboard listener; navigation is handled by the canvas
   
   // Function to handle starting edit mode
   const handleStartEdit = (key: string, value: string) => {
@@ -142,14 +124,9 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
     // Prevent the event from propagating to the canvas
     e.stopPropagation();
     e.preventDefault();
-    
-    console.log('UnifiedInfoPanel: handleNavigatePoint called with:', direction, 'onNavigatePoint:', !!onNavigatePoint, 'point:', !!point);
-    
+
     if (onNavigatePoint && point) {
-      console.log('UnifiedInfoPanel: Calling onNavigatePoint with stepSize:', point.navigationStepSize || 0.1);
       onNavigatePoint(direction, point.navigationStepSize || 0.1);
-    } else {
-      console.log(`Navigate ${direction} point - no handler or point available`);
     }
   };
 
@@ -239,7 +216,6 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
     
     // If a point is selected, show point info
     if (point) {
-      console.log('UnifiedInfoPanel: Rendering point info for:', point.formula.expression, 'navigationStepSize:', point.navigationStepSize, 'onNavigatePoint:', !!onNavigatePoint);
       return (
         <>
           <CardHeader className="p-2 sm:p-3 pb-0 sm:pb-1">
@@ -251,7 +227,7 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
                     className="w-3 h-3 rounded-full mr-2" 
                     style={{ backgroundColor: point.formula.color }}
                   />
-                  <span className="font-mono text-sm">{point.formula.expression}</span>
+                  <InlineMath math={convertToLatex(point.formula.expression)} />
                 </div>
               ) : (
                 t('pointInfoTitle')
@@ -279,7 +255,7 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
               <div>
                 <div className="text-xs font-medium mb-1">Calculation</div>
                 <div className="text-sm bg-muted p-1 rounded break-all">
-                  <span className="font-mono">{calculateY()}</span>
+                  <InlineMath math={calculateY()} />
                 </div>
               </div>
               
@@ -289,10 +265,7 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
                 <div className="flex items-center text-xs">
                   <button 
                     className="p-1 hover:bg-muted rounded point-nav-button"
-                    onClick={(e) => {
-                      console.log('UnifiedInfoPanel: Previous button clicked');
-                      handleNavigatePoint('prev', e);
-                    }}
+                    onClick={(e) => handleNavigatePoint('prev', e)}
                     aria-label="Previous Point"
                     data-nav-button="prev"
                   >
@@ -309,10 +282,7 @@ const UnifiedInfoPanel: React.FC<UnifiedInfoPanelProps> = ({
                   </div>
                   <button 
                     className="p-1 hover:bg-muted rounded point-nav-button"
-                    onClick={(e) => {
-                      console.log('UnifiedInfoPanel: Next button clicked');
-                      handleNavigatePoint('next', e);
-                    }}
+                    onClick={(e) => handleNavigatePoint('next', e)}
                     aria-label="Next Point"
                     data-nav-button="next"
                   >

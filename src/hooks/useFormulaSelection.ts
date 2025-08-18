@@ -137,12 +137,12 @@ export const useFormulaSelection = ({ onFormulaSelect, onModeChange }: UseFormul
     for (let i = 0; i < allPoints.length; i++) {
       const point = allPoints[i];
       // Convert screen coordinates to math coordinates for comparison
-      let pointMathX;
+      let pointMathX: number;
       if (selectedPoint.gridPosition && selectedPoint.pixelsPerUnit) {
         pointMathX = (point.x - selectedPoint.gridPosition.x) / selectedPoint.pixelsPerUnit;
       } else {
-        // Fallback: try to access mathX property if it exists (should be converted)
-        pointMathX = (point as any).mathX || 0;
+        // Without conversion context, approximate using screen X scaled
+        pointMathX = point.x;
       }
       
       const distance = Math.abs(pointMathX - nextMathX);
@@ -155,14 +155,15 @@ export const useFormulaSelection = ({ onFormulaSelect, onModeChange }: UseFormul
     
     if (closestPoint) {
       // Calculate math coordinates for the closest point
-      let closestPointMathX, closestPointMathY;
+      let closestPointMathX: number;
+      let closestPointMathY: number;
       if (selectedPoint.gridPosition && selectedPoint.pixelsPerUnit) {
         closestPointMathX = (closestPoint.x - selectedPoint.gridPosition.x) / selectedPoint.pixelsPerUnit;
         closestPointMathY = -(closestPoint.y - selectedPoint.gridPosition.y) / selectedPoint.pixelsPerUnit;
       } else {
-        // Fallback: try to access mathX/mathY properties if they exist
-        closestPointMathX = (closestPoint as any).mathX || 0;
-        closestPointMathY = (closestPoint as any).mathY || 0;
+        // Approximate with screen coordinates when conversion context is unavailable
+        closestPointMathX = closestPoint.x;
+        closestPointMathY = closestPoint.y;
       }
       
       logger.debug(`Found closest point at index ${closestIndex} with mathX ${closestPointMathX}`);
