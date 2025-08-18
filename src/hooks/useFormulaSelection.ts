@@ -130,10 +130,10 @@ export const useFormulaSelection = ({ onFormulaSelect, onModeChange }: UseFormul
     }
     
     // Find the point with the closest math X coordinate to our target
-    let closestPoint = null;
+    let closestPoint: FormulaPoint | null = null;
     let closestDistance = Infinity;
     let closestIndex = -1;
-    
+
     for (let i = 0; i < allPoints.length; i++) {
       const point = allPoints[i];
       // Convert screen coordinates to math coordinates for comparison
@@ -141,10 +141,10 @@ export const useFormulaSelection = ({ onFormulaSelect, onModeChange }: UseFormul
       if (selectedPoint.gridPosition && selectedPoint.pixelsPerUnit) {
         pointMathX = (point.x - selectedPoint.gridPosition.x) / selectedPoint.pixelsPerUnit;
       } else {
-        // Without conversion context, approximate using screen X scaled
+        // Without conversion context, approximate using screen X
         pointMathX = point.x;
       }
-      
+
       const distance = Math.abs(pointMathX - nextMathX);
       if (distance < closestDistance) {
         closestDistance = distance;
@@ -152,8 +152,10 @@ export const useFormulaSelection = ({ onFormulaSelect, onModeChange }: UseFormul
         closestIndex = i;
       }
     }
-    
-    if (closestPoint) {
+
+    const hasUsableClosest = closestPoint != null && closestDistance > 0.000001;
+
+    if (hasUsableClosest) {
       // Calculate math coordinates for the closest point
       let closestPointMathX: number;
       let closestPointMathY: number;
@@ -193,9 +195,51 @@ export const useFormulaSelection = ({ onFormulaSelect, onModeChange }: UseFormul
         allPoints: allPoints
       });
     } else {
-      logger.debug('No point found for navigation');
+      // Fallback: directly evaluate the function at nextMathX for sub-0.1 steps
+      const { formula } = selectedPoint;
+      const expression = formula.expression;
+      try {
+        const fn = new Function('x', `try { const Math = window.Math; return ${expression}; } catch (e) { return NaN; }`);
+        const rawY = fn(nextMathX);
+        if (typeof rawY === 'number' && isFinite(rawY)) {
+          const scaledMathY = rawY * (formula.scaleFactor || 1);
+          const pxPerUnit = selectedPoint.pixelsPerUnit || 1;
+          const gp = selectedPoint.gridPosition || { x: 0, y: 0 };
+          const canvasX = gp.x + nextMathX * pxPerUnit;
+          const canvasY = gp.y - scaledMathY * pxPerUnit;
+
+          const newSelectedPoint: SelectedPoint = {
+            x: canvasX,
+            y: canvasY,
+            mathX: nextMathX,
+            mathY: scaledMathY,
+            formula: selectedPoint.formula,
+            navigationStepSize: stepSize,
+            isValid: true,
+            gridPosition: selectedPoint.gridPosition,
+            pixelsPerUnit: selectedPoint.pixelsPerUnit,
+            allPoints: allPoints,
+          };
+          setSelectedPoint(newSelectedPoint);
+          // Keep currentPointInfo unchanged; we're not mapping to a discrete index here
+        } else {
+          logger.debug('Evaluation produced invalid number; skipping navigation');
+        }
+      } catch (err) {
+        logger.error('Error evaluating formula during fine navigation:', err);
+      }
     }
   }, [selectedPoint, currentPointInfo]);
+
+  // Adjust the navigation step size (ArrowUp/ArrowDown behavior)
+  const adjustNavigationStep = useCallback((increase: boolean) => {
+    setSelectedPoint(prev => {
+      if (!prev) return prev;
+      const current = prev.navigationStepSize || FORMULA_NAVIGATION_STEP_SIZE;
+      const updated = increase ? Math.min(1.0, +(current + 0.01).toFixed(2)) : Math.max(0.01, +(current - 0.01).toFixed(2));
+      return { ...prev, navigationStepSize: updated };
+    });
+  }, []);
 
   return {
     selectedPoint,
@@ -203,6 +247,7 @@ export const useFormulaSelection = ({ onFormulaSelect, onModeChange }: UseFormul
     clearAllSelectedPoints,
     handleFormulaPointSelect,
     navigateFormulaPoint,
+    adjustNavigationStep,
     clickedOnPathRef,
   };
 };

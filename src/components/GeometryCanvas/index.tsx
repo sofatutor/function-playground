@@ -111,6 +111,7 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
     clearAllSelectedPoints,
     handleFormulaPointSelect,
     navigateFormulaPoint,
+    adjustNavigationStep,
   } = useFormulaSelection({ onFormulaSelect, onModeChange });
   
   const { selectedShape, selectedShapeMeasurements, handleMeasurementUpdate } = useMeasurementsPanel({
@@ -360,9 +361,15 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
         navigateFormulaPoint('next', e.shiftKey);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        adjustNavigationStep(true);
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        adjustNavigationStep(false);
       }
     }
-  }, [selectedPoint, isNonInteractive, navigateFormulaPoint]);
+  }, [selectedPoint, isNonInteractive, navigateFormulaPoint, adjustNavigationStep]);
 
   // Ensure canvas has focus when a formula point is selected so keyboard works
   useEffect(() => {
@@ -575,6 +582,10 @@ const GeometryCanvasInner: React.FC<FormulaCanvasProps> = ({
             className="absolute w-80 unified-info-panel-container bottom-4 right-4 z-40 transition-all duration-200 ease-in-out"
             style={{ zIndex: Z_INDEX.UI_CONTROLS }}
             onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onMouseUp={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+            onPointerUp={(e) => e.stopPropagation()}
           >
             <UnifiedInfoPanel 
               // Point info props
