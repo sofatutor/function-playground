@@ -7,7 +7,7 @@ These instructions give Copilot repo-specific context so suggestions align with 
 - UI built with Shadcn components; tests with Jest (unit) and Playwright (E2E).
 
 ## Environment and commands
-- Node: use the version in `.nvmrc` (currently 24.1.0).
+- Node: use the version in `.nvmrc` (currently 24.22.1).
 - IMPORTANT: ALWAYS install dependencies with `npm ci` before running any command (do not use `npm install`).
 - Dev server: `npm run dev` (Vite, served at `http://localhost:8080`)
 - Build (prod): `npm run build`
